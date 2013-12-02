@@ -1,13 +1,13 @@
+#include "rarray.h"
 #include <iostream>
 #include <array>
-#include "rarray.h"
 #include <cassert>
 
 using std::cerr;
 char FP[2][5] = {"FAIL","PASS"};
 
 #define ALLCLEAR 0
-#define CHECK(x) {if(!(x))return 1;}
+#define CHECK(x) {if(!(x)){std::cerr<<__LINE__<<'\n';return 1;}}
 #define PASSORRETURN(x) {int e=x;cerr<<#x<<": "<<FP[e==0]<<'\n';if(e)return e;}
 
 template<typename T,int R> 
@@ -23,9 +23,11 @@ int testconstructors()
     //   rarray(int,int,int)
     //   rarray(const int*)
     //   rarray(const rarray<T,3>&)
+    // as well as the destructor
+    //   ~rarray()
     // And the following methods
-    //   T* data();
-    //   int extent(int);
+    //   T* data()
+    //   int extent(int)
     int dim[3] = {7,21,13};
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
@@ -55,8 +57,9 @@ int testaccessors(T value1, T value2)
     //   rarray(int,int,int)
     //   rarray(const int*)
     //   rarray(const rarray<T,3>&)
-    //   T* data();
-    //   int extent(int);
+    //   ~rarray()
+    //   T* data()
+    //   int extent(int)
     assert(value1!=value2);  // required for the test to work
     int dim[3] = {7,21,13};
     rarray<T,3> a(7,21,13);
@@ -105,6 +108,40 @@ int testsliceconstructor()
     return ALLCLEAR;
 }
 
+template<typename T> 
+int testcopy(T value1, T value2) 
+{
+    // Tests following methods:
+    //   rarray<T,3> copy() const;
+    rarray<T,3> b(100,40,3);
+
+    T value3 = value1;
+    for (int i=0; i<b.extent(0); i++) {
+        for (int j=0; j<b.extent(1); j++) {
+            for (int k=0; k<b.extent(2); k++) {
+                b[i][j][k] = value3;
+                value3 = value3+value2;
+            }
+        }
+    }
+
+    rarray<T,3> d(b.copy());
+
+    CHECK(d.data()!=b.data());
+    CHECK(d.extent(0)==b.extent(0));
+    CHECK(d.extent(1)==b.extent(1));
+    CHECK(d.extent(2)==b.extent(2));
+    for (int i=0; i<b.extent(0); i++) {
+        for (int j=0; j<b.extent(1); j++) {
+            for (int k=0; k<b.extent(2); k++) {
+                CHECK(b[i][j][k]==d[i][j][k]);
+            }
+        }
+    }
+
+    return ALLCLEAR;
+}
+
 class compound 
 {
   public:
@@ -118,35 +155,43 @@ class compound
     bool operator!=(const compound&other) const {
         return x!=other.x or y!=other.y;
     }
+    compound operator+(const compound& other) const {
+        return compound(x+other.x,y+other.y);
+    }
   private:
     int x;
     int y;
 };
 
+std::array<compound,3> operator+(const std::array<compound,3> &a,
+                                 const std::array<compound,3> &b)
+{
+    std::array<compound,3> result = {a[0]+b[0],a[1]+b[1],a[2]+b[2]};
+    return result;
+}
+
 int main() 
 {
-    {
-        PASSORRETURN(testconstructors<double>());
-        PASSORRETURN(testconstructors<compound>());
-        PASSORRETURN((testconstructors<std::array<compound,3> >()));
-    }
+    double d1 = -2.2, d2 = 7.1;
+    compound c1(1,2), c2(-7,13);
+    std::array<compound,3> a1 = {compound(1,2),compound(3,4),compound(5,6)};
+    std::array<compound,3> a2 = {compound(-1,-2),compound(3,-4),compound(5,-6)};
 
-    {
-        double d1 = -2.2, d2 = 7.1;
-        compound c1(1,2), c2(-7,13);
-        std::array<compound,3> a1 = {compound(1,2),compound(3,4),compound(5,6)};
-        std::array<compound,3> a2 = {compound(-1,-2),compound(3,-4),compound(5,-6)};
-        PASSORRETURN(testaccessors<double>(d1,d2));
-        PASSORRETURN(testaccessors<compound>(c1,c2));
-        PASSORRETURN((testaccessors<std::array<compound,3> >(a1,a2)));
-    }
+    PASSORRETURN(testconstructors<double>());
+    PASSORRETURN(testconstructors<compound>());
+    PASSORRETURN((testconstructors<std::array<compound,3> >()));
 
-    {
-        PASSORRETURN(testsliceconstructor<double>());
-        PASSORRETURN(testsliceconstructor<compound>());
-        PASSORRETURN((testsliceconstructor<std::array<compound,3> >()));
+    PASSORRETURN(testaccessors<double>(d1,d2));
+    PASSORRETURN(testaccessors<compound>(c1,c2));
+    PASSORRETURN((testaccessors<std::array<compound,3> >(a1,a2)));
 
-    }
+    PASSORRETURN(testsliceconstructor<double>());
+    PASSORRETURN(testsliceconstructor<compound>());
+    PASSORRETURN((testsliceconstructor<std::array<compound,3> >()));
+
+    PASSORRETURN(testcopy<double>(d1,d2));
+    PASSORRETURN(testcopy<compound>(c1,c2));
+    PASSORRETURN((testcopy<std::array<compound,3> >(a1,a2)));
 
     return ALLCLEAR;
 }

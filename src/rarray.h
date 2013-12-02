@@ -121,13 +121,13 @@ class rarray {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST;
+    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
 
     // return  T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST; 
+    cast_ptr_t cptr() CONST;  // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
-    rarray<const T,R>&  cref() CONST;
+    rarray<const T,R>&  cref() const;
 
     // access elements 
    #ifndef SKIPINTERMEDIATE
@@ -225,13 +225,13 @@ class rarray<T,1> {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST;
+    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
 
     // return  T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST;
+    cast_ptr_t cptr() CONST;  // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
-    rarray<const T,1>&  cref() CONST;
+    rarray<const T,1>&  cref() const;
 
     // access elements through intermediate object:
    #ifndef SKIPINTERMEDIATE
@@ -317,13 +317,13 @@ template<typename T,int R> class rarray_intermediate {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST;
+    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
 
     // return T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST;
+    cast_ptr_t cptr() CONST; // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
-    rarray_intermediate<const T,R>& cref() CONST; 
+    rarray_intermediate<const T,R>& cref() const; 
 
     // element access:
     inline rarray_intermediate<T,R-1> operator[](int i); 
@@ -370,10 +370,10 @@ template<typename T> class rarray_intermediate<T,1> {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST;
+    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
 
     // return T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST;
+    cast_ptr_t cptr() CONST;  // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
     rarray_intermediate<const T,1>& cref() const;
@@ -673,11 +673,9 @@ rarray<T,1>::rarray(const rarray_intermediate<T,1> &a)
 template<typename T, int R>
 rarray<T,R> rarray<T,R>::copy() const 
 {
-    int ntot = 1;
-    for (int i=0; i<R; i++)
-        ntot *= n[i];
     T* buf = new T[ntot];
-    int* bufrefcount = new int(0); 
+    int* bufrefcount = new int(0);
+    std::copy(buffer, buffer+ntot, buf);
     return rarray(buf, bufrefcount, n);
 }
 
@@ -686,6 +684,7 @@ rarray<T,1> rarray<T,1>::copy() const
 {
     T* buf = new T[n[0]];
     int* bufrefcount = new int(0); 
+    std::copy(buffer, buffer+n[0], buf);
     return rarray(buf, bufrefcount, n);
 }
 
