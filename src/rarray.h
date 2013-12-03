@@ -19,8 +19,6 @@
 #include <string>
 #include <sstream>
 
-#define CONST const
-
 // Precompiler notes:
 //
 // 1. Temporary intermediate expression in a multi-bracketed
@@ -60,6 +58,17 @@ template<typename T>
 struct pchain<T,1> {
     typedef T* ptr_t;
     typedef T* cast_ptr_t;
+};
+
+// struct to strip constness:
+template<typename T> 
+struct unconst { 
+    typedef T type; 
+};
+//
+template<typename T> 
+struct unconst<const T> { 
+    typedef T type; 
 };
 
 // forward definition of the class for intermediate bracket expressions:
@@ -121,10 +130,10 @@ class rarray {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
+    inline ptr_t ptr() const; // as this is really just a nasty cast, keep const
 
     // return  T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST;  // as this is really just a nasty cast, keep const
+    cast_ptr_t cptr() const;  // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
     rarray<const T,R>&  cref() const;
@@ -132,10 +141,12 @@ class rarray {
     // access elements 
    #ifndef SKIPINTERMEDIATE
     // through intermediate object:
-    inline rarray_intermediate<T,R-1> operator[](int i) CONST;
+    inline rarray_intermediate<T,R-1> operator[](int i);
+    inline rarray_intermediate<const T,R-1> operator[](int i) const;
    #else
     // or if SKIPINTERMEDIATE is set, by implicit case to a T**..:
-    inline operator typename pchain<T,R>::ptr_t () CONST; 
+    inline operator typename pchain<T,R>::ptr_t (); 
+    inline operator typename pchain<const T,R>::ptr_t () const; 
    #endif
 
     // copy constructors:
@@ -166,10 +177,6 @@ class rarray {
 
     // cleanup routine:
     void fini() ;
-
-    // structs to strip constness:
-    template<typename U> struct unconst { typedef U type; };
-    template<typename U> struct unconst<const U> { typedef U type; };
 
     // delete the chain of pointers, except the base:
     static void delete_except_base(ptr_t t);
@@ -225,10 +232,10 @@ class rarray<T,1> {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
+    inline ptr_t ptr() const; // as this is really just a nasty cast, keep const
 
     // return  T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST;  // as this is really just a nasty cast, keep const
+    cast_ptr_t cptr() const;  // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
     rarray<const T,1>&  cref() const;
@@ -236,10 +243,12 @@ class rarray<T,1> {
     // access elements through intermediate object:
    #ifndef SKIPINTERMEDIATE
     // through a T& pointer a the element:
-    inline T& operator[](int i) CONST;
+    inline T& operator[](int i);
+    inline const T& operator[](int i) const;
    #else
     // through implicit conversion to a pointer:
-    inline operator typename pchain<T,1>::ptr_t () CONST;
+    inline operator typename pchain<T,1>::ptr_t ();
+    inline operator typename pchain<const T,1>::ptr_t () const;
    #endif
 
     // copy constructors:
@@ -258,7 +267,7 @@ class rarray<T,1> {
     int   n[1];   // array with the number of elements in each dimension
     int   ntot;   // total number of buffer elements
     ptr_t tnsr;   // start of the pointer-chain
-    // INTEND TO ADD REFERNCE COUNTING FOR THIS TOO
+    // INTEND TO ADD REFERENCE COUNTING FOR THIS TOO
 
     // private constructor used by .copy
     rarray(T* buf, int* bufrefcount, const int* dim);
@@ -271,10 +280,6 @@ class rarray<T,1> {
 
     // cleanup routine:
     void fini() ;
-
-    // structs to strip constness:
-    template<typename U> struct unconst { typedef U type; };
-    template<typename U> struct unconst<const U> { typedef U type; };
 
     // delete the chain of pointers, except the base:
     static void delete_except_base(ptr_t t) ;
@@ -317,10 +322,10 @@ template<typename T,int R> class rarray_intermediate {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
+    inline ptr_t ptr() const; // as this is really just a nasty cast, keep const
 
     // return T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST; // as this is really just a nasty cast, keep const
+    cast_ptr_t cptr() const; // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
     rarray_intermediate<const T,R>& cref() const; 
@@ -343,6 +348,7 @@ template<typename T,int R> class rarray_intermediate {
     friend class rarray<T,R>; 
     friend class rarray<T,R+1>;
     friend class rarray_intermediate<T,R+1>;
+    friend class rarray<typename unconst<T>::type,R+1>;
 
 }; // end definition rarray_intermediate<T,R>
 
@@ -370,10 +376,10 @@ template<typename T> class rarray_intermediate<T,1> {
     const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
-    inline ptr_t ptr() CONST; // as this is really just a nasty cast, keep const
+    inline ptr_t ptr() const; // as this is really just a nasty cast, keep const
 
     // return T**.. acting similarly to this rarray when using []:
-    cast_ptr_t cptr() CONST;  // as this is really just a nasty cast, keep const
+    cast_ptr_t cptr() const;  // as this is really just a nasty cast, keep const
 
     // create a reference to this that treats elements as constant:
     rarray_intermediate<const T,1>& cref() const;
@@ -397,6 +403,7 @@ template<typename T> class rarray_intermediate<T,1> {
     friend class rarray<T,1>; 
     friend class rarray<T,2>;
     friend class rarray_intermediate<T,2>;
+    friend class rarray<typename unconst<T>::type,2>;
 
 };  // end of class template definition of rarray_intermediate<T,1>.
 
@@ -407,6 +414,18 @@ template<typename T> class rarray_intermediate<T,1> {
 ////                                                ////
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
+
+#ifdef TRACETEST
+  
+    #include <iostream>
+
+    #define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
+
+#else
+
+    #define profileSay(a) 
+
+#endif
 
 #ifdef BOUNDSCHECK
 
@@ -444,6 +463,7 @@ template<typename T> class rarray_intermediate<T,1> {
 template<typename T,int R>
 rarray<T,R>::rarray(int n0)  // for R=1
 {
+    profileSay("rarray<T,R>::rarray(int n0)");
     checkOrSay(R==1, "wrong rank in constructor");
     const int dim[] = {n0};
     T* buf = new T[n0];
@@ -454,6 +474,7 @@ rarray<T,R>::rarray(int n0)  // for R=1
 template<typename T,int R>
 rarray<T,R>::rarray(int n0, int n1)  // for R=2
 {
+    profileSay("rarray<T,R>::rarray(int n0,int n1)");
     checkOrSay(R==2, "wrong rank in constructor");
     const int dim[] = {n0,n1};
     T* buf = new T[n0*n1];
@@ -464,6 +485,7 @@ rarray<T,R>::rarray(int n0, int n1)  // for R=2
 template<typename T,int R>
 rarray<T,R>::rarray(int n0,int n1,int n2)  // for R=3
 {
+    profileSay("rarray<T,R>::rarray(int n0,int n1,int n2)");
     checkOrSay(R==3, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2};
     T* buf = new T[n0*n1*n2];
@@ -474,6 +496,7 @@ rarray<T,R>::rarray(int n0,int n1,int n2)  // for R=3
 template<typename T,int R>
 rarray<T,R>::rarray(int n0,int n1,int n2,int n3)  // for R=4
 {
+    profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3)");
     checkOrSay(R==4, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3};
     T* buf = new T[n0*n1*n2*n3];
@@ -484,6 +507,7 @@ rarray<T,R>::rarray(int n0,int n1,int n2,int n3)  // for R=4
 template<typename T,int R>
 rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4)  // for R=5
 {
+    profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4)");
     checkOrSay(R==5, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4};
     T* buf = new T[n0*n1*n2*n3*n4];
@@ -494,6 +518,7 @@ rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4)  // for R=5
 template<typename T,int R>
 rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4,int n5)  // for R=6
 {
+    profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4,int n5)");
     checkOrSay(R==6, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4,n5};
     T* buf = new T[n0*n1*n2*n3*n4*n5];
@@ -504,6 +529,7 @@ rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4,int n5)  // for R=6
 template<typename T,int R>
 rarray<T,R>::rarray(const int* dim)  // for any R (the only way for R>6)
 {
+    profileSay("rarray<T,R>::rarray(const int*)");
     int ntot = 1;
     for (int i=0; i<R; i++)
         ntot*=dim[i];
@@ -515,6 +541,7 @@ rarray<T,R>::rarray(const int* dim)  // for any R (the only way for R>6)
 template<typename T>
 rarray<T,1>::rarray(int n0)
 {
+    profileSay("rarray<T,1>::rarray(int n0)");
     const int dim[] = {n0};
     T* buf = new T[n0];
     int* bufrefcount = new int(0);
@@ -524,6 +551,7 @@ rarray<T,1>::rarray(int n0)
 template<typename T>
 rarray<T,1>::rarray(const int* dim)  // for uniformity
 {
+    profileSay("rarray<T,1>::rarray(const int*)");
     T* buf = new T[dim[0]];
     int* bufrefcount = new int(0);
     init(buf, bufrefcount, get_pointer(buf), dim);
@@ -534,6 +562,7 @@ rarray<T,1>::rarray(const int* dim)  // for uniformity
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf, int n0)  // for R=1
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int n0)");
     checkOrSay(R==1, "wrong rank in constructor");
     const int dim[] = {n0};
     init(buf, norefcount, get_pointer(buf), dim);
@@ -542,6 +571,7 @@ rarray<T,R>::rarray(T* buf, int n0)  // for R=1
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf, int n0, int n1)  // for R=2
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1)");
     checkOrSay(R==2, "wrong rank in constructor");
     const int dim[] = {n0,n1};
     init(buf, norefcount, get_pointer(buf), dim);
@@ -550,6 +580,7 @@ rarray<T,R>::rarray(T* buf, int n0, int n1)  // for R=2
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf,int n0,int n1,int n2)  // for R=3
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2)");
     checkOrSay(R==3, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2};
     init(buf, norefcount, get_pointer(buf), dim);
@@ -558,6 +589,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2)  // for R=3
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3)  // for R=4
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2,int n3)");
     checkOrSay(R==4, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3};
     init(buf, norefcount, get_pointer(buf), dim);
@@ -566,6 +598,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3)  // for R=4
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3,int n4)  // for R=5
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2,int n3,int n4)");
     checkOrSay(R==5, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4};
     init(buf, norefcount, get_pointer(buf), dim);
@@ -574,6 +607,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3,int n4)  // for R=5
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3,int n4,int n5)  // for R=6
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2,int n3,int n4,int n5)");
     checkOrSay(R==6, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4,n5};
     init(buf, norefcount, get_pointer(buf), dim);
@@ -582,12 +616,14 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3,int n4,int n5)  // for R=
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf, const int* dim)  // for any I (the only way for R>6)
 {
+    profileSay("rarray<T,R>::rarray(T*buf,const int*dim)");
     init(buf, norefcount, get_pointer(buf), dim);
 }
 
 template<typename T>
 rarray<T,1>::rarray(T* buf, int n0)
 {
+    profileSay("rarray<T,1>::rarray(T*buf,int n0)");
     const int dim[] = {n0};
     init(buf, norefcount, get_pointer(buf), dim);
 }
@@ -595,6 +631,7 @@ rarray<T,1>::rarray(T* buf, int n0)
 template<typename T>
 rarray<T,1>::rarray(T* buf, const int* dim)  // for any I (the only way for R>6)
 {
+    profileSay("rarray<T,1>::rarray(T*buf,const int*dim)");
     init(buf, norefcount, get_pointer(buf), dim);
 }
 
@@ -604,7 +641,9 @@ rarray_intermediate<T,R>::rarray_intermediate(T*const&   anorigin,
                                               const int* an, 
                                               ptr_t      atnsr)
 : origin(anorigin), originrefcount(anoriginrefcount), n(an), tnsr(atnsr)  
-{}
+{
+    profileSay("rarray_intermediate<T,R>::rarray_intermediate(T*const&anorigin,int*const&anoriginrefcount,const int*an,ptr_t atnsr");
+}
 
 template<typename T> inline 
 rarray_intermediate<T,1>::rarray_intermediate(T*const&   anorigin, 
@@ -612,19 +651,23 @@ rarray_intermediate<T,1>::rarray_intermediate(T*const&   anorigin,
                                               const int* an, 
                                               ptr_t      atnsr)
 : origin(anorigin), originrefcount(anoriginrefcount), n(an), tnsr(atnsr) 
-{}
+{
+    profileSay("rarray_intermediate<T,1>::rarray_intermediate(T*const&anorigin,int*const&anoriginrefcount,const int*an,ptr_t atnsr");
+}
 
 // private constructor used by .copy
 
 template<typename T,int R>
 rarray<T,R>::rarray(T* buf, int* bufrefcount, const int* dim)
 {
+    profileSay("rarray<T,R>::rarray(T*buf,int*bufrefcount,const int*dim)");
     init(buf, bufrefcount, get_pointer(buf), dim);
 }
 
 template<typename T>
 rarray<T,1>::rarray(T* buf, int* bufrefcount, const int* dim)
 {
+    profileSay("rarray<T,1>::rarray(T*buf,int*bufrefcount,const int*dim)");
     init(buf, bufrefcount, get_pointer(buf), dim);
 }
 
@@ -633,12 +676,14 @@ rarray<T,1>::rarray(T* buf, int* bufrefcount, const int* dim)
 template<typename T,int R>
 rarray<T,R>::~rarray()
 {
+    profileSay("rarray<T,R>::~rarray()");
     fini();
 }
 
 template<typename T>
 rarray<T,1>::~rarray()
 {
+    profileSay("rarray<T,1>::~rarray()");
     fini();
 }
 
@@ -647,32 +692,37 @@ rarray<T,1>::~rarray()
 template<typename T,int R>
 rarray<T,R>::rarray(const rarray<T,R> &a) 
 {
+    profileSay("rarray<T,R>::rarray(const rarray<T,R> &a)");
     init(a.origin, a.originrefcount, a.buffer, a.n);
 }
 
 template<typename T,int R>
 rarray<T,R>::rarray(const rarray_intermediate<T,R> &a) 
 {
+    profileSay("rarray<T,R>::rarray(const rarray_intermediate<T,R> &a)");    
     init(a.origin, a.originrefcount, base(a.tnsr), a.n);
 }
 
 template<typename T>
 rarray<T,1>::rarray(const rarray<T,1> &a) 
 {
+    profileSay("rarray<T,1>::rarray(const rarray<T,1>&a)");
     init(a.origin, a.originrefcount, a.buffer, a.n);
 }
 
 template<typename T>
 rarray<T,1>::rarray(const rarray_intermediate<T,1> &a) 
 {
+    profileSay("rarray<T,1>::rarray(const rarray_intermediate<T,1>&a)");
     init(a.origin, a.originrefcount, base(a.tnsr), a.n);
 }
 
 // create a copy
 
 template<typename T, int R>
-rarray<T,R> rarray<T,R>::copy() const 
+rarray<T,R> rarray<T,R>::copy() const
 {
+    profileSay("rarray<T,R> rarray<T,R>::copy() const");
     T* buf = new T[ntot];
     int* bufrefcount = new int(0);
     std::copy(buffer, buffer+ntot, buf);
@@ -682,6 +732,7 @@ rarray<T,R> rarray<T,R>::copy() const
 template<typename T>
 rarray<T,1> rarray<T,1>::copy() const 
 {
+    profileSay("rarray<T,1> rarray<T,1>::copy() const");
     T* buf = new T[n[0]];
     int* bufrefcount = new int(0); 
     std::copy(buffer, buffer+n[0], buf);
@@ -693,6 +744,7 @@ rarray<T,1> rarray<T,1>::copy() const
 template<typename T,int R>
 int rarray<T,R>::extent(int i) const 
 {
+    profileSay("int rarray<T,R>::extent(int i) const");
     checkOrSay(i >=0 && i < R, "wrong dimension");
     return n[i];
 }
@@ -700,6 +752,7 @@ int rarray<T,R>::extent(int i) const
 template<typename T>
 int rarray<T,1>::extent(int i) const 
 {
+    profileSay("int rarray<T,1>::extent(int i) const");
     checkOrSay(i >=0 && i < 1, "wrong dimension");
     return n[i];
 }
@@ -707,6 +760,7 @@ int rarray<T,1>::extent(int i) const
 template<typename T,int R> inline 
 int rarray_intermediate<T,R>::extent(int i) const 
 {
+    profileSay("int rarray_intermediate<T,R>::extent(int i) const");
     checkOrSay(i >=0 && i < R, "wrong dimension");        
     return n[i];
 }
@@ -714,6 +768,7 @@ int rarray_intermediate<T,R>::extent(int i) const
 template<typename T> inline 
 int rarray_intermediate<T,1>::extent(int i) const 
 {
+    profileSay("int rarray_intermediate<T,1>::extent(int i) const");
     checkOrSay(i >=0 && i < 1, "wrong dimension");        
     return n[i];
 }
@@ -724,12 +779,14 @@ int rarray_intermediate<T,1>::extent(int i) const
 template<typename T,int R>
 const int* rarray<T,R>::extents() const 
 {
+    profileSay("const int* rarray<T,R>::extents() const");
     return n;
 }
 
 template<typename T>
 const int* rarray<T,1>::extents() const 
 {
+    profileSay("const int* rarray<T,1>::extents() const");
     return n;
 }
 
@@ -738,12 +795,14 @@ const int* rarray<T,1>::extents() const
 template<typename T,int R> 
 const int* rarray_intermediate<T,R>::extents() const 
 {
+    profileSay("const int* rarray_intermediate<T,R>::extents() const");
     return n;
 }
 
 template<typename T> 
 const int* rarray_intermediate<T,1>::extents() const 
 {
+    profileSay("const int* rarray_intermediate<T,1>::extents() const");
     return n;
 }
 
@@ -752,12 +811,14 @@ const int* rarray_intermediate<T,1>::extents() const
 template<typename T,int R>
 int rarray<T,R>::size() const 
 { 
+    profileSay("int rarray<T,R>::size() const");
     return ntot;
 }
 
 template<typename T>
 int rarray<T,1>::size() const 
 { 
+    profileSay("int rarray<T,1>::size() const");
     return ntot;
 }
 
@@ -766,6 +827,7 @@ int rarray<T,1>::size() const
 template<typename T,int R> 
 int rarray_intermediate<T,R>::size() const 
 {
+    profileSay("int rarray_intermediate<T,R>::size() const");
     // multiplying the sizes in all dimensions
     int ntot = 1;       
     for (int i=0; i<R; i++)
@@ -776,6 +838,7 @@ int rarray_intermediate<T,R>::size() const
 template<typename T> 
 int rarray_intermediate<T,1>::size() const 
 { 
+    profileSay("int rarray_intermediate<T,1>::size() const");
     // multiplying the sizes in all dimensions
     int ntot = 1;        
     for (int i=0; i<1; i++)
@@ -788,24 +851,28 @@ int rarray_intermediate<T,1>::size() const
 template<typename T,int R>
 T* rarray<T,R>::data()
 {
+    profileSay("T* rarray<T,R>::data()");
     return buffer;
 }
 
 template<typename T,int R>
 const T* rarray<T,R>::data() const 
 {
+    profileSay("const T* rarray<T,R>::data() const");
     return buffer;
 }
 
 template<typename T>
 T* rarray<T,1>::data()
 {
+    profileSay("T* rarray<T,1>::data()");
     return buffer;
 }
 
 template<typename T>
 const T* rarray<T,1>::data() const 
 {
+    profileSay("const T* rarray<T,1>::data() const");
     return buffer;
 }
 
@@ -814,24 +881,28 @@ const T* rarray<T,1>::data() const
 template<typename T,int R> 
 T* rarray_intermediate<T,R>::data()
 {
+    profileSay("T* rarray_intermediate<T,R>::data()");
     return rarray<T,R>::base(tnsr);
 }
 
 template<typename T,int R> 
 const T* rarray_intermediate<T,R>::data() const 
 {
+    profileSay("const T* rarray_intermediate<T,R>::data() const");
     return rarray<T,R>::base(tnsr);
 }
 
 template<typename T> 
 T* rarray_intermediate<T,1>::data()
 {
+    profileSay("T* rarray_intermediate<T,1>::data()");
     return rarray<T,1>::base(tnsr);
 }
 
 template<typename T> 
 const T* rarray_intermediate<T,1>::data() const 
 {
+    profileSay("const T* rarray_intermediate<T,1>::data() const");
     return rarray<T,1>::base(tnsr);
 }
 
@@ -842,6 +913,7 @@ template<typename T,int R> inline
 typename rarray<T,R>::ptr_t 
 rarray<T,R>::ptr() const 
 {
+    profileSay("rarray<T,R>::ptr_t rarray<T,R>::ptr() const");
     return tnsr;
 }
 
@@ -849,6 +921,7 @@ template<typename T> inline
 typename rarray<T,1>::ptr_t 
 rarray<T,1>::ptr() const 
 {
+    profileSay("rarray<T,1>::ptr_t rarray<T,1>::ptr() const");
     return tnsr;
 }
 
@@ -858,6 +931,7 @@ template<typename T,int R> inline
 typename rarray_intermediate<T,R>::ptr_t 
 rarray_intermediate<T,R>::ptr() const 
 {
+    profileSay("rarray_intermediate<T,R>::ptr_t rarray_intermediate<T,R>::ptr() const");
     return tnsr;
 }
     
@@ -865,6 +939,7 @@ template<typename T> inline
 typename rarray_intermediate<T,1>::ptr_t 
 rarray_intermediate<T,1>::ptr() const 
 {
+    profileSay("rarray_intermediate<T,1>::ptr_t rarray_intermediate<T,1>::ptr() const");
     return tnsr;
 }
 
@@ -874,6 +949,7 @@ template<typename T,int R>
 typename rarray<T,R>::cast_ptr_t 
 rarray<T,R>::cptr() const 
 {
+    profileSay("rarray<T,R>::cast_ptr_t rarray<T,R>::cptr() const");
     return const_cast<cast_ptr_t>(tnsr);
 }
 
@@ -881,6 +957,7 @@ template<typename T>
 typename rarray<T,1>::cast_ptr_t 
 rarray<T,1>::cptr() const 
 {
+    profileSay("rarray<T,1>::cast_ptr_t rarray<T,1>::cptr() const");
     return const_cast<cast_ptr_t>(tnsr);
 }
 
@@ -890,6 +967,7 @@ template<typename T,int R>
 typename rarray_intermediate<T,R>::cast_ptr_t 
 rarray_intermediate<T,R>::cptr() const 
 {
+    profileSay("rarray_intermediate<T,R>::cast_ptr_t rarray_intermediate<T,R>::cptr() const");
     return const_cast<cast_ptr_t>(tnsr);
 }
 
@@ -897,6 +975,7 @@ template<typename T>
 typename rarray_intermediate<T,1>::cast_ptr_t 
 rarray_intermediate<T,1>::cptr() const 
 {
+    profileSay("rarray_intermediate<T,1>::cast_ptr_t rarray_intermediate<T,1>::cptr() const");
     return const_cast<cast_ptr_t>(tnsr);
 }
 
@@ -906,6 +985,7 @@ template<typename T,int R>
 rarray<const T,R>&  
 rarray<T,R>::cref() const 
 {
+    profileSay("rarray<const T,R>& rarray<T,R>::cref() const");
     return (rarray<const T,R>&)(*this);
 }
 
@@ -913,6 +993,7 @@ template<typename T>
 rarray<const T,1>&  
 rarray<T,1>::cref() const 
 {
+    profileSay("rarray<const T,1>& rarray<T,1>::cref() const");
     return (rarray<const T,1>&)(*this);
 }
 
@@ -922,6 +1003,7 @@ template<typename T,int R> inline
 rarray_intermediate<const T,R>& 
 rarray_intermediate<T,R>::cref() const
 {
+    profileSay("rarray_intermediate<const T,R>& rarray_intermediate<T,R>::cref() const");
     return (rarray_intermediate<const T,R>&)(*this);
 }
 
@@ -929,36 +1011,68 @@ template<typename T> inline
 rarray_intermediate<const T,1>& 
 rarray_intermediate<T,1>::cref() const
 {
+    profileSay("rarray_intermediate<const T,1>& rarray_intermediate<T,1>::cref() const");
     return (rarray_intermediate<const T,1>&)(*this);
 }
 
 #ifndef SKIPINTERMEDIATE
 template<typename T,int R> inline 
-rarray_intermediate<T,R-1> 
-rarray<T,R>::operator[](int i) const 
+rarray_intermediate<const T,R-1> 
+rarray<T,R>::operator[](int i) const
 {
+    profileSay("rarray_intermediate<const T,R-1> rarray<T,R>::operator[](int i) const");
+    checkOrSay(i >=0 && i < n[0], "wrong index");
+    return rarray_intermediate<const T,R-1>(origin, originrefcount, n+1, tnsr[i]);
+}
+template<typename T,int R> inline 
+rarray_intermediate<T,R-1> 
+rarray<T,R>::operator[](int i)
+{
+    profileSay("rarray_intermediate<T,R-1> rarray<T,R>::operator[](int i)");
     checkOrSay(i >=0 && i < n[0], "wrong index");
     return rarray_intermediate<T,R-1>(origin, originrefcount, n+1, tnsr[i]);
 }
 #else
 template<typename T,int R> inline 
-rarray<T,R>::operator typename pchain<T,R>::ptr_t () const 
+rarray<T,R>::operator typename pchain<const T,R>::ptr_t () const 
 {
+    profileSay("rarray<T,R>::operator typename pchain<const T,R>::ptr_t () const");
+    return tnsr;
+}
+template<typename T,int R> inline 
+rarray<T,R>::operator typename pchain<T,R>::ptr_t ()
+{
+    profileSay("rarray<T,R>::operator typename pchain<T,R>::ptr_t ()");
     return tnsr;
 }
 #endif
 
 #ifndef SKIPINTERMEDIATE
 template<typename T> inline 
-T& rarray<T,1>::operator[](int i) const 
+const T& rarray<T,1>::operator[](int i) const 
 {
+    profileSay("const T& rarray<T,1>::operator[](int i) const");
+    checkOrSay(i >=0 && i < n[0], "wrong index");
+    return tnsr[i];
+}
+template<typename T> inline 
+T& rarray<T,1>::operator[](int i)
+{
+    profileSay("T& rarray<T,1>::operator[](int i)");
     checkOrSay(i >=0 && i < n[0], "wrong index");
     return tnsr[i];
 }
 #else
 template<typename T> inline 
-rarray<T,1>::operator typename pchain<T,1>::ptr_t () const 
+rarray<T,1>::operator typename pchain<const T,1>::ptr_t () const 
 {
+    profileSay("rarray<T,1>::operator pchain<const T,1>::ptr_t () const");
+    return tnsr;
+}
+template<typename T> inline 
+rarray<T,1>::operator typename pchain<T,1>::ptr_t ()
+{
+    profileSay("rarray<T,1>::operator typename pchain<T,1>::ptr_t ()");
     return tnsr;
 }
 #endif
@@ -969,6 +1083,7 @@ template<typename T,int R> inline
 rarray_intermediate<T,R-1> 
 rarray_intermediate<T,R>::operator[](int i) 
 {
+    profileSay("rarray_intermediate<T,R-1> rarray_intermediate<T,R>::operator[](int i)");
     checkOrSay(i >=0 && i < n[0], "wrong index");        
     return rarray_intermediate<T,R-1>(origin, originrefcount, n+1, tnsr[i]);
 }
@@ -977,6 +1092,7 @@ template<typename T,int R> inline
 rarray_intermediate<const T,R-1> 
 rarray_intermediate<T,R>::operator[](int i) const 
 {
+    profileSay("rarray_intermediate<const T,R-1> rarray_intermediate<T,R>::operator[](int i) const");
     checkOrSay(i >=0 && i < n[0], "wrong index");
     return rarray_intermediate<const T,R-1>(origin, n+1, tnsr[i]);
 }
@@ -984,6 +1100,7 @@ rarray_intermediate<T,R>::operator[](int i) const
 template<typename T> inline
 T& rarray_intermediate<T,1>::operator[](int i) 
 {
+    profileSay("T& rarray_intermediate<T,1>::operator[](int i)");
     checkOrSay(i >=0 && i < n[0], "wrong index");
     return tnsr[i];
 }
@@ -991,6 +1108,7 @@ T& rarray_intermediate<T,1>::operator[](int i)
 template<typename T> inline
 const T& rarray_intermediate<T,1>::operator[](int i) const 
 {
+    profileSay("const T& rarray_intermediate<T,1>::operator[](int i) const");
     checkOrSay(i >=0 && i < n[0], "wrong index");
     return tnsr[i];
 }
@@ -1000,6 +1118,7 @@ const T& rarray_intermediate<T,1>::operator[](int i) const
 template<typename T,int R>
 rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R> &a) 
 {
+    profileSay("rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R>&a)");
     if (&a != this) {
         fini();
         init(a.origin, a.originrefcount, a.buffer, a.n); 
@@ -1010,6 +1129,7 @@ rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R> &a)
 template<typename T>
 rarray<T,1>& rarray<T,1>::operator=(const rarray<T,1> &a) 
 {
+    profileSay("rarray<T,1>& rarray<T,1>::operator=(const rarray<T,1>&a)");
     if (&a != this) {
         fini();
         init(a.origin, a.originrefcount, a.buffer, a.n); 
@@ -1020,6 +1140,7 @@ rarray<T,1>& rarray<T,1>::operator=(const rarray<T,1> &a)
 template<typename T,int R>
 rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R> &a) 
 {
+    profileSay("rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R>&a)");
     if (&a != this) {
         fini();
         init(a.origin, a.originrefcount, base(a.tnsr), a.n);
@@ -1030,6 +1151,7 @@ rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R> &a)
 template<typename T>
 rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1> &a) 
 {
+    profileSay("rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1>&a)");
     if (&a != this) {
         fini();
         init(a.origin, a.originrefcount, base(a.tnsr), a.n);
@@ -1040,8 +1162,9 @@ rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1> &a)
 // rarray private method to store dimension information and compute ntot
 
 template<typename T,int R>
-void rarray<T,R>::setn(const int* dim) 
+void rarray<T,R>::setn(const int* dim)
 {
+    profileSay("void rarray<T,R>::setn(const int*dim)");
     ntot = 1;
     for (int i=0;i<R;i++) {
         n[i] = dim[i];
@@ -1050,8 +1173,9 @@ void rarray<T,R>::setn(const int* dim)
 }
 
 template<typename T>
-void rarray<T,1>::setn(const int* dim) 
+void rarray<T,1>::setn(const int* dim)
 {
+    profileSay("void rarray<T,1>::setn(const int*dim)");
     ntot = 1;
     for (int i=0;i<1;i++) {
         n[i] = dim[i];
@@ -1067,6 +1191,7 @@ void rarray<T,R>::init(T* const &  orig,
                        T*          a, 
                        const int*  dim)
 {
+    profileSay("void rarray<T,R>::init(T*const&orig,int*origrefcount,T*a,const int*dim)");
     checkOrSay(orig != nullptr, "null pointer");
     checkOrSay(   a != nullptr, "null pointer");
     checkOrSay( dim != nullptr, "null pointer");
@@ -1085,6 +1210,7 @@ void rarray<T,1>::init(T* const &  orig,
                        T*          a, 
                        const int*  dim)
 {
+    profileSay("void rarray<T,1>::init(T*const&orig,int*origrefcount,T*a,const int*dim)");
     checkOrSay(orig != nullptr, "null pointer");
     checkOrSay(   a != nullptr, "null pointer");
     checkOrSay( dim != nullptr, "null pointer");
@@ -1102,6 +1228,7 @@ void rarray<T,1>::init(T* const &  orig,
 template<typename T,int R>
 void rarray<T,R>::fini() 
 {
+    profileSay("void rarray<T,R>::fini()");
     delete_except_base(tnsr);
     if (originrefcount != norefcount) {
         (*originrefcount)--;
@@ -1115,6 +1242,7 @@ void rarray<T,R>::fini()
 template<typename T>
 void rarray<T,1>::fini() 
 {
+    profileSay("void rarray<T,1>::fini()");
     delete_except_base(tnsr);
     if (originrefcount != norefcount) {
         (*originrefcount)--;
@@ -1130,19 +1258,18 @@ void rarray<T,1>::fini()
 template<typename T,int R>
 void rarray<T,R>::delete_except_base(ptr_t t) 
 {
+    profileSay("void rarray<T,R>::delete_except_base(ptr_t t)");
     if (R>1) {
-        
         typedef typename pchain<typename unconst<T>::type,R>::cast_ptr_t 
             noconst_cast_ptr_t;
-        
         delete[] reinterpret_cast<char**>(const_cast<noconst_cast_ptr_t>(t));
-        
     }
 }
 
 template<typename T>
 void rarray<T,1>::delete_except_base(ptr_t t)
 {
+    profileSay("void rarray<T,1>::delete_except_base(ptr_t t)");
 }
 
 // rarray private method to allocate the chain of pointers, except the base
@@ -1151,6 +1278,8 @@ template<typename T,int R>
 typename rarray<T,R>::ptr_t 
 rarray<T,R>::new_except_base(T* buf, const int* n) 
 {
+    profileSay("rarray<T,R>::ptr_t rarray<T,R>::new_except_base(T* buf, const int* n)");
+
     if (R>1) {
 
         typedef typename unconst<T>::type* bufstart_t;
@@ -1192,6 +1321,7 @@ template<typename T>
 typename rarray<T,1>::ptr_t 
 rarray<T,1>::new_except_base(T* buf, const int* n) 
 {
+    profileSay("rarray<T,1>::ptr_t rarray<T,1>::new_except_base(T* buf, const int* n)");
     return reinterpret_cast<ptr_t>(buf);
 }
 
@@ -1200,19 +1330,19 @@ rarray<T,1>::new_except_base(T* buf, const int* n)
 template<typename T,int R>
 T* rarray<T,R>::base(ptr_t tnsr) 
 {
+    profileSay("T* rarray<T,R>::base(ptr_t tnsr)");
     const char* result1 = reinterpret_cast<const char*>(tnsr);
     char* result2 = const_cast<char*>(result1);
-    char** result = reinterpret_cast<char**>(result2);
-    
+    char** result = reinterpret_cast<char**>(result2);    
     for (int i=0; i < R-1; i++)
         result = reinterpret_cast<char**>(*result);
-    
     return reinterpret_cast<T*>(result);
 }
 
 template<typename T>
-T* rarray<T,1>::base(ptr_t tnsr) 
+T* rarray<T,1>::base(ptr_t tnsr)
 {
+    profileSay("T* rarray<T,1>::base(ptr_t tnsr)");
     const char*  result1 = reinterpret_cast<const char*>(tnsr);
           char*  result2 = const_cast<char*>(result1);
           char** result  = reinterpret_cast<char**>(result2);
@@ -1222,10 +1352,12 @@ T* rarray<T,1>::base(ptr_t tnsr)
 // function to get some automatic pointer conversion working with templates:
 template<typename T> T* get_pointer(T*t) 
 {
+    profileSay("T* get_pointer(T*t)");
     return t;
 }
 
-// get rid of the checkOrSay macro
+// get rid of the macros
+#undef profileSay
 #undef checkOrSay
 // 
 

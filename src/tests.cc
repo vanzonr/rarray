@@ -66,22 +66,25 @@ int testaccessors(T value1, T value2)
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
     rarray<T,3> c(b);
-    for (int i=0; i<a.extent(0); i++) {
-        for (int j=0; j<a.extent(1); j++) {
-            for (int k=0; k<a.extent(2); k++) {
+    const int l=a.extent(0);
+    const int m=a.extent(1);
+    const int n=a.extent(2);
+    for (int i=0; i<l; i++) {
+        for (int j=0; j<m; j++) {
+            for (int k=0; k<n; k++) {
                 a[i][j][k] = value1;
                 b[i][j][k] = value2;
             }
         }
     }
-    for (int i=0; i<a.extent(0); i++)
-        for (int j=0; j<a.extent(1); j++)
-            for (int k=0; k<a.extent(2); k++)
+    for (int i=0; i<l; i++)
+        for (int j=0; j<m; j++)
+            for (int k=0; k<n; k++)
                 CHECK(a[i][j][k] == value1);
     
-    for (int i=0; i<b.extent(0); i++) {
-        for (int j=0; j<b.extent(1); j++) {
-            for (int k=0; k<b.extent(2); k++) {
+    for (int i=0; i<l; i++) {
+        for (int j=0; j<m; j++) {
+            for (int k=0; k<n; k++) {
                 CHECK(b[i][j][k] == value2);   
             }
         }
@@ -103,8 +106,13 @@ int testsliceconstructor()
     //   rarray(int,int,int)
     //   T* data();
     rarray<T,3> a(7,21,13);
+#ifdef SKIPINTERMEDIATE
+    const T* tan=getconstdata(rarray<T,2>(&a[1][0][0],a.extent(1),a.extent(2)));
+    T* tac = &a[1][0][0];
+#else
     const T* tan = getconstdata(rarray<T,2>(a[1]));
     T* tac = a[1].data();
+#endif
     CHECK(tan==tac);
     return ALLCLEAR;
 }
@@ -115,11 +123,13 @@ int testcopy(T value1, T value2)
     // Tests following methods:
     //   rarray<T,3> copy() const;
     rarray<T,3> b(100,40,3);
-
+    const int l=b.extent(0);
+    const int m=b.extent(1);
+    const int n=b.extent(2);
     T value3 = value1;
-    for (int i=0; i<b.extent(0); i++) {
-        for (int j=0; j<b.extent(1); j++) {
-            for (int k=0; k<b.extent(2); k++) {
+    for (int i=0; i<l; i++) {
+        for (int j=0; j<m; j++) {
+            for (int k=0; k<n; k++) {
                 b[i][j][k] = value3;
                 value3 = value3+value2;
             }
@@ -132,9 +142,9 @@ int testcopy(T value1, T value2)
     CHECK(d.extent(0)==b.extent(0));
     CHECK(d.extent(1)==b.extent(1));
     CHECK(d.extent(2)==b.extent(2));
-    for (int i=0; i<b.extent(0); i++) {
-        for (int j=0; j<b.extent(1); j++) {
-            for (int k=0; k<b.extent(2); k++) {
+    for (int i=0; i<l; i++) {
+        for (int j=0; j<m; j++) {
+            for (int k=0; k<n; k++) {
                 CHECK(b[i][j][k]==d[i][j][k]);
             }
         }
@@ -150,10 +160,13 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
     assert(A.extent(0)==B.extent(0));
     assert(B.extent(1)==C.extent(0));
     assert(C.extent(1)==A.extent(1));
-    for (int i=0;i<A.extent(0);i++) {
-        for (int j=0;j<A.extent(1);j++) {
+    const int l=B.extent(0);
+    const int m=C.extent(1);
+    const int n=B.extent(1);
+    for (int i=0;i<l;i++) {
+        for (int j=0;j<m;j++) {
             A[i][j] = 0;
-            for (int k=0;k<B.extent(1);k++) {
+            for (int k=0;k<n;k++) {
                 A[i][j] += B[i][k]*C[k][j];
             }
         }
@@ -163,8 +176,10 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
 template<typename T>
 void print(std::ostream& o, const rarray<T,2>& m)
 {
-    for (int i=0;i<m.extent(0);i++) {
-        for (int j=0;j<m.extent(1);j++) {
+    const int r=m.extent(0);
+    const int c=m.extent(1);
+    for (int i=0;i<r;i++) {
+        for (int j=0;j<c;j++) {
             o << std::setw(15) << m[i][j] << ' ';
         }
         o << '\n';
