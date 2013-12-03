@@ -2,6 +2,7 @@
 #include <iostream>
 #include <array>
 #include <cassert>
+#include <iomanip>
 
 using std::cerr;
 char FP[2][5] = {"FAIL","PASS"};
@@ -142,6 +143,57 @@ int testcopy(T value1, T value2)
     return ALLCLEAR;
 }
 
+// matrix matrix mutiple A=B*C
+template<class T>
+void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
+{
+    assert(A.extent(0)==B.extent(0));
+    assert(B.extent(1)==C.extent(0));
+    assert(C.extent(1)==A.extent(1));
+    for (int i=0;i<A.extent(0);i++) {
+        for (int j=0;j<A.extent(1);j++) {
+            A[i][j] = 0;
+            for (int k=0;k<B.extent(1);k++) {
+                A[i][j] += B[i][k]*C[k][j];
+            }
+        }
+    }
+}
+
+template<typename T>
+void print(std::ostream& o, const rarray<T,2>& m)
+{
+    for (int i=0;i<m.extent(0);i++) {
+        for (int j=0;j<m.extent(1);j++) {
+            o << std::setw(15) << m[i][j] << ' ';
+        }
+        o << '\n';
+    }
+}
+
+template<typename T>
+int testmmm() {
+    T bdata[3*3] = { 1,  2,  3,
+                     4,  5,  6,
+                     7,  8,  9};
+    T cdata[3*3] = { 1, -1,  2,
+                     3, -1,  2,
+                    -1,  4, -1};
+    T adata[3*3] = { 4,  9,  3,
+                    13, 15, 12,
+                    22, 21, 21};
+    rarray<T,2> b(bdata,3,3);
+    rarray<T,2> c(cdata,3,3);
+    rarray<T,2> a(3,3);
+    mmm(a,b,c);
+    for (int i=0;i<3;i++) {
+        for (int j=0;j<3;j++) {
+            CHECK(a[i][j]==adata[i*3+j]);
+        }
+    }
+    return ALLCLEAR;
+}
+
 class compound 
 {
   public:
@@ -192,6 +244,9 @@ int main()
     PASSORRETURN(testcopy<double>(d1,d2));
     PASSORRETURN(testcopy<compound>(c1,c2));
     PASSORRETURN((testcopy<std::array<compound,3> >(a1,a2)));
+
+    PASSORRETURN(testmmm<int>());
+    PASSORRETURN(testmmm<double>());
 
     return ALLCLEAR;
 }
