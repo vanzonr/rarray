@@ -1,0 +1,51 @@
+CXX=g++
+CXXFLAGS=-std=c++11 -g
+CPPFLAGS=-DTRACETEST
+all: testoutputs
+
+testoutputs: \
+ output_from_test.txt  \
+ coverage_in_test.txt  \
+ coverage_in_code.txt  \
+ missing_from_test.txt \
+ summary
+
+coverage_in_code.txt: rarray.h
+	@echo "Extracting lines from array.h that generate profile messages"
+	\grep -n profileSay rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   profileSay("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n > coverage_in_code.txt
+
+coverage_in_test.txt: output_from_test.txt output_from_nitest.txt 
+	@echo "Filtering profile messages from test output"
+	grep -h PROFILE output_from_test.txt output_from_nitest.txt | sort -u | sed 's/PROFILE rarray.h@//' | tr '\t' ' ' | sort -n > coverage_in_test.txt
+
+output_from_test.txt: profiletests
+	@echo "Run tests with profile messages on"
+	profiletests 2> output_from_test.txt
+
+output_from_nitest.txt: profilenitests
+	@echo "Run tests with profile messages on"
+	profilenitests 2> output_from_nitest.txt
+
+missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
+	@echo "Determine profiling lines in array.h that did not get executed"
+	sort coverage_in_code.txt > _coverage_in_code.txt 
+	sort coverage_in_test.txt > _coverage_in_test.txt
+	comm -2 -3 _coverage_in_code.txt _coverage_in_test.txt | sort -n > missing_from_test.txt
+	rm -f _coverage_in_code.txt _coverage_in_test.txt
+
+profiletests: tests.cc rarray.h
+	@echo "Compile tests.cc and rarray.h with profile messages on"
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) tests.cc -o profiletests
+
+profilenitests: tests.cc rarray.h
+	@echo "Compile tests.cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
+	$(CXX) -DSKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) tests.cc -o profilenitests
+
+summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
+	@echo "Summary:"
+	@wc -l coverage_in_code.txt
+	@wc -l coverage_in_test.txt
+	@wc -l missing_from_test.txt
+
+clean:
+	rm -f output_from_test.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt

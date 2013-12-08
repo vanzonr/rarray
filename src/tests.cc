@@ -11,11 +11,15 @@ char FP[2][5] = {"FAIL","PASS"};
 #define CHECK(x) {if(!(x)){std::cerr<<__LINE__<<'\n';return 1;}}
 #define PASSORRETURN(x) {int e=x;cerr<<#x<<": "<<FP[e==0]<<'\n';if(e)return e;}
 
+/////////////////////////////////////////////////////////
+
 template<typename T,int R> 
 const T* getconstdata(const rarray<T,R>& a)
 {
     return a.data();
 }
+
+/////////////////////////////////////////////////////////
 
 template<typename T> 
 int testconstructors() 
@@ -56,6 +60,8 @@ int testconstructors()
     CHECK(c.data()==b.data());
     return ALLCLEAR;
 }
+
+/////////////////////////////////////////////////////////
 
 template<typename T> 
 int testconstructors7dim() 
@@ -200,6 +206,8 @@ int testconstructors7dim()
     return ALLCLEAR;
 }
 
+/////////////////////////////////////////////////////////
+
 template<typename T> 
 int testconstructors7dimbuf()
 {    
@@ -293,6 +301,8 @@ int testconstructors7dimbuf()
     return ALLCLEAR;
 }
 
+/////////////////////////////////////////////////////////
+
 template<typename T> 
 int testaccessors(T value1, T value2) 
 {
@@ -338,6 +348,8 @@ int testaccessors(T value1, T value2)
     return ALLCLEAR;
 }
 
+/////////////////////////////////////////////////////////
+
 template<typename T> 
 int testsliceconstructor() 
 {
@@ -354,12 +366,29 @@ int testsliceconstructor()
     const T* tan=getconstdata(rarray<T,2>(&a[1][0][0],a.extent(1),a.extent(2)));
     T* tac = &a[1][0][0];
 #else
+    rarray<T,2> b(a[2]);
+    rarray<T,1> c(b[2]);
+    const rarray<T,2> d(a[2]);
+    const rarray<T,1> e(b[2]);
     const T* tan = getconstdata(rarray<T,2>(a[1]));
     T* tac = a[1].data();
 #endif
     CHECK(tan==tac);
+#ifndef SKIPINTERMEDIATE
+    CHECK(a[1].extent(0)==21);
+    CHECK(a[1].extent(1)==13);
+    CHECK(a[1].extents()[1]==13);
+    CHECK(a[1][6].extent(0)==13);
+    CHECK(a[1][6].extents()[0]==13);
+    CHECK(a[1].size()==21*13);
+    CHECK(a[1][6].size()==13);
+    T* p1 = a[3][2].data();
+    T* p2 = a[3].data();
+#endif
     return ALLCLEAR;
 }
+
+/////////////////////////////////////////////////////////
 
 template<typename T> 
 int testcopy(T value1, T value2) 
@@ -397,6 +426,8 @@ int testcopy(T value1, T value2)
     return ALLCLEAR;
 }
 
+/////////////////////////////////////////////////////////
+
 template<typename T> 
 int testcopy1d(T value1, T value2) 
 {
@@ -418,6 +449,8 @@ int testcopy1d(T value1, T value2)
     return ALLCLEAR;
 }
 
+/////////////////////////////////////////////////////////
+
 // matrix matrix mutiple A=B*C
 template<class T>
 void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
@@ -438,6 +471,8 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
     }
 }
 
+/////////////////////////////////////////////////////////
+
 template<typename T>
 void print(std::ostream& o, const rarray<T,2>& m)
 {
@@ -450,6 +485,8 @@ void print(std::ostream& o, const rarray<T,2>& m)
         o << '\n';
     }
 }
+
+/////////////////////////////////////////////////////////
 
 template<typename T>
 int testmmm() {
@@ -474,6 +511,231 @@ int testmmm() {
     return ALLCLEAR;
 }
 
+/////////////////////////////////////////////////////////
+
+void print1d_1(float* a, int n, std::ostream &out) 
+{
+    for (int i=0;i<n;i++) 
+      out << a[i] << ' ';
+    out << std::endl;
+}
+
+/////////////////////////////////////////////////////////
+
+void print1d_2(const float* a, int n, std::ostream &out) 
+{
+    for (int i=0;i<n;i++) 
+      out << a[i] << ' ';
+    out << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void print1d_3(const rarray<float,1> &a, std::ostream &out) 
+{
+  for (int i=0;i<a.extent(0);i++) 
+    out << a[i] << ' ';
+  out << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void print1d_4(const rarray<const float,1>& a, std::ostream &out)
+{
+  for (int i=0;i<a.extent(0);i++) 
+    out << a[i] << ' ';
+  out << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+int test1dconversions()
+{
+    const int n=9;
+    rarray<float,1> a(n);
+    for (int i=0;i<n;i++)
+        a[i] = i+1;
+    const rarray<float,1>& c=a;
+    std::stringstream s1,s2,s3,s4,s5,s6,s7;
+    //print1d_1(c.ptr(), c.extent(0), std::cout);
+    print1d_1(c.ptr(), c.extent(0), s1);
+    CHECK(s1.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_2(c.cptr(), c.extent(0), s2);
+    CHECK(s2.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_1(a.data(), c.extent(0), s3);
+    CHECK(s3.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_2(c.data(), c.extent(0), s4);
+    CHECK(s4.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_3(c, s5);
+    CHECK(s5.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_4(a.cref(), s6);
+    CHECK(s6.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_4(c.cref(), s7);
+    CHECK(s7.str()=="1 2 3 4 5 6 7 8 9 \n");
+    return ALLCLEAR;
+}
+
+// print2d_1 takes a double-pointer matrix, whose elements and row
+// pointers could be changed. Dangerous.
+// - Not const-correct, but common in non-const (often C) libraries.  
+// - Will require a call to ptr_no_const
+void print2d_1(float**a, int n, int m, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) 
+            cout << a[i][j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// print2d_2 takes a matrix with const elements, but whose row
+// pointers could in principle be changed. Dangerous, but not
+// uncommon!
+// - Not const-correct.
+// - Requires a ptr_no_mid_const of a shapeal 2d array
+void print2d_2(const float**a, int n, int m, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) 
+            cout << a[i][j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// print2d_3 takes a matrix, which is a pointer to a set of pointers. The
+// row pointers are constant, but the elements would be changable.
+// - Not (logically) const-correct.
+// - A non-const shapeal 2d array can be passed right in.
+void print2d_3(float *const* a, int n, int m, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) 
+            cout << a[i][j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// print2d_4 takes a constant matrix, as a set of pointers to rows. Both
+// the row pointers and the elements are const, and can't be changed.
+// - Const-correct.
+// - A const shapeal 2d array can be passed right in.
+void print2d_4(const float*const*a, int n, int m, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) 
+            cout << a[i][j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// print2d_5 wants the matrix as a contiguous memory block.
+// because of const, print2d_5 cannot change the elements of a. 
+// Dangerous, and very common.
+// - Not (logically) const-correct
+// - Requires a const-cast.
+void print2d_5(float *a, int n, int m, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) 
+            cout << a[i*m+j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// print2d_6 wants the constant matrix as a contiguous memory block.
+// because of const, print2d_6 cannot change the elements of a. 
+// - Const-correct
+// - A const shapeal 2d array can be passed right in.
+void print2d_6(const float *a, int n, int m, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) 
+            cout << a[i*m+j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// print2d_7 takes the wrapper 2d class, which already contains its dimenstions
+// because of const, print2d_7 cannot change the elements of a.
+// - Const-correct.
+// - A non-const shapeal 2d array can, of course, be passed right in.
+void print2d_7(const rarray<float,2> &a, std::ostream& cout)
+{
+  for (int i=0;i<a.extent(0);i++) {
+    for (int j=0;j<a.extent(1);j++) 
+      cout << a[i][j] << ' ';
+    cout << '\n';
+  }
+  cout << '\n';
+}
+
+// print2d_8 takes the wrapper 2d class, which already contains its dimenstions
+// because of const, print2d_7 cannot change the elements of a.
+// - Const-correct.
+// - A non-const shapeal 2d array can, of course, be passed right in.
+void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
+{
+  for (int i=0;i<a.extent(0);i++) {
+    for (int j=0;j<a.extent(1);j++) 
+      cout << a[i][j] << ' ';
+    cout << '\n';
+  }
+  cout << '\n';
+}
+
+int test2dconversions()
+{
+    const int n = 9;
+    const int m = 5;
+    rarray<float,2> a(n,m);
+    for (int i=0;i<n;i++)
+      for (int j=0;j<m;j++)
+        a[i][j]=(i+1)*10+j+1;
+#ifndef SKIPINTERMEDIATE
+    rarray<float,1> a1 = a[1];
+    a1=a[1]; // not really testing runtime
+#endif
+    const rarray<float,2>& c=a; // note the const
+    std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
+ // print2d_1(c, a.extent(0), a.extent(1), s1); won't work, one needs:
+    print2d_1(c.cptr(), c.extent(0), c.extent(1), s1);
+    CHECK(s1.str()==
+          "11 12 13 14 15 \n"
+          "21 22 23 24 25 \n"
+          "31 32 33 34 35 \n" 
+          "41 42 43 44 45 \n"
+          "51 52 53 54 55 \n"
+          "61 62 63 64 65 \n"
+          "71 72 73 74 75 \n"
+          "81 82 83 84 85 \n"
+          "91 92 93 94 95 \n\n");
+ // print2d_2(c, c.extent(0), c.extent(1), s2); // won't work, one needs:
+    print2d_2(c.cref().cptr(), c.extent(0), c.extent(1), s2);
+    CHECK(s2.str()==s1.str());
+    print2d_3(c.ptr(), c.extent(0), c.extent(1), s3);
+    CHECK(s3.str()==s1.str());
+    print2d_4(c.ptr(), c.extent(0), c.extent(1), s4);
+    CHECK(s4.str()==s1.str());
+    print2d_5(a.data(), c.extent(0), c.extent(1), s5);
+    CHECK(s5.str()==s1.str());
+    print2d_6(c.data(), c.extent(0), c.extent(1), s6);
+    CHECK(s6.str()==s1.str());
+    print2d_7(c, s7);
+    CHECK(s7.str()==s1.str());
+    print2d_8(c.cref(), s8);
+    CHECK(s8.str()==s1.str());
+
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 class compound 
 {
   public:
@@ -495,12 +757,16 @@ class compound
     int y;
 };
 
+//////////////////////////////////////////////////////////////////////
+
 std::array<compound,3> operator+(const std::array<compound,3> &a,
                                  const std::array<compound,3> &b)
 {
     std::array<compound,3> result = {a[0]+b[0],a[1]+b[1],a[2]+b[2]};
     return result;
 }
+
+//////////////////////////////////////////////////////////////////////
 
 int main() 
 {
@@ -540,5 +806,11 @@ int main()
     PASSORRETURN(testmmm<int>());
     PASSORRETURN(testmmm<double>());
 
+    PASSORRETURN(test1dconversions());
+    PASSORRETURN(test2dconversions());
+
     return ALLCLEAR;
 }
+
+//////////////////////////////////////////////////////////////////////
+

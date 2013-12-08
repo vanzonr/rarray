@@ -691,7 +691,7 @@ rarray<T,1>::rarray(const rarray<T,1> &a)
 template<typename T>
 rarray<T,1>::rarray(const rarray_intermediate<T,1> &a) 
 {
-    profileSay("rarray<T,1>::rarray(const rarray_intermediate<T,1>&a)");/*!!!!*/
+    profileSay("rarray<T,1>::rarray(const rarray_intermediate<T,1>&a)");/**/
     init(a.origin, a.originrefcount, base(a.tnsr), a.n);
 }
 
@@ -738,7 +738,7 @@ int rarray<T,1>::extent(int i) const
 template<typename T,int R> inline 
 int rarray_intermediate<T,R>::extent(int i) const 
 {
-    profileSay("int rarray_intermediate<T,R>::extent(int i) const");/*!!!!*/
+    profileSay("int rarray_intermediate<T,R>::extent(int i) const");/**/
     checkOrSay(i >=0 && i < R, "wrong dimension");        
     return n[i];
 }
@@ -746,7 +746,7 @@ int rarray_intermediate<T,R>::extent(int i) const
 template<typename T> inline 
 int rarray_intermediate<T,1>::extent(int i) const 
 {
-    profileSay("int rarray_intermediate<T,1>::extent(int i) const");/*!!!!*/
+    profileSay("int rarray_intermediate<T,1>::extent(int i) const");/**/
     checkOrSay(i >=0 && i < 1, "wrong dimension");        
     return n[i];
 }
@@ -773,14 +773,14 @@ const int* rarray<T,1>::extents() const
 template<typename T,int R> 
 const int* rarray_intermediate<T,R>::extents() const 
 {
-    profileSay("const int* rarray_intermediate<T,R>::extents() const");/*!!!!*/
+    profileSay("const int* rarray_intermediate<T,R>::extents() const");/**/
     return n;
 }
 
 template<typename T> 
 const int* rarray_intermediate<T,1>::extents() const 
 {
-    profileSay("const int* rarray_intermediate<T,1>::extents() const");/*!!!!*/
+    profileSay("const int* rarray_intermediate<T,1>::extents() const");/**/
     return n;
 }
 
@@ -805,7 +805,7 @@ int rarray<T,1>::size() const
 template<typename T,int R> 
 int rarray_intermediate<T,R>::size() const 
 {
-    profileSay("int rarray_intermediate<T,R>::size() const");/*!!!!*/
+    profileSay("int rarray_intermediate<T,R>::size() const");/**/
     // multiplying the sizes in all dimensions
     int ntot = 1;       
     for (int i=0; i<R; i++)
@@ -816,7 +816,7 @@ int rarray_intermediate<T,R>::size() const
 template<typename T> 
 int rarray_intermediate<T,1>::size() const 
 { 
-    profileSay("int rarray_intermediate<T,1>::size() const");/*!!!!*/
+    profileSay("int rarray_intermediate<T,1>::size() const");/**/
     // multiplying the sizes in all dimensions
     int ntot = 1;        
     for (int i=0; i<1; i++)
@@ -873,7 +873,7 @@ const T* rarray_intermediate<T,R>::data() const
 template<typename T> 
 T* rarray_intermediate<T,1>::data()
 {
-    profileSay("T* rarray_intermediate<T,1>::data()");/*!!!!*/
+    profileSay("T* rarray_intermediate<T,1>::data()");/**/
     return rarray<T,1>::base(tnsr);
 }
 
@@ -1119,10 +1119,8 @@ template<typename T,int R>
 rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R> &a) 
 {
     profileSay("rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R>&a)");/*!!!!*/
-    if (&a != this) {
-        fini();
-        init(a.origin, a.originrefcount, base(a.tnsr), a.n);
-    }
+    fini();
+    init(a.origin, a.originrefcount, base(a.tnsr), a.n);
     return *this;
 }
 
@@ -1130,10 +1128,8 @@ template<typename T>
 rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1> &a) 
 {
     profileSay("rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1>&a)");/*!!!!*/
-    if (&a != this) {
-        fini();
-        init(a.origin, a.originrefcount, base(a.tnsr), a.n);
-    }
+    fini();
+    init(a.origin, a.originrefcount, base(a.tnsr), a.n);
     return *this;
 }
 
@@ -1320,7 +1316,7 @@ T* rarray<T,R>::base(ptr_t tnsr)
 template<typename T>
 T* rarray<T,1>::base(ptr_t tnsr)
 {
-    profileSay("T* rarray<T,1>::base(ptr_t tnsr)");/*!!!!*/
+    profileSay("T* rarray<T,1>::base(ptr_t tnsr)");/**/
     const char*  result1 = reinterpret_cast<const char*>(tnsr);
           char*  result2 = const_cast<char*>(result1);
           char** result  = reinterpret_cast<char**>(result2);
