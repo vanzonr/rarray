@@ -317,7 +317,7 @@ template<typename T,int R> class rarray_intermediate {
 
     // return T* to the internal pointer to the data:
     T* data();
-    const T* data() const;
+    // DEAD: const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
     inline ptr_t ptr() const; // as this is really just a nasty cast, keep const
@@ -330,7 +330,7 @@ template<typename T,int R> class rarray_intermediate {
 
     // element access:
     inline rarray_intermediate<T,R-1> operator[](int i); 
-    inline rarray_intermediate<const T,R-1> operator[](int i) const;
+    // DEAD: inline rarray_intermediate<const T,R-1> operator[](int i) const;
 
   protected:
 
@@ -371,7 +371,7 @@ template<typename T> class rarray_intermediate<T,1> {
 
     // return T* to the internal pointer to the data:
     T* data();
-    const T* data() const;
+    // DEAD? const T* data() const;
 
     // return T*const*.. acting similarly to this rarray when using []:
     inline ptr_t ptr() const; // as this is really just a nasty cast, keep const
@@ -384,7 +384,7 @@ template<typename T> class rarray_intermediate<T,1> {
 
     // element access:
     inline T& operator[](int i);
-    inline const T& operator[](int i) const ;
+    // DEAD: inline const T& operator[](int i) const ;
 
   protected:
 
@@ -863,12 +863,13 @@ T* rarray_intermediate<T,R>::data()
     return rarray<T,R>::base(tnsr);
 }
 
-template<typename T,int R> 
-const T* rarray_intermediate<T,R>::data() const 
-{
-    profileSay("const T* rarray_intermediate<T,R>::data() const");/*!!!!*/
-    return rarray<T,R>::base(tnsr);
-}
+// DEAD
+// template<typename T,int R> 
+// const T* rarray_intermediate<T,R>::data() const 
+// {
+//     p rofileSay("const T* rarray_intermediate<T,R>::data() const");/*!!!!*/
+//     return rarray<T,R>::base(tnsr);
+// }
 
 template<typename T> 
 T* rarray_intermediate<T,1>::data()
@@ -877,12 +878,13 @@ T* rarray_intermediate<T,1>::data()
     return rarray<T,1>::base(tnsr);
 }
 
-template<typename T> 
-const T* rarray_intermediate<T,1>::data() const 
-{
-    profileSay("const T* rarray_intermediate<T,1>::data() const");/*!!!!*/
-    return rarray<T,1>::base(tnsr);
-}
+// DEAD
+// template<typename T> 
+// const T* rarray_intermediate<T,1>::data() const 
+// {
+//     p rofileSay("const T* rarray_intermediate<T,1>::data() const");/*!!!!*/
+//     return rarray<T,1>::base(tnsr);
+// }
 
 // rarray method to return T*const*.. acting similarly to this rarray
 // when using []:
@@ -1066,14 +1068,15 @@ rarray_intermediate<T,R>::operator[](int i)
     return rarray_intermediate<T,R-1>(origin, originrefcount, n+1, tnsr[i]);
 }
 
-template<typename T,int R> inline
-rarray_intermediate<const T,R-1> 
-rarray_intermediate<T,R>::operator[](int i) const 
-{
-    profileSay("rarray_intermediate<const T,R-1> rarray_intermediate<T,R>::operator[](int i) const");/*!!!!*/
-    checkOrSay(i >=0 && i < n[0], "wrong index");
-    return rarray_intermediate<const T,R-1>(origin, n+1, tnsr[i]);
-}
+// DEAD
+// template<typename T,int R> inline
+// rarray_intermediate<const T,R-1> 
+// rarray_intermediate<T,R>::operator[](int i) const 
+// {
+//     p rofileSay("rarray_intermediate<const T,R-1> rarray_intermediate<T,R>::operator[](int i) const");/*!!!!*/
+//     checkOrSay(i >=0 && i < n[0], "wrong index");
+//     return rarray_intermediate<const T,R-1>(origin, n+1, tnsr[i]);
+// }
 
 template<typename T> inline
 T& rarray_intermediate<T,1>::operator[](int i) 
@@ -1083,13 +1086,14 @@ T& rarray_intermediate<T,1>::operator[](int i)
     return tnsr[i];
 }
 
-template<typename T> inline
-const T& rarray_intermediate<T,1>::operator[](int i) const 
-{
-    profileSay("const T& rarray_intermediate<T,1>::operator[](int i) const");/*!!!!*/
-    checkOrSay(i >=0 && i < n[0], "wrong index");
-    return tnsr[i];
-}
+// DEAD:
+// template<typename T> inline
+// const T& rarray_intermediate<T,1>::operator[](int i) const 
+// {
+//     p rofileSay("const T& rarray_intermediate<T,1>::operator[](int i) const");/*!!!!*/
+//     checkOrSay(i >=0 && i < n[0], "wrong index");
+//     return tnsr[i];
+// }
 
 // rarray method to assignment operators
 

@@ -1,17 +1,42 @@
+//
+// tests.cc
+//
+// testsuite for rarray.h
+//
 #include "rarray.h"
 #include <iostream>
 #include <array>
 #include <cassert>
 #include <iomanip>
+#include <string.h>
+#include <string>
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+using std::string;
 using std::cerr;
 char FP[2][5] = {"FAIL","PASS"};
-
+string strip(const char* s) 
+{
+    int len=strlen(s);
+    while (s[0]=='(' and s[len-1]==')') {
+        ++s;
+        len -= 2;
+    }
+    return string(s,len);
+}
 #define ALLCLEAR 0
-#define CHECK(x) {if(!(x)){std::cerr<<__LINE__<<'\n';return 1;}}
-#define PASSORRETURN(x) {int e=x;cerr<<#x<<": "<<FP[e==0]<<'\n';if(e)return e;}
+#define CHECK(x) {if(!(x)){cerr<<__LINE__<<'\n';return 1;}}
+#define PASSORRETURN(x) {int e=x;cerr<<strip(#x)<<": "<<FP[e==0]<<'\n';if(e)return e;}
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> 
 const T* getconstdata(const rarray<T,R>& a)
@@ -19,7 +44,7 @@ const T* getconstdata(const rarray<T,R>& a)
     return a.data();
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testconstructors() 
@@ -61,7 +86,8 @@ int testconstructors()
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testconstructors7dim() 
@@ -206,7 +232,8 @@ int testconstructors7dim()
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testconstructors7dimbuf()
@@ -301,7 +328,8 @@ int testconstructors7dimbuf()
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testaccessors(T value1, T value2) 
@@ -348,7 +376,8 @@ int testaccessors(T value1, T value2)
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testsliceconstructor() 
@@ -388,7 +417,8 @@ int testsliceconstructor()
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testcopy(T value1, T value2) 
@@ -426,7 +456,8 @@ int testcopy(T value1, T value2)
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T> 
 int testcopy1d(T value1, T value2) 
@@ -449,7 +480,8 @@ int testcopy1d(T value1, T value2)
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 // matrix matrix mutiple A=B*C
 template<class T>
@@ -471,7 +503,7 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
     }
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T>
 void print(std::ostream& o, const rarray<T,2>& m)
@@ -486,7 +518,7 @@ void print(std::ostream& o, const rarray<T,2>& m)
     }
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<typename T>
 int testmmm() {
@@ -511,21 +543,22 @@ int testmmm() {
     return ALLCLEAR;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void print1d_1(float* a, int n, std::ostream &out) 
 {
     for (int i=0;i<n;i++) 
-      out << a[i] << ' ';
+        out << a[i] << ' ';
     out << std::endl;
 }
 
-/////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void print1d_2(const float* a, int n, std::ostream &out) 
 {
     for (int i=0;i<n;i++) 
-      out << a[i] << ' ';
+        out << a[i] << ' ';
     out << std::endl;
 }
 
@@ -533,18 +566,18 @@ void print1d_2(const float* a, int n, std::ostream &out)
 
 void print1d_3(const rarray<float,1> &a, std::ostream &out) 
 {
-  for (int i=0;i<a.extent(0);i++) 
-    out << a[i] << ' ';
-  out << std::endl;
+    for (int i=0;i<a.extent(0);i++) 
+        out << a[i] << ' ';
+    out << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////
 
 void print1d_4(const rarray<const float,1>& a, std::ostream &out)
 {
-  for (int i=0;i<a.extent(0);i++) 
-    out << a[i] << ' ';
-  out << std::endl;
+    for (int i=0;i<a.extent(0);i++) 
+        out << a[i] << ' ';
+    out << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -574,6 +607,9 @@ int test1dconversions()
     CHECK(s7.str()=="1 2 3 4 5 6 7 8 9 \n");
     return ALLCLEAR;
 }
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 // print2d_1 takes a double-pointer matrix, whose elements and row
 // pointers could be changed. Dangerous.
@@ -667,12 +703,12 @@ void print2d_6(const float *a, int n, int m, std::ostream& cout)
 // - A non-const shapeal 2d array can, of course, be passed right in.
 void print2d_7(const rarray<float,2> &a, std::ostream& cout)
 {
-  for (int i=0;i<a.extent(0);i++) {
-    for (int j=0;j<a.extent(1);j++) 
-      cout << a[i][j] << ' ';
+    for (int i=0;i<a.extent(0);i++) {
+        for (int j=0;j<a.extent(1);j++) 
+            cout << a[i][j] << ' ';
+        cout << '\n';
+    }
     cout << '\n';
-  }
-  cout << '\n';
 }
 
 // print2d_8 takes the wrapper 2d class, which already contains its dimenstions
@@ -688,6 +724,8 @@ void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
   }
   cout << '\n';
 }
+
+//////////////////////////////////////////////////////////////////////
 
 int test2dconversions()
 {
@@ -730,10 +768,264 @@ int test2dconversions()
     CHECK(s7.str()==s1.str());
     print2d_8(c.cref(), s8);
     CHECK(s8.str()==s1.str());
-
     return ALLCLEAR;
 }
 
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// Six different signatures of a print function for a tensor: 
+
+// print_1 takes a double-pointer tensor, whose elements and row
+// pointers could be changed. Dangerous.
+// - Not const-correct, but common in non-const (often C) libraries.  
+// - Will require a call to no_const
+void print3d_1(float***a, int n, int m, int l, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) {
+            for (int k=0;k<l;k++) 
+                cout << a[i][j][k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// print3d_2 takes a tensor whose elements are constant, but whose row
+// pointers could in principle be changed. Dangerous, but common!
+// - Not const-correct.
+// - Requires a mid_const_cast of a shapeal 3d array
+void print3d_2(const float***a, int n, int m, int l, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++)  {
+            for (int k=0;k<l;k++) 
+                cout << a[i][j][k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// print3d_3 takes a tensor, which is a pointer to a set of pointers. The
+// row pointers are constant, but the elements would be changable.
+// - Not (logically) const-correct.
+// - A non-const shaped 3d array can be passed right in.
+void print3d_3(float *const*const* a, int n, int m, int l, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++)  {
+            for (int k=0;k<l;k++) 
+                cout << a[i][j][k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// print3d_4 takes a constant tensor, as a set of pointers to rows. Both
+// the row pointers and the elements are const, and can't be changed.
+// - Const-correct.
+// - A const shaped 3d array can be passed right in.
+void print3d_4(const float*const*const*a, int n, int m, int l, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) {
+            for (int k=0;k<l;k++) 
+                cout << a[i][j][k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// print3d_5 wants the tensor as a contiguous memory block.
+// because of absence of const, print3d_5 could change the elements of a. 
+// Dangerous, and very common.
+// - Not (logically) const-correct
+// - Requires a const-cast.
+void print3d_5(float *a, int n, int m, int l, std::ostream& cout)
+{    
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) {
+            for (int k=0;k<l;k++) 
+                cout << a[(i*m+j)*l+k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// print3d_6 wants the constant tensor as a contiguous memory block.
+// because of const, print3d_6 cannot change the elements of a. 
+// - Const-correct
+// - A const shapeal 3d array can be passed right in.
+void print3d_6(const float *a, int n, int m, int l, std::ostream& cout)
+{
+    for (int i=0;i<n;i++) {
+        for (int j=0;j<m;j++) {
+            for (int k=0;k<l;k++) 
+                cout << a[(i*m+j)*l+k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// print3d_7 takes the wrapper 3d class, which already contains its dimensions
+// because of const, print3d_7 cannot change the elements of a.
+// - Const-correct.
+// - A non-const shaped 3d array can, of course, be passed right in.
+void print3d_7(const rarray<float,3> &a, std::ostream& cout)
+{
+    for (int i=0;i<a.extent(0);i++) {
+        for (int j=0;j<a.extent(1);j++) {
+            for (int k=0;k<a.extent(2);k++) 
+                cout << a[i][j][k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+int test3dconversions() 
+{
+    const int n = 9;
+    const int m = 5;
+    const int l = 2;
+    rarray<float,3> a(n,m,l);
+    std::stringstream s1,s2,s3,s4,s5,s6,s7;
+
+    for (int i=0;i<n;i++)
+      for (int j=0;j<m;j++)
+        for (int k=0;k<l;k++)
+          a[i][j][k]=((i+1)*10+j+1)*10+k+1;
+    
+    const rarray<float,3>& c=a; // note the const: not enough
+
+    const rarray<float,3>* pa = &a;
+  //print3d_1(c, c.extent(0), c.extent(1), c.extent(2)); //won't work, one needs:
+    print3d_1(c.cptr(), c.extent(0), c.extent(1), c.extent(2), s1); 
+    CHECK(s1.str()==
+     "111 112       \t121 122       \t131 132       \t141 142       \t151 152       \t\n"
+     "211 212       \t221 222       \t231 232       \t241 242       \t251 252       \t\n"
+     "311 312       \t321 322       \t331 332       \t341 342       \t351 352       \t\n"
+     "411 412       \t421 422       \t431 432       \t441 442       \t451 452       \t\n"
+     "511 512       \t521 522       \t531 532       \t541 542       \t551 552       \t\n"
+     "611 612       \t621 622       \t631 632       \t641 642       \t651 652       \t\n"
+     "711 712       \t721 722       \t731 732       \t741 742       \t751 752       \t\n"
+     "811 812       \t821 822       \t831 832       \t841 842       \t851 852       \t\n"
+     "911 912       \t921 922       \t931 932       \t941 942       \t951 952       \t\n\n");
+ // print3d_2(c, c.extent(0), c.extent(1), c.extent(2)); won't work, one needs:
+    print3d_2(c.cref().cptr(), c.extent(0), c.extent(1), c.extent(2), s2); 
+    CHECK(s2.str()==s1.str());    
+    print3d_3(c.ptr(), c.extent(0), c.extent(1), c.extent(2), s3); 
+    CHECK(s3.str()==s1.str());
+    print3d_4(c.ptr(), c.extent(0), c.extent(1), c.extent(2), s4);
+    CHECK(s4.str()==s1.str());
+ // print3d_5(c, c.extent(0), c.extent(1), c.extent(2)); won't work, one needs
+    print3d_5(a.data(), c.extent(0), c.extent(1), c.extent(2), s5);
+    CHECK(s5.str()==s1.str());
+    print3d_6(c.data(), c.extent(0), c.extent(1), c.extent(2), s6);
+    CHECK(s6.str()==s1.str());
+    print3d_7(c, s7);
+    CHECK(s7.str()==s1.str());
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+int testassignment()
+{
+    const int n=10;
+    const int m=100;
+    const int p=3;
+    int l = 0;
+    rarray<float,3> a(n,m,p);
+    rarray<float,3> b(0,0,0);
+    for (int i=0;i<n;i++)
+        for (int j=0;j<m;j++)
+            for (int k=0;k<p;k++)
+                a[i][j][k] = float(l++);
+    b = a;
+    CHECK(b.data()==a.data());
+    //CHECK(b.ptr()==a.ptr()); // not yet, b has its own ptr.
+    CHECK(b.extent(0)==a.extent(0));
+    CHECK(b.extent(1)==a.extent(1));
+    CHECK(b.extent(2)==a.extent(2));
+#ifndef SKIPINTERMEDIATE
+    rarray<float,2> e(0,0);
+    e = a[2];
+    CHECK(e.data()==a[2].data());
+    CHECK(e.extent(0)==a.extent(1));
+    CHECK(e.extent(1)==a.extent(2));    
+#endif
+    rarray<float,1> c(2048), d(0);
+    d = c;
+    CHECK(d.data()==c.data());
+    CHECK(d.extent(0)==c.extent(0));
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+#ifndef SKIPINTERMEDIATE
+int testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
+{
+    const float* a1=a[1].data();
+    CHECK(a1==data1check); 
+    CHECK(a[1].ptr());
+    CHECK(a[1].cptr());
+    CHECK(a[1].cref().ptr());
+    CHECK(a[1][2].ptr());
+    CHECK(a[1][2].cptr());
+    CHECK(a[1][2].cref().ptr());
+    return ALLCLEAR;
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+
+int testconstintermediate()
+{
+#ifdef SKIPINTERMEDIATE
+    return ALLCLEAR;
+#else
+    rarray<float,3> a(7,8,9);
+    int l=0;
+    for (int i=0;i<7;i++)
+        for (int j=0;j<8;j++)
+            for (int k=0;k<9;k++)
+                a[i][j][k] = float(l++);
+    return testconstintermediatefunction(a,a[1].data());
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 class compound 
@@ -808,6 +1100,10 @@ int main()
 
     PASSORRETURN(test1dconversions());
     PASSORRETURN(test2dconversions());
+    PASSORRETURN(test3dconversions());
+
+    PASSORRETURN(testassignment());
+    PASSORRETURN(testconstintermediate()); 
 
     return ALLCLEAR;
 }
