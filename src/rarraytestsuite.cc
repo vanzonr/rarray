@@ -93,10 +93,14 @@ template<typename T>
 int testconstructors7dim() 
 {
     int dim[7] = {7,10,13,2,4,5,21};
-    rarray<T,1> a1(7);
+    rarray<T,1> z1(7);
+    rarray<T,1> a1;
+    a1 = z1;
     rarray<T,1> b1(dim);
     rarray<T,1> c1(b1);
-    rarray<T,2> a2(7,10);
+    rarray<T,2> z2(7,10);
+    rarray<T,2> a2;
+    a2 = z2;
     rarray<T,2> b2(dim);
     rarray<T,2> c2(b2);
     rarray<T,3> a3(7,10,13);
@@ -228,6 +232,10 @@ int testconstructors7dim()
     CHECK(c7.extent(4) == dim[4]);
     CHECK(c7.extent(5) == dim[5]);
     CHECK(c7.extent(6) == dim[6]);
+
+
+    a1.free(); //optional here, as a1 will go out of scope
+    b7.free();
 
     return ALLCLEAR;
 }

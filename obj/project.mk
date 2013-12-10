@@ -9,14 +9,14 @@ CXX = g++
 CCL = g++ -o 
 LDFLAGS =
 LDLIBS  = -lm
-    
-NAME = tests
- 
+
+NAME = rarraytestsuite
+
 all: $(EXECPATH)$(NAME)
 
-tests.o: tests.cc rarray.h
+rarraytestsuite.o: rarraytestsuite.cc rarray.h
 
-OBJFILES = tests.o
+OBJFILES = rarraytestsuite.o
 .PHONY: again clean
 
 clean:

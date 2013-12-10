@@ -33,13 +33,13 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 	comm -2 -3 _coverage_in_code.txt _coverage_in_test.txt | sort -n > missing_from_test.txt
 	rm -f _coverage_in_code.txt _coverage_in_test.txt
 
-profiletests: tests.cc rarray.h
-	@echo "Compile tests.cc and rarray.h with profile messages on"
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) tests.cc -o profiletests
+profiletests: rarraytestsuite.cc rarray.h
+	@echo "Compile rarraytestsuite.cc and rarray.h with profile messages on"
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) rarraytestsuite.cc -o profiletests
 
-profilenitests: tests.cc rarray.h
-	@echo "Compile tests.cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
-	$(CXX) -DSKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) tests.cc -o profilenitests
+profilenitests: rarraytestsuite.cc rarray.h
+	@echo "Compile rarraytestsuite.cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
+	$(CXX) -DSKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) rarraytestsuite.cc -o profilenitests
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@echo "Summary:"
