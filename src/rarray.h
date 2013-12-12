@@ -12,7 +12,8 @@
 // 27/11/2013: copied shape.h over as a start, renamed things, and
 //               added constructors and copy.
 // 30/11/2013: made proper const and non-const versions of methods.
-
+// for further history see "hg log".
+//
 #ifndef RARRAY_H
 #define RARRAY_H
 
