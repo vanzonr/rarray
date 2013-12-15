@@ -179,6 +179,9 @@ class rarray {
 
     // setup new rarray object:
     void init(T* const & orig, int* origrefcount, T* a, const int*  dim);
+    void init_shallow (T* const & orig, int* origrefcount, T* a, const int* dim, char** & tnsrorig, ptr_t b);  
+    void init_tnsr(T* const & orig, int* origrefcount, T* a, const int* dim);
+    void init_data(const int* dim, int antot);
 
     // cleanup routine:
     void fini();
@@ -287,6 +290,9 @@ class rarray<T,1> {
 
     // setup new rarray object:
     void init(T* const & orig, int* origrefcount, T* a, const int* dim);
+    void init_shallow (T* const & orig, int* origrefcount, T* a, const int* dim, char** & tnsrorig, ptr_t b);  
+    void init_new_tnsr(T* const & orig, int* origrefcount, T* a, const int* dim);
+    void init_new_data(const int* dim);
 
     // cleanup routine:
     void fini() ;
@@ -1318,6 +1324,59 @@ void rarray<T,1>::init(T* const &  orig,
     buffer = a;
     setn(dim);
     tnsr = new_except_base(buffer, n, tnsrorigin);
+}
+
+// new init functions (unborn)
+
+template<typename T,int R>
+void rarray<T,R>::init_shallow(T* const &  orig, 
+                               int*        origrefcount, 
+                               T*          a, 
+                               const int*  dim,
+                               char** &    tnsrorig,
+                               ptr_t       b)
+{
+    profileSay("void rarray<T,R>::init_shallow(T*const&orig,int*origrefcount,T*a,const int*dim,char**&tnsrorig,ptr_t b)");
+    checkOrSay(    orig != nullptr, "null pointer");
+    checkOrSay(       a != nullptr, "null pointer");
+    checkOrSay(     dim != nullptr, "null pointer");
+    checkOrSay(tnsrorig != nullptr, "null pointer");
+    checkOrSay(       b != nullptr, "null pointer");
+    originrefcount = origrefcount;
+    if (originrefcount != norefcount) 
+        (*originrefcount)++;
+    origin = orig;
+    buffer = a;
+    setn(dim);
+    tnsr = b;
+    tnsrorigin = tnsrorig;
+}
+
+template<typename T,int R>
+void rarray<T,R>::init_tnsr(T* const &  orig, 
+                            int*        origrefcount, 
+                            T*          a, 
+                            const int*  dim)
+{
+    profileSay("void rarray<T,R>::init_tnsr(T*const&orig,int*origrefcount,T*a,const int*dim)");
+    checkOrSay(orig != nullptr, "null pointer");
+    checkOrSay(   a != nullptr, "null pointer");
+    checkOrSay( dim != nullptr, "null pointer");
+    char** tnsrorig;
+    ptr_t tnsr = new_except_base(a, dim, tnsrorig);
+    init_shallow(orig, origrefcount, a, dim, tnsrorig, tnsr);
+}
+
+template<typename T,int R>
+void rarray<T,R>::init_data(const int* dim, int antot)
+{
+    profileSay("void rarray<T,R>::init_data(const int*dim,int antot)");
+    checkOrSay( dim != nullptr, "null pointer");
+    checkOrSay( antot >= 0, "negative number of elements");
+    T* buf = new T[antot];
+    int* bufrefcount = new int(0);
+    init_tnsr(buf, bufrefcount, get_pointer(buf), dim);
+    owned = true;
 }
 
 //  rarray private cleanup routine
