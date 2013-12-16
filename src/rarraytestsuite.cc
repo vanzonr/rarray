@@ -1111,8 +1111,8 @@ int main()
     PASSORRETURN(test2dconversions());
     PASSORRETURN(test3dconversions());
 
-    PASSORRETURN(testassignment());
     PASSORRETURN(testconstintermediate()); 
+    PASSORRETURN(testassignment());
 
     return ALLCLEAR;
 }

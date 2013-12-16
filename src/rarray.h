@@ -1133,7 +1133,6 @@ rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R> &a)
         fini();
         init_shallow(a.origin, a.originrefcount, a.buffer, a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
         owned = a.owned;
-
     }
     return *this;
 }
@@ -1368,9 +1367,13 @@ rarray<T,R>::new_except_base(T* buf, const int* n, char**& torig)
             for (int j=0; j<ntot; j++)
                 ptr[j] = palloc + j*n[i];
             
-            ptr     = reinterpret_cast<char***>(*ptr);
             ntot   *= n[i];
-            palloc += ntot;
+            if (ntot==0) {
+                break;
+            } else {
+                ptr     = reinterpret_cast<char***>(*ptr);
+                palloc += ntot;
+            }
         }
         
         for (int j=0; j<ntot; j++)
