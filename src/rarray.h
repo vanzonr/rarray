@@ -507,10 +507,11 @@ rarray<T,R>::rarray(int n0, int n1)  // for R=2
     profileSay("rarray<T,R>::rarray(int n0,int n1)"); /**/
     checkOrSay(R==2, "wrong rank in constructor");
     const int dim[] = {n0,n1};
-    T* buf = new T[n0*n1];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, n0*n1);
+    // T* buf = new T[n0*n1];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T,int R>
@@ -519,10 +520,11 @@ rarray<T,R>::rarray(int n0,int n1,int n2)  // for R=3
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2)"); /**/
     checkOrSay(R==3, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2};
-    T* buf = new T[n0*n1*n2];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, n0*n1*n2);
+    // T* buf = new T[n0*n1*n2];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T,int R>
@@ -531,10 +533,11 @@ rarray<T,R>::rarray(int n0,int n1,int n2,int n3)  // for R=4
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3)"); /**/
     checkOrSay(R==4, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3};
-    T* buf = new T[n0*n1*n2*n3];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, n0*n1*n2*n3);
+    // T* buf = new T[n0*n1*n2*n3];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T,int R>
@@ -543,10 +546,11 @@ rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4)  // for R=5
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4)"); /**/
     checkOrSay(R==5, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4};
-    T* buf = new T[n0*n1*n2*n3*n4];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, n0*n1*n2*n3*n4);
+    // T* buf = new T[n0*n1*n2*n3*n4];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T,int R>
@@ -555,10 +559,11 @@ rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4,int n5)  // for R=6
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4,int n5)"); /**/
     checkOrSay(R==6, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4,n5};
-    T* buf = new T[n0*n1*n2*n3*n4*n5];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, n0*n1*n2*n3*n4*n5);
+    // T* buf = new T[n0*n1*n2*n3*n4*n5];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T,int R>
@@ -568,10 +573,11 @@ rarray<T,R>::rarray(const int* dim)  // for any R (the only way for R>6)
     int ntot = 1;
     for (int i=0; i<R; i++)
         ntot*=dim[i];
-    T* buf = new T[ntot];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, ntot);
+    // T* buf = new T[ntot];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T>
@@ -603,6 +609,7 @@ rarray<T,R>::rarray(T* buf, int n0, int n1)  // for R=2
     profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1)"); /**/
     checkOrSay(R==2, "wrong rank in constructor");
     const int dim[] = {n0,n1};
+//? init_tnsr(buf, norefcount, get_pointer(buf), dim);
     init(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
