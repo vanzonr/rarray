@@ -1312,7 +1312,7 @@ void rarray<T,R>::fini()
             (*originrefcount)--;
             if (*originrefcount==0) {
                 delete[] tnsrorigin;
-                delete[] origin;
+                if (owned) delete[] origin;
                 delete originrefcount;
             }
         }
@@ -1330,7 +1330,7 @@ void rarray<T,1>::fini()
         if (originrefcount != norefcount) {
             (*originrefcount)--;
             if (*originrefcount==0) {
-                delete[] origin;
+                if (owned) delete[] origin;
                 delete originrefcount;
             }
         }
