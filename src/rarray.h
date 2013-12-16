@@ -536,8 +536,7 @@ template<typename T>
 rarray<T,1>::rarray(int n0)
 {
     profileSay("rarray<T,1>::rarray(int n0)");
-    const int dim[] = {n0};
-    init_data(dim, n0);
+    init_data(&n0, n0);
 }
 
 template<typename T>
