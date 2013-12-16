@@ -172,24 +172,24 @@ class rarray {
     bool  owned;  // does the container own the data/buffer
 
     // private constructor used by .copy
-    rarray(T* buf, int* bufrefcount, const int* dim);
+    //    rarray(T* buf, int* bufrefcount, const int* dim);
 
     // store dimension information and compute ntot:
     void setn(const int* dim); 
 
     // setup new rarray object:
-    void init(T* const & orig, int* origrefcount, T* a, const int*  dim);
-    void init_shallow (T* const & orig, int* origrefcount, T* a, const int* dim, char** & tnsrorig, ptr_t b);  
+    //void init(T* const & orig, int* origrefcount, T* a, const int*  dim);
+    void init_shallow (T* const & orig, int* origrefcount, T* a, const int* dim, char** tnsrorig, ptr_t b);  
     void init_tnsr(T* const & orig, int* origrefcount, T* a, const int* dim);
     void init_data(const int* dim, int antot);
 
     // cleanup routine:
     void fini();
 
-    // delete the chain of pointers, except the base:
-    static void delete_except_base(ptr_t t);
+    // // delete the chain of pointers, except the base:
+    // static void delete_except_base(ptr_t t);
 
-    // allocate the chain of pointers, except the base:
+    // // allocate the chain of pointers, except the base:
     static ptr_t new_except_base(T* buf, const int*  n, char**& torig);
 
     // find base of a chain of pointers:
@@ -283,22 +283,22 @@ class rarray<T,1> {
     bool  owned;  // does the container own the data/buffer
 
     // private constructor used by .copy
-    rarray(T* buf, int* bufrefcount, const int* dim);
+    //    rarray(T* buf, int* bufrefcount, const int* dim);
 
     // store dimension information and compute ntot:
     void setn(const int* dim); 
 
     // setup new rarray object:
-    void init(T* const & orig, int* origrefcount, T* a, const int* dim);
-    void init_shallow (T* const & orig, int* origrefcount, T* a, const int* dim, char** & tnsrorig, ptr_t b);  
-    void init_new_tnsr(T* const & orig, int* origrefcount, T* a, const int* dim);
-    void init_new_data(const int* dim);
+    //void init(T* const & orig, int* origrefcount, T* a, const int* dim);
+    void init_shallow (T* const & orig, int* origrefcount, T* a, const int* dim, char** tnsrorig, ptr_t b);  
+    void init_tnsr(T* const & orig, int* origrefcount, T* a, const int* dim);
+    void init_data(const int* dim, int ntot);
 
     // cleanup routine:
     void fini() ;
 
     // delete the chain of pointers, except the base:
-    static void delete_except_base(ptr_t t) ;
+    //    static void delete_except_base(ptr_t t) ;
 
     // allocate the chain of pointers, except the base:
     static ptr_t new_except_base(T* buf, const int* n, char**& torig);
@@ -585,20 +585,22 @@ rarray<T,1>::rarray(int n0)
 {
     profileSay("rarray<T,1>::rarray(int n0)"); /**/
     const int dim[] = {n0};
-    T* buf = new T[n0];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, n0);
+    // T* buf = new T[n0];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 template<typename T>
 rarray<T,1>::rarray(const int* dim)  // for uniformity
 {
     profileSay("rarray<T,1>::rarray(const int*)"); /**/
-    T* buf = new T[dim[0]];
-    int* bufrefcount = new int(0);
-    init(buf, bufrefcount, get_pointer(buf), dim);
-    owned = true;
+    init_data(dim, dim[0]);
+    // T* buf = new T[dim[0]];
+    // int* bufrefcount = new int(0);
+    // init(buf, bufrefcount, get_pointer(buf), dim);
+    // owned = true;
 }
 
 // from existing buffers:
@@ -609,8 +611,7 @@ rarray<T,R>::rarray(T* buf, int n0, int n1)  // for R=2
     profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1)"); /**/
     checkOrSay(R==2, "wrong rank in constructor");
     const int dim[] = {n0,n1};
-//? init_tnsr(buf, norefcount, get_pointer(buf), dim);
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -620,7 +621,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2)  // for R=3
     profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2)"); /**/
     checkOrSay(R==3, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2};
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -630,7 +631,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3)  // for R=4
     profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2,int n3)"); /**/
     checkOrSay(R==4, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3};
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -640,7 +641,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3,int n4)  // for R=5
     profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2,int n3,int n4)"); /**/
     checkOrSay(R==5, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4};
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -650,7 +651,7 @@ rarray<T,R>::rarray(T* buf,int n0,int n1,int n2,int n3,int n4,int n5)  // for R=
     profileSay("rarray<T,R>::rarray(T*buf,int n0,int n1,int n2,int n3,int n4,int n5)"); /**/
     checkOrSay(R==6, "wrong rank in constructor");
     const int dim[] = {n0,n1,n2,n3,n4,n5};
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -658,7 +659,7 @@ template<typename T,int R>
 rarray<T,R>::rarray(T* buf, const int* dim)  // for any I (the only way for R>6)
 {
     profileSay("rarray<T,R>::rarray(T*buf,const int*dim)"); /**/
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -667,7 +668,7 @@ rarray<T,1>::rarray(T* buf, int n0)
 {
     profileSay("rarray<T,1>::rarray(T*buf,int n0)"); /**/
     const int dim[] = {n0};
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -675,7 +676,7 @@ template<typename T>
 rarray<T,1>::rarray(T* buf, const int* dim)  // for any I (the only way for R>6)
 {
     profileSay("rarray<T,1>::rarray(T*buf,const int*dim)"); /**/
-    init(buf, norefcount, get_pointer(buf), dim);
+    init_tnsr(buf, norefcount, get_pointer(buf), dim);
     owned = false;
 }
 
@@ -715,19 +716,19 @@ rarray_intermediate<T,1>::rarray_intermediate(T*const&    anorigin,
 
 // private constructor used by .copy
 
-template<typename T,int R>
-rarray<T,R>::rarray(T* buf, int* bufrefcount, const int* dim)
-{
-    profileSay("rarray<T,R>::rarray(T*buf,int*bufrefcount,const int*dim)");
-    init(buf, bufrefcount, get_pointer(buf), dim);
-}
+// template<typename T,int R>
+// rarray<T,R>::rarray(T* buf, int* bufrefcount, const int* dim)
+// {
+//     p rofileSay("rarray<T,R>::rarray(T*buf,int*bufrefcount,const int*dim)");
+//     init(buf, bufrefcount, get_pointer(buf), dim);
+// }
 
-template<typename T>
-rarray<T,1>::rarray(T* buf, int* bufrefcount, const int* dim)
-{
-    profileSay("rarray<T,1>::rarray(T*buf,int*bufrefcount,const int*dim)");
-    init(buf, bufrefcount, get_pointer(buf), dim);
-}
+// template<typename T>
+// rarray<T,1>::rarray(T* buf, int* bufrefcount, const int* dim)
+// {
+//     p rofileSay("rarray<T,1>::rarray(T*buf,int*bufrefcount,const int*dim)");
+//     init(buf, bufrefcount, get_pointer(buf), dim);
+// }
 
 // rarray<T,R> destructor (rarray_intermediate has none)
 
@@ -766,28 +767,36 @@ template<typename T,int R>
 rarray<T,R>::rarray(const rarray<T,R> &a) 
 {
     profileSay("rarray<T,R>::rarray(const rarray<T,R>&a)");
-    init(a.origin, a.originrefcount, a.buffer, a.n);
+    //init(a.origin, a.originrefcount, a.buffer, a.n);
+    init_shallow(a.origin, a.originrefcount, a.buffer, a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+    owned = a.owned;
 }
 
 template<typename T,int R>
 rarray<T,R>::rarray(const rarray_intermediate<T,R> &a) 
 {
     profileSay("rarray<T,R>::rarray(const rarray_intermediate<T,R>&a)");
-    init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    //init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    init_shallow(a.origin, a.originrefcount, base(a.tnsr), a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+    owned = a.owned;
 }
 
 template<typename T>
 rarray<T,1>::rarray(const rarray<T,1> &a) 
 {
     profileSay("rarray<T,1>::rarray(const rarray<T,1>&a)"); 
-    init(a.origin, a.originrefcount, a.buffer, a.n);
+    //init(a.origin, a.originrefcount, a.buffer, a.n);
+    init_shallow(a.origin, a.originrefcount, a.buffer, a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+    owned = a.owned;
 }
 
 template<typename T>
 rarray<T,1>::rarray(const rarray_intermediate<T,1> &a) 
 {
     profileSay("rarray<T,1>::rarray(const rarray_intermediate<T,1>&a)");
-    init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    //init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    init_shallow(a.origin, a.originrefcount, base(a.tnsr), a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+    owned = a.owned;
 }
 
 // create a copy
@@ -798,10 +807,14 @@ rarray<T,R> rarray<T,R>::copy() const
     profileSay("rarray<T,R> rarray<T,R>::copy() const");
     if (origin != nullptr) { // if initialized
         //copy
-        T* buf = new T[ntot]; 
-        int* bufrefcount = new int(0);
-        std::copy(buffer, buffer+ntot, buf);
-        return rarray(buf, bufrefcount, n);
+        //T* buf = new T[ntot]; 
+        //int* bufrefcount = new int(0);
+        //std::copy(buffer, buffer+ntot, buf);
+        //return rarray(buf, bufrefcount, n);
+        //
+        rarray<T,R> result(n);
+        std::copy(buffer, buffer+ntot, result.buffer);
+        return result;
     } else {
         // else return uninitialized coy
         return rarray();
@@ -814,10 +827,13 @@ rarray<T,1> rarray<T,1>::copy() const
     profileSay("rarray<T,1> rarray<T,1>::copy() const");
     if (origin != nullptr) { // if initialized
         //copy    
-        T* buf = new T[n[0]];
-        int* bufrefcount = new int(0); 
-        std::copy(buffer, buffer+n[0], buf);
-        return rarray(buf, bufrefcount, n);
+        // T* buf = new T[n[0]];
+        // int* bufrefcount = new int(0); 
+        // std::copy(buffer, buffer+n[0], buf);
+        // return rarray(buf, bufrefcount, n);
+        rarray<T,1> result(n);
+        std::copy(buffer, buffer+ntot, result.buffer);
+        return result;
     } else {
         // else return uninitialized coy
         return rarray();
@@ -1235,7 +1251,10 @@ rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R> &a)
     profileSay("rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R>&a)");/*!!!!*/
     if (&a != this) {
         fini();
-        init(a.origin, a.originrefcount, a.buffer, a.n); 
+        //init(a.origin, a.originrefcount, a.buffer, a.n); 
+        init_shallow(a.origin, a.originrefcount, a.buffer, a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+        owned = a.owned;
+
     }
     return *this;
 }
@@ -1246,7 +1265,9 @@ rarray<T,1>& rarray<T,1>::operator=(const rarray<T,1> &a)
     profileSay("rarray<T,1>& rarray<T,1>::operator=(const rarray<T,1>&a)");/*!!!!*/
     if (&a != this) {
         fini();
-        init(a.origin, a.originrefcount, a.buffer, a.n); 
+        //init(a.origin, a.originrefcount, a.buffer, a.n); 
+        init_shallow(a.origin, a.originrefcount, a.buffer, a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+        owned = a.owned;
     }
     return *this;
 }
@@ -1256,7 +1277,9 @@ rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R> &a)
 {
     profileSay("rarray<T,R>& rarray<T,R>::operator=(const rarray_intermediate<T,R>&a)");/*!!!!*/
     fini();
-    init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    //init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    init_shallow(a.origin, a.originrefcount, base(a.tnsr), a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+    owned = a.owned;
     return *this;
 }
 
@@ -1265,7 +1288,9 @@ rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1> &a)
 {
     profileSay("rarray<T,1>& rarray<T,1>::operator=(const rarray_intermediate<T,1>&a)");/*!!!!*/
     fini();
-    init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    //init(a.origin, a.originrefcount, base(a.tnsr), a.n);
+    init_shallow(a.origin, a.originrefcount, base(a.tnsr), a.n, const_cast<char**>(a.tnsrorigin), a.tnsr);
+    owned = a.owned;
     return *this;
 }
 
@@ -1295,55 +1320,55 @@ void rarray<T,1>::setn(const int* dim)
 
 // rarray private method to setup new rarray object
 
-template<typename T,int R>
-void rarray<T,R>::init(T* const &  orig, 
-                       int*        origrefcount, 
-                       T*          a, 
-                       const int*  dim)
-{
-    profileSay("void rarray<T,R>::init(T*const&orig,int*origrefcount,T*a,const int*dim)");
-    checkOrSay(orig != nullptr, "null pointer");
-    checkOrSay(   a != nullptr, "null pointer");
-    checkOrSay( dim != nullptr, "null pointer");
-    originrefcount = origrefcount;
-    if ( originrefcount != norefcount) 
-        (*originrefcount)++;
-    origin = orig;
-    buffer = a;
-    setn(dim);
-    tnsr = new_except_base(buffer, n, tnsrorigin);
-}
+// template<typename T,int R>
+// void rarray<T,R>::init(T* const &  orig, 
+//                        int*        origrefcount, 
+//                        T*          a, 
+//                        const int*  dim)
+// {
+//     pro fileSay("void rarray<T,R>::init(T*const&orig,int*origrefcount,T*a,const int*dim)");
+//     checkOrSay(orig != nullptr, "null pointer");
+//     checkOrSay(   a != nullptr, "null pointer");
+//     checkOrSay( dim != nullptr, "null pointer");
+//     originrefcount = origrefcount;
+//     if ( originrefcount != norefcount) 
+//         (*originrefcount)++;
+//     origin = orig;
+//     buffer = a;
+//     setn(dim);
+//     tnsr = new_except_base(buffer, n, tnsrorigin);
+// }
 
-template<typename T>
-void rarray<T,1>::init(T* const &  orig, 
-                       int*        origrefcount,
-                       T*          a, 
-                       const int*  dim)
-{
-    profileSay("void rarray<T,1>::init(T*const&orig,int*origrefcount,T*a,const int*dim)");
-    checkOrSay(orig != nullptr, "null pointer");
-    checkOrSay(   a != nullptr, "null pointer");
-    checkOrSay( dim != nullptr, "null pointer");
-    originrefcount = origrefcount;
-    if (originrefcount != norefcount) 
-        (*originrefcount)++;
-    origin = orig;
-    buffer = a;
-    setn(dim);
-    tnsr = new_except_base(buffer, n, tnsrorigin);
-}
+// template<typename T>
+// void rarray<T,1>::init(T* const &  orig, 
+//                        int*        origrefcount,
+//                        T*          a, 
+//                        const int*  dim)
+// {
+//     prof ileSay("void rarray<T,1>::init(T*const&orig,int*origrefcount,T*a,const int*dim)");
+//     checkOrSay(orig != nullptr, "null pointer");
+//     checkOrSay(   a != nullptr, "null pointer");
+//     checkOrSay( dim != nullptr, "null pointer");
+//     originrefcount = origrefcount;
+//     if (originrefcount != norefcount) 
+//         (*originrefcount)++;
+//     origin = orig;
+//     buffer = a;
+//     setn(dim);
+//     tnsr = new_except_base(buffer, n, tnsrorigin);
+// }
 
-// new init functions (unborn)
+// new init functions 
 
 template<typename T,int R>
 void rarray<T,R>::init_shallow(T* const &  orig, 
                                int*        origrefcount, 
                                T*          a, 
                                const int*  dim,
-                               char** &    tnsrorig,
+                               char**      tnsrorig,
                                ptr_t       b)
 {
-    profileSay("void rarray<T,R>::init_shallow(T*const&orig,int*origrefcount,T*a,const int*dim,char**&tnsrorig,ptr_t b)");
+    profileSay("void rarray<T,R>::init_shallow(T*const&orig,int*origrefcount,T*a,const int*dim,char**tnsrorig,ptr_t b)");
     checkOrSay(    orig != nullptr, "null pointer");
     checkOrSay(       a != nullptr, "null pointer");
     checkOrSay(     dim != nullptr, "null pointer");
@@ -1386,6 +1411,57 @@ void rarray<T,R>::init_data(const int* dim, int antot)
     owned = true;
 }
 
+template<typename T>
+void rarray<T,1>::init_shallow(T* const &  orig, 
+                               int*        origrefcount, 
+                               T*          a, 
+                               const int*  dim,
+                               char**      tnsrorig,
+                               ptr_t       b)
+{
+    profileSay("void rarray<T,1>::init_shallow(T*const&orig,int*origrefcount,T*a,const int*dim,char**tnsrorig,ptr_t b)");
+    checkOrSay(    orig != nullptr, "null pointer");
+    checkOrSay(       a != nullptr, "null pointer");
+    checkOrSay(     dim != nullptr, "null pointer");
+    checkOrSay(tnsrorig != nullptr, "null pointer");
+    checkOrSay(       b != nullptr, "null pointer");
+    originrefcount = origrefcount;
+    if (originrefcount != norefcount) 
+        (*originrefcount)++;
+    origin = orig;
+    buffer = a;
+    setn(dim);
+    tnsr = b;
+    tnsrorigin = tnsrorig;
+}
+
+template<typename T>
+void rarray<T,1>::init_tnsr(T* const &  orig, 
+                            int*        origrefcount, 
+                            T*          a, 
+                            const int*  dim)
+{
+    profileSay("void rarray<T,R>::init_tnsr(T*const&orig,int*origrefcount,T*a,const int*dim)");
+    checkOrSay(orig != nullptr, "null pointer");
+    checkOrSay(   a != nullptr, "null pointer");
+    checkOrSay( dim != nullptr, "null pointer");
+    char** tnsrorig;
+    ptr_t tnsr = new_except_base(a, dim, tnsrorig);
+    init_shallow(orig, origrefcount, a, dim, tnsrorig, tnsr);
+}
+
+template<typename T>
+void rarray<T,1>::init_data(const int* dim, int antot)
+{
+    profileSay("void rarray<T,R>::init_data(const int*dim,int antot)");
+    checkOrSay( dim != nullptr, "null pointer");
+    checkOrSay( antot >= 0, "negative number of elements");
+    T* buf = new T[antot];
+    int* bufrefcount = new int(0);
+    init_tnsr(buf, bufrefcount, get_pointer(buf), dim);
+    owned = true;
+}
+
 //  rarray private cleanup routine
 
 template<typename T,int R>
@@ -1393,10 +1469,11 @@ void rarray<T,R>::fini()
 {
     profileSay("void rarray<T,R>::fini()");
     if (origin!=nullptr) {
-        delete_except_base(tnsr);
         if (originrefcount != norefcount) {
             (*originrefcount)--;
             if (*originrefcount==0) {
+                //delete_except_base(tnsr);
+                delete[] tnsrorigin;
                 delete[] origin;
                 delete originrefcount;
             }
@@ -1412,10 +1489,11 @@ void rarray<T,1>::fini()
 {
     profileSay("void rarray<T,1>::fini()");
     if (origin!=nullptr) {
-        delete_except_base(tnsr);
         if (originrefcount != norefcount) {
             (*originrefcount)--;
             if (*originrefcount==0) {
+                //delete_except_base(tnsr);
+                ////delete[] tnsrorigin;
                 delete[] origin;
                 delete originrefcount;
             }
@@ -1428,22 +1506,22 @@ void rarray<T,1>::fini()
 
 //  rarray private method to delete the chain of pointers, except the base 
 
-template<typename T,int R>
-void rarray<T,R>::delete_except_base(ptr_t t) 
-{
-    profileSay("void rarray<T,R>::delete_except_base(ptr_t t)");
-    if (R>1) {
-        typedef typename pchain<typename unconst<T>::type,R>::cast_ptr_t 
-            noconst_cast_ptr_t;
-        delete[] reinterpret_cast<char**>(const_cast<noconst_cast_ptr_t>(t));
-    }
-}
+// template<typename T,int R>
+// void rarray<T,R>::delete_except_base(ptr_t t) 
+// {
+//     profil eSay("void rarray<T,R>::delete_except_base(ptr_t t)");
+//     if (R>1) {
+//         typedef typename pchain<typename unconst<T>::type,R>::cast_ptr_t 
+//             noconst_cast_ptr_t;
+//         delete[] reinterpret_cast<char**>(const_cast<noconst_cast_ptr_t>(t));
+//     }
+// }
 
-template<typename T>
-void rarray<T,1>::delete_except_base(ptr_t t)
-{
-    profileSay("void rarray<T,1>::delete_except_base(ptr_t t)");
-}
+// template<typename T>
+// void rarray<T,1>::delete_except_base(ptr_t t)
+// {
+//     pr ofileSay("void rarray<T,1>::delete_except_base(ptr_t t)");
+// }
 
 // rarray private method to allocate the chain of pointers, except the base
 
@@ -1464,7 +1542,7 @@ rarray<T,R>::new_except_base(T* buf, const int* n, char**& torig)
         for (int i=R-1; i--; )
             nalloc = n[i]*(1+nalloc);
         
-        char**  palloc = new char*[nalloc];
+        char**  palloc = new char*[nalloc];        
         int     ntot   = 1;
         char*** ptr    = reinterpret_cast<char***>(&result);
         
@@ -1496,7 +1574,7 @@ template<typename T>
 typename rarray<T,1>::ptr_t 
 rarray<T,1>::new_except_base(T* buf, const int* n, char**& torig) 
 {
-    profileSay("rarray<T,1>::ptr_t rarray<T,1>::new_except_base(T* buf, const int* n)");
+    profileSay("rarray<T,1>::ptr_t rarray<T,1>::new_except_base(T* buf, const int*n,char**&torig)");
     torig = reinterpret_cast<char**>(buf);
     return reinterpret_cast<ptr_t>(buf);
 }
