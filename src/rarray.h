@@ -1230,7 +1230,7 @@ void rarray<T,R>::init_tnsr(T* const &  orig,
     checkOrSay(orig != nullptr, "null pointer");
     checkOrSay(   a != nullptr, "null pointer");
     checkOrSay( dim != nullptr, "null pointer");
-    if (origrefcount=norefcount)
+    if (origrefcount==norefcount)
         origrefcount=new int(0);
     char** tnsrorig;
     ptr_t tnsr = new_except_base(a, dim, tnsrorig);
@@ -1284,7 +1284,7 @@ void rarray<T,1>::init_tnsr(T* const &  orig,
     checkOrSay( dim != nullptr, "null pointer");
     char** tnsrorig;
     ptr_t tnsr = new_except_base(a, dim, tnsrorig);
-    if (origrefcount=norefcount)
+    if (origrefcount==norefcount)
         origrefcount=new int(0);
     init_shallow(orig, origrefcount, a, dim, tnsrorig, tnsr);
 }

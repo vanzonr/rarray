@@ -248,91 +248,92 @@ int testconstructors7dimbuf()
 {    
     int dim[7] = {7,10,13,2,4,5,21};
     T* buf = new T[7*10*13*2*4*5*21];
-    rarray<T,1> a1(buf, 7);
-    rarray<T,1> b1(buf, dim);
-    rarray<T,2> a2(buf, 7,10);
-    rarray<T,2> b2(buf, dim);
-    rarray<T,3> a3(buf, 7,10,13);
-    rarray<T,3> b3(buf, dim);
-    rarray<T,4> a4(buf, 7,10,13,2);
-    rarray<T,4> b4(buf, dim);
-    rarray<T,5> a5(buf, 7,10,13,2,4);
-    rarray<T,5> b5(buf, dim);
-    rarray<T,6> a6(buf, 7,10,13,2,4,5);
-    rarray<T,6> b6(buf, dim);
-    rarray<T,7> b7(buf, dim);
-
-    CHECK(a1.data());
-    CHECK(b1.data());
-    CHECK(a2.data());
-    CHECK(b2.data());
-    CHECK(a3.data());
-    CHECK(b3.data());
-    CHECK(a4.data());
-    CHECK(b4.data());
-    CHECK(a5.data());
-    CHECK(b5.data());
-    CHECK(a6.data());
-    CHECK(b6.data());
-    CHECK(b7.data());
-
-    CHECK(a1.extent(0) == dim[0]);
-    CHECK(b1.extent(0) == dim[0]);
-
-    CHECK(a2.extent(0) == dim[0]);
-    CHECK(a2.extent(1) == dim[1]);
-    CHECK(b2.extent(0) == dim[0]);
-    CHECK(b2.extent(1) == dim[1]);
-
-    CHECK(a3.extent(0) == dim[0]);
-    CHECK(a3.extent(1) == dim[1]);
-    CHECK(a3.extent(2) == dim[2]);
-    CHECK(b3.extent(0) == dim[0]);
-    CHECK(b3.extent(1) == dim[1]);
-    CHECK(b3.extent(2) == dim[2]);
-
-    CHECK(a4.extent(0) == dim[0]);
-    CHECK(a4.extent(1) == dim[1]);
-    CHECK(a4.extent(2) == dim[2]);
-    CHECK(a4.extent(3) == dim[3]);
-    CHECK(b4.extent(0) == dim[0]);
-    CHECK(b4.extent(1) == dim[1]);
-    CHECK(b4.extent(2) == dim[2]);
-    CHECK(b4.extent(3) == dim[3]);
-
-    CHECK(a5.extent(0) == dim[0]);
-    CHECK(a5.extent(1) == dim[1]);
-    CHECK(a5.extent(2) == dim[2]);
-    CHECK(a5.extent(3) == dim[3]);
-    CHECK(a5.extent(4) == dim[4]);
-    CHECK(b5.extent(0) == dim[0]);
-    CHECK(b5.extent(1) == dim[1]);
-    CHECK(b5.extent(2) == dim[2]);
-    CHECK(b5.extent(3) == dim[3]);
-    CHECK(b5.extent(4) == dim[4]);
-
-    CHECK(a6.extent(0) == dim[0]);
-    CHECK(a6.extent(1) == dim[1]);
-    CHECK(a6.extent(2) == dim[2]);
-    CHECK(a6.extent(3) == dim[3]);
-    CHECK(a6.extent(4) == dim[4]);
-    CHECK(a6.extent(5) == dim[5]);
-    CHECK(b6.extent(0) == dim[0]);
-    CHECK(b6.extent(1) == dim[1]);
-    CHECK(b6.extent(2) == dim[2]);
-    CHECK(b6.extent(3) == dim[3]);
-    CHECK(b6.extent(4) == dim[4]);
-    CHECK(b6.extent(5) == dim[5]);
-
-    CHECK(b7.extent(0) == dim[0]);
-    CHECK(b7.extent(1) == dim[1]);
-    CHECK(b7.extent(2) == dim[2]);
-    CHECK(b7.extent(3) == dim[3]);
-    CHECK(b7.extent(4) == dim[4]);
-    CHECK(b7.extent(5) == dim[5]);
-    CHECK(b7.extent(6) == dim[6]);
-
-    delete[] buf; // test has memory leak-later
+    {
+        rarray<T,1> a1(buf, 7);
+        rarray<T,1> b1(buf, dim);
+        rarray<T,2> a2(buf, 7,10);
+        rarray<T,2> b2(buf, dim);
+        rarray<T,3> a3(buf, 7,10,13);
+        rarray<T,3> b3(buf, dim);
+        rarray<T,4> a4(buf, 7,10,13,2);
+        rarray<T,4> b4(buf, dim);
+        rarray<T,5> a5(buf, 7,10,13,2,4);
+        rarray<T,5> b5(buf, dim);
+        rarray<T,6> a6(buf, 7,10,13,2,4,5);
+        rarray<T,6> b6(buf, dim);
+        rarray<T,7> b7(buf, dim);
+        
+        CHECK(a1.data());
+        CHECK(b1.data());
+        CHECK(a2.data());
+        CHECK(b2.data());
+        CHECK(a3.data());
+        CHECK(b3.data());
+        CHECK(a4.data());
+        CHECK(b4.data());
+        CHECK(a5.data());
+        CHECK(b5.data());
+        CHECK(a6.data());
+        CHECK(b6.data());
+        CHECK(b7.data());
+        
+        CHECK(a1.extent(0) == dim[0]);
+        CHECK(b1.extent(0) == dim[0]);
+        
+        CHECK(a2.extent(0) == dim[0]);
+        CHECK(a2.extent(1) == dim[1]);
+        CHECK(b2.extent(0) == dim[0]);
+        CHECK(b2.extent(1) == dim[1]);
+        
+        CHECK(a3.extent(0) == dim[0]);
+        CHECK(a3.extent(1) == dim[1]);
+        CHECK(a3.extent(2) == dim[2]);
+        CHECK(b3.extent(0) == dim[0]);
+        CHECK(b3.extent(1) == dim[1]);
+        CHECK(b3.extent(2) == dim[2]);
+        
+        CHECK(a4.extent(0) == dim[0]);
+        CHECK(a4.extent(1) == dim[1]);
+        CHECK(a4.extent(2) == dim[2]);
+        CHECK(a4.extent(3) == dim[3]);
+        CHECK(b4.extent(0) == dim[0]);
+        CHECK(b4.extent(1) == dim[1]);
+        CHECK(b4.extent(2) == dim[2]);
+        CHECK(b4.extent(3) == dim[3]);
+        
+        CHECK(a5.extent(0) == dim[0]);
+        CHECK(a5.extent(1) == dim[1]);
+        CHECK(a5.extent(2) == dim[2]);
+        CHECK(a5.extent(3) == dim[3]);
+        CHECK(a5.extent(4) == dim[4]);
+        CHECK(b5.extent(0) == dim[0]);
+        CHECK(b5.extent(1) == dim[1]);
+        CHECK(b5.extent(2) == dim[2]);
+        CHECK(b5.extent(3) == dim[3]);
+        CHECK(b5.extent(4) == dim[4]);
+        
+        CHECK(a6.extent(0) == dim[0]);
+        CHECK(a6.extent(1) == dim[1]);
+        CHECK(a6.extent(2) == dim[2]);
+        CHECK(a6.extent(3) == dim[3]);
+        CHECK(a6.extent(4) == dim[4]);
+        CHECK(a6.extent(5) == dim[5]);
+        CHECK(b6.extent(0) == dim[0]);
+        CHECK(b6.extent(1) == dim[1]);
+        CHECK(b6.extent(2) == dim[2]);
+        CHECK(b6.extent(3) == dim[3]);
+        CHECK(b6.extent(4) == dim[4]);
+        CHECK(b6.extent(5) == dim[5]);
+        
+        CHECK(b7.extent(0) == dim[0]);
+        CHECK(b7.extent(1) == dim[1]);
+        CHECK(b7.extent(2) == dim[2]);
+        CHECK(b7.extent(3) == dim[3]);
+        CHECK(b7.extent(4) == dim[4]);
+        CHECK(b7.extent(5) == dim[5]);
+        CHECK(b7.extent(6) == dim[6]);
+    }
+    delete[] buf;
     return ALLCLEAR;
 }
 
