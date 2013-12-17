@@ -1,19 +1,86 @@
 //
 // rarray.h 
 //
+// Runtime arrays
+//
 // Template classes for pointer-based, runtime dimensionalized,
-// multi-dimensional arrays
+// multi-dimensional arrays.
 //
-// More documentation in docrarray.pdf
+// There are a number of design points of the 'rarray' array
+// 
+// 1. Having dynamically allocated multidimensional array that
+//    combine the convenience of automatic c++ arrays with that of the
+//    typical textbook dynamically allocated pointer-to-pointer
+//    structure. Thus one would ideally be able to write
 //
-// (c) 2013 Ramses van Zon - SciNet/University of Toronto 
+//       double [*][*] a = new double[100][100];
+//       ...
+//       a[4][2] = ...
 //
-#ifndef RARRAY_H
-#define RARRAY_H
-
-#include <string>
-#include <sstream>
-
+//    and a 'double[*][*]' would be a variant of double** (really,
+//    double *const*, see below), which remembers its index
+//    ranges. However, this would require a modification of the
+//    language, so we work with rarray instead, it becomes:
+//
+//       rarray<double,2> a = rarray<double,2>(100,100);
+//       rarray<double,2> a = rnew<double>(100,100);
+//       ...
+//       a[4][2] = ...
+//
+//    or just
+//
+//       rarray<double,2> a(100,100);
+//       ...
+//       a[4][2] = ...
+//
+//    Essentially, rarray<TYPE,1>=TYPE[*], rarray<TYPE,2> =
+//    TYPE[*][*], rarray<TYPE,3> = TYPE[*][*][*] etc. More verbose
+//    then I'd like, but no more than needed within the constraints of
+//    the c++ language.
+//
+//    The compatibility requirement with pointer-to-pointer structures
+//    is achieve by allocating a pointer-to-pointer structure. This
+//    accounts for most of the memory overhead of using rarray.
+//
+// 2. Having rarrays know their sizes, so that can be passed to
+//    functions as a single argument. eg.
+//
+//       void printme(rarray<double,2>& a) {
+//          for (int i=0;i<a.extent(0);i++) {
+//             for (int j=0;j<a.extent(1);j++) 
+//                cout << ' ' << a.out;
+//             cout << endl;
+//          }
+//       }
+//       printme(a);
+//
+//    Note: passing an rarray by value instead of passing the
+//    reference would make a shallow, reference counted copy. There is
+//    a copy function to create a deep copy.
+//
+// 3. Enabling interplay with libraries: this is achieved by
+//    guarranteeing contiguous elements in the multi-dimensional
+//    array, and a way to get this data out:
+//
+//       double* adata = a.data();
+//
+//    Relatedly, it should be allowed to use an external bufer, e.g.
+//
+//       double* adata = new double[100*100];
+//       rarray<double,2> = rarray<double,2>(adata,100,100);
+//
+//    This is similar to a placement new, except the constructors of
+//    the data are called in the first line instead of in the
+//    definition of the rarray.
+//    
+//    The guarrantee of contiguity means strided arrays are not supported.
+//
+// 4. Optionally allowing bounds checking, triggered by defining the
+//    BOUNDSCHECK compiler constant.
+//
+// 5. Avoiding a lot of cluttered sematics around const with pointer
+//    to pointer structers.
+//
 // Precompiler notes:
 //
 // 1. Temporary intermediate expression in a multi-bracketed
@@ -37,34 +104,103 @@
 //    exception is a range check condition is not satisfied.
 //
 //    When BOUNDSCHECK is set, it will switch off SKIPINTERMEDIATE.
+//
+// More documentation in docrarray.pdf
+//
+// (c) 2013 Ramses van Zon - SciNet/University of Toronto 
+//
+
+#ifndef RARRAY_H
+#define RARRAY_H
+
+#include <string>
+#include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////
 
-// define internal types
+// Define internal types
 
-// pointer chain struct generates type T**... :
+////////  DEFINITION struct pchain<T,R>  ////////
+
+// pchain: a struct to recursively generates types T**... and
+// T*const*... as typedefs called cast_ptr_t and ptr_t inside the
+// struct pchain<T,R>.
+// 
+// More specifically:
+//
+//   The type 
+//      pchain<T,1>::ptr_t
+//   is equal to the type
+//      T*
+//   ie., the pointer type for a one dimensional c array, 
+//
+//   The type 
+//      pchain<T,2>::ptr_t
+//   is equal to the type
+//      T*const*
+//   which is the pointer type for a two-dimensional c array.
+//   The reason for the const is that the shape of this array is supposed to
+//   remain at its fixed rectangular form. 
+//
+//   The type
+//      pchain<T,3>::ptr_t 
+//   is equal to
+//      T*const*const*, 
+//   the appropriate pointer for a 3d c array, 
+//
+//   etc.
+//
+//   Because one encounters non-const correct pointer-to-pointers
+//   often (when allocating the pointer-to-pointer structure by hand,
+//   one has little choice but to use these), the same struct
+//   recursion defined pchain<T,R> as T****, i.e.,
+// 
+//      pchain<T,1>::cast_ptr_t = T* 
+//      pchain<T,2>::cast_ptr_t = T**
+//      pchain<T,3>::cast_ptr_t = T***
+//      ...
+//
+// Recursive definition of pchain<T,R> in terms of pchain<T,R-1>:
 template<typename T,int R> 
 struct pchain {
-    typedef typename pchain<T,R-1>::ptr_t const* ptr_t;    
-    typedef typename pchain<T,R-1>::cast_ptr_t*  cast_ptr_t;
+    typedef typename pchain<T,R-1>::ptr_t const* ptr_t;     // const shape
+    typedef typename pchain<T,R-1>::cast_ptr_t*  cast_ptr_t;// non-const variant
 };
-//
+// Now we end the recursion by specifically defining the R=1 case:
 template<typename T> 
 struct pchain<T,1> {
-    typedef T* ptr_t;
-    typedef T* cast_ptr_t;
+    typedef T* ptr_t; // note there is not const: a const here would
+                      // express that the elements of the
+                      // multidimensional arrays are constant, not
+                      // that its shape is constant. We do want to be
+                      // able to have multidimensional arrays of
+                      // constant shape but with modifiable elements,
+                      // so const here would not be
+                      // appropriate. Finally note that one can
+                      // express non-modifiable element using
+                      // pchain<const T,R>.
+    typedef T* cast_ptr_t; // There would never have been a const here
 };
 
-// struct to strip constness:
+////////  END DEFINITION struct pchain<T,R>  ////////
+
+
+////////  DEFINITION struct unconst<T>  ////////
+
+// Define a struct to strip constness from a type:
+// Generically, do not strip a const:
 template<typename T> 
 struct unconst { 
-    typedef T type; 
+    typedef T type; // non-stripping, intended for typed without const
 };
-//
+// Override this non-const-stripped type with a stripped one using
+// the following instantiation which applies for types with const only.
 template<typename T> 
-struct unconst<const T> { 
-    typedef T type; 
+struct unconst<const T> {  
+    typedef T type; // note that the const is gone
 };
+
+////////  END DEFINITION struct unconst<T>  ////////
 
 // forward definition of the class for intermediate bracket expressions:
 template<typename T,int R> class rarray_intermediate;
@@ -74,7 +210,17 @@ template<typename T> inline T* get_pointer(T*t);
 
 ////////////////////////////////////////////////////////////////////////////
 
-// rarray class
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+////                                                ////
+////               I N T E R F A C E                ////
+////                                                ////
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
+
+////////  DEFINITION class rarray<T,R>  ////////
 
 template<typename T,int R> 
 class rarray {
@@ -186,7 +332,7 @@ class rarray {
 
 }; // end definition rarray<T,R>
 
-// define rarray<T,1> to stop the recursion in operator[]:
+// Define rarray<T,1> to stop the recursion in operator[]:
 
 template<typename T> 
 class rarray<T,1> {
@@ -290,7 +436,11 @@ class rarray<T,1> {
 
 }; // end definition rarray<T,1>
 
+////////  END DEFINITION class rarray<T,R>  ////////
+
 //////////////////////////////////////////////////////////////////////////////
+
+////////  DEFINITION class rarray_intermediate <T,R>  ////////
 
 // rarray_intermediate class: interface like rarray without assignment. Really
 // only a reference to one, used in intermediate expressions produced
@@ -406,13 +556,17 @@ template<typename T> class rarray_intermediate<T,1> {
 
 };  // end of class template definition of rarray_intermediate<T,1>.
 
+////////  END DEFINITION class rarray_intermediate <T,R>  ////////
+
+
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 ////                                                ////
-////                 IMPLEMENTATION                 ////
+////          I M P L E M E N T A T I O N           ////
 ////                                                ////
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
+
 
 #ifdef TRACETEST
   
