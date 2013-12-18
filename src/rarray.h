@@ -1548,7 +1548,7 @@ typename rarray<T,1>::ptr_t
 rarray<T,1>::new_except_base(T* buf, const int* n, char**& torig) 
 {
     profileSay("rarray<T,1>::ptr_t rarray<T,1>::new_except_base(T* buf, const int*n,char**&torig)");
-    torig = reinterpret_cast<char**>(buf);
+    torig = reinterpret_cast<char**>(const_cast<typename unconst<T>::type*>(buf));
     return reinterpret_cast<ptr_t>(buf);
 }
 
