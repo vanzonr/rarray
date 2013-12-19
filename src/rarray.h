@@ -203,6 +203,15 @@ struct Unconst<const T> {
 
 ////////  END DEFINITION struct Unconst<T>  ////////
 
+template<int R>
+int rarray_mul(const int* dim)
+{
+    int volume = 1;
+    for (int i=0;i<R;i++) 
+        volume *= dim[i];
+    return volume;
+}
+
 // forward definition of the class for intermediate bracket expressions:
 
 template<typename T,int R> class rarray_intermediate;
@@ -317,7 +326,8 @@ class rarray {
     int*      rcount_;        // reference count for the array
     bool      manage_;        // does the container own the data buffer?
     int       extent_[R];     // array of number of elements in each dimension
-    int       volume_;        // total number of data buffer elements
+    //int       volume_;        // total number of data buffer elements
+    int volume_() const { return rarray_mul<R>(extent_); }
     //T*        buffer_;        // start of current contiguous data buffer
     T* buffer_() const { return base(parray_); }
 
@@ -428,7 +438,8 @@ class rarray<T,1> {
     int*      rcount_;        // reference count for the original buffer
     bool      manage_;        // does the container own the data buffer?
     int       extent_[1];     // array of number of elements in each dimension
-    int       volume_;        // total number of buffer elements
+    //int       volume_;        // total number of buffer elements
+    int volume_() const { return extent_[0]; }
     //T*        buffer_;        // start of current contiguous buffer
     T* buffer_() const { return base(parray_); }
 
@@ -927,7 +938,7 @@ rarray<T,R> rarray<T,R>::copy() const
     if (origin_ != nullptr) { 
         // if initialized
         rarray<T,R> result(extent_);
-        std::copy(buffer_(), buffer_()+volume_, result.buffer_());
+        std::copy(buffer_(), buffer_()+volume_(), result.buffer_());
         return result;
     } else {
         // else return uninitialized coy
@@ -942,7 +953,7 @@ rarray<T,1> rarray<T,1>::copy() const
     if (origin_ != nullptr) { // if initialized
         //copy    
         rarray<T,1> result(extent_);
-        std::copy(buffer_(), buffer_()+volume_, result.buffer_());
+        std::copy(buffer_(), buffer_()+volume_(), result.buffer_());
         return result;
     } else {
         // else return uninitialized coy
@@ -1029,7 +1040,7 @@ int rarray<T,R>::size() const
 { 
     profileSay("int rarray<T,R>::size() const");
     checkOrSay(origin_!=nullptr, "attempt at using uninitialized rarray");
-    return volume_;
+    return volume_();
 }
 
 template<typename T>
@@ -1037,7 +1048,7 @@ int rarray<T,1>::size() const
 { 
     profileSay("int rarray<T,1>::size() const");
     checkOrSay(origin_!=nullptr, "attempt at using uninitialized rarray");
-    return volume_;
+    return volume_();
 }
 
 // ...for rarray_intermediate
@@ -1370,10 +1381,10 @@ template<typename T,int R>
 void rarray<T,R>::setn(const int* dim)
 {
     profileSay("void rarray<T,R>::setn(const int*dim)");
-    volume_ = 1;
+    //volume_ = 1;
     for (int i=0;i<R;i++) {
         extent_[i] = dim[i];
-        volume_ *= dim[i];
+        //volume_ *= dim[i];
     }   
 }
 
@@ -1381,10 +1392,10 @@ template<typename T>
 void rarray<T,1>::setn(const int* dim)
 {
     profileSay("void rarray<T,1>::setn(const int*dim)");
-    volume_ = 1;
+    //volume_ = 1;
     for (int i=0;i<1;i++) {
         extent_[i] = dim[i];
-        volume_   *= dim[i];
+        //volume_   *= dim[i];
     }   
 }
 
@@ -1541,24 +1552,24 @@ rarray<T,R>::new_except_base(T* buffer, const int* dim, char**& parrayorigin)
             nalloc = dim[i]*(1+nalloc);
         
         char**  palloc = new char*[nalloc];        
-        int     volume_   = 1;
+        int     volume = 1;
         char*** ptr    = reinterpret_cast<char***>(&result);
         
         for (int i=0; i<R-1; i++) {
             
-            for (int j=0; j<volume_; j++)
+            for (int j=0; j<volume; j++)
                 ptr[j] = palloc + j*dim[i];
             
-            volume_   *= dim[i];
-            if (volume_==0) {
+            volume *= dim[i];
+            if (volume==0) {
                 break;
             } else {
                 ptr     = reinterpret_cast<char***>(*ptr);
-                palloc += volume_;
+                palloc += volume;
             }
         }
         
-        for (int j=0; j<volume_; j++)
+        for (int j=0; j<volume; j++)
             ptr[j] = reinterpret_cast<char**>(bufstart + j*dim[R-1]);
         
         parrayorigin = result;
