@@ -17,6 +17,10 @@
 #include "blitz/array.h"
 #endif
 
+#ifndef NOARMADILLO
+#include <armadillo>
+#endif
+
 const int repeat = 3;
 //const int n = 13376; // requires ~2GB of storage
 //const int n = 9458; // requires ~1GB of storage
@@ -43,10 +47,8 @@ extern void pass(float*,float*,int&); // calling this function between
 double case_rarray(int repeat)
 {
     double d = 0.0;
-    float* adata = new float[n*n*n*n];
-    float* bdata = new float[n*n*n*n];
-    float* cdata = new float[n*n*n*n];
-    rarray<float,4> a(adata,n,n,n,n), b(bdata,n,n,n,n), c(cdata,n,n,n,n);
+    rarray<float,4> a(n,n,n,n), b(n,n,n,n), c(n,n,n,n);
+    //float[****] a[n][n][n][n], b[n][n][n][n], c[n][n][n][n];
     while (repeat--) {
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
@@ -69,9 +71,6 @@ double case_rarray(int repeat)
                         d += c[i][j][k][l];
         pass(&c[0][0][0][0],(float*)&d,repeat);
     }
-    delete[] adata;
-    delete[] bdata;
-    delete[] cdata;
     return d;
 }
 

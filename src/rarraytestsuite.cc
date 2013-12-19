@@ -1035,6 +1035,24 @@ int testconstintermediate()
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+void fill_1d_rarray(rarray<float,1> a, float value)
+{
+    for (int i=0; i < a.size(); i++)
+        a[i] = value;
+}
+
+int testintermediateconversion()
+{
+    rarray<float,2> a(10,10);
+    a[2][7]=14;
+    fill_1d_rarray(a[2], 13);
+    CHECK(a[2][7]==13);
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 class compound 
@@ -1113,6 +1131,7 @@ int main()
 
     PASSORRETURN(testconstintermediate()); 
     PASSORRETURN(testassignment());
+    PASSORRETURN(testintermediateconversion());
 
     return ALLCLEAR;
 }
