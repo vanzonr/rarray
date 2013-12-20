@@ -328,7 +328,7 @@ class rarray {
     void fini();
 
     // allocate the chain of pointers, except the base:
-    static parray_t new_except_base(T* buffer, const int* dim, char**& parrayorigin);
+    static parray_t new_except_base(T* buffer, const int* dim);
 
     // find base of a chain of pointers:
     static T* base(parray_t parray);
@@ -429,9 +429,7 @@ class rarray<T,1> {
     void setn(const int* dim); 
 
     // setup new rarray object:
-    // void init_shallow (T*const& origin, int* rcount, T* buffer, const int* dim, char** parrayorigin, parray_t parray, bool original);  
     void init_shallow (int* rcount, const int* dim, parray_t parray, bool original);  
-    // void init_parray(T*const& origin, T* buffer, const int* dim);
     void init_parray(T* buffer, const int* dim);
     void init_data(const int* dim, int dimtot);
 
@@ -439,7 +437,7 @@ class rarray<T,1> {
     void fini() ;
 
     // allocate the chain of pointers, except the base:
-    static parray_t new_except_base(T* buffer, const int* dim, char**& parrayorigin);
+    static parray_t new_except_base(T* buffer, const int* dim);
 
     // find base of a chain of pointers:
     static T* base(parray_t parray) ;
@@ -663,7 +661,7 @@ rarray<T,R>::rarray(int n0, int n1) //for R=2
 {
     profileSay("rarray<T,R>::rarray(int n0,int n1)");
     checkOrSay(R==2, "wrong rank in constructor");
-    checkOrSay(n0==0||n1==0, "zero extents in constructor not allowed");
+    checkOrSay(n0!=0&&n1!=0, "zero extents in constructor not allowed");
     const int dim[] = {n0,n1};
     init_data(dim, n0*n1);
 }
@@ -673,7 +671,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2) //for R=3
 {
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2)");
     checkOrSay(R==3, "wrong rank in constructor");
-    checkOrSay(n0==0||n1==0||n2==0, "zero extents in constructor not allowed");
+    checkOrSay(n0!=0&&n1!=0&&n2!=0, "zero extents in constructor not allowed");
     const int dim[] = {n0,n1,n2};
     init_data(dim, n0*n1*n2);
 }
@@ -683,7 +681,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2, int n3) //for R=4
 {
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3)");
     checkOrSay(R==4, "wrong rank in constructor");
-    checkOrSay(n0==0||n1==0||n2==0||n3==0, "zero extents in constructor not allowed");
+    checkOrSay(n0!=0&&n1!=0&&n2!=0&&n3!=0, "zero extents in constructor not allowed");
     const int dim[] = {n0,n1,n2,n3};
     init_data(dim, n0*n1*n2*n3);
 }
@@ -693,7 +691,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4) //for R=5
 {
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4)");
     checkOrSay(R==5, "wrong rank in constructor");
-    checkOrSay(n0==0||n1==0||n2==0||n3==0||n4==0, "zero extents in constructor not allowed");
+    checkOrSay(n0!=0&&n1!=0&&n2!=0&&n3!=0&&n4!=0, "zero extents in constructor not allowed");
     const int dim[] = {n0,n1,n2,n3,n4};
     init_data(dim, n0*n1*n2*n3*n4);
 }
@@ -703,7 +701,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5) //for R=6
 {
     profileSay("rarray<T,R>::rarray(int n0,int n1,int n2,int n3,int n4,int n5)");
     checkOrSay(R==6, "wrong rank in constructor");
-    checkOrSay(n0==0||n1==0||n2==0||n3==0||n4==0||n5==0, "zero extents in constructor not allowed");
+    checkOrSay(n0!=0&&n1!=0&&n2!=0&&n3!=0&&n4!=0&&n5!=0, "zero extents in constructor not allowed");
     const int dim[] = {n0,n1,n2,n3,n4,n5};
     init_data(dim, n0*n1*n2*n3*n4*n5);
 }
@@ -715,7 +713,7 @@ rarray<T,R>::rarray(const int* dim) //for any R (the only way for R>6)
     int dimtot = 1;
     for (int i=0; i<R; i++)
         dimtot*=dim[i];
-    checkOrSay(dimtot==0,"zero extents in constructor not allowed");
+    checkOrSay(dimtot!=0,"zero extents in constructor not allowed");
     init_data(dim, dimtot);
 }
 
@@ -1015,7 +1013,7 @@ template<typename T,int R>
 int rarray<T,R>::size() const 
 { 
     profileSay("int rarray<T,R>::size() const");
-    checkOrSay(parrray_!=nullptr, "attempt at using uninitialized rarray");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     // multiplying the sizes in all dimensions
     int dimtot = 1;        
     for (int i=0; i<R; i++)
@@ -1239,7 +1237,7 @@ rarray_intermediate<T,R-1>
 rarray<T,R>::operator[](int i)
 {
     profileSay("rarray_intermediate<T,R-1> rarray<T,R>::operator[](int i)");
-    checkOrSay(parray__!=nullptr, "attempt at using uninitialized rarray");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     checkOrSay(i >=0 and i < extent_[0], "wrong index");
     return rarray_intermediate<T,R-1>(rcount_, extent_+1, parray_[i], manage_);
 }
@@ -1395,7 +1393,7 @@ void rarray<T,R>::init_shallow(int*        rcount,
                                parray_t    parray,
                                bool        original)
 {
-    profileSay("void rarray<T,R>::init_shallow(T*const&origin,int*rcount,T*buffer,const int*dim,char**parrayorig,parray_t b)");
+    profileSay("void rarray<T,R>::init_shallow(int*rcount,const int*dim,parray_t b)");
     checkOrSay(          dim != nullptr, "null pointer");
     checkOrSay(       parray != nullptr, "null pointer");
     checkOrSay( base(parray) != nullptr, "null pointer");
@@ -1412,11 +1410,9 @@ void rarray<T,R>::init_parray(T*          buffer,
                               const int*  dim)
 {
     profileSay("void rarray<T,R>::init_parray(T*const&orig,int*origrcount_,T*a,const int*dim)");
-    checkOrSay(origin != nullptr, "null pointer");
     checkOrSay(buffer != nullptr, "null pointer");
     checkOrSay(   dim != nullptr, "null pointer");
-    char** parrayorigin;
-    parray_t parray = new_except_base(buffer, dim, parrayorigin);
+    parray_t parray = new_except_base(buffer, dim);
     extent_ = new int[R];
     init_shallow(new int(0), dim, parray, true);
 }
@@ -1438,7 +1434,7 @@ void rarray<T,1>::init_shallow(int*        rcount,
                                parray_t    parray,
                                bool        original)
 {
-    profileSay("void rarray<T,1>::init_shallow(T*const&origin,int*rcount_,T*buffer,const int*dim,char**parrayorigin,parray_t parray)");
+    profileSay("void rarray<T,1>::init_shallow(int*rcount_,const int*dim,parray_t parray)");
     checkOrSay(         dim != nullptr, "null pointer");
     checkOrSay(      parray != nullptr, "null pointer");
     checkOrSay(base(parray) != nullptr, "null pointer");
@@ -1451,15 +1447,13 @@ void rarray<T,1>::init_shallow(int*        rcount,
 }
 
 template<typename T>
-void rarray<T,1>::init_parray(T*          buffer, 
-                              const int*  dim)
+void rarray<T,1>::init_parray(T* buffer, const int* dim)
 {
-    profileSay("void rarray<T,1>::init_parray(T*const&origin,T*buffer,const int*dim)");
+    profileSay("void rarray<T,1>::init_parray(T*buffer,const int*dim)");
     checkOrSay(buffer != nullptr, "null pointer");
     checkOrSay(   dim != nullptr, "null pointer");
     extent_ = new int[1];
-    char** parrayorigin;
-    parray_t parray = new_except_base(buffer, dim, parrayorigin);
+    parray_t parray = new_except_base(buffer, dim);
     init_shallow(new int(0), dim, parray, true);
 }
 
@@ -1518,9 +1512,9 @@ void rarray<T,1>::fini()
 
 template<typename T,int R>
 typename rarray<T,R>::parray_t 
-rarray<T,R>::new_except_base(T* buffer, const int* dim, char**& parrayorigin) 
+rarray<T,R>::new_except_base(T* buffer, const int* dim) 
 {
-    profileSay("rarray<T,R>::parray_t rarray<T,R>::new_except_base(T* buffer,const int*dim,char**&parrayorigin)");
+    profileSay("parray_t rarray<T,R>::new_except_base(T*buffer,const int*dim)");
 
     if (R>1) {
 
@@ -1554,12 +1548,10 @@ rarray<T,R>::new_except_base(T* buffer, const int* dim, char**& parrayorigin)
         for (int j=0; j<volume; j++)
             ptr[j] = reinterpret_cast<char**>(bufstart + j*dim[R-1]);
         
-        parrayorigin = result;
         return reinterpret_cast<parray_t>(result);
         
     } else {
         
-        parrayorigin = reinterpret_cast<char**>(buffer);
         return reinterpret_cast<parray_t>(buffer);
         
     }
@@ -1567,10 +1559,9 @@ rarray<T,R>::new_except_base(T* buffer, const int* dim, char**& parrayorigin)
 
 template<typename T>
 typename rarray<T,1>::parray_t 
-rarray<T,1>::new_except_base(T* buffer, const int* dim, char**& parrayorigin) 
+rarray<T,1>::new_except_base(T* buffer, const int* dim) 
 {
-    profileSay("rarray<T,1>::parray_t rarray<T,1>::new_except_base(T* buffer, const int*dim,char**&parrayorigin)");
-    parrayorigin = reinterpret_cast<char**>(const_cast<typename Unconst<T>::type*>(buffer));
+    profileSay("parray_t rarray<T,1>::new_except_base(T*buffer,const int*dim)");
     return reinterpret_cast<parray_t>(buffer);
 }
 
