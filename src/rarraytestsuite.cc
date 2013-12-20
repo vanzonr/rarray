@@ -61,7 +61,7 @@ int testconstructors()
     int dim[3] = {7,21,13};
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
-    rarray<T,3> c(b);
+       rarray<T,3> c(b);
     const int* asize = a.extents();
     CHECK(a.data());
     CHECK(a.size()==7*21*13);
@@ -973,7 +973,7 @@ int testassignment()
     const int p=3;
     int l = 0;
     rarray<float,3> a(n,m,p);
-    rarray<float,3> b(0,0,0);
+    rarray<float,3> b;
     for (int i=0;i<n;i++)
         for (int j=0;j<m;j++)
             for (int k=0;k<p;k++)
@@ -985,13 +985,14 @@ int testassignment()
     CHECK(b.extent(1)==a.extent(1));
     CHECK(b.extent(2)==a.extent(2));
 #ifndef SKIPINTERMEDIATE
-    rarray<float,2> e(0,0);
+    rarray<float,2> e;
     e = a[2];
     CHECK(e.data()==a[2].data());
     CHECK(e.extent(0)==a.extent(1));
     CHECK(e.extent(1)==a.extent(2));    
 #endif
-    rarray<float,1> c(2048), d(0);
+    rarray<float,1> c(2048);
+    rarray<float,1> d;
     d = c;
     CHECK(d.data()==c.data());
     CHECK(d.extent(0)==c.extent(0));
@@ -1046,8 +1047,10 @@ int testintermediateconversion()
 {
     rarray<float,2> a(10,10);
     a[2][7]=14;
+#ifndef SKIPINTERMEDIATE
     fill_1d_rarray(a[2], 13);
     CHECK(a[2][7]==13);
+#endif
     return ALLCLEAR;
 }
 
