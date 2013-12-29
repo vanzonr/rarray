@@ -21,6 +21,10 @@
 #include <armadillo>
 #endif
 
+#ifndef NOEIGEN3
+#include <eigen3/Eigen/Dense>
+#endif
+
 const int repeat = 3;
 //const int n = 13376; // requires ~2GB of storage
 //const int n = 9458; // requires ~1GB of storage
@@ -226,6 +230,45 @@ double case_vector(int repeat)
     return d;
 }
 
+double case_eigen(int repeat) 
+{
+    using namespace Eigen;
+    double d = 0.0;
+    Matrix<Matrix<float,Dynamic,Dynamic>,Dynamic,Dynamic> a(n,n);
+    Matrix<Matrix<float,Dynamic,Dynamic>,Dynamic,Dynamic> b(n,n);
+    Matrix<Matrix<float,Dynamic,Dynamic>,Dynamic,Dynamic> c(n,n);
+    
+    for (int i=0;i<n;i++) 
+        for (int j=0;j<n;j++) {
+            a(i,j).resize(n,n);
+            b(i,j).resize(n,n);
+            c(i,j).resize(n,n);
+        }
+    while (repeat--) {
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) {
+                        a(i,j)(k,l) = l+i+repeat;
+                        b(i,j)(k,l) = k+j+repeat/2;
+                    }
+        pass(&(a(0,0)(0,0)),&(b(0,0)(0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        c(i,j)(k,l) = a(i,j)(k,l)+b(i,j)(k,l);
+        pass(&(c(0,0)(0,0)),&(c(0,0)(0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        d += c(i,j)(k,l);
+        pass(&(c(0,0)(0,0)),(float*)&d,repeat);
+    }
+    return d;
+}
+
 double case_blitz_1(int repeat) 
 {
 #ifndef NOBLITZ
@@ -340,6 +383,11 @@ int main(int argc,char**argv)
         printf("blitz2: ");
         fflush(stdout);
         answer = case_blitz_2(repeat);
+        break;
+    case 9: 
+        printf("eigen: ");
+        fflush(stdout);
+        answer = case_eigen(repeat);
         break;
     }
 

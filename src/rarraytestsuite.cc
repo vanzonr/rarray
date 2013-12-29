@@ -237,6 +237,9 @@ int testconstructors7dim()
     a1.free(); //optional here, as a1 will go out of scope
     b7.free();
 
+    CHECK(a1.isfree());
+    CHECK(b7.isfree());
+    CHECK(c7.isfree() == false);
     return ALLCLEAR;
 }
 
