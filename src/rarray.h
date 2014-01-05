@@ -313,9 +313,6 @@ class rarray {
     // get start of current contiguous buffer
     T* get_buffer() const;
 
-    // copy dimension information:
-    void setn(const int* extent); 
-
     // setup new rarray object:
     void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount);
     void init_shallow(parray_t parray, const int* extent);
@@ -429,9 +426,6 @@ class rarray<T,1> {
     int*      rcount_;      // reference count for the array if not a subarray
 
     T* get_buffer() const;
-
-    // copy dimension information:
-    void setn(const int* extent); 
 
     // setup new rarray object:
     void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount);
@@ -1408,26 +1402,6 @@ T* rarray<T,1>::get_buffer() const
     return base(parray_); 
 }
 
-// rarray private method to store extent information
-
-template<typename T,int R>
-void rarray<T,R>::setn(const int* extent)
-{
-    profileSay("void rarray<T,R>::setn(const int*)");
-    if (extent_ != extent) 
-        for (int i=0;i<R;i++)
-            extent_[i] = extent[i];
-}
-
-template<typename T>
-void rarray<T,1>::setn(const int* extent)
-{
-    profileSay("void rarray<T,1>::setn(const int*)");
-    if (extent_ != extent) 
-        for (int i=0;i<1;i++)
-            extent_[i] = extent[i];
-}
-
 // init functions 
 
 template<typename T,int R>
@@ -1442,8 +1416,9 @@ void rarray<T,R>::init_shallow(parray_t    parray,
     checkOrSay(base(parray) != nullptr, "null pointer");
     rcount_ = rcount;
     parray_ = parray;
-    setn(extent);
     entire_ = entire;
+    for (int i=0;i<R;i++)
+        extent_[i] = extent[i];
     if (entire_)
         (*rcount_)++;
 }
@@ -1456,9 +1431,10 @@ void rarray<T,R>::init_shallow(parray_t parray, const int* extent)
     checkOrSay(      parray != nullptr, "null pointer");
     checkOrSay(base(parray) != nullptr, "null pointer");
     parray_ = parray;
-    setn(extent);
     rcount_ = nullptr;
     entire_ = false;
+    for (int i=0;i<R;i++)
+        extent_[i] = extent[i];
 }
 
 template<typename T,int R>
@@ -1495,8 +1471,9 @@ void rarray<T,1>::init_shallow(parray_t    parray,
     checkOrSay(base(parray) != nullptr, "null pointer");
     rcount_ = rcount;
     parray_ = parray;
-    setn(extent);
     entire_ = entire;
+    for (int i=0;i<1;i++)
+        extent_[i] = extent[i];
     if (entire_ and rcount != nullptr)
         (*rcount_)++;
 }
@@ -1509,9 +1486,10 @@ void rarray<T,1>::init_shallow(parray_t parray, const int* extent)
     checkOrSay(      parray != nullptr, "null pointer");
     checkOrSay(base(parray) != nullptr, "null pointer");
     parray_ = parray;
-    setn(extent);
     rcount_ = nullptr;
     entire_ = false;
+    for (int i=0;i<1;i++)
+        extent_[i] = extent[i];
 }
 
 template<typename T>
