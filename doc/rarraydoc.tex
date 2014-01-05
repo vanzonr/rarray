@@ -32,7 +32,30 @@ of Toronto, Toronto, Ontario, Canada\vspace{-8pt}}
 
 \section{Introduction}
 
-Multi-dimensional arrays are arrays with more that one index.  
+While C and thus C++ has some support for multidimensional arrays whose sizes are known at compile time, the support for arrays with sizes that are known only at runtime, is limited. For one-dimensional  arrays,  C++ has a reasonable allocation construction in the operators \texttt{new} and \texttt{delete}. An example of the standard way to allocate a one-dimensional array is the following piece of code:
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+\begin{verbatim}
+float* a;
+int n = 1000;
+a = new float[n];
+a[40] = 2.4;
+delete[] a;
+\end{verbatim}%
+\vspace{-12pt}\end{framed}\vspace{-5pt}%
+It is important to note that this code also works if \texttt{n} was not known yet, e.g., if it was passed as a function argument or read in as input. 
+
+In the above code snippet, the new/delete construct assigns the address of the array to a pointer. This pointer does not remember its size, so this is not really an 'array'.  The standard C++ library does provide a one-dimensional array that remembers it size in the form of the \texttt{std::vector}, e.g.
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+\begin{verbatim}
+std::vector a;
+int n = 1000;
+a.reserve(n);
+a[40] = 2.4;
+a.clear();
+\end{verbatim}%
+\vspace{-12pt}\end{framed}\vspace{-5pt}%
+
+Multi-dimensional runtime-allocated arrays are not supported by \cxx.
 The textbook \cxx\ solution for multidimensional arrays that are
 dynamically allocated during runtime, is as follows:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
@@ -52,19 +75,21 @@ track of array dimensions.
 %However, with \cxx{} offering the language constructs to create new types, 
 At first, there seems to be no shortage of libraries to fill this
 lack of \cxx\ support for dynamic multi-dimensional arrays, such as
-%\begin{itemize}\itemsep 0pt \parskip 0pt
-%\item 
+\begin{itemize}\itemsep 0pt \parskip 0pt
+\item 
 Blitz++;
-%\item 
+\item 
 The Boost Multidimensional Array Library (\texttt{boost::multiarray}); 
 and
-%\item 
+\item Eigen
+\item Armadillo
+\item 
 Nested \texttt{vector}s from the Standard Template Library.
-%\end{itemize}
+\end{itemize}
 These typically do have some runtime overhead compared to the above
 textbook solution. In contrast, the purpose of the rarray
 library is to be a minimal interface for runtime multidimensional arrays with
-minimal runtime overhead compared to the textbook solution.
+\emph{minimal to no performance overhead} compared to the textbook solution.
 
 \noindent{\bf Example:\vspace{-7pt}}
 \begin{framed}\vspace{-14pt}%
@@ -72,8 +97,7 @@ minimal runtime overhead compared to the textbook solution.
   #include "rarray.h"
   int main() 
   {
-     int dim0=256, dim1=256, dim2=256;
-     rarray<float,3> a(dim0,dim1,dim2);
+     rarray<float,3> a(256, 256, 256);
      a[1][2][3] = 105;
   }
 \end{verbatim}%
@@ -83,11 +107,11 @@ minimal runtime overhead compared to the textbook solution.
 \noindent{\bf Features of rarray:\vspace{-3pt}}
 \begin{itemize}\itemsep0pt\parskip2pt
 \item Can use any data type T and any rank R.
-\item Can separates content from shape, by providing views on existing
-  contiguous arrays.
-\item Does shallow, reference counted copies by default, but has a
-  copy method for deep copies.
-\item Elements are accessible using repeated square brackets.
+\item Provides views on existing contiguous arrays.
+\item Does shallow, reference counted copies by default, but also has a
+  deep {\tt copy} method.
+\item Elements are accessible using repeated square brackets, like c/c++ arrays.
+\item Can be emptied with the {\tt free} method.
 \item Checks index bounds if the preprocessor
   constant {\tt BOUNDSCHECK} is defined. 
 \item Provides a method to get the number of elements in each
@@ -119,6 +143,7 @@ Effectively, the interface part of a rarray object is defined as follows:%
     rarray<T,R>(const rarray<T,R> &a);     // shallow copy constructor   
     rarray<T,R>& operator=(const rarray<T,R> &a); // shallow assignment
     ~rarray<T,R>();                        // destructor 
+    free();                                /  release memory
     rarray<T,R>       copy() const;        // deep copy
     const int*        extents()     const; // size of all dimensions 
     int               extent(int i) const; // size of dimension i
@@ -131,11 +156,8 @@ Effectively, the interface part of a rarray object is defined as follows:%
   };
 \end{verbatim}
 \end{framed}
-%All methods except assignment are \texttt{const}, even if they return a
-%non-const pointer.  This reflects that the \texttt{rarray} are
-%responsible only for the rarray, not the content. THIS IS NOT RIGHT ANYMORE!
 
-\section{Using the {\tt rarray} arrays}
+\section{Using the {\tt rarray}s}
 
 \subsection{Defining a multidimensional rarray}
 
@@ -158,20 +180,22 @@ declared as follows:
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
-or, using an external buffer, as
+or, using an external, already allocated buffer, as
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
   float* data=new float[256*256*256];  
   rarray<float,3> s(data,256,256,256);
-  arr[1][2][3] = 105;
+  s[1][2][3] = 105;
   // do whatever you need with s
   delete[] data;
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
-Without the \texttt{delete[]} statement, there would be a memory leak. This reflects that rarray is not responsible
+Without the \texttt{delete[]} statement, there would be a memory leak. This reflects that rarray is in this case not responsible
 for the content. The data pointer can also be retrieved using
 \texttt{s.data()}. 
+
+Even in the former case (\texttt{rarray<float,3> s(256,256,256)}), one can release the memory of this array by calling \texttt{s.free()} before the rarray goes out of scope.
 
 \subsection{Accessing the elements}
 
@@ -200,7 +224,7 @@ The more-or-less equivalent automatic array version
 \vspace{-14pt}\end{framed}
 \noindent
 is a little simpler, but automatic arrays are allocated on the stack,
-which is typically limited, and cannot be passed to functions that do
+which is typically of limited size. Another drawback is that this array cannot be passed to functions that do
 not hard-code exactly matching dimensions (except for the last
 dimensions, which is why one-dimensional arrays work well enough).
 
@@ -243,7 +267,7 @@ the \texttt{{\tt\#include "rarray.h"}} in the source.
 %\\
 %Regardless of \texttt{{\tt BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
 
-\pagebreak[4]
+%\pagebreak[4]
 \subsection{Methods of {\tt rarray}}
 
 %\subsubsection{Get size in each dimension: \tt extent}

@@ -27,8 +27,8 @@
 
 const int repeat = 3;
 //const int n = 13376; // requires ~2GB of storage
-//const int n = 9458; // requires ~1GB of storage
-const int n = 96; // requires little
+const int n = 140; // requires ~1GB of storage
+//const int n = 96; // requires little
 
 double case_exact(int repeat)
 {
@@ -37,7 +37,7 @@ double case_exact(int repeat)
         check += (repeat/2)*(3*repeat/2-2);       
     else
         check += (repeat-1)*(3*repeat-1)/4;    
-    return n*n*n*n*check+(double)n*n*n*n*(n-1)*repeat;
+    return double(n)*double(n)*double(n)*double(n)*check+double(n)*double(n)*double(n)*double(n)*double(n-1)*repeat;
 }
 
 extern void pass(float*,float*,int&); // calling this function between
@@ -110,9 +110,9 @@ double case_auto(int repeat)
 double case_dyn(int repeat)
 {
     double d = 0.0;
-    float* adata = new float[n*n*n*n];
-    float* bdata = new float[n*n*n*n];
-    float* cdata = new float[n*n*n*n];
+    float* adata = new float[(long long int)(n)*n*n*n];
+    float* bdata = new float[(long long int)(n)*n*n*n];
+    float* cdata = new float[(long long int)(n)*n*n*n];
     rarray<float,4> ararray(adata,n,n,n,n),brarray(bdata,n,n,n,n),crarray(cdata,n,n,n,n);
     float*const*const*const* a=ararray.ptr();
     float*const*const*const* b=brarray.ptr();
@@ -337,9 +337,11 @@ double case_blitz_2(int repeat)
 
 int main(int argc,char**argv) 
 {
-    Stopwatch s = START;
     double answer;
     int thiscase = (argc==1)?1:atoi(argv[1]);
+    double check = case_exact(repeat);
+
+    Stopwatch s = START;
 
     switch (thiscase) {
     case 0: 
@@ -391,7 +393,6 @@ int main(int argc,char**argv)
         break;
     }
 
-    double check = case_exact(repeat);
     double eps = 1e-6;
 
     if (fabs(1-answer/check)<eps)

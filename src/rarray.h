@@ -11,38 +11,22 @@
 // 1. Having dynamically allocated multidimensional array that
 //    combine the convenience of automatic c++ arrays with that of the
 //    typical textbook dynamically allocated pointer-to-pointer
-//    structure. Thus one would ideally be able to write
-//
-//       double [*][*] a = new double[100][100];
-//       ...
-//       a[4][2] = ...
-//
-//    and a 'double[*][*]' would be a variant of double** (really,
-//    double *const*, see below), which remembers its index
-//    ranges. However, this would require a modification of the
-//    language, so we work with rarray instead, it becomes:
-//
-//       rarray<double,2> a = rarray<double,2>(100,100);
-//       rarray<double,2> a = rnew<double>(100,100);
-//       ...
-//       a[4][2] = ...
-//
-//    or just
+//    structure. With rarrar, one can write
 //
 //       rarray<double,2> a(100,100);
 //       ...
 //       a[4][2] = ...
 //
-//    Essentially, rarray<TYPE,1>=TYPE[*], rarray<TYPE,2> =
-//    TYPE[*][*], rarray<TYPE,3> = TYPE[*][*][*] etc. More verbose
-//    then I'd like, but no more than needed within the constraints of
-//    the c++ language.
+//    A bit more verbose then I'd like, but no more than needed within
+//    the constraints of the C++ language.
 //
 //    The compatibility requirement with pointer-to-pointer structures
 //    is achieve by allocating a pointer-to-pointer structure. This
 //    accounts for most of the memory overhead of using rarray.
 //
-// 2. Having rarrays know their sizes, so that can be passed to
+// 2. To be as fast as pointer-to-pointer structures.
+//
+// 3. Having rarrays know their sizes, so that can be passed to
 //    functions as a single argument. eg.
 //
 //       void printme(rarray<double,2>& a) {
@@ -55,10 +39,12 @@
 //       printme(a);
 //
 //    Note: passing an rarray by value instead of passing the
-//    reference would make a shallow, reference counted copy. There is
-//    a copy function to create a deep copy.
+//    reference would make a shallow, reference counted copy. This can
+//    be preferable if the array is to be used in a reshaped way
+//    inside the function. For deep-copies, there is a copy member
+//    function.
 //
-// 3. Enabling interplay with libraries: this is achieved by
+// 4. Enabling interplay with libraries: this is achieved by
 //    guarranteeing contiguous elements in the multi-dimensional
 //    array, and a way to get this data out:
 //
@@ -75,10 +61,10 @@
 //    
 //    The guarrantee of contiguity means strided arrays are not supported.
 //
-// 4. Optionally allowing bounds checking, triggered by defining the
+// 5. Optionally allowing bounds checking, triggered by defining the
 //    BOUNDSCHECK compiler constant.
 //
-// 5. Avoiding a lot of cluttered sematics around const with pointer
+// 6. Avoiding a lot of cluttered sematics around const with pointer
 //    to pointer structers.
 //
 // Precompiler notes:
@@ -107,7 +93,7 @@
 //
 // More documentation in docrarray.pdf
 //
-// (c) 2013 Ramses van Zon - SciNet/University of Toronto 
+// (c) 2013-2014 Ramses van Zon - SciNet/University of Toronto 
 //
 
 #ifndef RARRAY_H
@@ -264,6 +250,14 @@ class rarray {
     // check if uninitialized
     bool isfree() const;
 
+    // reshape without changing the underlying buffer
+    void reshape(int n0, int n1);  // for R=2
+    void reshape(int n0, int n1, int n2);  // for R=3
+    void reshape(int n0, int n1, int n2, int n3);  // for R=4
+    void reshape(int n0, int n1, int n2, int n3, int n4);  // for R=5
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5);  // for R=6
+    void reshape(const int* extent);  // for any R (the only way for R>6)
+
     // return a copy:
     rarray<T,R> copy() const;
 
@@ -377,6 +371,10 @@ class rarray<T,1> {
 
     // check if uninitialized
     bool isfree() const;
+
+    // to change shape (only shrinking is defined)
+    void reshape(int n0);
+    void reshape(const int* extent); //for conformity
 
     // return a copy:
     rarray<T,1> copy() const;
