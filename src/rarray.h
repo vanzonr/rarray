@@ -1503,6 +1503,81 @@ void rarray<T,1>::init_parray(T* buffer, const int* extent)
     init_shallow(parray, extent, true, new int(0));
 }
 
+template<typename T,int R>
+void rarray<T,R>::reshape(const int* extent)
+{
+    profileSay("void rarray<T,R>::reshape(const int* extent)");
+    checkOrSay(parray_ != nullptr and entire_ and *rcount_==1, "reshape not allowed on referenced object");
+    int tot1 = 1, tot2 = 1;
+    for (int i=0;i<R;i++) {
+        tot1 *= extent_[i];
+        tot2 *= extent[i];
+    }
+    checkOrSay(tot2 <= tot1, "reshaping beyond underlying memory buffer");
+    if (parray_ != nullptr and entire_ and *rcount_==1) {
+        T* buffer = get_buffer();
+        delete[] parray_;
+        for (int i=0;i<R;i++)
+            extent_[i] = extent[i];
+        parray_ = new_except_base(buffer, extent_);
+    }
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1) //for R=2
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int)");
+    checkOrSay(R==2, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0, "zero extents not allowed");
+    const int extent[] = {n0,n1};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2) //for R=3
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int)");
+    checkOrSay(R==3, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0, "zero extents not allowed");
+    const int extent[] = {n0,n1,n2};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3) //for R=4
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int)");
+    checkOrSay(R==4, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero extents not allowed");
+    const int extent[] = {n0,n1,n2,n3};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4) //for R=5
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int)");
+    checkOrSay(R==5, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero extents not allowed");
+    const int extent[] = {n0,n1,n2,n3,n4};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5) //for R=6
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int)");
+    checkOrSay(R==6, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero extents not allowed");
+    const int extent[] = {n0,n1,n2,n3,n4,n5};
+    reshape(extent);
+}
+
 template<typename T>
 void rarray<T,1>::init_data(const int* extent, int extenttot)
 {
@@ -1512,6 +1587,27 @@ void rarray<T,1>::init_data(const int* extent, int extenttot)
     T* buffer = new T[extenttot];
     init_parray(buffer, extent);
     ismine_ = true;
+}
+
+template<typename T>
+void rarray<T,1>::reshape(const int* extent)
+{
+    profileSay("void rarray<T,1>::reshape(const int* extent)");
+    checkOrSay(parray_ != nullptr and entire_ and *rcount_==1, "reshape not allowed on referenced object");
+    checkOrSay(*extent <= *extent_, "reshaping beyond underlying memory buffer");
+    if (parray_ != nullptr and entire_ and *rcount_==1) 
+        *extent_ = *extent;
+}
+
+template<typename T>
+void rarray<T,1>::reshape(int n0) //for R=1
+{
+    // constructor
+    profileSay("void rarray<T,1>::reshape(int)");
+    checkOrSay(R==1, "wrong rank in reshape");
+    checkOrSay(n0!=0, "zero extents not allowed");
+    const int extent[] = {n0};
+    reshape(extent);
 }
 
 //  rarray private cleanup routine
