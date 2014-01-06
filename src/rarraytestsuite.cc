@@ -1057,6 +1057,43 @@ int testintermediateconversion()
     return ALLCLEAR;
 }
 
+int testreshape() 
+{
+    int dim[7] = {7,10,13,2,4,5,21};
+    int dimr[7] = {21,5,4,2,13,10,7};
+    rarray<float,1> a(dim), a2(a);
+    rarray<float,2> b(dim), b2(b);
+    rarray<float,3> c(dim), c2(c);
+    rarray<float,4> d(dim);
+    rarray<float,5> e(dim);
+    rarray<float,6> f(dim);
+    rarray<float,7> g(dim);
+    a[3] = 4;
+    a.reshape(4);
+    CHECK(a.extent(0)==4);
+    CHECK(a[3]==4);
+    CHECK(a2.extent(0)==7);
+    a2.reshape(4);
+    CHECK(a2.extent(0)==4);
+    CHECK(a2[3]==4);
+    b[5][6] = 5;
+    b.reshape(10,7);
+    CHECK(b.extent(0)==10);
+    CHECK(b.extent(1)==7);
+    CHECK(b[8][0] == 5);
+    c[4][8][3] = 6;
+    c.reshape(10,7,13);
+    CHECK(c.extent(0)==10);
+    CHECK(c.extent(1)==7);
+    CHECK(c.extent(2)==13);
+    CHECK(c[6][6][3] == 6);
+    d.reshape(2,2,2,2);
+    e.reshape(13,7,10,2,4);
+    f.reshape(21,5,6,1,13,10);
+    g.reshape(dimr);
+    return ALLCLEAR;
+}
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1138,6 +1175,8 @@ int main()
     PASSORRETURN(testconstintermediate()); 
     PASSORRETURN(testassignment());
     PASSORRETURN(testintermediateconversion());
+
+    PASSORRETURN(testreshape());
 
     return ALLCLEAR;
 }

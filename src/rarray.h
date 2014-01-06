@@ -206,7 +206,7 @@ template<typename T,int R> class rarray_intermediate;
 
 
 //------  DEFINITION class rarray<T,R>  ------//
-
+#include <iostream>
 template<typename T,int R> 
 class rarray {
 
@@ -269,6 +269,22 @@ class rarray {
 
     // retrieve the total number of elements:
     int size() const;
+
+     // void dumpme() const {
+     //     T* buffer = get_buffer();
+     //     for (int i =0; i < size(); i++ )
+     //         std::cout << i << ':' << buffer[i] << ' ';
+     //     std::cout << std::endl;
+     // }
+
+     // void dumpmewhere(const T& value) const {
+     //     T* buffer = get_buffer();
+     //     for (int i =0; i < size(); i++ ) {
+     //         if (value == buffer[i])
+     //             std::cout << i << ':' << buffer[i] << ' ';
+     //     }
+     //     std::cout << std::endl;
+     // }
 
     // return T* to the internal data:
     T* data();
@@ -1514,12 +1530,19 @@ void rarray<T,R>::reshape(const int* extent)
         tot2 *= extent[i];
     }
     checkOrSay(tot2 <= tot1, "reshaping beyond underlying memory buffer");
-    if (parray_ != nullptr and entire_ and *rcount_==1) {
-        T* buffer = get_buffer();
-        delete[] parray_;
-        for (int i=0;i<R;i++)
-            extent_[i] = extent[i];
-        parray_ = new_except_base(buffer, extent_);
+    if (parray_ != nullptr and entire_) { // cannot reshape subarrays
+        if (*rcount_==1) {
+            T* buffer = get_buffer();
+            delete[] parray_;
+            for (int i=0;i<R;i++)
+                extent_[i] = extent[i];
+            parray_ = new_except_base(buffer, extent_);
+        } else { // if this has other references to it, create a new view
+            T* buffer = get_buffer();    // get buffer address
+            ismine_ = false;             // protect buffer from being deleted
+            fini();                      // deallocate everything else
+            init_parray(buffer, extent); // reallocate pointer arrays
+        }
     }
 }
 
@@ -1595,8 +1618,16 @@ void rarray<T,1>::reshape(const int* extent)
     profileSay("void rarray<T,1>::reshape(const int* extent)");
     checkOrSay(parray_ != nullptr and entire_ and *rcount_==1, "reshape not allowed on referenced object");
     checkOrSay(*extent <= *extent_, "reshaping beyond underlying memory buffer");
-    if (parray_ != nullptr and entire_ and *rcount_==1) 
-        *extent_ = *extent;
+    if (parray_ != nullptr and entire_) {
+        if (*rcount_==1) {
+            *extent_ = *extent;
+        } else {
+            T* buffer = get_buffer();    // get buffer address        
+            ismine_ = false;             // protect buffer from being deleted
+            fini();                      // deallocate everything else
+            init_parray(buffer, extent); // reallocate pointer arrays
+        }
+    }
 }
 
 template<typename T>
