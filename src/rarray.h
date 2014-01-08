@@ -270,22 +270,6 @@ class rarray {
     // retrieve the total number of elements:
     int size() const;
 
-     // void dumpme() const {
-     //     T* buffer = get_buffer();
-     //     for (int i =0; i < size(); i++ )
-     //         std::cout << i << ':' << buffer[i] << ' ';
-     //     std::cout << std::endl;
-     // }
-
-     // void dumpmewhere(const T& value) const {
-     //     T* buffer = get_buffer();
-     //     for (int i =0; i < size(); i++ ) {
-     //         if (value == buffer[i])
-     //             std::cout << i << ':' << buffer[i] << ' ';
-     //     }
-     //     std::cout << std::endl;
-     // }
-
     // return T* to the internal data:
     T* data();
     const T* data() const;

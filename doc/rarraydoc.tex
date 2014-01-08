@@ -112,6 +112,7 @@ library is to be a minimal interface for runtime multidimensional arrays with
   deep {\tt copy} method.
 \item Elements are accessible using repeated square brackets, like c/c++ arrays.
 \item Can be emptied with the {\tt free} method.
+\item Can be reshaped.
 \item Checks index bounds if the preprocessor
   constant {\tt BOUNDSCHECK} is defined. 
 \item Provides a method to get the number of elements in each
@@ -143,15 +144,17 @@ Effectively, the interface part of a rarray object is defined as follows:%
     rarray<T,R>(const rarray<T,R> &a);     // shallow copy constructor   
     rarray<T,R>& operator=(const rarray<T,R> &a); // shallow assignment
     ~rarray<T,R>();                        // destructor 
-    free();                                /  release memory
-    rarray<T,R>       copy() const;        // deep copy
+    void              reshape(int dim0, ...);// change shape (not data)
+    void              reshape(const int*dim);// change shape (not data)
+    void              free();              // release memory
+    rarray<T,R>       copy()        const; // deep copy
     const int*        extents()     const; // size of all dimensions 
     int               extent(int i) const; // size of dimension i
     int               size()        const; // total number of elements
     T*                data()        const; // start of internal buffer
     T*const*...       ptr();        const; // convert to a T*const*... 
     T**...            cptr()        const; // convers to a T**... 
-    rarray<const T,R>& cref()       const; // convert to const elements
+    rarray<const T,R>&cref()        const; // convert to const elements
     rarray<T,R-1> operator[](int i) const; // element access
   };
 \end{verbatim}
@@ -212,6 +215,42 @@ For example:\vspace{-9pt}
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}\noindent
 The \texttt{extent(int)} method used here returns the size of each dimension (counting from 0).
+
+\subsection{Reshaping the rarray}
+
+If you want to use the data in an rarray but access it in a different 'shape', there are two possible approaches:
+\begin{enumerate}
+  \item You create a new rarray with the desired dimensions, but which uses the data from the first rarray. E.g.
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+void dump(const rarray<double,3>& r) {
+   rarray<double,1> rflat(r.data(), r.size());
+   for (int i=0;i<r.size();i++)
+       std::cout << rflat[i] << ' ';
+  std::cout << std::endl;
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+\item You reshape the existing rarray with the desired dimensions. E.g.
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+void dump(rarray<double,3>& r) {
+   r.reshape(r.data(), 1, 1, r.size());
+   for (int i=0;i<r.size();i++)
+       std::cout << rflat[0][0][i] << ' ';
+  std::cout << std::endl;
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+This only works if the new and old shape have the same ranks, as the rank of the rarray is part of its type. 
+
+The example intentionally also has side effects, as the original rarray that was passed to the dump function now has a different shape.  To fix this, one could pass the \texttt{rarray r} by value. This creates a shallow, reference counted copy, so passing it in is not that expensive. Upon reshaping, \texttt{r} gets unlinked from the reference counting, and the effect is the same as if we has created a new \texttt{rarray} with \texttt{r.data()} as the buffer.
+\end{enumerate}
+In both cases, the total size of the new shape should be less or equal to that of the old shape. 
 
 \subsection{Comparison with standard alternatives}
 
@@ -308,6 +347,23 @@ This method returns a pointer to a \texttt{T**...}. This conversion breaks const
 \noindent\textbf{Definition:} \texttt{rarray{\tt<}const T,R{\tt>}\& cref() const;}
 
 This method creates reference to this with const elements.
+
+\noindent\textbf{Definition:} \texttt{void reshape(int dim0, ...);}
+
+This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size. If the rarray was a reference to another rarray, the reference will get destroyed even though the data is still shared.
+
+\noindent\textbf{Definition:} \texttt{void reshape(const int*dim);}
+
+Same as the previous reshape method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank seven or higher.
+
+\noindent\textbf{Definition:} \texttt{void free();}
+
+This method release memory the memory associated with the rarray. If the rarray was created by providing a pre-existing buffer for the data, the memory of this buffer does not released.
+
+\noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>}\& copy() const;}
+
+This method creates deep copy of the rarray.
+
 
 \section{Conversion of rarray objects and function arguments}
 
@@ -505,44 +561,22 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
 \end{verbatim}\vspace{-14pt}
 \end{framed}
 
-\section{Q\&A}
+\section{Overheads}
 
-
-\subsection{How can I reshape a rarray object?}
-If the rank of the rarray object \texttt{s} stays the same, you can do
-\vspace{-5pt}\begin{framed}\vspace{-14pt}%
-\begin{verbatim}
-  s = rarray<T,R>(s.data(), newdim0, newdim1, ...);
-\end{verbatim}\vspace{-14pt}
-\end{framed}
-If the rank changes, on the other hand, you need to define a new rarray
-\vspace{-5pt}\begin{framed}\vspace{-14pt}%
-\begin{verbatim}
-  rarray<T,RNEW> s2(s.data(), newdim0, newdim1, ...);
-\end{verbatim}\vspace{-14pt}
-\end{framed}
-
-\subsection{Can I `slice' a rarray object?}
-
-Generally no, except that you can specify the first \texttt{r} indices of a rank \texttt{R} rarray
-array (as is true for automatic \cxx\ arrays).
-E.g., to get row 10 from a rank-2 rarray object \texttt{s}:
-\texttt{rarray{\tt <}T,1{\tt >} r = s[10];}
-
-\subsection{What is the memory overhead of the rarray class?}
+\subsection{Memory overhead using the rarray class}
 
 The memory overhead here comes from having to store the dimensions and a pointer-to-pointer structure.  The latter account for most of the memory overhead.   A rarray object of 100$\times$100$\times$100$\times$100  doubles on a 64-bit machine will have a memory overhead of a bit over 1\%. In general, the memory overhead as a percentage is roughly 100\% divided by the last dimension. Therefore, avoid rarrays with a small last dimension such as 100$\times$100$\times$100$\times$2.
 
-\subsection{Is there a performance overhead to the rarray class?}
+\subsection{Performance overhead using the rarray class}
 
-When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above. %\footnote{Tested with gcc 4.6.1 and, icc 12.1.5 on x86, and with xlC 12.1 on power 6.}
+When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above. %\footnote{Tested with gcc 4.6.1 - 4.8.2 and, icc 12.1.5 on x86, and with xlC 12.1 on power 6.}
 So in that sense, no there is no performance overhead.  
 However, with \texttt{{\tt BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
 
 
-\subsection{Is there a compilation overhead to the rarray class?}
+\subsection{Compilation overhead using the rarray class}
 
-Yes, but this is very compiler dependent again.
+There is an overhead in the compilation stage, but this is very compiler dependent.
 
 
 \end{document}
