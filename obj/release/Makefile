@@ -9,7 +9,7 @@ EXECPATH = ../../
 
 CPPFLAGS = -I../../src -std=c++11 -DNDEBUG
 CFLAGS   = -O3 -ffast-math -march=native
-CXXFLAGS = -O3 -ffast-math -march=native
+CXXFLAGS = -Wall -O3 -ffast-math -march=native
 
 include ../project.mk
 

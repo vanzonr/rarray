@@ -427,6 +427,22 @@ template<typename T> class rarray_intermediate<T,1> {
     #define profileSay(a) 
 #endif
 
+#ifdef BOUNDSCHECK
+    #include <stdexcept>
+    #define checkOrSay(a, b) if (not(a)) throw std::out_of_range(b)
+    // Boundschecking needs to switch off SKIPINTERMEDIATE if it
+    // was set lest only the first dimension gets checked.
+    #ifdef SKIPINTERMEDIATE
+        #undef SKIPINTERMEDIATE
+    #endif
+#else
+    #define checkOrSay(a, b) 
+#endif
+
+#if __cplusplus <= 199711L
+    #define nullptr 0 
+#endif
+
 // DEFINITION OF EXTENT AND RARRAY
 
 #define EXTENT(A,I) extent_given_byte_size(A,I,sizeof(A))
@@ -436,6 +452,7 @@ template<typename T> inline
 int extent_given_byte_size(T a[], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(T[],int,int)");
+    checkOrSay(i>=0 and i<1, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(T);
         default: return 1;
@@ -446,6 +463,7 @@ template<typename T,int Z> inline
 int extent_given_byte_size(T a[][Z], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(T[][Z],int,int)");
+    checkOrSay(i>=0 and i<2, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(T)/Z;
         case 1:  return Z;
@@ -457,6 +475,7 @@ template<typename T,int Y,int Z> inline
 int extent_given_byte_size(T a[][Y][Z], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(T[][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<3, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(T)/Z/Y;
         case 1:  return Y;
@@ -469,6 +488,7 @@ template<typename T,int X,int Y,int Z> inline
 int extent_given_byte_size(T a[][X][Y][Z], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(T[][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<4, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(T)/X/Z/Y;
         case 1:  return X;
@@ -482,6 +502,7 @@ template<typename T,int W,int X,int Y,int Z> inline
 int extent_given_byte_size(T a[][W][X][Y][Z], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(T[][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<5, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(T)/W/X/Z/Y;
         case 1:  return W;
@@ -496,6 +517,7 @@ template<typename T,int V,int W,int X,int Y,int Z> inline
 int extent_given_byte_size(T a[][V][W][X][Y][Z], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(T[][V][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<6, "wrong dimension");
     switch (i) {
        case 0:  return byte_size/sizeof(T)/V/W/X/Z/Y;
        case 1:  return V;
@@ -551,7 +573,7 @@ rarray<T,5> make_rarray_given_byte_size(T a[][W][X][Y][Z], int byte_size)
 {
     profileSay("rarray<T,5> make_rarray_given_byte_size(T[][W][X][Y][Z],int)");
     const int v = byte_size/sizeof(T)/W/X/Z/Y;
-    return rarray<T,5>(***a,v,W,X,Y,Z);
+    return rarray<T,5>(****a,v,W,X,Y,Z);
 }
 
 template<typename T,int V,int W,int X,int Y,int Z> inline
@@ -559,12 +581,13 @@ rarray<T,6> make_rarray_given_byte_size(T a[][V][W][X][Y][Z], int byte_size)
 {
     profileSay("rarray<T,6> make_rarray_given_byte_size(T[][V][W][X][Y][Z],int)");
     const int u = byte_size/sizeof(T)/V/W/X/Z/Y;
-    return rarray<T,6>(***a,u,V,W,X,Y,Z);
+    return rarray<T,6>(*****a,u,V,W,X,Y,Z);
 }
 
 template<typename T,int R> inline
 rarray<T,R> make_rarray_given_byte_size(rarray<T,R> a, int byte_size) 
 {
+    profileSay("rarray<T,R> make_rarray_given_byte_size(rarray<T,R>,int)");
     return a;
 }
 
@@ -574,22 +597,6 @@ rarray<T,R> make_rarray_given_byte_size(rarray<T,R> a, int byte_size)
 //          I M P L E M E N T A T I O N           //
 //                                                //
 //------------------------------------------------//
-
-#ifdef BOUNDSCHECK
-    #include <stdexcept>
-    #define checkOrSay(a, b) if (not(a)) throw std::out_of_range(b)
-    // Boundschecking needs to switch off SKIPINTERMEDIATE if it
-    // was set lest only the first dimension gets checked.
-    #ifdef SKIPINTERMEDIATE
-        #undef SKIPINTERMEDIATE
-    #endif
-#else
-    #define checkOrSay(a, b) 
-#endif
-
-#if __cplusplus <= 199711L
-    #define nullptr 0 
-#endif
 
 //----------------------------------------------------------------------//
 
@@ -602,9 +609,9 @@ template<typename T, int R>
 rarray<T,R>::rarray() 
   : parray_(nullptr), 
     extent_(nullptr),
-    rcount_(nullptr), 
     ismine_(false),
-    entire_(false)
+    entire_(false),
+    rcount_(nullptr)
 {
     // constructor
     profileSay("rarray<T,R>::rarray()");
@@ -615,9 +622,9 @@ template<typename T>
 rarray<T,1>::rarray() 
   : parray_(nullptr), 
     extent_(nullptr),
-    rcount_(nullptr),
     ismine_(false),
-    entire_(false)
+    entire_(false),
+    rcount_(nullptr)
 {
     // constructor
     profileSay("rarray<T,1>::rarray()");

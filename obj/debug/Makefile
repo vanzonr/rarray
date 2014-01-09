@@ -7,7 +7,7 @@
 VPATH = ../../src
 EXECPATH = ../../
 
-CPPFLAGS = -I../../src -std=c++11 -DDEBUG
+CPPFLAGS = -I../../src -std=c++11 -Wall -DDEBUG
 CFLAGS   = -g 
 CXXFLAGS = -g 
 
