@@ -241,7 +241,7 @@ class rarray {
     const T*            data()        const;                           // return T* to the internal data
     inline parray_t     ptr_array()   const;                           // return T*const*.. acting similarly to this rarray when using []:
     noconst_parray_t    cptr_array()  const;                           // return  T**.. acting similarly to this rarray when using []:    
-    rarray<const T,R>&  const_ref()        const;                           // create a reference to this that treats elements as constant:
+    rarray<const T,R>&  const_ref()   const;                           // create a reference to this that treats elements as constant:
 
     // access elements 
    #ifndef SKIPINTERMEDIATE
@@ -308,9 +308,9 @@ class rarray<T,1> {
     int                 size()        const;                           // retrieve the total number of elements
     T*                  data();                                        // return T* to the internal data
     const T*            data()        const;                           // return T* to the internal data
-    inline parray_t     ptr_array()         const;                           // return T* acting similarly to this rarray when using []
-    noconst_parray_t    cptr_array()        const;                           // return  T* acting similarly to this rarray when using []
-    rarray<const T,1>&  const_ref()        const;                           // create reference to this that treats elements as constant
+    inline parray_t     ptr_array()   const;                           // return T* acting similarly to this rarray when using []
+    noconst_parray_t    cptr_array()  const;                           // return  T* acting similarly to this rarray when using []
+    rarray<const T,1>&  const_ref()   const;                           // create reference to this that treats elements as constant
 
     // access elements through intermediate object:
    #ifndef SKIPINTERMEDIATE
@@ -366,11 +366,11 @@ class rarray_intermediate {
     inline int extent(int i) const;                                    // retrieve array size in dimension i
     const int* extents() const;                                        // retrieve array sizes in all dimensions    
     int size() const;                                                  // retrieve the total number of elements
-    T* data();                                                         // return T* to the internal pointer to the data
-    inline parray_t ptr_array() const;                                       // return T*const*.. acting similarly to this rarray when using []
-    noconst_parray_t cptr_array() const;                                     // return T**.. acting similarly to this rarray when using []
-    rarray_intermediate<const T,R>& const_ref() const;                      // create a reference to this that treats elements as constant
-    inline rarray_intermediate<T,R-1> operator[](int i);               // element access
+    T* data() const;                                                   // return T* to the internal pointer to the data
+    inline parray_t ptr_array() const;                                 // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t cptr_array() const;                               // return T**.. acting similarly to this rarray when using []
+    rarray_intermediate<const T,R>& const_ref() const;                 // create a reference to this that treats elements as constant
+    inline rarray_intermediate<T,R-1> operator[](int i) const;         // element access
 
   protected:
     parray_t   const  parray_;                                         // start of the pointer array
@@ -399,11 +399,11 @@ template<typename T> class rarray_intermediate<T,1> {
     int extent(int i) const;                                           // retrieve array size in dimension i
     const int* extents() const;                                        // retrieve array sizes in all dimensions
     int size() const;                                                  // retrieve the total number of elements
-    T* data();                                                         // return T* to the internal pointer to the data
-    inline parray_t ptr_array() const;                                       // return T*const*.. acting similarly to this rarray when using []
-    noconst_parray_t cptr_array() const;                                     // return T**.. acting similarly to this rarray when using []
-    rarray_intermediate<const T,1>& const_ref() const;                      // create a reference to this that treats elements as constant
-    inline T& operator[](int i);                                       // element access
+    T* data() const;                                                   // return T* to the internal pointer to the data
+    inline parray_t ptr_array() const;                                 // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t cptr_array() const;                               // return T**.. acting similarly to this rarray when using []
+    rarray_intermediate<const T,1>& const_ref() const;                 // create a reference to this that treats elements as constant
+    inline T& operator[](int i) const;                                 // element access
 
   protected:
     parray_t   const   parray_;                                        // start of the pointer array
@@ -589,6 +589,39 @@ rarray<T,R> make_rarray_given_byte_size(rarray<T,R> a, int byte_size)
 {
     profileSay("rarray<T,R> make_rarray_given_byte_size(rarray<T,R>,int)");
     return a;
+}
+
+// output
+#include <iostream>
+
+template<typename T,int R> inline
+std::ostream& operator<<(std::ostream &o, const rarray<T,R>& r)
+{
+    o << '{' << r[0];
+    for (int i=1; i<r.extent(0); i++) 
+        o << ',' << r[i];
+    o << '}';
+    return o;
+}
+
+template<typename T,int R> inline
+std::ostream& operator<<(std::ostream &o, const rarray_intermediate<T,R>& r)
+{
+    o << '{' << r[0];
+    for (int i=1; i<r.extent(0); i++) 
+        o << ',' << r[i];
+    o << '}';
+    return o;
+}
+
+template<typename T> inline
+std::ostream& operator<<(std::ostream &o, const rarray_intermediate<T,1>& r)
+{
+    o << '{' << r.data()[0];
+    for (int i=1; i<r.extent(0); i++) 
+        o << ',' << r.data()[i];
+    o << '}';
+    return o;
 }
 
 
@@ -1103,14 +1136,14 @@ const T* rarray<T,1>::data() const
 // ...for rarray_intermediate
 
 template<typename T,int R> 
-T* rarray_intermediate<T,R>::data()
+T* rarray_intermediate<T,R>::data() const
 {
     profileSay("T* rarray_intermediate<T,R>::data()");
     return rarray<T,R>::base(parray_);
 }
 
 template<typename T> 
-T* rarray_intermediate<T,1>::data()
+T* rarray_intermediate<T,1>::data() const
 {
     profileSay("T* rarray_intermediate<T,1>::data()");
     return rarray<T,1>::base(parray_);
@@ -1305,7 +1338,7 @@ rarray<T,1>::operator typename PointerArray<T,1>::type ()
 
 template<typename T,int R> inline
 rarray_intermediate<T,R-1> 
-rarray_intermediate<T,R>::operator[](int i) 
+rarray_intermediate<T,R>::operator[](int i) const
 {
     profileSay("rarray_intermediate<T,R-1> rarray_intermediate<T,R>::operator[](int)");
     checkOrSay(i >=0 and i < extent_[0], "wrong index");        
@@ -1313,7 +1346,7 @@ rarray_intermediate<T,R>::operator[](int i)
 }
 
 template<typename T> inline
-T& rarray_intermediate<T,1>::operator[](int i) 
+T& rarray_intermediate<T,1>::operator[](int i) const
 {
     profileSay("T& rarray_intermediate<T,1>::operator[](int)");
     checkOrSay(i >=0 and i < extent_[0], "wrong index");

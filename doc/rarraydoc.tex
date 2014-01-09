@@ -285,15 +285,15 @@ solution using the STL:
 \begin{verbatim}
   #include <vector>
   int main() {
-    using std::vector;
-    int n = 256;                 // size per dimension
-    vector<vector<vector<float> > > v(n);// allocate for top dimension
-    for (int i=0;i<n;i++) {
-      v[i].reserve(n);           // allocate vectors for middle dimension
-      for (int j=0;j<n;j++) 
-        v[i][j].reserve(n);      // allocate elements in last dimension
-    }
-    v[1][2][3] = 105;            // assign to element (for example)
+     using std::vector;
+     int n = 256;                // size per dimension
+     vector<vector<vector<float> > > v(n);// allocate for top dimension
+     for (int i=0;i<n;i++) {
+        v[i].reserve(n);         // allocate vectors for middle dimension
+        for (int j=0;j<n;j++) 
+           v[i][j].reserve(n);   // allocate elements in last dimension
+     }
+     v[1][2][3] = 105;           // assign to element (for example)
   }
 \end{verbatim}
 \vspace{-14pt}\end{framed}\vspace{-8pt}
@@ -422,7 +422,7 @@ int main()
 If rarray objects are to be passed to functions, it may be good idea to have the function take (const) references to the rarray. Otherwise, the \texttt{rarray} will be shallowly copied (which really isn't all that expensive).  For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-  void fill(const rarray<float,2> &s, float z) 
+  void fill(rarray<float,2> &s, float z) 
   {
      for (int i=0; i<s.extent(0); i++)
         for (int j=0; j<s.extent(1); j++)
@@ -431,14 +431,14 @@ If rarray objects are to be passed to functions, it may be good idea to have the
 
   int main() 
   {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    fill(s, 3.14);
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     fill(s, 3.14);
+     delete[] s.data();
   }
 \end{verbatim}
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 
-A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elements are not changed by it. Because \cxx\ cannot convert a reference to a \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}}, one has to use the \texttt{cons\_ref} method.
+A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elements are not changed by it. Because \cxx\ cannot convert a reference to a \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}}, one has to use the \texttt{const\_ref} method.
 For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
@@ -452,9 +452,9 @@ For example:
   }
   int main() 
   {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    float z = add(s.const_ref()); // const_ref() because add() takes <const float>
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     float z = add(s.const_ref()); // 'cause add() takes <const float>
+     delete[] s.data();
   }
 \end{verbatim}
 \vspace{-14pt}
@@ -493,9 +493,9 @@ functions using the syntax \texttt{s.data()}, which yields a
        a[i] = z;
   }
   int main() {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    fill1(s.data(), s.extent(0), s.extent(1), 3.14);
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     fill1(s.data(), s.extent(0), s.extent(1), 3.14);
+     delete[] s.data();
   }
 \end{verbatim}
 \end{framed}
@@ -537,9 +537,9 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
            a[i][j] = z;
   }
   int main() {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    fill3(s.ptr_array(), s.extent(0), s.extent(1), 3.14);
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     fill3(s.ptr_array(), s.extent(0), s.extent(1), 3.14);
+     delete[] s.data();
   }
 \end{verbatim}
 \vspace{-14pt}\end{framed}\vspace{-8pt}
@@ -556,9 +556,9 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
      return x;
   }
   int main() {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    float z = add4(s.ptr_array());
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     float z = add4(s.ptr_array());
+     delete[] s.data();
   }
 \end{verbatim}\vspace{-14pt}
 \end{framed}
@@ -583,9 +583,9 @@ Generating a T** from a rarray object, one could change the internal structure o
            a[i][j] = z;
   }
   int main() {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    fill5(s.noconst_ptr_array(), s.extent(0), s.extent(1), 3.14);
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     fill5(s.noconst_ptr_array(), s.extent(0), s.extent(1), 3.14);
+     delete[] s.data();
   }
 \end{verbatim}\vspace{-14pt}
 \end{framed}
@@ -606,9 +606,9 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
      return x;
   }
   int main() {
-    rarray<float,2> s(new float[40*40], 40, 40);
-    float z = add6(s.const_ref().noconst_ptr_array());
-    delete[] s.data();
+     rarray<float,2> s(new float[40*40], 40, 40);
+     float z = add6(s.const_ref().noconst_ptr_array());
+     delete[] s.data();
   }
 \end{verbatim}\vspace{-14pt}
 \end{framed}

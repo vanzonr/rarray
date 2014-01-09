@@ -1426,6 +1426,17 @@ int test6dautoconversion()
     return ALLCLEAR;
 }
 
+int testoutput() {
+
+    double a[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    double b[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
+    rarray<double,2> r(a,4,4);
+    rarray<double,3> s(b,3,3,3);
+    std::cout << r << '\n';
+    std::cout << s << '\n';
+    return ALLCLEAR;
+}
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1516,6 +1527,8 @@ int main()
     PASSORRETURN(test4dautoconversion());
     PASSORRETURN(test5dautoconversion());
     PASSORRETURN(test6dautoconversion());
+
+    PASSORRETURN(testoutput());
 
     return ALLCLEAR;
 }
