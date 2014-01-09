@@ -76,15 +76,11 @@ track of array dimensions.
 At first, there seems to be no shortage of libraries to fill this
 lack of \cxx\ support for dynamic multi-dimensional arrays, such as
 \begin{itemize}\itemsep 0pt \parskip 0pt
-\item 
-Blitz++;
-\item 
-The Boost Multidimensional Array Library (\texttt{boost::multiarray}); 
-and
-\item Eigen
-\item Armadillo
-\item 
-Nested \texttt{vector}s from the Standard Template Library.
+\item Blitz++;
+\item The Boost Multidimensional Array Library (\texttt{boost::multiarray}); 
+\item Eigen;
+\item Armadillo; and
+\item Nested \texttt{vector}s from the Standard Template Library.
 \end{itemize}
 These typically do have some runtime overhead compared to the above
 textbook solution. In contrast, the purpose of the rarray
@@ -113,19 +109,21 @@ library is to be a minimal interface for runtime multidimensional arrays with
 \item Elements are accessible using repeated square brackets, like c/c++ arrays.
 \item Can be emptied with the {\tt free} method.
 \item Can be reshaped.
+\item Automatic C-style arrays can be converted to rarrays using RARRAY.
 \item Checks index bounds if the preprocessor
   constant {\tt BOUNDSCHECK} is defined. 
+\item Provides a method {\tt isfree} to check if the rarray is uninitialized.
 \item Provides a method to get the number of elements in each
   dimension (\texttt{extent}), or in all dimensions (\texttt{extents}).
 \item Provides  a method to obtain the total number of elements in the
   array (\texttt{size}).
 \item Provides a method to make the data type of the array const
-  (\texttt{cref}).
+  (\texttt{const\_ref}).
 \item Provides conversion methods using the member
   function \texttt{data()} for conversions to a \texttt{T*} or
-  \texttt{const T*}, using the method \texttt{ptr()} for
+  \texttt{const T*}, using the method \texttt{ptr\_array()} for
   conversions to \texttt{T*const*} or \texttt{const T*const*}, and
-  using the method \texttt{cptr()} for the conversion to a
+  using the method \texttt{noconst\_ptr\_array()} for the conversion to a
   \texttt{T**}.
 \end{itemize}
 
@@ -137,6 +135,7 @@ Effectively, the interface part of a rarray object is defined as follows:%
 \begin{verbatim}
   class rarray<T,R> {
    public:    
+    rarray<T,R>();                         // create uninitialized array
     rarray<T,R>(int dim0, ...);            // give dimensions for R<7
     rarray<T,R>(const int*dim);            // dimensions in an array
     rarray<T,R>(T* buf, int dim0, ...);    // give dimensions for R<7
@@ -147,15 +146,17 @@ Effectively, the interface part of a rarray object is defined as follows:%
     void              reshape(int dim0, ...);// change shape (not data)
     void              reshape(const int*dim);// change shape (not data)
     void              free();              // release memory
+    bool              isfree();     const; // check if uninitialized;
     rarray<T,R>       copy()        const; // deep copy
     const int*        extents()     const; // size of all dimensions 
     int               extent(int i) const; // size of dimension i
     int               size()        const; // total number of elements
     T*                data()        const; // start of internal buffer
-    T*const*...       ptr();        const; // convert to a T*const*... 
-    T**...            cptr()        const; // convers to a T**... 
-    rarray<const T,R>&cref()        const; // convert to const elements
-    rarray<T,R-1> operator[](int i) const; // element access
+    T*const*...       ptr_array();  const; // convert to a T*const*... 
+    T**...            noconst_ptr_array() const; // converts to a T**... 
+    rarray<const T,R>&  const_ref()       const; // convert to const elements
+    rarray<const T,R-1> operator[](int i) const; // element access
+    rarray<T,R-1>       operator[](int i);       // element access
   };
 \end{verbatim}
 \end{framed}
@@ -194,7 +195,7 @@ or, using an external, already allocated buffer, as
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
-Without the \texttt{delete[]} statement, there would be a memory leak. This reflects that rarray is in this case not responsible
+Without the \texttt{delete[]} statement in the latter example, there would be a memory leak. This reflects that rarray is in this case not responsible
 for the content. The data pointer can also be retrieved using
 \texttt{s.data()}. 
 
@@ -215,6 +216,17 @@ For example:\vspace{-9pt}
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}\noindent
 The \texttt{extent(int)} method used here returns the size of each dimension (counting from 0).
+
+\subsection{Copying and function arguments}
+
+In C, when we copy a variable of a built-in type to a new variable, the new copy is completely independent of the old variable. Likewise, the default way of passing arguments to a function involves a complete copy as well for built-in type.  For C-style arrays, however, only the pointer to the first element gets copied, not the whole array. The latter is called a shallow copy. Rarrays use shallow copies much like pointers, with the additional functionality that memory allocated by the rarray gets released. 
+
+What does this essentially mean? Well:
+\begin{enumerate}
+\item You can pass rarrays by value to function, which means the as if you were passing a pointer.
+\item If you assign one rarray to another, the other simply points to the old one.
+\item If you wish to do a deep copy, i.e., create a new array independent of the old array, you need to use the 'copy' method.
+\end{enumerate}
 
 \subsection{Reshaping the rarray}
 
@@ -330,21 +342,21 @@ This method returns the total number of elements.
 
 This method returns a pointer to a \texttt{T*}. Const-correct.
 
-%\subsubsection{Get pointer equivalent: \tt ptr}
+%\subsubsection{Get pointer equivalent: \tt ptr\_array}
 
-\noindent\textbf{Definition:} \texttt{T*const*... ptr() const;}
+\noindent\textbf{Definition:} \texttt{T*const*... ptr\_array() const;}
 
 This method returns a pointer to a \texttt{T*const*...}. Const-correct.
 
-%\subsubsection{Get const-casted pointer equivalent: \tt cptr}
+%\subsubsection{Get const-casted pointer equivalent: \tt noconst_ptr\_array}
 
-\noindent\textbf{Definition:} \texttt{T**... cptr() const;}
+\noindent\textbf{Definition:} \texttt{T**... noconst\_ptr\_array() const;}
 
 This method returns a pointer to a \texttt{T**...}. This conversion breaks const-correctness.%, as the pointer structure itself could in principle be modified.
 
-%\subsubsection{Get const-content equivalent: \tt cref}
+%\subsubsection{Get const-content equivalent: \tt const\_ref}
 
-\noindent\textbf{Definition:} \texttt{rarray{\tt<}const T,R{\tt>}\& cref() const;}
+\noindent\textbf{Definition:} \texttt{rarray{\tt<}const T,R{\tt>}\& const\_ref() const;}
 
 This method creates reference to this with const elements.
 
@@ -360,14 +372,54 @@ Same as the previous reshape method, but takes an array of new dimensions as an 
 
 This method release memory the memory associated with the rarray. If the rarray was created by providing a pre-existing buffer for the data, the memory of this buffer does not released.
 
+\noindent\textbf{Definition:} \texttt{bool isfree();}
+
+Checks if the rarray is in an uninitialized state.
+
 \noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>}\& copy() const;}
 
 This method creates deep copy of the rarray.
 
 
+\section{Conversion of automatic C-style arrays to rarrays}
+
+It is possible to convert C-style automatic arrays to rarrays using the {\tt RARRAY} macro (which calls some templated functions under the hood).  You can apply RARRAY to any automatic array of rank six or less, and even to a rarray (which essentially does nothing). 
+
+The main convenience of this is that one can write functions that take rarray argument(s) and pass automatic arrays to them. Another use is in initializing a rarray;
+
+Examples:
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+\begin{verbatim}
+#include <iostream>
+#include "rarray.h"
+
+void print2d(const rarray<float,2> &s) 
+{
+    for (int i=0; i<s.extent(0); i++) {
+        for (int j=0; j<s.extent(1); j++)
+            std::cout << s[i][j] << ' ';
+        std::cout << std::endl;
+    }
+}
+
+int main() 
+{
+    float printme[4][4] = { { 1.0, 1.2, 1.4, 1.6},
+                            { 2.0, 2.2, 2.4, 2.6},
+                            { 3.0, 3.2, 3.4, 3.6},
+                            { 4.0, 4.2, 4.4, 4.6} };
+    print2d(RARRAY(printme));
+    rarray<float,2> a = RARRAY(printme).copy();
+    print2d(a);
+}
+\end{verbatim}
+\vspace{-14pt}\end{framed}\vspace{-8pt}
+
+
+
 \section{Conversion of rarray objects and function arguments}
 
-If rarray objects are to be passed to functions, it is a good idea to have the function take (const) references to the rarray. Otherwise, the \texttt{rarray} will be copied.  For example:
+If rarray objects are to be passed to functions, it may be good idea to have the function take (const) references to the rarray. Otherwise, the \texttt{rarray} will be shallowly copied (which really isn't all that expensive).  For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
   void fill(const rarray<float,2> &s, float z) 
@@ -386,7 +438,7 @@ If rarray objects are to be passed to functions, it is a good idea to have the f
 \end{verbatim}
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 
-A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elements are not changed by it. Because \cxx\ cannot convert a reference to a \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}}, one has to use the \texttt{cref} method.
+A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elements are not changed by it. Because \cxx\ cannot convert a reference to a \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}}, one has to use the \texttt{cons\_ref} method.
 For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
@@ -401,7 +453,7 @@ For example:
   int main() 
   {
     rarray<float,2> s(new float[40*40], 40, 40);
-    float z = add(s.cref()); // cref() because add() takes <const float>
+    float z = add(s.const_ref()); // const_ref() because add() takes <const float>
     delete[] s.data();
   }
 \end{verbatim}
@@ -421,7 +473,7 @@ format.
 
 With the \texttt{const} keyword, the number of useful \cxx\ forms for multidimensional array arguments has grown to about six.  In the case of a two-dimensional array these take the forms:
  \texttt{T*}, \texttt{const T*}, \texttt{T*const*}, \texttt{const T*const*}, \texttt{T**}, and \texttt{const T**}.
-Using the rarray library, const-correct argument passing requires the \texttt{data} or \texttt{ptr} method but non-const-correct argument passing will require the \texttt{cptr} function, possibly combined with \texttt{cref}.
+Using the rarray library, const-correct argument passing requires the \texttt{data} or \texttt{ptr\_array} method but non-const-correct argument passing will require the \texttt{noconst\_ptr\_array} function, possibly combined with \texttt{const\_ref}.
 We will briefly looking at these cases separately now.
 %  Each will be started with a simple example, followed by an explanation.
 
@@ -472,7 +524,7 @@ C++ accepts a \texttt{float*} instead of a \texttt{const float*}, so \texttt{dat
 
 \noindent
 In \texttt{T*const*}, the middle const means that one cannot reassign the row pointers.
-The rarray classes can be converted to this type using the \texttt{ptr()} method. 
+The rarray classes can be converted to this type using the \texttt{ptr\_array()} method. 
 For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt{T*const*const*const*}, etc.
 
 \noindent
@@ -486,7 +538,7 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
   }
   int main() {
     rarray<float,2> s(new float[40*40], 40, 40);
-    fill3(s.ptr(), s.extent(0), s.extent(1), 3.14);
+    fill3(s.ptr_array(), s.extent(0), s.extent(1), 3.14);
     delete[] s.data();
   }
 \end{verbatim}
@@ -505,21 +557,21 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
   }
   int main() {
     rarray<float,2> s(new float[40*40], 40, 40);
-    float z = add4(s.ptr());
+    float z = add4(s.ptr_array());
     delete[] s.data();
   }
 \end{verbatim}\vspace{-14pt}
 \end{framed}
 
 \noindent
-\cxx\ accepts a \texttt{T*const*} where a \texttt{const T*const*} is expected, so here one can again use the method \texttt{ptr()}.
+\cxx\ accepts a \texttt{T*const*} where a \texttt{const T*const*} is expected, so here one can again use the method \texttt{ptr\_array()}.
 This extends to its generalizations \texttt{const T*const*const*}, \texttt{const T*const*const*const*}, etc., as well.
 
 
 \subsection{Conversion to a {\tt T**}}
 
 \noindent
-Generating a T** from a rarray object, one could change the internal structure of that rarray object through the double pointer.  This is therefore considered a not const-correct.  It is however commonly needed, so \texttt{rarray} does have a function for it, called \texttt{cptr}. 
+Generating a T** from a rarray object, one could change the internal structure of that rarray object through the double pointer.  This is therefore considered a not const-correct.  It is however commonly needed, so \texttt{rarray} does have a function for it, called \texttt{noconst\_ptr\_array}. 
 
 \noindent
 {\bf Example:}
@@ -532,7 +584,7 @@ Generating a T** from a rarray object, one could change the internal structure o
   }
   int main() {
     rarray<float,2> s(new float[40*40], 40, 40);
-    fill5(s.cptr(), s.extent(0), s.extent(1), 3.14);
+    fill5(s.noconst_ptr_array(), s.extent(0), s.extent(1), 3.14);
     delete[] s.data();
   }
 \end{verbatim}\vspace{-14pt}
@@ -540,7 +592,7 @@ Generating a T** from a rarray object, one could change the internal structure o
 
 \subsection{Conversion to a {\tt const T**}}
 \noindent
-C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \texttt{const T**}, one first needs to convert the \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}} using \texttt{cref()}, after which one can use the \texttt{cptr} function.
+C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \texttt{const T**}, one first needs to convert the \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}} using \texttt{const\_ref()}, after which one can use the \texttt{noconst\_ptr\_array} function.
 
 \noindent
 {\bf Example:}
@@ -555,7 +607,7 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
   }
   int main() {
     rarray<float,2> s(new float[40*40], 40, 40);
-    float z = add6(s.cref().cptr());
+    float z = add6(s.const_ref().noconst_ptr_array());
     delete[] s.data();
   }
 \end{verbatim}\vspace{-14pt}

@@ -239,9 +239,9 @@ class rarray {
     int                 size()        const;                           // retrieve the total number of elements  
     T*                  data();                                        // return T* to the internal data
     const T*            data()        const;                           // return T* to the internal data
-    inline parray_t     ptr()         const;                           // return T*const*.. acting similarly to this rarray when using []:
-    noconst_parray_t    cptr()        const;                           // return  T**.. acting similarly to this rarray when using []:    
-    rarray<const T,R>&  cref()        const;                           // create a reference to this that treats elements as constant:
+    inline parray_t     ptr_array()   const;                           // return T*const*.. acting similarly to this rarray when using []:
+    noconst_parray_t    cptr_array()  const;                           // return  T**.. acting similarly to this rarray when using []:    
+    rarray<const T,R>&  const_ref()        const;                           // create a reference to this that treats elements as constant:
 
     // access elements 
    #ifndef SKIPINTERMEDIATE
@@ -308,9 +308,9 @@ class rarray<T,1> {
     int                 size()        const;                           // retrieve the total number of elements
     T*                  data();                                        // return T* to the internal data
     const T*            data()        const;                           // return T* to the internal data
-    inline parray_t     ptr()         const;                           // return T* acting similarly to this rarray when using []
-    noconst_parray_t    cptr()        const;                           // return  T* acting similarly to this rarray when using []
-    rarray<const T,1>&  cref()        const;                           // create reference to this that treats elements as constant
+    inline parray_t     ptr_array()         const;                           // return T* acting similarly to this rarray when using []
+    noconst_parray_t    cptr_array()        const;                           // return  T* acting similarly to this rarray when using []
+    rarray<const T,1>&  const_ref()        const;                           // create reference to this that treats elements as constant
 
     // access elements through intermediate object:
    #ifndef SKIPINTERMEDIATE
@@ -367,9 +367,9 @@ class rarray_intermediate {
     const int* extents() const;                                        // retrieve array sizes in all dimensions    
     int size() const;                                                  // retrieve the total number of elements
     T* data();                                                         // return T* to the internal pointer to the data
-    inline parray_t ptr() const;                                       // return T*const*.. acting similarly to this rarray when using []
-    noconst_parray_t cptr() const;                                     // return T**.. acting similarly to this rarray when using []
-    rarray_intermediate<const T,R>& cref() const;                      // create a reference to this that treats elements as constant
+    inline parray_t ptr_array() const;                                       // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t cptr_array() const;                                     // return T**.. acting similarly to this rarray when using []
+    rarray_intermediate<const T,R>& const_ref() const;                      // create a reference to this that treats elements as constant
     inline rarray_intermediate<T,R-1> operator[](int i);               // element access
 
   protected:
@@ -400,9 +400,9 @@ template<typename T> class rarray_intermediate<T,1> {
     const int* extents() const;                                        // retrieve array sizes in all dimensions
     int size() const;                                                  // retrieve the total number of elements
     T* data();                                                         // return T* to the internal pointer to the data
-    inline parray_t ptr() const;                                       // return T*const*.. acting similarly to this rarray when using []
-    noconst_parray_t cptr() const;                                     // return T**.. acting similarly to this rarray when using []
-    rarray_intermediate<const T,1>& cref() const;                      // create a reference to this that treats elements as constant
+    inline parray_t ptr_array() const;                                       // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t cptr_array() const;                                     // return T**.. acting similarly to this rarray when using []
+    rarray_intermediate<const T,1>& const_ref() const;                      // create a reference to this that treats elements as constant
     inline T& operator[](int i);                                       // element access
 
   protected:
@@ -1121,18 +1121,18 @@ T* rarray_intermediate<T,1>::data()
 
 template<typename T,int R> inline 
 typename rarray<T,R>::parray_t 
-rarray<T,R>::ptr() const 
+rarray<T,R>::ptr_array() const 
 {
-    profileSay("rarray<T,R>::parray_t rarray<T,R>::ptr() const");
+    profileSay("rarray<T,R>::parray_t rarray<T,R>::ptr_array() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     return parray_;
 }
 
 template<typename T> inline 
 typename rarray<T,1>::parray_t 
-rarray<T,1>::ptr() const 
+rarray<T,1>::ptr_array() const 
 {
-    profileSay("rarray<T,1>::parray_t rarray<T,1>::ptr() const");
+    profileSay("rarray<T,1>::parray_t rarray<T,1>::ptr_array() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     return parray_;
 }
@@ -1141,17 +1141,17 @@ rarray<T,1>::ptr() const
 
 template<typename T,int R> inline 
 typename rarray_intermediate<T,R>::parray_t 
-rarray_intermediate<T,R>::ptr() const 
+rarray_intermediate<T,R>::ptr_array() const 
 {
-    profileSay("rarray_intermediate<T,R>::parray_t rarray_intermediate<T,R>::ptr() const");
+    profileSay("rarray_intermediate<T,R>::parray_t rarray_intermediate<T,R>::ptr_array() const");
     return parray_;
 }
     
 template<typename T> inline 
 typename rarray_intermediate<T,1>::parray_t 
-rarray_intermediate<T,1>::ptr() const 
+rarray_intermediate<T,1>::ptr_array() const 
 {
-    profileSay("rarray_intermediate<T,1>::parray_t rarray_intermediate<T,1>::ptr() const");
+    profileSay("rarray_intermediate<T,1>::parray_t rarray_intermediate<T,1>::ptr_array() const");
     return parray_;
 }
 
@@ -1159,18 +1159,18 @@ rarray_intermediate<T,1>::ptr() const
 
 template<typename T,int R>
 typename rarray<T,R>::noconst_parray_t 
-rarray<T,R>::cptr() const 
+rarray<T,R>::cptr_array() const 
 {
-    profileSay("rarray<T,R>::noconst_parray_t rarray<T,R>::cptr() const");
+    profileSay("rarray<T,R>::noconst_parray_t rarray<T,R>::cptr_array() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     return const_cast<noconst_parray_t>(parray_);
 }
 
 template<typename T>
 typename rarray<T,1>::noconst_parray_t 
-rarray<T,1>::cptr() const 
+rarray<T,1>::cptr_array() const 
 {
-    profileSay("rarray<T,1>::noconst_parray_t rarray<T,1>::cptr() const");
+    profileSay("rarray<T,1>::noconst_parray_t rarray<T,1>::cptr_array() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     return const_cast<noconst_parray_t>(parray_);
 }
@@ -1179,17 +1179,17 @@ rarray<T,1>::cptr() const
 
 template<typename T,int R> 
 typename rarray_intermediate<T,R>::noconst_parray_t 
-rarray_intermediate<T,R>::cptr() const 
+rarray_intermediate<T,R>::cptr_array() const 
 {
-    profileSay("rarray_intermediate<T,R>::noconst_parray_t rarray_intermediate<T,R>::cptr() const");
+    profileSay("rarray_intermediate<T,R>::noconst_parray_t rarray_intermediate<T,R>::cptr_array() const");
     return const_cast<noconst_parray_t>(parray_);
 }
 
 template<typename T> 
 typename rarray_intermediate<T,1>::noconst_parray_t 
-rarray_intermediate<T,1>::cptr() const 
+rarray_intermediate<T,1>::cptr_array() const 
 {
-    profileSay("rarray_intermediate<T,1>::noconst_parray_t rarray_intermediate<T,1>::cptr() const");
+    profileSay("rarray_intermediate<T,1>::noconst_parray_t rarray_intermediate<T,1>::cptr_array() const");
     return const_cast<noconst_parray_t>(parray_);
 }
 
@@ -1197,18 +1197,18 @@ rarray_intermediate<T,1>::cptr() const
 
 template<typename T,int R>
 rarray<const T,R>&  
-rarray<T,R>::cref() const 
+rarray<T,R>::const_ref() const 
 {
-    profileSay("rarray<const T,R>& rarray<T,R>::cref() const");
+    profileSay("rarray<const T,R>& rarray<T,R>::const_ref() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     return (rarray<const T,R>&)(*this);
 }
 
 template<typename T> 
 rarray<const T,1>&  
-rarray<T,1>::cref() const 
+rarray<T,1>::const_ref() const 
 {
-    profileSay("rarray<const T,1>& rarray<T,1>::cref() const");
+    profileSay("rarray<const T,1>& rarray<T,1>::const_ref() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
     return (rarray<const T,1>&)(*this);
 }
@@ -1217,17 +1217,17 @@ rarray<T,1>::cref() const
 
 template<typename T,int R> inline
 rarray_intermediate<const T,R>& 
-rarray_intermediate<T,R>::cref() const
+rarray_intermediate<T,R>::const_ref() const
 {
-    profileSay("rarray_intermediate<const T,R>& rarray_intermediate<T,R>::cref() const");
+    profileSay("rarray_intermediate<const T,R>& rarray_intermediate<T,R>::const_ref() const");
     return (rarray_intermediate<const T,R>&)(*this);
 }
 
 template<typename T> inline
 rarray_intermediate<const T,1>& 
-rarray_intermediate<T,1>::cref() const
+rarray_intermediate<T,1>::const_ref() const
 {
-    profileSay("rarray_intermediate<const T,1>& rarray_intermediate<T,1>::cref() const");
+    profileSay("rarray_intermediate<const T,1>& rarray_intermediate<T,1>::const_ref() const");
     return (rarray_intermediate<const T,1>&)(*this);
 }
 
@@ -1665,24 +1665,24 @@ rarray<T,R>::new_except_base(T* buffer, const int* extent)
         
         char**  palloc = new char*[nalloc];        
         int     extenttot = 1;
-        char*** ptr    = reinterpret_cast<char***>(&result);
+        char*** ptr_array    = reinterpret_cast<char***>(&result);
         
         for (int i=0; i<R-1; i++) {
             
             for (int j=0; j<extenttot; j++)
-                ptr[j] = palloc + j*extent[i];
+                ptr_array[j] = palloc + j*extent[i];
             
             extenttot *= extent[i];
             if (extenttot==0) {
                 break; // really should not be allowed and give an error
             } else {
-                ptr     = reinterpret_cast<char***>(*ptr);
+                ptr_array     = reinterpret_cast<char***>(*ptr_array);
                 palloc += extenttot;
             }
         }
         
         for (int j=0; j<extenttot; j++)
-            ptr[j] = reinterpret_cast<char**>(bufstart + j*extent[R-1]);
+            ptr_array[j] = reinterpret_cast<char**>(bufstart + j*extent[R-1]);
         
         return reinterpret_cast<parray_t>(result);
         

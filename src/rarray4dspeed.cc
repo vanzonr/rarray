@@ -114,9 +114,9 @@ double case_dyn(int repeat)
     float* bdata = new float[(long long int)(n)*n*n*n];
     float* cdata = new float[(long long int)(n)*n*n*n];
     rarray<float,4> ararray(adata,n,n,n,n),brarray(bdata,n,n,n,n),crarray(cdata,n,n,n,n);
-    float*const*const*const* a=ararray.ptr();
-    float*const*const*const* b=brarray.ptr();
-    float*const*const*const* c=crarray.ptr();
+    float*const*const*const* a=ararray.ptr_array();
+    float*const*const*const* b=brarray.ptr_array();
+    float*const*const*const* c=crarray.ptr_array();
     while (repeat--) {
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
