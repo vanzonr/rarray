@@ -102,15 +102,14 @@
 #include <string>
 #include <sstream>
 
-//------------------------------------------------------------------------//
+// DEFINE INTERNAL TYPES
 
-// Define internal types
 
-//------  DEFINITION struct PointerArray<T,R>  ------//
+// DEFINITION struct PointerArray<T,R>
 
 // PointerArray: a struct to recursively generates types T**... and
-// T*const*... as typedefs called noconst_pointer_array_t and pointer_array_t inside the
-// struct PointerArray<T,R>.
+// T*const*... as typedefs called noconst_pointer_array_t and
+// pointer_array_t inside the struct PointerArray<T,R>.
 // 
 // More specifically:
 //
@@ -119,22 +118,18 @@
 //   is equal to the type
 //      T*
 //   ie., the pointer type for a one dimensional c array, 
-//
-//   The type 
+//   Similarly, the type 
 //      PointerArray<T,2>::type
 //   is equal to the type
 //      T*const*
 //   which is the pointer type for a two-dimensional c array.
 //   The reason for the const is that the shape of this array is supposed to
 //   remain at its fixed rectangular form. 
-//
-//   The type
+//   Following the same pattern, the type
 //      PointerArray<T,3>::type 
 //   is equal to
 //      T*const*const*, 
-//   the appropriate pointer for a 3d c array, 
-//
-//   etc.
+//   the appropriate pointer for a 3d c array, etc.
 //
 //   Because one encounters non-const correct pointer-to-pointers
 //   often (when allocating the pointer-to-pointer structure by hand,
@@ -143,7 +138,6 @@
 // 
 //      PointerArray<T,1>::noconst_type = T* 
 //      PointerArray<T,2>::noconst_type = T**
-//      PointerArray<T,3>::noconst_type = T***
 //      ...
 //
 // Recursive definition of PointerArray<T,R> in terms of PointerArray<T,R-1>:
@@ -152,7 +146,7 @@ struct PointerArray {
     typedef typename PointerArray<T,R-1>::type const*    type;     // const shape
     typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type;// non-const variant
 };
-// Now we end the recursion by specifically defining the R=1 case:
+// End recursion by specifically defining the R=1 case:
 template<typename T> 
 struct PointerArray<T,1> {
     typedef T* type;         // note there is not const: a const
@@ -169,119 +163,85 @@ struct PointerArray<T,1> {
     typedef T* noconst_type; // There would never have been a const here
 };
 
-//------  END DEFINITION struct PointerArray<T,R>  ------//
+// END DEFINITION struct PointerArray<T,R>
 
 
-//------  DEFINITION struct unconst<T>  ------//
+// DEFINITION struct unconst<T>
 
 // Define a struct to strip constness from a type:
-// Generically, do not strip a const:
 template<typename T> 
 struct Unconst { 
     typedef T type; // non-stripping, intended for typed without const
 };
-// Override this non-const-stripped type with a stripped one using
-// the following instantiation which applies for types with const only.
+// Override this non-const-stripped type with a stripped one which applies for types with const only.
 template<typename T> 
 struct Unconst<const T> {  
     typedef T type; // note that the const is gone
 };
 
-//------  END DEFINITION struct Unconst<T>  ------//
+// END DEFINITION struct Unconst<T>
+
 
 // forward definition of the class for intermediate bracket expressions:
 
 template<typename T,int R> class rarray_intermediate;
 
-//----------------------------------------------------------------------//--
+//------------------------------------------------//
+//                                                //
+//               I N T E R F A C E                //
+//                                                //
+//------------------------------------------------//
 
 
-//------------------------------------------------------
-//------------------------------------------------------
-//--                                                --//
-//--               I N T E R F A C E                --//
-//--                                                --//
-//------------------------------------------------------
-//------------------------------------------------------
+// DEFINITION class rarray<T,R>
 
-
-//------  DEFINITION class rarray<T,R>  ------//
-#include <iostream>
 template<typename T,int R> 
 class rarray {
 
-  public:
+  public: 
+    typedef T*        iterator;                                        // iterator type
+    typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef int       difference_type;                                 // difference type for indices
+    typedef int       size_type;                                       // type of indices
+    typedef typename PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
+    typedef typename PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
 
-    // associated types
-    typedef T*        iterator;
-    typedef const T*  const_iterator;
-    typedef int       difference_type;
-    typedef int       size_type;
+    rarray();                                                          // constructor leaving rarray uninitialized 
+    rarray(int n0, int n1);                                            // constructor creating own buffer for R=2
+    rarray(int n0, int n1, int n2);                                    // constructor creating own buffer for R=3
+    rarray(int n0, int n1, int n2, int n3);                            // constructor creating own buffer for R=4
+    rarray(int n0, int n1, int n2, int n3, int n4);                    // constructor creating own buffer for R=5
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5);            // constructor creating own buffer for R=6
+    rarray(const int* extent);                                         // constructor creating own buffer for any R (the only way for R>6)
+    rarray(T* buffer, int n0, int n1);                                 // constructor from an existing buffer for R=2
+    rarray(T* buffer, int n0, int n1, int n2);                         // constructor from an existing buffer for R=3
+    rarray(T* buffer, int n0, int n1, int n2, int n3);                 // constructor from an existing buffer for R=4
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4);         // constructor from an existing buffer for R=5
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5); // constructor from an existing buffer for R=6
+    rarray(T* buffer, const int* extent);                              // constructor from an existing buffer for any R (the only way for R>6)
+    rarray(const rarray<T,R> &a);                                      // copy constructor
+    rarray(const rarray_intermediate<T,R> &a);                         // copy constructor
+    rarray<T,R>& operator=(const rarray<T,R> &a);                      // assignment operator
+    rarray<T,R>& operator=(const rarray_intermediate<T,R> &a);         // assignment operator
+    ~rarray();                                                         // destructor
+    void free();                                                       // make undefined
+    void reshape(int n0, int n1);                                      // reshape without changing the underlying buffer for R=2
+    void reshape(int n0, int n1, int n2);                              // reshape without changing the underlying buffer for R=3
+    void reshape(int n0, int n1, int n2, int n3);                      // reshape without changing the underlying buffer for R=4
+    void reshape(int n0, int n1, int n2, int n3, int n4);              // reshape without changing the underlying buffer for R=5
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5);      // reshape without changing the underlying buffer for R=6
+    void reshape(const int* extent);                                   // reshape without changing the underlying buffer for any R (the only way for R>6)
 
-    // chained pointer types:
-    typedef typename PointerArray<T,R>::type          parray_t;
-    typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t;
-
-    // constructors 
-    rarray(); // uninitialized
-
-    // creating their own buffer:
-    rarray(int n0, int n1);  // for R=2
-    rarray(int n0, int n1, int n2);  // for R=3
-    rarray(int n0, int n1, int n2, int n3);  // for R=4
-    rarray(int n0, int n1, int n2, int n3, int n4);  // for R=5
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5);  // for R=6
-    rarray(const int* extent);  // for any R (the only way for R>6)
-
-    // constructors from an existing buffer
-    rarray(T* buffer, int n0, int n1); //for R=2
-    rarray(T* buffer, int n0, int n1, int n2); //for R=3
-    rarray(T* buffer, int n0, int n1, int n2, int n3); //for R=4
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4); //for R=5
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5); //for R=6
-    rarray(T* buffer, const int* extent); //for any R (the only way for R>6)
-
-    // destructor:
-    ~rarray();
-
-    // make undefined
-    void free();
-
-    // check if uninitialized
-    bool isfree() const;
-
-    // reshape without changing the underlying buffer
-    void reshape(int n0, int n1);  // for R=2
-    void reshape(int n0, int n1, int n2);  // for R=3
-    void reshape(int n0, int n1, int n2, int n3);  // for R=4
-    void reshape(int n0, int n1, int n2, int n3, int n4);  // for R=5
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5);  // for R=6
-    void reshape(const int* extent);  // for any R (the only way for R>6)
-
-    // return a copy:
-    rarray<T,R> copy() const;
-
-    // retrieve array size in dimension i:
-    int extent(int i) const;
-
-    // retrieve array sizes in all dimensions:
-    const int* extents() const;
-
-    // retrieve the total number of elements:
-    int size() const;
-
-    // return T* to the internal data:
-    T* data();
-    const T* data() const;
-
-    // return T*const*.. acting similarly to this rarray when using []:
-    inline parray_t ptr() const; // as this is really just a cast, keep const
-
-    // return  T**.. acting similarly to this rarray when using []:
-    noconst_parray_t cptr() const;  // as this is really just a cast, keep const
-
-    // create a reference to this that treats elements as constant:
-    rarray<const T,R>&  cref() const;
+    bool                isfree()      const;                           // check if uninitialized
+    rarray<T,R>         copy()        const;                           // return a copy
+    int                 extent(int i) const;                           // retrieve array size in dimension i
+    const int*          extents()     const;                           // retrieve array sizes in all dimensions
+    int                 size()        const;                           // retrieve the total number of elements  
+    T*                  data();                                        // return T* to the internal data
+    const T*            data()        const;                           // return T* to the internal data
+    inline parray_t     ptr()         const;                           // return T*const*.. acting similarly to this rarray when using []:
+    noconst_parray_t    cptr()        const;                           // return  T**.. acting similarly to this rarray when using []:    
+    rarray<const T,R>&  cref()        const;                           // create a reference to this that treats elements as constant:
 
     // access elements 
    #ifndef SKIPINTERMEDIATE
@@ -294,39 +254,21 @@ class rarray {
     inline operator typename PointerArray<const T,R>::type () const; 
    #endif
 
-    // copy constructors:
-    rarray(const rarray<T,R> &a);
-    rarray(const rarray_intermediate<T,R> &a);
-
-    // assignment operators:
-    rarray<T,R>& operator=(const rarray<T,R> &a); 
-    rarray<T,R>& operator=(const rarray_intermediate<T,R> &a);
-
   private:
+    parray_t  parray_;                                                 // start of the array of pointers
+    int*      extent_;                                                 // array of number of elements in each dimension
+    bool      ismine_;                                                 // does the container own the data buffer?
+    bool      entire_;                                                 // true if not a subarray
+    int*      rcount_;                                                 // reference count for the array if not a subarray
 
-    parray_t  parray_;      // start of the array of pointers
-    int*      extent_;      // array of number of elements in each dimension
-    bool      ismine_;      // does the container own the data buffer?
-    bool      entire_;      // true if not a subarray
-    int*      rcount_;      // reference count for the array if not a subarray
-
-    // get start of current contiguous buffer
-    T* get_buffer() const;
-
-    // setup new rarray object:
-    void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount);
-    void init_shallow(parray_t parray, const int* extent);
-    void init_parray(T* buffer, const int* extent);
-    void init_data(const int* extent, int extenttot);
-
-    // cleanup routine:
-    void fini();
-
-    // allocate the chain of pointers, except the base:
-    static parray_t new_except_base(T* buffer, const int* extent);
-
-    // find base of a chain of pointers:
-    static T* base(parray_t parray);
+    T*   get_buffer() const;                                           // get start of current contiguous buffer
+    void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount); // setup new rarray object
+    void init_shallow(parray_t parray, const int* extent);             // setup new rarray object
+    void init_parray(T* buffer, const int* extent);                    // setup new rarray object
+    void init_data(const int* extent, int extenttot);                  // setup new rarray object
+    void fini();                                                       // cleanup routine
+    static parray_t new_except_base(T* buffer, const int* extent);     // allocate the chain of pointers, except the base
+    static T*       base(parray_t parray);                             // find base of a chain of pointers:
 
     friend class rarray_intermediate<T,R>;
 
@@ -338,65 +280,37 @@ template<typename T>
 class rarray<T,1> {
 
   public:
+    typedef T*        iterator;                                        // iterator type
+    typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef int       difference_type;                                 // difference type for indices
+    typedef int       size_type;                                       // type of indices
+    typedef typename PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
+    typedef typename PointerArray<T,1>::noconst_type noconst_parray_t; // conforming shorthand for T*
 
-    // associated types
-    typedef T*        iterator;
-    typedef const T*  const_iterator;
-    typedef int       difference_type;
-    typedef int       size_type;
+    rarray();                                                          // constructor leaving object uninitialized
+    rarray(int n0);                                                    // constructor creating own buffer
+    rarray(const int* extent);                                         // constructor creating own buffer from pointer, for conformity
+    rarray(T* buffer, int n0);                                         // constructor from an existing buffer:
+    rarray(T* buffer, const int* extent);                              // constructor from an existing buffer for conformity    
+    rarray(const rarray<T,1> &a);                                      // copy constructor
+    rarray(const rarray_intermediate<T,1> &a);                         // copy constructor    
+    rarray<T,1>& operator=(const rarray<T,1> &a);                      // assignment operator
+    rarray<T,1>& operator=(const rarray_intermediate<T,1> &a);         // assignment operator
+    ~rarray();                                                         // destructor
+    void free();                                                       // make uninitialized again
+    void reshape(int n0);                                              // to change shape (only shrinking is defined)
+    void reshape(const int* extent);                                   // for conformity
 
-    // chained pointer types:
-    typedef typename PointerArray<T,1>::type          parray_t;
-    typedef typename PointerArray<T,1>::noconst_type  noconst_parray_t;
-
-    // constructors:
-    rarray(); // leave object uninitialized
-
-    // creating their own buffer:
-    rarray(int n0);
-    rarray(const int* extent); //for conformity
-
-    // from an existing buffer:
-    rarray(T* buffer, int n0);
-    rarray(T* buffer, const int* extent); //for conformity
-
-    // destructor:
-    ~rarray();
-
-    // make uninitialized again
-    void free();
-
-    // check if uninitialized
-    bool isfree() const;
-
-    // to change shape (only shrinking is defined)
-    void reshape(int n0);
-    void reshape(const int* extent); //for conformity
-
-    // return a copy:
-    rarray<T,1> copy() const;
-
-    // retrieve array size in dimension i:
-    int extent(int i) const ;
-
-    // retrieve array sizes in all dimensions:
-    const int* extents() const ;
-
-    // retrieve the total number of elements:
-    int size() const;
-
-    // return T* to the internal data:
-    T* data();
-    const T* data() const;
-
-    // return T*const*.. acting similarly to this rarray when using []:
-    inline parray_t ptr() const; // as this is really just a cast, keep const
-
-    // return  T**.. acting similarly to this rarray when using []:
-    noconst_parray_t cptr() const;  // as this is really just a cast, keep const
-
-    // create a reference to this that treats elements as constant:
-    rarray<const T,1>&  cref() const;
+    bool                isfree()      const;                           // check if uninitialized
+    rarray<T,1>         copy()        const;                           // return a copy
+    int                 extent(int i) const;                           // retrieve array size in dimension i
+    const int*          extents()     const;                           // retrieve array sizes in all dimensions
+    int                 size()        const;                           // retrieve the total number of elements
+    T*                  data();                                        // return T* to the internal data
+    const T*            data()        const;                           // return T* to the internal data
+    inline parray_t     ptr()         const;                           // return T* acting similarly to this rarray when using []
+    noconst_parray_t    cptr()        const;                           // return  T* acting similarly to this rarray when using []
+    rarray<const T,1>&  cref()        const;                           // create reference to this that treats elements as constant
 
     // access elements through intermediate object:
    #ifndef SKIPINTERMEDIATE
@@ -409,48 +323,30 @@ class rarray<T,1> {
     inline operator typename PointerArray<const T,1>::type () const;
    #endif
 
-    // copy constructors:
-    rarray(const rarray<T,1> &a);
-    rarray(const rarray_intermediate<T,1> &a);
-
-    // assignment operators:
-    rarray<T,1>& operator=(const rarray<T,1> &a);
-    rarray<T,1>& operator=(const rarray_intermediate<T,1> &a) ;
-
   private:
+    parray_t  parray_;                                                 // start of the array of pointers
+    int*      extent_;                                                 // array of number of elements in each dimension
+    bool      ismine_;                                                 // does the container own the data buffer?
+    bool      entire_;                                                 // true if not a subarray
+    int*      rcount_;                                                 // reference count for the array if not a subarray
 
-    parray_t  parray_;      // start of the array of pointers
-    int*      extent_;      // array of number of elements in each dimension
-    bool      ismine_;      // does the container own the data buffer?
-    bool      entire_;      // true if not a subarray
-    int*      rcount_;      // reference count for the array if not a subarray
-
-    T* get_buffer() const;
-
-    // setup new rarray object:
-    void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount);
-    void init_shallow(parray_t parray, const int* extent);
-    void init_parray(T* buffer, const int* extent);
-    void init_data(const int* extent, int extenttot);
-
-    // cleanup routine:
-    void fini() ;
-
-    // allocate the chain of pointers, except the base:
-    static parray_t new_except_base(T* buffer, const int* extent);
-
-    // find base of a chain of pointers:
-    static T* base(parray_t parray) ;
+    T*   get_buffer() const;                                           // get start of current contiguous buffer  
+    void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount); // setup new rarray object
+    void init_shallow(parray_t parray, const int* extent);             // setup new rarray object
+    void init_parray(T* buffer, const int* extent);                    // setup new rarray object
+    void init_data(const int* extent, int extenttot);                  // setup new rarray object
+    void fini() ;                                                      // cleanup routine
+    static parray_t new_except_base(T* buffer, const int* extent);     // allocate the chain of pointers, except the base
+    static T* base(parray_t parray) ;                                  // find base of a chain of pointers
 
     friend class rarray_intermediate<T,1>;
 
 }; // end definition rarray<T,1>
 
-//------  END DEFINITION class rarray<T,R>  ------//
+// END DEFINITION class rarray<T,R>
 
-//----------------------------------------------------------------------//--//
 
-//------  DEFINITION class rarray_intermediate <T,R>  ------//
+// DEFINITION class rarray_intermediate <T,R>
 
 // rarray_intermediate class: interface like rarray without assignment. Really
 // only a reference to one, used in intermediate expressions produced
@@ -460,53 +356,30 @@ template<typename T,int R>
 class rarray_intermediate {
 
   public:
-
-    // associated types
-    typedef T*        iterator;
-    typedef const T*  const_iterator;
-    typedef int       difference_type;
-    typedef int       size_type;
-
-    // chained pointer types:
-    typedef typename PointerArray<T,R>::type          parray_t;
-    typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t;
-
-    // retrieve array size in dimension i:
-    inline int extent(int i) const;
-
-    // retrieve array sizes in all dimensions:
-    const int* extents() const; 
-
-    // retrieve the total number of elements:
-    int size() const;
-
-    // return T* to the internal pointer to the data:
-    T* data();
-
-    // return T*const*.. acting similarly to this rarray when using []:
-    inline parray_t ptr() const; // as this is really just a cast, keep const
-
-    // return T**.. acting similarly to this rarray when using []:
-    noconst_parray_t cptr() const; // as this is really just a cast, keep const
-
-    // create a reference to this that treats elements as constant:
-    rarray_intermediate<const T,R>& cref() const; 
-
-    // element access:
-    inline rarray_intermediate<T,R-1> operator[](int i); 
+    typedef T*        iterator;                                        // iterator type
+    typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef int       difference_type;                                 // difference type for indices
+    typedef int       size_type;                                       // type of indices
+    typedef typename PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
+    typedef typename PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
+    
+    inline int extent(int i) const;                                    // retrieve array size in dimension i
+    const int* extents() const;                                        // retrieve array sizes in all dimensions    
+    int size() const;                                                  // retrieve the total number of elements
+    T* data();                                                         // return T* to the internal pointer to the data
+    inline parray_t ptr() const;                                       // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t cptr() const;                                     // return T**.. acting similarly to this rarray when using []
+    rarray_intermediate<const T,R>& cref() const;                      // create a reference to this that treats elements as constant
+    inline rarray_intermediate<T,R-1> operator[](int i);               // element access
 
   protected:
+    parray_t   const  parray_;                                         // start of the pointer array
+    const int* const  extent_;                                         // number of elements in each dimension
 
-    parray_t   const  parray_;        // start of the pointer array
-    const int* const  extent_;        // number of elements in each dimension
-
-    // constructor:
-    inline rarray_intermediate(parray_t parray, const int* extent);
-
-    // can be called only by:
-    friend class rarray<T,R>; 
-    friend class rarray<T,R+1>;
-    friend class rarray_intermediate<T,R+1>;
+    inline rarray_intermediate(parray_t parray, const int* extent);    // constructor, called by
+    friend class rarray<T,R>;                                          // constructor can only
+    friend class rarray<T,R+1>;                                        // be called by these
+    friend class rarray_intermediate<T,R+1>;                           // classes.
     friend class rarray<typename Unconst<T>::type,R+1>;
 
 }; // end definition rarray_intermediate<T,R>
@@ -516,49 +389,27 @@ class rarray_intermediate {
 template<typename T> class rarray_intermediate<T,1> {
 
   public:
+    typedef T*        iterator;                                        // iterator type
+    typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef int       difference_type;                                 // difference type for indices
+    typedef int       size_type;                                       // type of indices
+    typedef typename PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
+    typedef typename PointerArray<T,1>::noconst_type noconst_parray_t; // conforming shorthand for T*
 
-    // associated types
-    typedef T*        iterator;
-    typedef const T*  const_iterator;
-    typedef int       difference_type;
-    typedef int       size_type;
-
-    // chained pointer types:
-    typedef typename PointerArray<T,1>::type          parray_t;
-    typedef typename PointerArray<T,1>::noconst_type  noconst_parray_t;
-
-    // retrieve array size in dimension i:
-    int extent(int i) const;
-
-    // retrieve array sizes in all dimensions:
-    const int* extents() const; 
-
-    // retrieve the total number of elements:
-    int size() const; 
-
-    // return T* to the internal pointer to the data:
-    T* data();
-
-    // return T*const*.. acting similarly to this rarray when using []:
-    inline parray_t ptr() const; // as this is really just a cast, keep const
-
-    // return T**.. acting similarly to this rarray when using []:
-    noconst_parray_t cptr() const;  // as this is really just a cast, keep const
-
-    // create a reference to this that treats elements as constant:
-    rarray_intermediate<const T,1>& cref() const;
-
-    // element access:
-    inline T& operator[](int i);
+    int extent(int i) const;                                           // retrieve array size in dimension i
+    const int* extents() const;                                        // retrieve array sizes in all dimensions
+    int size() const;                                                  // retrieve the total number of elements
+    T* data();                                                         // return T* to the internal pointer to the data
+    inline parray_t ptr() const;                                       // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t cptr() const;                                     // return T**.. acting similarly to this rarray when using []
+    rarray_intermediate<const T,1>& cref() const;                      // create a reference to this that treats elements as constant
+    inline T& operator[](int i);                                       // element access
 
   protected:
+    parray_t   const   parray_;                                        // start of the pointer array
+    const int* const   extent_;                                        // number of elements in each dimension
 
-    parray_t   const   parray_;        // start of the pointer array
-    const int* const   extent_;        // number of elements in each dimension
-
-    // constructor:
-    inline rarray_intermediate(parray_t parray, const int* extent);
-
+    inline rarray_intermediate(parray_t parray, const int* extent);    // constructor
     // can only be used by:
     friend class rarray<T,1>; 
     friend class rarray<T,2>;
@@ -567,56 +418,180 @@ template<typename T> class rarray_intermediate<T,1> {
 
 };  // end of class template definition of rarray_intermediate<T,1>.
 
-//------  END DEFINITION class rarray_intermediate <T,R>  ------//
-
-
-//------------------------------------------------------
-//------------------------------------------------------
-//--                                                --//
-//--          I M P L E M E N T A T I O N           --//
-//--                                                --//
-//------------------------------------------------------
-//------------------------------------------------------
-
+// END DEFINITION class rarray_intermediate <T,R>
 
 #ifdef TRACETEST
-  
     #include <iostream>
-
     #define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
-
 #else
-
     #define profileSay(a) 
-
 #endif
 
+// DEFINITION OF EXTENT AND RARRAY
+
+#define EXTENT(A,I) extent_given_byte_size(A,I,sizeof(A))
+#define RARRAY(A)   make_rarray_given_byte_size(A,sizeof(A))
+
+template<typename T> inline
+int extent_given_byte_size(T a[], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(T[],int,int)");
+    switch (i) {
+        case 0:  return byte_size/sizeof(T);
+        default: return 1;
+    }
+}
+
+template<typename T,int Z> inline
+int extent_given_byte_size(T a[][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(T[][Z],int,int)");
+    switch (i) {
+        case 0:  return byte_size/sizeof(T)/Z;
+        case 1:  return Z;
+        default: return 1;
+    }
+}
+
+template<typename T,int Y,int Z> inline
+int extent_given_byte_size(T a[][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(T[][Y][Z],int,int)");
+    switch (i) {
+        case 0:  return byte_size/sizeof(T)/Z/Y;
+        case 1:  return Y;
+        case 2:  return Z;
+        default: return 1;
+    }
+}
+
+template<typename T,int X,int Y,int Z> inline
+int extent_given_byte_size(T a[][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(T[][X][Y][Z],int,int)");
+    switch (i) {
+        case 0:  return byte_size/sizeof(T)/X/Z/Y;
+        case 1:  return X;
+        case 2:  return Y;
+        case 3:  return Z;
+        default: return 1;
+    }
+}
+
+template<typename T,int W,int X,int Y,int Z> inline
+int extent_given_byte_size(T a[][W][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(T[][W][X][Y][Z],int,int)");
+    switch (i) {
+        case 0:  return byte_size/sizeof(T)/W/X/Z/Y;
+        case 1:  return W;
+        case 2:  return X;
+        case 3:  return Y;
+        case 4:  return Z;
+        default: return 1;
+    }
+}
+
+template<typename T,int V,int W,int X,int Y,int Z> inline
+int extent_given_byte_size(T a[][V][W][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(T[][V][W][X][Y][Z],int,int)");
+    switch (i) {
+       case 0:  return byte_size/sizeof(T)/V/W/X/Z/Y;
+       case 1:  return V;
+       case 2:  return W;
+       case 3:  return X;
+       case 4:  return Y;
+       case 5:  return Z;
+       default: return 1;
+    }
+}
+
+template<typename T,int R> inline
+int extent_given_byte_size(const rarray<T,R>& a, int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(const rarray<T,R>&,int,int)");
+    return a.extent(i);
+}
+
+template<typename T> inline
+rarray<T,1> make_rarray_given_byte_size(T a[], int byte_size) 
+{
+    profileSay("rarray<T,1> make_rarray_given_byte_size(T[],int)");
+    const int z = byte_size/sizeof(T);
+    return rarray<T,1>(a,z);
+}
+
+template<typename T,int Z> inline
+rarray<T,2> make_rarray_given_byte_size(T a[][Z], int byte_size) 
+{
+    profileSay("rarray<T,2> make_rarray_given_byte_size(T[][Z],int)");
+    const int y = byte_size/sizeof(T)/Z;
+    return rarray<T,2>(*a,y,Z);
+}
+
+template<typename T,int Y,int Z> inline
+rarray<T,3> make_rarray_given_byte_size(T a[][Y][Z], int byte_size) 
+{
+    profileSay("rarray<T,3> make_rarray_given_byte_size(T[][Y][Z],int)");
+    const int x = byte_size/sizeof(T)/Z/Y;
+    return rarray<T,3>(**a,x,Y,Z);
+}
+
+template<typename T,int X,int Y,int Z> inline
+rarray<T,4> make_rarray_given_byte_size(T a[][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<T,4> make_rarray_given_byte_size(T[][X][Y][Z],int)");
+    const int w = byte_size/sizeof(T)/X/Z/Y;
+    return rarray<T,4>(***a,w,X,Y,Z);
+}
+
+template<typename T,int W,int X,int Y,int Z> inline
+rarray<T,5> make_rarray_given_byte_size(T a[][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<T,5> make_rarray_given_byte_size(T[][W][X][Y][Z],int)");
+    const int v = byte_size/sizeof(T)/W/X/Z/Y;
+    return rarray<T,5>(***a,v,W,X,Y,Z);
+}
+
+template<typename T,int V,int W,int X,int Y,int Z> inline
+rarray<T,6> make_rarray_given_byte_size(T a[][V][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<T,6> make_rarray_given_byte_size(T[][V][W][X][Y][Z],int)");
+    const int u = byte_size/sizeof(T)/V/W/X/Z/Y;
+    return rarray<T,6>(***a,u,V,W,X,Y,Z);
+}
+
+template<typename T,int R> inline
+rarray<T,R> make_rarray_given_byte_size(rarray<T,R> a, int byte_size) 
+{
+    return a;
+}
+
+
+//------------------------------------------------//
+//                                                //
+//          I M P L E M E N T A T I O N           //
+//                                                //
+//------------------------------------------------//
+
 #ifdef BOUNDSCHECK
-
     #include <stdexcept>
-
     #define checkOrSay(a, b) if (not(a)) throw std::out_of_range(b)
-
     // Boundschecking needs to switch off SKIPINTERMEDIATE if it
     // was set lest only the first dimension gets checked.
-
     #ifdef SKIPINTERMEDIATE
         #undef SKIPINTERMEDIATE
     #endif
-
 #else
-
     #define checkOrSay(a, b) 
-
 #endif
 
 #if __cplusplus <= 199711L
-
     #define nullptr 0 
-
 #endif
 
-//------------------------------------------------------------------------//
+//----------------------------------------------------------------------//
 
 // rarray<T,R> and rarray_intermediate<T,R> constructors:
 
