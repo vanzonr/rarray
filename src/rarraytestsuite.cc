@@ -608,7 +608,7 @@ int test1dconversions()
     //print1d_1(c.ptr_array(), c.extent(0), std::cout);
     print1d_1(c.ptr_array(), c.extent(0), s1);
     CHECK(s1.str()=="1 2 3 4 5 6 7 8 9 \n");
-    print1d_2(c.cptr_array(), c.extent(0), s2);
+    print1d_2(c.noconst_ptr_array(), c.extent(0), s2);
     CHECK(s2.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_1(a.data(), c.extent(0), s3);
     CHECK(s3.str()=="1 2 3 4 5 6 7 8 9 \n");
@@ -757,7 +757,7 @@ int test2dconversions()
     const rarray<float,2>& c=a; // note the const
     std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
  // print2d_1(c, a.extent(0), a.extent(1), s1); won't work, one needs:
-    print2d_1(c.cptr_array(), c.extent(0), c.extent(1), s1);
+    print2d_1(c.noconst_ptr_array(), c.extent(0), c.extent(1), s1);
     CHECK(s1.str()==
           "11 12 13 14 15 \n"
           "21 22 23 24 25 \n"
@@ -769,7 +769,7 @@ int test2dconversions()
           "81 82 83 84 85 \n"
           "91 92 93 94 95 \n\n");
  // print2d_2(c, c.extent(0), c.extent(1), s2); // won't work, one needs:
-    print2d_2(c.const_ref().cptr_array(), c.extent(0), c.extent(1), s2);
+    print2d_2(c.const_ref().noconst_ptr_array(), c.extent(0), c.extent(1), s2);
     CHECK(s2.str()==s1.str());
     print2d_3(c.ptr_array(), c.extent(0), c.extent(1), s3);
     CHECK(s3.str()==s1.str());
@@ -941,7 +941,7 @@ int test3dconversions()
 
     //  const rarray<float,3>* pa = &a;
   //print3d_1(c, c.extent(0), c.extent(1), c.extent(2)); //won't work, one needs:
-    print3d_1(c.cptr_array(), c.extent(0), c.extent(1), c.extent(2), s1); 
+    print3d_1(c.noconst_ptr_array(), c.extent(0), c.extent(1), c.extent(2), s1); 
     CHECK(s1.str()==
      "111 112       \t121 122       \t131 132       \t141 142       \t151 152       \t\n"
      "211 212       \t221 222       \t231 232       \t241 242       \t251 252       \t\n"
@@ -953,7 +953,7 @@ int test3dconversions()
      "811 812       \t821 822       \t831 832       \t841 842       \t851 852       \t\n"
      "911 912       \t921 922       \t931 932       \t941 942       \t951 952       \t\n\n");
  // print3d_2(c, c.extent(0), c.extent(1), c.extent(2)); won't work, one needs:
-    print3d_2(c.const_ref().cptr_array(), c.extent(0), c.extent(1), c.extent(2), s2); 
+    print3d_2(c.const_ref().noconst_ptr_array(), c.extent(0), c.extent(1), c.extent(2), s2); 
     CHECK(s2.str()==s1.str());    
     print3d_3(c.ptr_array(), c.extent(0), c.extent(1), c.extent(2), s3); 
     CHECK(s3.str()==s1.str());
@@ -1014,10 +1014,10 @@ int testconstintermediatefunction(const rarray<float,3>& a, const float* data1ch
     const float* a1=a[1].data();
     CHECK(a1==data1check); 
     CHECK(a[1].ptr_array());
-    CHECK(a[1].cptr_array());
+    CHECK(a[1].noconst_ptr_array());
     CHECK(a[1].const_ref().ptr_array());
     CHECK(a[1][2].ptr_array());
-    CHECK(a[1][2].cptr_array());
+    CHECK(a[1][2].noconst_ptr_array());
     CHECK(a[1][2].const_ref().ptr_array());
     return ALLCLEAR;
 }
@@ -1428,10 +1428,13 @@ int test6dautoconversion()
 
 int testoutput() {
 
-    double a[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-    double b[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
-    rarray<double,2> r(a,4,4);
-    rarray<double,3> s(b,3,3,3);
+    double a[5]={1,2,3,4,5};
+    double b[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    double c[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
+    rarray<double,1> q(a,5);
+    rarray<double,2> r(b,4,4);
+    rarray<double,3> s(c,3,3,3);
+    std::cout << q << '\n';
     std::cout << r << '\n';
     std::cout << s << '\n';
     return ALLCLEAR;
