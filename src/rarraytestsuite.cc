@@ -234,13 +234,12 @@ int testconstructors7dim()
     CHECK(c7.extent(5) == dim[5]);
     CHECK(c7.extent(6) == dim[6]);
 
+    a1.clear(); //optional here, as a1 will go out of scope
+    b7.clear();
 
-    a1.free(); //optional here, as a1 will go out of scope
-    b7.free();
-
-    CHECK(a1.isfree());
-    CHECK(b7.isfree());
-    CHECK(c7.isfree() == false);
+    CHECK(a1.is_clear());
+    CHECK(b7.is_clear());
+    CHECK(c7.is_clear() == false);
     return ALLCLEAR;
 }
 

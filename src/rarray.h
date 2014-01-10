@@ -226,7 +226,7 @@ class rarray {
     rarray<T,R>& operator=(const rarray<T,R> &a);                      // assignment operator
     rarray<T,R>& operator=(const rarray_intermediate<T,R> &a);         // assignment operator
     ~rarray();                                                         // destructor
-    void free();                                                       // make undefined
+    void clear();                                                      // make undefined
     void reshape(int n0, int n1);                                      // reshape without changing the underlying buffer for R=2
     void reshape(int n0, int n1, int n2);                              // reshape without changing the underlying buffer for R=3
     void reshape(int n0, int n1, int n2, int n3);                      // reshape without changing the underlying buffer for R=4
@@ -234,7 +234,7 @@ class rarray {
     void reshape(int n0, int n1, int n2, int n3, int n4, int n5);      // reshape without changing the underlying buffer for R=6
     void reshape(const int* extent);                                   // reshape without changing the underlying buffer for any R (the only way for R>6)
 
-    bool                isfree()             const;                    // check if uninitialized
+    bool                is_clear()           const;                    // check if uninitialized
     rarray<T,R>         copy()               const;                    // return a copy
     int                 extent(int i)        const;                    // retrieve array size in dimension i
     const int*          extents()            const;                    // retrieve array sizes in all dimensions
@@ -299,11 +299,11 @@ class rarray<T,1> {
     rarray<T,1>& operator=(const rarray<T,1> &a);                      // assignment operator
     rarray<T,1>& operator=(const rarray_intermediate<T,1> &a);         // assignment operator
     ~rarray();                                                         // destructor
-    void free();                                                       // make uninitialized again
+    void clear();                                                      // make uninitialized again
     void reshape(int n0);                                              // to change shape (only shrinking is defined)
     void reshape(const int* extent);                                   // for conformity
 
-    bool                isfree()             const;                    // check if uninitialized
+    bool                is_clear()           const;                    // check if uninitialized
     rarray<T,1>         copy()               const;                    // return a copy
     int                 extent(int i)        const;                    // retrieve array size in dimension i
     const int*          extents()            const;                    // retrieve array sizes in all dimensions
@@ -883,31 +883,31 @@ rarray<T,1>::~rarray()
 
 // public cleanup routine
 template<typename T,int R>
-void rarray<T,R>::free()
+void rarray<T,R>::clear()
 {
-    profileSay("void rarray<T,R>::free()");
+    profileSay("void rarray<T,R>::clear()");
     fini();
 }
 
 template<typename T>
-void rarray<T,1>::free()
+void rarray<T,1>::clear()
 {
-    profileSay("void rarray<T,1>::free()");
+    profileSay("void rarray<T,1>::clear()");
     fini();
 }
 
 // check if uninitialized
 template<typename T,int R>
-bool rarray<T,R>::isfree() const
+bool rarray<T,R>::is_clear() const
 {
-    profileSay("bool rarray<T,R>::isfree()");
+    profileSay("bool rarray<T,R>::is_clear()");
     return parray_ == nullptr;
 }
 
 template<typename T>
-bool rarray<T,1>::isfree() const
+bool rarray<T,1>::is_clear() const
 {
-    profileSay("bool rarray<T,1>::isfree()");
+    profileSay("bool rarray<T,1>::is_clear()");
     return parray_ == nullptr;
 }
 
