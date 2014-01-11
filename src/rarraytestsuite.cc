@@ -1437,18 +1437,18 @@ int testoutput() {
     std::cout << r << '\n';
     std::cout << s << '\n';
 
-    std::stringstream str("{{{len=2:,d,5},{2,len=3:{}2},{len=7:{1,2,3},1}},{{4},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
-
-    // int extent[3] = {0};
-    // read_and_parse_extent<int,3>(str, extent);
-    // rarray<int,3> intarray(extent);
-    // read_and_parse_extent<int,3>(str, extent, intarray.ptr_array());
+    std::stringstream instr("{{{#2:14,5},{2,#3:{}2},{#7:{1,2,3},1}},{{4},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
+    std::string outstr("{{{14,5},{2,0},{0,1}},{{4,0},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
     
     rarray<int,3> intarray;
 
-    str >> intarray;
-    
-    std::cout << intarray;
+    instr >> intarray;
+    intarray[1][0][1] = 0;
+
+    std::stringstream check;
+    check << intarray;
+
+    CHECK(check.str()==outstr);
 
     return ALLCLEAR;
 }

@@ -596,10 +596,20 @@ template<typename T,int R>
 std::ostream& operator<<(std::ostream &o, const rarray<T,R>& r)
 {
     profileSay("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
-    o << '{' << r[0];
-    for (int i=1; i<r.extent(0); i++) 
-        o << ',' << r[i];
-    o << '}';
+    if (not r.is_clear()) {
+        o << '{';
+        for (int i=0; i<r.extent(0); i++)  {
+            if (i>0)
+                o << ',';
+            o << r[i];
+        }
+        o << '}';
+    } else {
+        for (int i=0; i<R; i++) 
+            o << '{';
+        for (int i=0; i<R; i++) 
+            o << '}';
+    }
     return o;
 }
 
@@ -607,18 +617,21 @@ template<typename T>
 std::ostream& operator<<(std::ostream &o, const rarray<T,1>& r)
 {
     profileSay("std::ostream& operator<<(std::ostream&,const rarray<T,1>&)");
-    o << '{';
-    for (int i=0; i<r.extent(0); i++) {
-        if (i) o << ',';
-        std::stringstream strstr;
-        std::string result;
-        strstr << r[i];
-        result = strstr.str();
-        if (result.find_first_of("{,}") != std::string::npos)
-            o << "len=" << result.size() << ':';
-        o << result;
-    }
-    o << '}';
+    if (not r.is_clear()) {
+        o << '{';
+        for (int i=0; i<r.extent(0); i++) {
+            if (i) o << ',';
+            std::stringstream strstr;
+            std::string result;
+            strstr << r[i];
+            result = strstr.str();
+            if (result.find_first_of("{,}") != std::string::npos)
+                o << '#' << result.size() << ':';
+            o << result;
+        }
+        o << '}';
+    } else 
+        o << "{}";
     return o;
 }
 
@@ -645,7 +658,7 @@ std::ostream& operator<<(std::ostream &o, const rarray_intermediate<T,1>& r)
         strstr << r[i];
         result = strstr.str();
         if (result.find_first_of("{,}") != std::string::npos)
-            o << "len=" << result.size() << ':';
+            o << '#' << result.size() << ':';
         o << result;
     }
     o << '}';
@@ -691,7 +704,7 @@ void read_and_parse_extent(std::istream &in, int* extents, typename PointerArray
                     if (lastchar != ',' and lastchar != '}')
                         word += lastchar;
                     charsread++;
-                    if (word == "len=") {
+                    if (word == "#") {
                         word="";
                         string skipstr;
                         do {
@@ -760,7 +773,7 @@ std::istream& operator>>(std::istream &i, rarray<T,R>& r)
     profileSay("std::istream& operator>>(std::istream&,rarray<T,R>&)");
     int extent[R] = {0};
     read_and_parse_extent<T,R>(i, extent);
-    r.reshape(extent);
+    r = rarray<T,R>(extent);
     read_and_parse_extent<T,R>(i, extent, r.ptr_array());
     return i;
 }
