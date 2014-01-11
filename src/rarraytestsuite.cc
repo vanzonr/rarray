@@ -1436,6 +1436,20 @@ int testoutput() {
     std::cout << q << '\n';
     std::cout << r << '\n';
     std::cout << s << '\n';
+
+    std::stringstream str("{{{len=2:,d,5},{2,len=3:{}2},{len=7:{1,2,3},1}},{{4},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
+
+    // int extent[3] = {0};
+    // read_and_parse_extent<int,3>(str, extent);
+    // rarray<int,3> intarray(extent);
+    // read_and_parse_extent<int,3>(str, extent, intarray.ptr_array());
+    
+    rarray<int,3> intarray;
+
+    str >> intarray;
+    
+    std::cout << intarray;
+
     return ALLCLEAR;
 }
 
