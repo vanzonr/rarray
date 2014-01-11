@@ -625,7 +625,7 @@ std::ostream& operator<<(std::ostream &o, const rarray<T,1>& r)
             std::string result;
             strstr << r[i];
             result = strstr.str();
-            if (result.find_first_of("{,}") != std::string::npos)
+            if (result.find_first_of("{,}#") != std::string::npos)
                 o << '#' << result.size() << ':';
             o << result;
         }
@@ -657,7 +657,7 @@ std::ostream& operator<<(std::ostream &o, const rarray_intermediate<T,1>& r)
         std::string result;
         strstr << r[i];
         result = strstr.str();
-        if (result.find_first_of("{,}") != std::string::npos)
+        if (result.find_first_of("{,}#") != std::string::npos)
             o << '#' << result.size() << ':';
         o << result;
     }
@@ -666,15 +666,19 @@ std::ostream& operator<<(std::ostream &o, const rarray_intermediate<T,1>& r)
 }
 
 template<typename T, int R>
-struct deref {
-    static T& access(typename PointerArray<T,R>::type p, const int* indices) {
+struct deref 
+{
+    static T& access(typename PointerArray<T,R>::type p, const int* indices) 
+    {
         return deref<T,R-1>::access(p[indices[0]-1], indices+1);
     }
 };
 
 template<typename T>
-struct deref<T,1> {
-    static T& access(typename PointerArray<T,1>::type p, const int* indices) {
+struct deref<T,1> 
+{
+    static T& access(typename PointerArray<T,1>::type p, const int* indices) 
+    {
         return p[indices[0]-1];
     }
 };
@@ -683,40 +687,33 @@ template<typename T, int R>
 void read_and_parse_extent(std::istream &in, int* extents, typename PointerArray<T,R>::type p = 0)
 {
     using std::string;
-    char   lastchar;
-    string result;
     size_t init_file_ptr = in.tellg();
     try {
         int current_extents[R] = {0};
-        for (int i=0;i<R;i++) {
+        for (int i=0; i<R; i++) {
             current_extents[i] = 1;
-            result += (lastchar = in.get());
-            if (lastchar != '{') 
+            if (in.get() != '{') 
                 throw std::istream::failure("Format error");
         }
         int current_depth = R-1; // start scanning the deepest level
         while (current_depth>=0) {
             if (current_depth==R-1) {
-                int charsread = 0;
-                string word = "";
+                char    lastchar;
+                string  word = "";
                 do {
-                    result += (lastchar = in.get());
+                    lastchar = in.get();
                     if (lastchar != ',' and lastchar != '}')
                         word += lastchar;
-                    charsread++;
                     if (word == "#") {
                         word="";
                         string skipstr;
                         do {
-                            result += (lastchar = in.get());
-                            skipstr += lastchar;
+                            skipstr += (lastchar = in.get());
                         } while (lastchar!=':');
                         int skip = atoi(skipstr.c_str());
-                        for (int i=0; i<skip; i++) {
-                            result += in.get();
-                            word += *result.rbegin();
-                        }
-                        result += (lastchar = in.get());
+                        for (int i=0; i<skip; i++) 
+                            word += in.get();
+                        lastchar = in.get();
                     }
                     if (lastchar == ',') {
                         if (p) {
@@ -724,7 +721,6 @@ void read_and_parse_extent(std::istream &in, int* extents, typename PointerArray
                             ss >> deref<T,R>::access(p, current_extents);
                         }
                         word="";
-                        charsread=0;
                         current_extents[current_depth]++;
                     }
                 } while (lastchar != '}');
@@ -736,32 +732,28 @@ void read_and_parse_extent(std::istream &in, int* extents, typename PointerArray
                     extents[current_depth] = current_extents[current_depth];
                 current_depth--;
             } else {
-                result += (lastchar = in.get());
-                switch (lastchar) {
-                case ',':
+                switch (in.get()) {
+                  case ',':
                     current_extents[current_depth]++;
                     break;
-                case '{':
+                  case '{':
                     current_depth++;
                     current_extents[current_depth] = 1;
                     break;
-                case '}':
+                  case '}':
                     if (extents[current_depth] < current_extents[current_depth])
                         extents[current_depth] = current_extents[current_depth];
                     current_depth--;
                     break;
-                default:
+                  default:
                     throw std::istream::failure("Format error");
                 }
             }
         }    
     }
     catch (std::istream::failure& e) {
-        // upon failure, undo characters read in 
-        in.seekg(init_file_ptr, in.beg);
-        result = "";
-        // and pass on the error
-        throw e;
+        in.seekg(init_file_ptr, in.beg);// upon failure, undo characters read in
+        throw e;                        // and pass on the error
     }
     if (p==0)
         in.seekg(init_file_ptr, in.beg);
