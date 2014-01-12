@@ -1913,14 +1913,30 @@ void read_and_parse_extent(std::istream &                   in,
 }
 
 template<typename T,int R>
-std::istream& operator>>(std::istream &i, rarray<T,R>& r)
+std::istream& operator>>(std::istream &in, rarray<T,R>& r)
 {
     profileSay("std::istream& operator>>(std::istream&,rarray<T,R>&)");
     int extent[R] = {0};
-    radetail::read_and_parse_extent<T,R>(i, extent, 0);
-    r = rarray<T,R>(extent);
-    radetail::read_and_parse_extent<T,R>(i, 0, r.ptr_array());
-    return i;
+    size_t init_file_ptr = in.tellg();
+    try {
+        // skip initial white space
+        char lastchar;
+        do {
+            lastchar = in.get();
+        } while (lastchar==' ' or lastchar== '\t' or lastchar=='\n');
+        in.putback(lastchar);
+        // read the extents
+        radetail::read_and_parse_extent<T,R>(in, extent, 0);
+        // allocate array
+        r = rarray<T,R>(extent);
+        // fill array
+        radetail::read_and_parse_extent<T,R>(in, 0, r.ptr_array());
+        return in;
+    }
+    catch (std::istream::failure& e) {
+        in.seekg(init_file_ptr, in.beg);// upon failure, undo characters read in
+        throw e;                        // and pass on the error
+    }
 }
 
 

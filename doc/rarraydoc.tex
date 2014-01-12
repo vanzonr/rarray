@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{\small January 10, 2014\vspace{-7mm}}
+\date{\small January 12, 2014\vspace{-7mm}}
 
 \maketitle
 
@@ -57,36 +57,42 @@ The header file \texttt{rarray.h} provides the type \texttt{rarray<T,R>}, where 
 
 \centerline{\begin{tabular}{|l|l|}
 \hline
-\rule{0pt}{15pt}Define a \texttt{n$\times$m$\times$k} array of \texttt{float}s:&
+\rule{0pt}{14pt}Define a \texttt{n$\times$m$\times$k} array of \texttt{float}s:&
 \texttt{rarray<float,3> b(n,m,k);}
 \\
-\rule{0pt}{15pt}Define a \texttt{n$\times$m$\times$k} array of \texttt{float}s with&
+\rule{0pt}{14pt}Define a \texttt{n$\times$m$\times$k} array of \texttt{float}s with&
 \\
 data already allocated at a pointer \texttt{p}:&
 \texttt{rarray<float,3> c(p,n,m,k);}
 \\
-\rule{0pt}{15pt}Element i,j,k of the array \texttt{b}:&
+\rule{0pt}{14pt}Element i,j,k of the array \texttt{b}:&
 \texttt{b[i][j][k]}
 \\
-\rule{0pt}{15pt}Pointer to the contiguous data in \texttt{b}:&
+\rule{0pt}{14pt}Pointer to the contiguous data in \texttt{b}:&
 \texttt{b.data()}
 \\
-\rule{0pt}{15pt}Extent in the \texttt{i}th dimension in \texttt{b:}&
+\rule{0pt}{14pt}Extent in the \texttt{i}th dimension in \texttt{b:}&
 \texttt{b.extent(i)}
 \\
-\rule{0pt}{15pt}Shallow copy of the array:&
-\texttt{rarray<float,3> d=b};
+\rule{0pt}{14pt}Shallow copy of the array:&
+\texttt{rarray<float,3> d=b;}
 \\
-\rule{0pt}{15pt}Deep copy of the array:&
-\texttt{rarray<float,3> e=b.copy()};
+\rule{0pt}{14pt}Deep copy of the array:&
+\texttt{rarray<float,3> e=b.copy();}
 \\
-\rule{0pt}{15pt}A rarray using an existing automatic array:&
+\rule{0pt}{14pt}A rarray using an existing automatic array:&
 \texttt{float f[10][20][8]=\{\dots\};}\\
 &
-\texttt{rarray<float,3> g=RARRAY(f)};
+\texttt{rarray<float,3> g=RARRAY(f);}
 \\
-\rule{0pt}{15pt}A rarray copy of an existing automatic array:&
-\texttt{rarray<float,3> h=RARRAY(f).copy()};
+\rule{0pt}{14pt}A rarray copy of an existing automatic array:&
+\texttt{rarray<float,3> h=RARRAY(f).copy();}
+\\
+\rule{0pt}{14pt}Output a rarray to screen:&
+\texttt{std::cout << h << endl;}
+\\
+\rule{0pt}{14pt}Read a rarray from keyboard:&
+\texttt{std::cin >> h;}
 \\\hline
 \end{tabular}}
 
@@ -220,6 +226,7 @@ The guarrantee of contiguity means strided arrays are not supported.
   conversions to \texttt{T*const*} or \texttt{const T*const*}, and
   using the method \texttt{noconst\_ptr\_array()} for the conversion to a
   \texttt{T**}.
+\item Streaming input and output.
 \end{itemize}
 
 \section{Using the {\tt rarray}s}
@@ -276,8 +283,25 @@ For example:\vspace{-9pt}
         s[i][j][k] = i+j+k;
 \end{verbatim}%
 \vspace{-12pt}
+\end{framed}%\vspace{-8pt}\noindent
+
+\subsection{Streaming input and output}
+
+Although it is usually preferrable to store large arrays in binary, rarray does provide streaming operators \texttt{<<} and \texttt{>>} to read and write to standard C++ iostreams.  The output produced by the output streaming operator is like that of automatic arrays initializers: Each dimension is started and ended by \texttt{\{} and \texttt{\}} and components are comma separated. 
+E.g.:\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  int buf[6] = {1,2,3,4,5,6};
+  rarray<int,2> arr(buf,3,2)
+  std::cout << arr;
+\end{verbatim}%
+\vspace{-12pt}
 \end{framed}\vspace{-8pt}\noindent
-The \texttt{extent(int)} method used here returns the size of each dimension (counting from 0).
+will print \texttt{\{\{1,2\},\{3,4\},\{5,6\}\}}. The streaming operators use those of the element types. 
+
+Reading would not be unambiguous for some types, e.g. for \texttt{std::string}, that can contain the syntactic elements `\texttt{\{}', `\texttt{\}}', `\texttt{,}', or `\texttt{\#}'.  If thse elements are found in the output of an element, the element is prepended with a string that encodes the string length of the output. This prepending string starts with a '\texttt\#' character, then the length of the string output for the element  (excluding the prepended part), followed by a `\texttt:' character.
+
+The input stream operators expect the same format as input.
 
 \subsection{Copying and function arguments}
 
@@ -292,9 +316,9 @@ What does this essentially mean? Well:
 
 \subsection{Reshaping the rarray}
 
-If you want to use the data in an rarray but access it in a different `shape', there are two possible approaches:
+To use the data in an rarray but access it in a different `shape', one can
 \begin{enumerate}
-  \item You create a new rarray with the desired dimensions, but which uses the data from the first rarray. E.g.
+  \item create a new rarray which uses the data from the first rarray. E.g.
 \vspace{-9pt}
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
@@ -307,7 +331,7 @@ void dump(const rarray<double,3>& r) {
 \end{verbatim}%
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
-\item You reshape the existing rarray with the desired dimensions. E.g.
+\item or one can reshape the existing rarray with the desired dimensions. E.g.
 \vspace{-9pt}
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
@@ -320,10 +344,10 @@ void dump(rarray<double,3>& r) {
 \end{verbatim}%
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
-This only works if the new and old shape have the same ranks, as the rank of the rarray is part of its type. 
-
-The example intentionally also has side effects, as the original rarray that was passed to the dump function now has a different shape.  To fix this, one could pass the \texttt{rarray r} by value. This creates a shallow, reference counted copy, so passing it in is not that expensive. Upon reshaping, \texttt{r} gets unlinked from the reference counting, and the effect is the same as if we has created a new \texttt{rarray} with \texttt{r.data()} as the buffer.
+This only works if the new and old shape have the same ranks.
 \end{enumerate}
+The last example intentionally also has side effects, as the original rarray that was passed to the dump function now has a different shape.  To fix this, one could pass the \texttt{rarray r} by value. This creates a shallow, reference counted copy, so passing it in is not that expensive. Upon reshaping, \texttt{r} gets unlinked from the reference counting, and the effect is the same as if we has created a new \texttt{rarray} with \texttt{r.data()} as the buffer.
+
 In both cases, the total size of the new shape should be less or equal to that of the old shape, because no additional data is allocated by the reshape method. 
 \subsection{Optional bounds checking}
 
@@ -354,8 +378,8 @@ The more-or-less equivalent automatic array version
 \noindent
 is a little simpler, but automatic arrays are allocated on the stack,
 which is typically of limited size. Another drawback is that this array cannot be passed to functions that do
-not hard-code exactly matching dimensions (except for the last
-dimensions, which is why one-dimensional arrays work well enough).
+not hard-code exactly matching dimensions except for the last
+one.
 
 Using rarray also has benefits over another common \cxx\ 
 solution using the STL:
@@ -379,7 +403,7 @@ solution using the STL:
 which is complicated, is non-contiguous in memory, and likely
 slower. 
 
-\pagebreak[4]
+%\pagebreak[4]
 \section{Class definition}
 
 \subsection{Interface}
@@ -490,16 +514,14 @@ The main convenience of this is that one can write functions that take rarray ar
 \begin{verbatim}
 #include <iostream>
 #include "rarray.h"
-void print2d(const rarray<float,2> &s) 
-{
+void print2d(const rarray<float,2> &s) {
     for (int i=0; i<s.extent(0); i++) {
         for (int j=0; j<s.extent(1); j++)
             std::cout << s[i][j] << ' ';
         std::cout << std::endl;
     }
 }
-int main() 
-{
+int main() {
     float printme[4][4] = { { 1.0, 1.2, 1.4, 1.6},
                             { 2.0, 2.2, 2.4, 2.6},
                             { 3.0, 3.2, 3.4, 3.6},
@@ -519,16 +541,14 @@ A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elemen
 For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-  float add(const rarray<const float,2> &s) 
-  {
+  float add(const rarray<const float,2> &s)   {
      float x = 0.0;
      for (int i=0; i<s.extent(0); i++)
         for (int j=0; j<s.extent(1); j++)
            x += a[i][j];
      return x;
   }
-  int main() 
-  {
+  int main() {
      rarray<float,2> s(40, 40);
      float z = add(s.const_ref()); // because add() takes <const float>
   }
