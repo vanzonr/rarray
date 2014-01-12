@@ -1433,9 +1433,9 @@ int testoutput() {
     rarray<double,1> q(a,5);
     rarray<double,2> r(b,4,4);
     rarray<double,3> s(c,3,3,3);
-    std::cout << q << '\n';
-    std::cout << r << '\n';
-    std::cout << s << '\n';
+    std::stringstream out;
+    out << q << r << s;
+    CHECK(out.str() == "{1,2,3,4,5}{{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,16}}{{{1,2,3},{4,5,6},{7,8,9}},{{10,11,12},{13,14,15},{16,17,18}},{{19,20,21},{22,23,24},{25,26,27}}}");
 
     std::stringstream instr("{{{#2:14,5},{2,#3:{}2},{#7:{1,2,3},1}},{{4},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
     std::string outstr("{{{14,5},{2,0},{0,1}},{{4,0},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
@@ -1450,6 +1450,21 @@ int testoutput() {
 
     CHECK(check.str()==outstr);
 
+    rarray<std::string,2> A(2,2);
+    A[0][0] = "Hello, world";
+    A[0][1] = "I like { and }";
+    A[1][0] = "I prefer #";
+    A[1][1] = "I'm easy.";
+    
+    rarray<std::string,2> B;
+
+    std::stringstream sin("{{#12:Hello, world,#14:I like { and }},{#10:I prefer #,I'm easy.}}");
+    sin >> B;
+
+    CHECK(A[0][0] == B[0][0]);
+    CHECK(A[0][1] == B[0][1]);
+    CHECK(A[1][0] == B[1][0]);
+    CHECK(A[1][1] == B[1][1]);
     return ALLCLEAR;
 }
 
