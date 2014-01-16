@@ -18,6 +18,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
 
 // DEFINE INTERNAL TYPES
 
@@ -70,14 +71,7 @@ struct PointerArray<T,1> {
     typedef T* type;         // note there is not const: a const
                              // here would express that the elements
                              // of the multidimensional arrays are
-                             // constant, not that its shape is
-                             // constant. We do want to be able to
-                             // have multidimensional arrays of
-                             // constant shape but with modifiable
-                             // elements, so const here would not be
-                             // appropriate. Finally note that one
-                             // can express non-modifiable element
-                             // using PointerArray<const T,R>.
+                             // constant, not that its shape is constant. 
     typedef T* noconst_type; // There would never have been a const here
 };
 
@@ -132,17 +126,27 @@ class rarray {
     rarray(int n0, int n1, int n2, int n3);                            // constructor creating own buffer for R=4
     rarray(int n0, int n1, int n2, int n3, int n4);                    // constructor creating own buffer for R=5
     rarray(int n0, int n1, int n2, int n3, int n4, int n5);            // constructor creating own buffer for R=6
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6); 
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7); 
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8); 
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9); 
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10); 
     rarray(const int* extent);                                         // constructor creating own buffer for any R (the only way for R>6)
-    rarray(T* buffer, int n0, int n1);                                 // constructor from an existing buffer for R=2
+    rarray(T* buffer, int n0, int n1);                                 // constructor from an existing buffer for R=2..11
     rarray(T* buffer, int n0, int n1, int n2);                         // constructor from an existing buffer for R=3
     rarray(T* buffer, int n0, int n1, int n2, int n3);                 // constructor from an existing buffer for R=4
     rarray(T* buffer, int n0, int n1, int n2, int n3, int n4);         // constructor from an existing buffer for R=5
     rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5); // constructor from an existing buffer for R=6
-    rarray(T* buffer, const int* extent);                              // constructor from an existing buffer for any R (the only way for R>6)
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6); 
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7); 
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8); 
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9); 
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10); 
+    rarray(T* buffer, const int* extent);                              // constructor from an existing buffer for any R (the only way for R>11)
     rarray(const rarray<T,R> &a);                                      // copy constructor
-    rarray(const radetail::Subarray<T,R> &a);                         // copy constructor
+    rarray(const radetail::Subarray<T,R> &a);                          // copy constructor
     rarray<T,R>& operator=(const rarray<T,R> &a);                      // assignment operator
-    rarray<T,R>& operator=(const radetail::Subarray<T,R> &a);         // assignment operator
+    rarray<T,R>& operator=(const radetail::Subarray<T,R> &a);          // assignment operator
     ~rarray();                                                         // destructor
     void clear();                                                      // make undefined
     void reshape(int n0, int n1);                                      // reshape without changing the underlying buffer for R=2
@@ -150,6 +154,11 @@ class rarray {
     void reshape(int n0, int n1, int n2, int n3);                      // reshape without changing the underlying buffer for R=4
     void reshape(int n0, int n1, int n2, int n3, int n4);              // reshape without changing the underlying buffer for R=5
     void reshape(int n0, int n1, int n2, int n3, int n4, int n5);      // reshape without changing the underlying buffer for R=6
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6);
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7);
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8);
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);
     void reshape(const int* extent);                                   // reshape without changing the underlying buffer for any R (the only way for R>6)
 
     bool                is_clear()           const;                    // check if uninitialized
@@ -324,7 +333,7 @@ template<typename T> class Subarray<T,1> {
     T*                              data()               const;        // return T* to the internal pointer to the data
     parray_t                        ptr_array()          const;        // return T*const*.. acting similarly to this rarray when using []
     noconst_parray_t                noconst_ptr_array()  const;        // return T**.. acting similarly to this rarray when using []
-    Subarray<const T,1>& const_ref()          const;        // create a reference to this that treats elements as constant
+    Subarray<const T,1>&            const_ref()          const;        // create a reference to this that treats elements as constant
     T&                              operator[](int i)    const;        // element access
 
   protected:
@@ -347,21 +356,31 @@ template<typename T> class Subarray<T,1> {
 #define EXTENT(A,I) extent_given_byte_size(A,I,sizeof(A))
 #define RARRAY(A)   make_rarray_given_byte_size(A,sizeof(A))
 
-template<typename T>                                int extent_given_byte_size(T a[], int i, int byte_size); 
-template<typename T,int Z>                          int extent_given_byte_size(T a[][Z], int i, int byte_size);
-template<typename T,int Y,int Z>                    int extent_given_byte_size(T a[][Y][Z], int i, int byte_size);
-template<typename T,int X,int Y,int Z>              int extent_given_byte_size(T a[][X][Y][Z], int i, int byte_size);
-template<typename T,int W,int X,int Y,int Z>        int extent_given_byte_size(T a[][W][X][Y][Z], int i, int byte_size);
-template<typename T,int V,int W,int X,int Y,int Z>  int extent_given_byte_size(T a[][V][W][X][Y][Z], int i, int byte_size);
-template<typename T,int R>                          int extent_given_byte_size(const rarray<T,R>& a, int i, int byte_size);
+template<typename A>                                                              int extent_given_byte_size(A a[], int i, int byte_size); 
+template<typename A,int Z>                                                        int extent_given_byte_size(A a[][Z], int i, int byte_size);
+template<typename A,int Y,int Z>                                                  int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);
+template<typename A,int X,int Y,int Z>                                            int extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size);
+template<typename A,int W,int X,int Y,int Z>                                      int extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size);
+template<typename A,int V,int W,int X,int Y,int Z>                                int extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size);
+template<typename A,int U,int V,int W,int X,int Y,int Z>                          int extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size);
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    int extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size);
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              int extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size);
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
+template<typename A,int R>                                                        int extent_given_byte_size(const rarray<A,R>& a, int i, int byte_size);
 
-template<typename T>                                rarray<T,1> make_rarray_given_byte_size(T a[], int byte_size); 
-template<typename T,int Z>                          rarray<T,2> make_rarray_given_byte_size(T a[][Z], int byte_size); 
-template<typename T,int Y,int Z>                    rarray<T,3> make_rarray_given_byte_size(T a[][Y][Z], int byte_size);
-template<typename T,int X,int Y,int Z>              rarray<T,4> make_rarray_given_byte_size(T a[][X][Y][Z], int byte_size);
-template<typename T,int W,int X,int Y,int Z>        rarray<T,5> make_rarray_given_byte_size(T a[][W][X][Y][Z], int byte_size);
-template<typename T,int V,int W,int X,int Y,int Z>  rarray<T,6> make_rarray_given_byte_size(T a[][V][W][X][Y][Z], int byte_size);
-template<typename T,int R>                          rarray<T,R> make_rarray_given_byte_size(rarray<T,R> a, int byte_size); 
+template<typename A>                                                              rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size); 
+template<typename A,int Z>                                                        rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size); 
+template<typename A,int Y,int Z>                                                  rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);
+template<typename A,int X,int Y,int Z>                                            rarray<A,4>  make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size);
+template<typename A,int W,int X,int Y,int Z>                                      rarray<A,5>  make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size);
+template<typename A,int V,int W,int X,int Y,int Z>                                rarray<A,6>  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size);
+template<typename A,int U,int V,int W,int X,int Y,int Z>                          rarray<A,7>  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size);
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    rarray<A,8>  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size);
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);
+template<typename A,int R>                                                        rarray<A,R> make_rarray_given_byte_size(rarray<A,R> a, int byte_size); 
 
 
 } // end namespace radetail
@@ -443,7 +462,7 @@ rarray<T,R>::rarray(int n0, int n1) //for R=2
     profileSay("rarray<T,R>::rarray(int, int)");
     checkOrSay(R==2, "wrong rank in constructor");
     checkOrSay(n0!=0 and n1!=0, "zero extents in constructor not allowed");
-    const int extent[] = {n0,n1};
+    const int extent[R] = {n0,n1};
     init_data(extent, n0*n1);
 }
 
@@ -454,7 +473,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2) //for R=3
     profileSay("rarray<T,R>::rarray(int, int, int)");
     checkOrSay(R==3, "wrong rank in constructor");
     checkOrSay(n0!=0 and n1!=0 and n2!=0, "zero extents in constructor not allowed");
-    const int extent[] = {n0,n1,n2};
+    const int extent[R] = {n0,n1,n2};
     init_data(extent, n0*n1*n2);
 }
 
@@ -465,7 +484,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2, int n3) //for R=4
     profileSay("rarray<T,R>::rarray(int, int, int, int)");
     checkOrSay(R==4, "wrong rank in constructor");
     checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero extents in constructor not allowed");
-    const int extent[] = {n0,n1,n2,n3};
+    const int extent[R] = {n0,n1,n2,n3};
     init_data(extent, n0*n1*n2*n3);
 }
 
@@ -476,7 +495,7 @@ rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4) //for R=5
     profileSay("rarray<T,R>::rarray(int, int, int, int, int)");
     checkOrSay(R==5, "wrong rank in constructor");
     checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero extents in constructor not allowed");
-    const int extent[] = {n0,n1,n2,n3,n4};
+    const int extent[R] = {n0,n1,n2,n3,n4};
     init_data(extent, n0*n1*n2*n3*n4);
 }
 
@@ -487,12 +506,67 @@ rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5) //for R=6
     profileSay("rarray<T,R>::rarray(int, int, int, int, int, int)");
     checkOrSay(R==6, "wrong rank in constructor");
     checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero extents in constructor not allowed");
-    const int extent[] = {n0,n1,n2,n3,n4,n5};
+    const int extent[R] = {n0,n1,n2,n3,n4,n5};
     init_data(extent, n0*n1*n2*n3*n4*n5);
 }
 
 template<typename T,int R>
-rarray<T,R>::rarray(const int* extent) //for any R (the only way for R>6)
+rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6) //for R=7
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(int, int, int, int, int, int, int)");
+    checkOrSay(R==7, "wrong rank in constructor");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero extents in constructor not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
+    init_data(extent, n0*n1*n2*n3*n4*n5*n6);
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7) //for R=8
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(int, int, int, int, int, int, int, int)");
+    checkOrSay(R==8, "wrong rank in constructor");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero extents in constructor not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
+    init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7);
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8) //for R=9
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==9, "wrong rank in constructor");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero extents in constructor not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
+    init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8);
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9) //for R=10
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==10, "wrong rank in constructor");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero extents in constructor not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
+    init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8*n9);
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10) //for R=11
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int, int. int)");
+    checkOrSay(R==11, "wrong rank in constructor");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero extents in constructor not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
+    init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10);
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(const int* extent) //for any R (the only way for R>11)
 {
     // constructor
     profileSay("rarray<T,R>::rarray(const int*)");
@@ -527,7 +601,7 @@ rarray<T,R>::rarray(T* buffer, int n0, int n1) //for R=2
     // constructor
     profileSay("rarray<T,R>::rarray(T*, int, int)");
     checkOrSay(R==2, "wrong rank in constructor");
-    const int extent[] = {n0,n1};
+    const int extent[R] = {n0,n1};
     init_parray(buffer, extent);
     ismine_ = false;
 }
@@ -538,7 +612,7 @@ rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2) //for R=3
     // constructor
     profileSay("rarray<T,R>::rarray(T*, int, int, int)");
     checkOrSay(R==3, "wrong rank in constructor");
-    const int extent[] = {n0,n1,n2};
+    const int extent[R] = {n0,n1,n2};
     init_parray(buffer, extent);
     ismine_ = false;
 }
@@ -549,7 +623,7 @@ rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3) //for R=4
     // constructor
     profileSay("rarray<T,R>::rarray(T*, int, int, int, int)");
     checkOrSay(R==4, "wrong rank in constructor");
-    const int extent[] = {n0,n1,n2,n3};
+    const int extent[R] = {n0,n1,n2,n3};
     init_parray(buffer, extent);
     ismine_ = false;
 }
@@ -560,7 +634,7 @@ rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4) //for R=5
     // constructor
     profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int)");
     checkOrSay(R==5, "wrong rank in constructor");
-    const int extent[] = {n0,n1,n2,n3,n4};
+    const int extent[R] = {n0,n1,n2,n3,n4};
     init_parray(buffer, extent);
     ismine_ = false;
 }
@@ -571,7 +645,62 @@ rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5) /
     // constructor
     profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int, int)");
     checkOrSay(R==6, "wrong rank in constructor");
-    const int extent[] = {n0,n1,n2,n3,n4,n5};
+    const int extent[R] = {n0,n1,n2,n3,n4,n5};
+    init_parray(buffer, extent);
+    ismine_ = false;
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6) //for R=7
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int)");
+    checkOrSay(R==7, "wrong rank in constructor");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
+    init_parray(buffer, extent);
+    ismine_ = false;
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7) //for R=8
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==8, "wrong rank in constructor");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
+    init_parray(buffer, extent);
+    ismine_ = false;
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8) //for R=9
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==9, "wrong rank in constructor");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
+    init_parray(buffer, extent);
+    ismine_ = false;
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9) //for R=10
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==10, "wrong rank in constructor");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
+    init_parray(buffer, extent);
+    ismine_ = false;
+}
+
+template<typename T,int R>
+rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10) //for R=11
+{
+    // constructor
+    profileSay("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==11, "wrong rank in constructor");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     init_parray(buffer, extent);
     ismine_ = false;
 }
@@ -590,13 +719,13 @@ rarray<T,1>::rarray(T* buffer, int n0)
 {
     // constructor
     profileSay("rarray<T,1>::rarray(T*, int)");
-    const int extent[] = {n0};
+    const int extent[1] = {n0};
     init_parray(buffer, extent);
     ismine_ = false;
 }
 
 template<typename T>
-rarray<T,1>::rarray(T* buffer, const int* extent) //for any I (the only way for R>6)
+rarray<T,1>::rarray(T* buffer, const int* extent) 
 {
     // constructor
     profileSay("rarray<T,1>::rarray(T*, const int*)");
@@ -1359,7 +1488,7 @@ void rarray<T,R>::reshape(int n0, int n1) //for R=2
     profileSay("void rarray<T,R>::reshape(int, int)");
     checkOrSay(R==2, "wrong rank in reshape");
     checkOrSay(n0!=0 and n1!=0, "zero extents not allowed");
-    const int extent[] = {n0,n1};
+    const int extent[R] = {n0,n1};
     reshape(extent);
 }
 
@@ -1370,7 +1499,7 @@ void rarray<T,R>::reshape(int n0, int n1, int n2) //for R=3
     profileSay("void rarray<T,R>::reshape(int, int, int)");
     checkOrSay(R==3, "wrong rank in reshape");
     checkOrSay(n0!=0 and n1!=0 and n2!=0, "zero extents not allowed");
-    const int extent[] = {n0,n1,n2};
+    const int extent[R] = {n0,n1,n2};
     reshape(extent);
 }
 
@@ -1381,7 +1510,7 @@ void rarray<T,R>::reshape(int n0, int n1, int n2, int n3) //for R=4
     profileSay("void rarray<T,R>::reshape(int, int, int, int)");
     checkOrSay(R==4, "wrong rank in reshape");
     checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero extents not allowed");
-    const int extent[] = {n0,n1,n2,n3};
+    const int extent[R] = {n0,n1,n2,n3};
     reshape(extent);
 }
 
@@ -1392,7 +1521,7 @@ void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4) //for R=5
     profileSay("void rarray<T,R>::reshape(int, int, int, int, int)");
     checkOrSay(R==5, "wrong rank in reshape");
     checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero extents not allowed");
-    const int extent[] = {n0,n1,n2,n3,n4};
+    const int extent[R] = {n0,n1,n2,n3,n4};
     reshape(extent);
 }
 
@@ -1403,7 +1532,62 @@ void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5) //for 
     profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int)");
     checkOrSay(R==6, "wrong rank in reshape");
     checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero extents not allowed");
-    const int extent[] = {n0,n1,n2,n3,n4,n5};
+    const int extent[R] = {n0,n1,n2,n3,n4,n5};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6) //for R=7
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int, int)");
+    checkOrSay(R==7, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero extents not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7) //for R=8
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int)");
+    checkOrSay(R==8, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero extents not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8) //for R=9
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==9, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero extents not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9) //for R=10
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==10, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero extents not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
+    reshape(extent);
+}
+
+template<typename T,int R>
+void rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10) //for R=11
+{
+    // constructor
+    profileSay("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int, int)");
+    checkOrSay(R==11, "wrong rank in reshape");
+    checkOrSay(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero extents not allowed");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     reshape(extent);
 }
 
@@ -1443,7 +1627,7 @@ void rarray<T,1>::reshape(int n0) //for R=1
     profileSay("void rarray<T,1>::reshape(int)");
     checkOrSay(R==1, "wrong rank in reshape");
     checkOrSay(n0!=0, "zero extents not allowed");
-    const int extent[] = {n0};
+    const int extent[1] = {n0};
     reshape(extent);
 }
 
@@ -1568,49 +1752,51 @@ T* rarray<T,1>::base(parray_t parray)
     return reinterpret_cast<T*>(result);
 }
 
-template<typename T>
-int extent_given_byte_size(T a[], int i, int byte_size) 
+// find extents of automatic arrays, given the size of the array
+
+template<typename A>
+int extent_given_byte_size(A a[], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(T[],int,int)");
+    profileSay("int extent_given_byte_size(A[],int,int)");
     checkOrSay(i>=0 and i<1, "wrong dimension");
     switch (i) {
-        case 0:  return byte_size/sizeof(T);
+        case 0:  return byte_size/sizeof(A);
         default: return 1;
     }
 }
 
-template<typename T,int Z>
-int extent_given_byte_size(T a[][Z], int i, int byte_size) 
+template<typename A,int Z>
+int extent_given_byte_size(A a[][Z], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(T[][Z],int,int)");
+    profileSay("int extent_given_byte_size(A[][Z],int,int)");
     checkOrSay(i>=0 and i<2, "wrong dimension");
     switch (i) {
-        case 0:  return byte_size/sizeof(T)/Z;
+        case 0:  return byte_size/sizeof(A)/Z;
         case 1:  return Z;
         default: return 1;
     }
 }
 
-template<typename T,int Y,int Z>
-int extent_given_byte_size(T a[][Y][Z], int i, int byte_size) 
+template<typename A,int Y,int Z>
+int extent_given_byte_size(A a[][Y][Z], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(T[][Y][Z],int,int)");
+    profileSay("int extent_given_byte_size(A[][Y][Z],int,int)");
     checkOrSay(i>=0 and i<3, "wrong dimension");
     switch (i) {
-        case 0:  return byte_size/sizeof(T)/Z/Y;
+        case 0:  return byte_size/sizeof(A)/Z/Y;
         case 1:  return Y;
         case 2:  return Z;
         default: return 1;
     }
 }
 
-template<typename T,int X,int Y,int Z>
-int extent_given_byte_size(T a[][X][Y][Z], int i, int byte_size) 
+template<typename A,int X,int Y,int Z>
+int extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(T[][X][Y][Z],int,int)");
+    profileSay("int extent_given_byte_size(A[][X][Y][Z],int,int)");
     checkOrSay(i>=0 and i<4, "wrong dimension");
     switch (i) {
-        case 0:  return byte_size/sizeof(T)/X/Z/Y;
+        case 0:  return byte_size/sizeof(A)/X/Z/Y;
         case 1:  return X;
         case 2:  return Y;
         case 3:  return Z;
@@ -1618,13 +1804,13 @@ int extent_given_byte_size(T a[][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename T,int W,int X,int Y,int Z>
-int extent_given_byte_size(T a[][W][X][Y][Z], int i, int byte_size) 
+template<typename A,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(T[][W][X][Y][Z],int,int)");
+    profileSay("int extent_given_byte_size(A[][W][X][Y][Z],int,int)");
     checkOrSay(i>=0 and i<5, "wrong dimension");
     switch (i) {
-        case 0:  return byte_size/sizeof(T)/W/X/Z/Y;
+        case 0:  return byte_size/sizeof(A)/W/X/Z/Y;
         case 1:  return W;
         case 2:  return X;
         case 3:  return Y;
@@ -1633,13 +1819,13 @@ int extent_given_byte_size(T a[][W][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename T,int V,int W,int X,int Y,int Z>
-int extent_given_byte_size(T a[][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,int V,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(T[][V][W][X][Y][Z],int,int)");
+    profileSay("int extent_given_byte_size(A[][V][W][X][Y][Z],int,int)");
     checkOrSay(i>=0 and i<6, "wrong dimension");
     switch (i) {
-       case 0:  return byte_size/sizeof(T)/V/W/X/Z/Y;
+       case 0:  return byte_size/sizeof(A)/V/W/X/Z/Y;
        case 1:  return V;
        case 2:  return W;
        case 3:  return X;
@@ -1649,59 +1835,198 @@ int extent_given_byte_size(T a[][V][W][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename T,int R>
-int extent_given_byte_size(const rarray<T,R>& a, int i, int byte_size) 
+template<typename A,int U,int V,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size) 
 {
-    profileSay("int extent_given_byte_size(const rarray<T,R>&,int,int)");
+    profileSay("int extent_given_byte_size(A[][U][V][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<7, "wrong dimension");
+    switch (i) {
+       case 0:  return byte_size/sizeof(A)/U/V/W/X/Z/Y;
+       case 1:  return U;
+       case 2:  return V;
+       case 3:  return W;
+       case 4:  return X;
+       case 5:  return Y;
+       case 6:  return Z;
+       default: return 1;
+    }
+}
+
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(A[][T][U][V][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<8, "wrong dimension");
+    switch (i) {
+       case 0:  return byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
+       case 1:  return T;
+       case 2:  return U;
+       case 3:  return V;
+       case 4:  return W;
+       case 5:  return X;
+       case 6:  return Y;
+       case 7:  return Z;
+       default: return 1;
+    }
+}
+
+
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(A[][S][T][U][V][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<9, "wrong dimension");
+    switch (i) {
+       case 0:  return byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
+       case 1:  return S;
+       case 2:  return T;
+       case 3:  return U;
+       case 4:  return V;
+       case 5:  return W;
+       case 6:  return X;
+       case 7:  return Y;
+       case 8:  return Z;
+       default: return 1;
+    }
+}
+
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<10, "wrong dimension");
+    switch (i) {
+       case 0:  return byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
+       case 1:  return R;
+       case 2:  return S;
+       case 3:  return T;
+       case 4:  return U;
+       case 5:  return V;
+       case 6:  return W;
+       case 7:  return X;
+       case 8:  return Y;
+       case 9:  return Z;
+       default: return 1;
+    }
+}
+
+
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
+int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int,int)");
+    checkOrSay(i>=0 and i<10, "wrong dimension");
+    switch (i) {
+       case 0:   return byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
+       case 1:   return Q;
+       case 2:   return R;
+       case 3:   return S;
+       case 4:   return T;
+       case 5:   return U;
+       case 6:   return V;
+       case 7:   return W;
+       case 8:   return X;
+       case 9:   return Y;
+       case 10:  return Z;
+       default: return 1;
+    }
+}
+
+template<typename A,int R>
+int extent_given_byte_size(const rarray<A,R>& a, int i, int byte_size) 
+{
+    profileSay("int extent_given_byte_size(const rarray<A,R>&,int,int)");
     return a.extent(i);
 }
 
-template<typename T>
-rarray<T,1> make_rarray_given_byte_size(T a[], int byte_size) 
+// convert to rarray
+
+template<typename A>
+rarray<A,1> make_rarray_given_byte_size(A a[], int byte_size) 
 {
-    profileSay("rarray<T,1> make_rarray_given_byte_size(T[],int)");
-    const int z = byte_size/sizeof(T);
-    return rarray<T,1>(a,z);
+    profileSay("rarray<A,1> make_rarray_given_byte_size(A[],int)");
+    const int z = byte_size/sizeof(A);
+    return rarray<A,1>(a,z);
 }
 
-template<typename T,int Z>
-rarray<T,2> make_rarray_given_byte_size(T a[][Z], int byte_size) 
+template<typename A,int Z>
+rarray<A,2> make_rarray_given_byte_size(A a[][Z], int byte_size) 
 {
-    profileSay("rarray<T,2> make_rarray_given_byte_size(T[][Z],int)");
-    const int y = byte_size/sizeof(T)/Z;
-    return rarray<T,2>(*a,y,Z);
+    profileSay("rarray<A,2> make_rarray_given_byte_size(A[][Z],int)");
+    const int y = byte_size/sizeof(A)/Z;
+    return rarray<A,2>(*a,y,Z);
 }
 
-template<typename T,int Y,int Z>
-rarray<T,3> make_rarray_given_byte_size(T a[][Y][Z], int byte_size) 
+template<typename A,int Y,int Z>
+rarray<A,3> make_rarray_given_byte_size(A a[][Y][Z], int byte_size) 
 {
-    profileSay("rarray<T,3> make_rarray_given_byte_size(T[][Y][Z],int)");
-    const int x = byte_size/sizeof(T)/Z/Y;
-    return rarray<T,3>(**a,x,Y,Z);
+    profileSay("rarray<A,3> make_rarray_given_byte_size(A[][Y][Z],int)");
+    const int x = byte_size/sizeof(A)/Z/Y;
+    return rarray<A,3>(**a,x,Y,Z);
 }
 
-template<typename T,int X,int Y,int Z>
-rarray<T,4> make_rarray_given_byte_size(T a[][X][Y][Z], int byte_size) 
+template<typename A,int X,int Y,int Z>
+rarray<A,4> make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size) 
 {
-    profileSay("rarray<T,4> make_rarray_given_byte_size(T[][X][Y][Z],int)");
-    const int w = byte_size/sizeof(T)/X/Z/Y;
-    return rarray<T,4>(***a,w,X,Y,Z);
+    profileSay("rarray<A,4> make_rarray_given_byte_size(A[][X][Y][Z],int)");
+    const int w = byte_size/sizeof(A)/X/Z/Y;
+    return rarray<A,4>(***a,w,X,Y,Z);
 }
 
-template<typename T,int W,int X,int Y,int Z>
-rarray<T,5> make_rarray_given_byte_size(T a[][W][X][Y][Z], int byte_size) 
+template<typename A,int W,int X,int Y,int Z>
+rarray<A,5> make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size) 
 {
-    profileSay("rarray<T,5> make_rarray_given_byte_size(T[][W][X][Y][Z],int)");
-    const int v = byte_size/sizeof(T)/W/X/Z/Y;
-    return rarray<T,5>(****a,v,W,X,Y,Z);
+    profileSay("rarray<A,5> make_rarray_given_byte_size(A[][W][X][Y][Z],int)");
+    const int v = byte_size/sizeof(A)/W/X/Z/Y;
+    return rarray<A,5>(****a,v,W,X,Y,Z);
 }
 
-template<typename T,int V,int W,int X,int Y,int Z>
-rarray<T,6> make_rarray_given_byte_size(T a[][V][W][X][Y][Z], int byte_size) 
+template<typename A,int V,int W,int X,int Y,int Z>
+rarray<A,6> make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size) 
 {
-    profileSay("rarray<T,6> make_rarray_given_byte_size(T[][V][W][X][Y][Z],int)");
-    const int u = byte_size/sizeof(T)/V/W/X/Z/Y;
-    return rarray<T,6>(*****a,u,V,W,X,Y,Z);
+    profileSay("rarray<A,6> make_rarray_given_byte_size(A[][V][W][X][Y][Z],int)");
+    const int u = byte_size/sizeof(A)/V/W/X/Z/Y;
+    return rarray<A,6>(*****a,u,V,W,X,Y,Z);
+}
+
+template<typename A,int U,int V,int W,int X,int Y,int Z>
+rarray<A,7> make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<A,6> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
+    const int t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
+    return rarray<A,7>(******a,t,U,V,W,X,Y,Z);
+}
+
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>
+rarray<A,8> make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<A,6> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
+    const int s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
+    return rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z);
+}
+
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>
+rarray<A,9> make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<A,9> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
+    const int r = byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
+    return rarray<A,9>(********a,r,S,T,U,V,W,X,Y,Z);
+}
+
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
+rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<A,10> make_rarray_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int)");
+    const int q = byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
+    return rarray<A,10>(*********a,q,R,S,T,U,V,W,X,Y,Z);
+}
+
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
+rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size) 
+{
+    profileSay("rarray<A,11> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
+    const int p = byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
+    return rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z);
 }
 
 template<typename T,int R>
@@ -1920,11 +2245,13 @@ std::istream& operator>>(std::istream &in, rarray<T,R>& r)
     size_t init_file_ptr = in.tellg();
     try {
         // skip initial white space
-        char lastchar;
-        do {
-            lastchar = in.get();
-        } while (lastchar==' ' or lastchar== '\t' or lastchar=='\n');
-        in.putback(lastchar);
+	if (in.flags() && std::ios::skipws) {
+            char lastchar;
+            do {
+                lastchar = in.get();
+            } while (lastchar==' ' or lastchar== '\t' or lastchar=='\n');
+            in.putback(lastchar);
+        }
         // read the extents
         radetail::read_and_parse_extent<T,R>(in, extent, 0);
         // allocate array
@@ -1938,7 +2265,6 @@ std::istream& operator>>(std::istream &in, rarray<T,R>& r)
         throw e;                        // and pass on the error
     }
 }
-
 
 // get rid of the macros
 #undef profileSay
