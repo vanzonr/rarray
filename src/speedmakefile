@@ -1,0 +1,22 @@
+#make file for 4d speed benchmarks
+CXX=g++
+CXXFLAGS=-DEIGEN_NO_DEBUG -DNDEBUG -std=c++11 -O3 -ffast-math -fstrict-aliasing -march=native
+FC=gfortran
+FFLAGS=-O3 -ffast-math -fstrict-aliasing -march=native
+
+all: rarray4dspeed rarray4dspeedf
+
+rarray4dspeed: rarray4dspeed.cc pass.o
+	$(CXX) $(CXXFLAGS) -o $@  $^
+
+rarray4dspeedf: rarray4dspeedf.f90 passf.o 
+	$(FC) $(FFLAGS) -o $@  $^
+
+pass.o: pass.cc
+	$(CXX) -c -o $@ $^
+
+passf.o: passf.f90
+	$(CXX) -c -o $@ $^
+
+clean:
+	rm -f rarray4dspeed rarray4dspeedf pass.o

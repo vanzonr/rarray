@@ -5,7 +5,6 @@
 //
 #include "rarray.h"
 #include <iostream>
-#include <array>
 #include <cassert>
 #include <iomanip>
 #include <string.h>
@@ -1444,10 +1443,10 @@ int testoutput() {
 
     instr >> intarray;
     intarray[1][0][1] = 0;
+    intarray[0][2][0] = 0;
 
     std::stringstream check;
     check << intarray;
-
     CHECK(check.str()==outstr);
 
     rarray<std::string,2> A(2,2);
@@ -1518,10 +1517,19 @@ int testiterators() {
     CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
 
     std::stringstream rout;
+
+#if __cplusplus <= 199711L
+    for (auto ap = q.begin(); ap != q.end(); ++ap)
+    {
+        *ap *= 2;
+    }
+#else
     for (auto& a: q)
     {
         a *= 2;
     }
+#endif
+
 
     for (rarray<double,2>::const_iterator i=q.cbegin(); i!=q.cend(); i++)
     {
@@ -1532,24 +1540,38 @@ int testiterators() {
 
     const rarray<double,1> qconst = q;
 
+#if __cplusplus <= 199711L
+    for (auto bp=qconst.begin(); bp != qconst.end(); ++bp)
+    {
+        rout << (*bp) << ',';
+    }
+#else
     for (const auto& b: qconst)
     {
         rout << b << ',';
     }
+#endif
 
     CHECK(rout.str() == "2,4,6,8,10,");
 
     #ifndef SKIPINTERMEDIATE
     std::stringstream check;
     
+#if __cplusplus <= 199711L
+    for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
+        *cp *= 2;
+    for (auto dp = s[1][2].begin(); dp != s[1][2].end(); ++dp)
+        *dp += 10;
+    for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
+        check << (*cp) << ',';
+#else
     for (auto& c: s[1])
         c *= 2;
-
     for (auto& d: s[1][2])
         d += 10;
-
     for (const auto& c: s[1])
         check << c << ',';
+#endif
 
     for (rarray<double,2>::const_iterator i=s[2].cbegin(); i!=s[2].cend(); i++)
     {
@@ -1599,10 +1621,28 @@ class compound
 
 //////////////////////////////////////////////////////////////////////
 
-std::array<compound,3> operator+(const std::array<compound,3> &a,
-                                 const std::array<compound,3> &b)
+template<typename T, int R>
+struct array {
+    T elements_[R];
+    T& operator[](const int i) { return elements_[i]; }
+    const T& operator[](const int i) const { return elements_[i]; }
+    bool operator!=(const struct array& other) {
+        for (int i=0;i<R;i++)
+            if (elements_[i] != other.elements_[i])
+                return true;
+        return false;
+    }
+    bool operator==(const struct array& other) {
+        return !operator!=(other);
+    }       
+};
+
+//////////////////////////////////////////////////////////////////////
+
+array<compound,3> operator+(const array<compound,3> &a,
+                            const array<compound,3> &b)
 {
-    std::array<compound,3> result = {a[0]+b[0],a[1]+b[1],a[2]+b[2]};
+    array<compound,3> result = {a[0]+b[0],a[1]+b[1],a[2]+b[2]};
     return result;
 }
 
@@ -1612,36 +1652,36 @@ int main()
 {
     double d1 = -2.2, d2 = 7.1;
     compound c1(1,2), c2(-7,13);
-    std::array<compound,3> a1 = {compound(1,2),compound(3,4),compound(5,6)};
-    std::array<compound,3> a2 = {compound(-1,-2),compound(3,-4),compound(5,-6)};
+    array<compound,3> a1 = {compound(1,2),compound(3,4),compound(5,6)};
+    array<compound,3> a2 = {compound(-1,-2),compound(3,-4),compound(5,-6)};
 
     PASSORRETURN(testconstructors<double>());
     PASSORRETURN(testconstructors<compound>());
-    PASSORRETURN((testconstructors<std::array<compound,3> >()));
+    PASSORRETURN((testconstructors<array<compound,3> >()));
 
     PASSORRETURN(testconstructors7dim<double>());
     PASSORRETURN(testconstructors7dim<compound>());
-    PASSORRETURN((testconstructors7dim<std::array<compound,3> >()));
+    PASSORRETURN((testconstructors7dim<array<compound,3> >()));
 
     PASSORRETURN(testconstructors7dimbuf<double>());
     PASSORRETURN(testconstructors7dimbuf<compound>());
-    PASSORRETURN((testconstructors7dimbuf<std::array<compound,3> >()));
+    PASSORRETURN((testconstructors7dimbuf<array<compound,3> >()));
 
     PASSORRETURN(testaccessors<double>(d1,d2));
     PASSORRETURN(testaccessors<compound>(c1,c2));
-    PASSORRETURN((testaccessors<std::array<compound,3> >(a1,a2)));
+    PASSORRETURN((testaccessors<array<compound,3> >(a1,a2)));
 
     PASSORRETURN(testsliceconstructor<double>());
     PASSORRETURN(testsliceconstructor<compound>());
-    PASSORRETURN((testsliceconstructor<std::array<compound,3> >()));
+    PASSORRETURN((testsliceconstructor<array<compound,3> >()));
 
     PASSORRETURN(testcopy<double>(d1,d2));
     PASSORRETURN(testcopy<compound>(c1,c2));
-    PASSORRETURN((testcopy<std::array<compound,3> >(a1,a2)));
+    PASSORRETURN((testcopy<array<compound,3> >(a1,a2)));
 
     PASSORRETURN(testcopy1d<double>(d1,d2));
     PASSORRETURN(testcopy1d<compound>(c1,c2));
-    PASSORRETURN((testcopy1d<std::array<compound,3> >(a1,a2)));
+    PASSORRETURN((testcopy1d<array<compound,3> >(a1,a2)));
 
     PASSORRETURN(testmmm<int>());
     PASSORRETURN(testmmm<double>());

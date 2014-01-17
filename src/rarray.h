@@ -2480,7 +2480,7 @@ T& radetail::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* i
 template<typename T, int R> 
 void radetail::read_and_parse_shape(std::istream &                             in, 
                                     int*                                       shape, 
-                                    typename radetail::PointerArray<T,R>::type p = 0)
+                                    typename radetail::PointerArray<T,R>::type p)
 {
     profileSay("void read_and_parse_shape(std::istream&,int*,PointerArray<T,R>::type)");
     size_t init_file_ptr = in.tellg();
