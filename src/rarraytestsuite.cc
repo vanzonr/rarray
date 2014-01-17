@@ -63,7 +63,7 @@ int testconstructors()
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
        rarray<T,3> c(b);
-    const int* asize = a.extents();
+    const int* asize = a.shape();
     CHECK(a.data());
     CHECK(a.size()==7*21*13);
     CHECK(asize);
@@ -151,8 +151,8 @@ int testconstructors7dim()
     CHECK(a1.extent(0) == dim[0]);
     CHECK(b1.extent(0) == dim[0]);
     CHECK(c1.extent(0) == dim[0]);
-    CHECK(a1.extents());
-    CHECK(a1.extents()[0] == dim[0]);
+    CHECK(a1.shape());
+    CHECK(a1.shape()[0] == dim[0]);
 
     CHECK(a2.extent(0) == dim[0]);
     CHECK(a2.extent(1) == dim[1]);
@@ -418,9 +418,9 @@ int testsliceconstructor()
 #ifndef SKIPINTERMEDIATE
     CHECK(a[1].extent(0)==21);
     CHECK(a[1].extent(1)==13);
-    CHECK(a[1].extents()[1]==13);
+    CHECK(a[1].shape()[1]==13);
     CHECK(a[1][6].extent(0)==13);
-    CHECK(a[1][6].extents()[0]==13);
+    CHECK(a[1][6].shape()[0]==13);
     CHECK(a[1].size()==21*13);
     CHECK(a[1][6].size()==13);
     T* p1 = a[3][2].data();
