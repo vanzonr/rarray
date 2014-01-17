@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <cstdlib>
 
-// Define internal types
+// Define internal types in own namespace
 
 namespace radetail
 {
@@ -58,7 +58,7 @@ struct Unconst<const T> {  // Override non-const-stripped type with a stripped o
 // Forward definition subarray<T,R> for use in class rarray<T,R>:
 template<typename T,int R> class subarray;
 
-}  // end namespace radetail
+}  // end namespace radetail (to be continued)
 
 //------------------------------------------------//
 //                                                //
@@ -134,6 +134,11 @@ class rarray {
     noconst_parray_t    noconst_ptr_array()  const;                    // return a T**.. acting similarly to this rarray when using []:    
     rarray<const T,R>&  const_ref()          const;                    // create a reference to this that treats elements as constant:
 
+    iterator            begin();                                       // start of the *content*
+    const_iterator      cbegin()             const;
+    iterator            end();                                         // end of the *content*
+    const_iterator      cend()               const;
+
     // access elements 
    #ifndef SKIPINTERMEDIATE
     // through intermediate object:
@@ -184,9 +189,9 @@ class rarray<T,1> {
     rarray(T* buffer, int n0);                                         // constructor from an existing buffer:
     rarray(T* buffer, const int* extent);                              // constructor from an existing buffer for conformity    
     rarray(const rarray<T,1> &a);                                      // copy constructor
-    rarray(const radetail::subarray<T,1> &a);                         // copy constructor    
+    rarray(const radetail::subarray<T,1> &a);                          // copy constructor    
     rarray<T,1>& operator=(const rarray<T,1> &a);                      // assignment operator
-    rarray<T,1>& operator=(const radetail::subarray<T,1> &a);         // assignment operator
+    rarray<T,1>& operator=(const radetail::subarray<T,1> &a);          // assignment operator
     ~rarray();                                                         // destructor
     void clear();                                                      // make uninitialized again
     void reshape(int n0);                                              // to change shape (only shrinking is defined)
@@ -195,7 +200,7 @@ class rarray<T,1> {
     bool                is_clear()           const;                    // check if uninitialized
     rarray<T,1>         copy()               const;                    // return a copy
     int                 extent(int i)        const;                    // retrieve array size in dimension i
-    const int*          shape()            const;                    // retrieve array sizes in all dimensions
+    const int*          shape()              const;                    // retrieve array sizes in all dimensions
     int                 size()               const;                    // retrieve the total number of elements
     T*                  data();                                        // return T* to the internal data
     const T*            data()               const;                    // return T* to the internal data
@@ -203,7 +208,12 @@ class rarray<T,1> {
     noconst_parray_t    noconst_ptr_array()  const;                    // return  T**... acting similarly to this rarray when using []
     rarray<const T,1>&  const_ref()          const;                    // create reference to this that treats elements as constant
 
-    // access elements through intermediate object:
+    iterator            begin();                                       // start of the *content*
+    const_iterator      cbegin()             const;
+    iterator            end();                                         // end of the *content*
+    const_iterator      cend()               const;
+
+    // accesselements through intermediate object:
    #ifndef SKIPINTERMEDIATE
     // through a T& pointer a the element:
     T& operator[](int i);
@@ -238,7 +248,12 @@ class rarray<T,1> {
 
 } // End NAMESPACE ra
 
-namespace radetail {
+// Input/output streaming operators in global namespace
+template<typename T,int R>  std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
+template<typename T,int R>  std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
+template<typename T,int R>  std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r);
+
+namespace radetail { // continuing namespace radetail
 
 // Definition class subarray <T,R>
 
@@ -258,13 +273,17 @@ class subarray {
     typedef typename PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
     
     int                  extent(int i)        const;                   // retrieve array size in dimension i
-    const int*           shape()            const;                   // retrieve array sizes in all dimensions    
+    const int*           shape()              const;                   // retrieve array sizes in all dimensions    
     int                  size()               const;                   // retrieve the total number of elements
     T*                   data()               const;                   // return T* to the internal pointer to the data
     parray_t             ptr_array()          const;                   // return T*const*.. acting similarly when using []
     noconst_parray_t     noconst_ptr_array()  const;                   // return T**.. acting similarly to this rarray when using []
     subarray<const T,R>& const_ref()          const;                   // create a reference to this treating elements as constant
     subarray<T,R-1>      operator[](int i)    const;                   // element access
+    iterator             begin()              const;                   // start of the *content*
+    iterator             end()                const;                   // end of the *content*
+    const_iterator       cbegin()             const;                   // start of the *content* (const version)
+    const_iterator       cend()               const;                   // end of the *content* (const version)
 
   protected:
     parray_t   const  parray_;                                         // start of the pointer array
@@ -290,14 +309,18 @@ template<typename T> class subarray<T,1> {
     typedef typename PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
     typedef typename PointerArray<T,1>::noconst_type noconst_parray_t; // conforming shorthand for T*
 
-    int                             extent(int i)        const;        // retrieve array size in dimension i
-    const int*                      shape()            const;        // retrieve array sizes in all dimensions
-    int                             size()               const;        // retrieve the total number of elements
-    T*                              data()               const;        // return T* to the internal pointer to the data
-    parray_t                        ptr_array()          const;        // return T*const*.. acting similarly to this rarray when using []
-    noconst_parray_t                noconst_ptr_array()  const;        // return T**.. acting similarly to this rarray when using []
-    subarray<const T,1>&            const_ref()          const;        // create a reference to this that treats elements as constant
-    T&                              operator[](int i)    const;        // element access
+    int                  extent(int i)        const;                   // retrieve array size in dimension i
+    const int*           shape()              const;                   // retrieve array sizes in all dimensions
+    int                  size()               const;                   // retrieve the total number of elements
+    T*                   data()               const;                   // return T* to the internal pointer to the data
+    parray_t             ptr_array()          const;                   // return T*const*.. acting similarly to this rarray when using []
+    noconst_parray_t     noconst_ptr_array()  const;                   // return T**.. acting similarly to this rarray when using []
+    subarray<const T,1>& const_ref()          const;                   // create a reference to this that treats elements as constant
+    T&                   operator[](int i)    const;                   // element access
+    iterator             begin()              const;                   // start of the *content*
+    iterator             end()                const;                   // end of the *content*
+    const_iterator       cbegin()             const;                   // start of the *content* (const version)
+    const_iterator       cend()               const;                   // end of the *content* (const version)
 
   protected:
     parray_t   const   parray_;                                        // start of the pointer array
@@ -310,6 +333,11 @@ template<typename T> class subarray<T,1> {
     friend class ra::rarray<typename Unconst<T>::type,2>;
 
 };  // end of class template definition of subarray<T,1>.
+
+template<typename T,int R>  std::ostream& text_output(std::ostream &o, const ra::rarray<T,R>& r);
+template<typename T>        std::ostream& text_output(std::ostream &o, const ra::rarray<T,1>& r);
+template<typename T,int R>  std::ostream& text_output(std::ostream &o, const subarray<T,R>& r);
+template<typename T>        std::ostream& text_output(std::ostream &o, const subarray<T,1>& r);
 
 // End Definition class subarray <T,R>
 
@@ -328,7 +356,6 @@ struct Deref<T,1>  // R=1 is special
 };
 // End Definition Deref<T,R>
 
-// Definition StringToValue
 //
 // Convert a string to a value, for operator>>
 //
@@ -341,10 +368,12 @@ struct StringToValue<std::string> {
     static void get(const std::string& input, std::string& output);
 };
 
-// function prototype:
+// Function prototype of helper routine used by operator>>:
 template<typename T, int R> 
 void read_and_parse_shape(std::istream & in, int* shape, typename PointerArray<T,R>::type p = 0);
 
+// Template functions to detemine the dimensions of automatic arrays, for use in the EXTENT macro
+// To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatica array
 template<typename A>                                                              int extent_given_byte_size(A a[], int i, int byte_size); 
 template<typename A,int Z>                                                        int extent_given_byte_size(A a[][Z], int i, int byte_size);
 template<typename A,int Y,int Z>                                                  int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);
@@ -357,7 +386,8 @@ template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>            
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
 template<typename A,int R>                                                        int extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size);
-
+// Template functions to convert automatic arrays, for conversion with RARRAY macro
+// To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
 template<typename A>                                                              ra::rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size); 
 template<typename A,int Z>                                                        ra::rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size); 
 template<typename A,int Y,int Z>                                                  ra::rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);
@@ -373,12 +403,6 @@ template<typename A,int R>                                                      
 
 } // end namespace radetail
 
-// Input/output streaming operators
-template<typename T,int R>  std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
-template<typename T>        std::ostream& operator<<(std::ostream &o, const ra::rarray<T,1>& r);
-template<typename T,int R>  std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r);
-template<typename T>        std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,1>& r);
-template<typename T,int R>  std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
 
 //------------------------------------------------//
 //                                                //
@@ -1991,6 +2015,20 @@ template<typename T,int R>
 std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r)
 {
     profileSay("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    return radetail::text_output(o,r);
+}
+
+template<typename T,int R>
+std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r)
+{
+    profileSay("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    return radetail::text_output(o,r);
+}
+
+template<typename T,int R>
+std::ostream& radetail::text_output(std::ostream &o, const ra::rarray<T,R>& r)
+{
+    profileSay("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
     if (not r.is_clear()) {
         o << '{';
         for (int i=0; i<r.extent(0); i++)  {
@@ -2022,7 +2060,7 @@ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r)
 }
 
 template<typename T>
-std::ostream& operator<<(std::ostream &o, const ra::rarray<T,1>& r)
+std::ostream& radetail::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
     profileSay("std::ostream& operator<<(std::ostream&,const rarray<T,1>&)");
     if (not r.is_clear()) {
@@ -2044,7 +2082,7 @@ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,1>& r)
 }
 
 template<typename T,int R>
-std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r)
+std::ostream& radetail::text_output(std::ostream &o, const radetail::subarray<T,R>& r)
 {
     profileSay("std::ostream& operator<<(std::ostream&,const subarray<T,R>&)");
     o << '{' << r[0];
@@ -2055,7 +2093,7 @@ std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r)
 }
 
 template<typename T>
-std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,1>& r)
+std::ostream& radetail::text_output(std::ostream &o, const radetail::subarray<T,1>& r)
 {
     profileSay("std::ostream& operator<<(std::ostream&,const subarray<T,1>&)");
     o << '{';
@@ -2179,7 +2217,6 @@ void radetail::read_and_parse_shape(std::istream &                             i
     if (p==0)
         in.seekg(init_file_ptr, in.beg);
 }
-
 
 template<typename T,int R>
 std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
