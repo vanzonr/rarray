@@ -20,82 +20,42 @@
 #include <stdexcept>
 #include <cstdlib>
 
-// DEFINE INTERNAL TYPES
+// Define internal types
 
 namespace radetail
 {
 
-// DEFINITION struct PointerArray<T,R>
-
-// PointerArray: a struct to recursively generates types T**... and T*const*... 
-// These types are typedef'ed as noconst_parray_t and pointer_array_t
-// 
-// More specifically:
-//
-//   The type 
-//      PointerArray<T,1>::type
-//   is equal to the type
-//      T*
-//   ie., the pointer type for a one dimensional c array, 
-//   Similarly, the type 
-//      PointerArray<T,2>::type
-//   is equal to the type
-//      T*const*
-//   which is the pointer type for a two-dimensional c array.
-//   The reason for the const is that the shape of this array is supposed to
-//   remain at its fixed rectangular form. 
-//   Following the same pattern, the type
-//      PointerArray<T,3>::type 
-//   is equal to
-//      T*const*const*, 
-//   the appropriate pointer for a 3d c array, etc.
-//
-//   Because one encounters non-const correct pointer-to-pointers
-//   often (in fact, when allocating the pointer-to-pointer structure
-//   by hand, one has little choice but to use these), the same struct
-//   recursion defined PointerArray<T,R> as T****, i.e.,
-// 
-//      PointerArray<T,1>::noconst_type = T* 
-//      PointerArray<T,2>::noconst_type = T**
-//      ...
-//
-// Recursive definition of PointerArray<T,R> in terms of PointerArray<T,R-1>:
+//    PointerArray<T,1>::type   =    T*
+//    PointerArray<T,2>::type   =    T*const*
+//    PointerArray<T,3>::type   =    T*const*const*
+//    .. 
+//    PointerArray<T,1>::noconst_type   =    T*
+//    PointerArray<T,2>::noconst_type   =    T**
+//    PointerArray<T,3>::noconst_type   =    T*** 
+//    ...
 template<typename T,int R> 
 struct PointerArray {
-    typedef typename PointerArray<T,R-1>::type const*    type;     // const shape
+    typedef typename PointerArray<T,R-1>::type const*    type;     // const shape, recursive
     typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type;// non-const variant
 };
-// We end the recursion by specifically defining the R=1 case:
 template<typename T> 
-struct PointerArray<T,1> {
-    typedef T* type;         // note there is not const: a const
-                             // here would express that the elements
-                             // of the multidimensional arrays are
-                             // constant, not that its shape is constant. 
-    typedef T* noconst_type; // There would never have been a const here
+struct PointerArray<T,1> { // We end the recursion by specifically defining the R=1 case
+    typedef T* type;         // no const as this would express that the elements are constant
+    typedef T* noconst_type; 
 };
 
-// END DEFINITION struct PointerArray<T,R>
-
-
-// DEFINITION struct unconst<T>
-
-// Define a struct to strip constness from a type:
+// Unconst<T>::type = T , unless T=const U, in which case Unconst<const T>::type = T .
+//
 template<typename T> 
 struct Unconst { 
     typedef T type; // non-stripping, intended for typed without const
 };
-// Override this non-const-stripped type with a stripped one which applies for types with const only.
-template<typename T> 
-struct Unconst<const T> {  
-    typedef T type; // note that the const is gone
+template<typename T>  
+struct Unconst<const T> {  // Override non-const-stripped type with a stripped one which applies for types with const only.
+    typedef T type; // no const!
 };
 
-// END DEFINITION struct Unconst<T>
-
-
-// forward definition of the class for intermediate bracket expressions in class rarray:
-
+// Forward definition subarray<T,R> for use in class rarray<T,R>:
 template<typename T,int R> class subarray;
 
 }  // end namespace radetail
@@ -107,7 +67,7 @@ template<typename T,int R> class subarray;
 //------------------------------------------------//
 
 
-// DEFINITION class rarray<T,R>
+// Definition class rarray<T,R>
 
 namespace ra {
 
@@ -166,7 +126,7 @@ class rarray {
     bool                is_clear()           const;                    // check if uninitialized
     rarray<T,R>         copy()               const;                    // return a copy
     int                 extent(int i)        const;                    // retrieve array size in dimension i
-    const int*          shape()            const;                    // retrieve array sizes in all dimensions
+    const int*          shape()              const;                    // retrieve array sizes in all dimensions
     int                 size()               const;                    // retrieve the total number of elements  
     T*                  data();                                        // return a T* to the internal data
     const T*            data()               const;                    // return a T* to the internal data
@@ -274,13 +234,13 @@ class rarray<T,1> {
 
 }; // end definition rarray<T,1>
 
-// END DEFINITION class rarray<T,R>
+// End Definition class rarray<T,R>
 
-} // END NAMESPACE ra
+} // End NAMESPACE ra
 
 namespace radetail {
 
-// DEFINITION class subarray <T,R>
+// Definition class subarray <T,R>
 
 // subarray class: interface like rarray without assignment. Really
 // only a reference to one, used in intermediate expressions produced
@@ -351,13 +311,39 @@ template<typename T> class subarray<T,1> {
 
 };  // end of class template definition of subarray<T,1>.
 
-// END DEFINITION class subarray <T,R>
+// End Definition class subarray <T,R>
 
+// Deref<T,1>(T*   p, int* i) where i->{n1}        =  p[n1]
+// Deref<T,2>(T**  p, int* i) where i->{n1,n2}     =  p[n1][n2]
+// Deref<T,3>(T*** p, int* i) where i->{n1,n2,n3}  =  p[n1][n2][n3]
+//...
+template<typename T, int R>
+struct Deref {
+    static T& access(typename PointerArray<T,R>::type p, const int* indices);
+};
+template<typename T>
+struct Deref<T,1>  // R=1 is special
+{
+    static T& access(typename PointerArray<T,1>::type p, const int* indices);
+};
+// End Definition Deref<T,R>
 
-// DEFINITION OF EXTENT AND RARRAY
+// Definition StringToValue
+//
+// Convert a string to a value, for operator>>
+//
+template<typename T>
+struct StringToValue {
+    static void get(const std::string& input, T& output);
+};
+template<>
+struct StringToValue<std::string> {
+    static void get(const std::string& input, std::string& output);
+};
 
-#define EXTENT(A,I) radetail::extent_given_byte_size(A,I,sizeof(A))
-#define RARRAY(A)   radetail::make_rarray_given_byte_size(A,sizeof(A))
+// function prototype:
+template<typename T, int R> 
+void read_and_parse_shape(std::istream & in, int* shape, typename PointerArray<T,R>::type p = 0);
 
 template<typename A>                                                              int extent_given_byte_size(A a[], int i, int byte_size); 
 template<typename A,int Z>                                                        int extent_given_byte_size(A a[][Z], int i, int byte_size);
@@ -385,11 +371,9 @@ template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>      
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  ra::rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);
 template<typename A,int R>                                                        ra::rarray<A,R> make_rarray_given_byte_size(ra::rarray<A,R> a, int byte_size); 
 
-
 } // end namespace radetail
 
-// INPUT/OUTPUT STREAMING OPERATORS
-
+// Input/output streaming operators
 template<typename T,int R>  std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
 template<typename T>        std::ostream& operator<<(std::ostream &o, const ra::rarray<T,1>& r);
 template<typename T,int R>  std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r);
@@ -2003,30 +1987,6 @@ ra::rarray<T,R> radetail::make_rarray_given_byte_size(ra::rarray<T,R> a, int byt
     return a;
 }
 
-namespace radetail {
-
-template<typename T, int R>
-struct deref 
-{
-    static T& access(typename PointerArray<T,R>::type p, const int* indices) 
-    {
-    profileSay("deref<T,R>::access(PointerArray<T,R>::type,const int*)");
-        return deref<T,R-1>::access(p[indices[0]-1], indices+1);
-    }
-};
-
-template<typename T>
-struct deref<T,1> 
-{
-    static T& access(typename PointerArray<T,1>::type p, const int* indices) 
-    {
-    profileSay("deref<T,1>::access(PointerArray<T,1>::type,const int*)");
-        return p[indices[0]-1];
-    }
-};
-
-}
-
 template<typename T,int R>
 std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r)
 {
@@ -2115,47 +2075,35 @@ std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,1>& r)
 
 // helper routines to convert a string to any data type
 
-namespace ra {
-
 template<typename T>
-struct StringToValue
+void radetail::StringToValue<T>::get(const std::string& input, T& output) 
 {
-    static void get(const std::string& input, T& output)
-    {
     profileSay("void StringToValue::get(const std::string&,T&)");
-        std::stringstream str(input); // use streaming operators by default
-        str >> output;
-    }
-};
+    std::stringstream str(input); // use streaming operators by default
+    str >> output; // won't work with strings as they get truncated at first whitespace
+}
 
-// for strings using streaming operators does not work, because the
-// input string would be truncated at the first white space.
-// The solution is to write a specialization of StringToValue:
-template<>
-struct StringToValue<std::string>
+void radetail::StringToValue<std::string>::get(const std::string& input, std::string& output)
 {
-    static void get(const std::string& input, std::string& output)
-    {
     profileSay("void StringToValue::get(const std::string&,std::string&)");
-        output = input;
-    }
-};
-
+    output = input;
 }
 
-namespace radetail {
-
-    template<typename T, int R> 
-    void read_and_parse_shape(std::istream &                   in, 
-                               int*                             shape, 
-                               typename PointerArray<T,R>::type p = 0);
+template<typename T, int R>
+T& radetail::Deref<T,R>::access(typename PointerArray<T,R>::type p, const int* indices) {
+    profileSay("Deref<T,R>::access(PointerArray<T,R>::type,const int*)");
+    return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
 }
-
+template<typename T>
+T& radetail::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices) {
+    profileSay("Deref<T,1>::access(PointerArray<T,1>::type,const int*)");
+    return p[indices[0]-1];
+}
 
 template<typename T, int R> 
 void radetail::read_and_parse_shape(std::istream &                             in, 
-                                     int*                                       shape, 
-                                     typename radetail::PointerArray<T,R>::type p = 0)
+                                    int*                                       shape, 
+                                    typename radetail::PointerArray<T,R>::type p = 0)
 {
     profileSay("void read_and_parse_shape(std::istream&,int*,PointerArray<T,R>::type)");
     size_t init_file_ptr = in.tellg();
@@ -2190,15 +2138,15 @@ void radetail::read_and_parse_shape(std::istream &                             i
                     }
                     if (lastchar == ',') {
                         if (p) 
-                            ra::StringToValue<T>::get(word,
-                                                      deref<T,R>::access(p, current_shape));
+                            StringToValue<T>::get(word,
+                                                  Deref<T,R>::access(p, current_shape));
                         word="";
                         current_shape[current_depth]++;
                     }
                 } while (lastchar != '}');
                 if (p) 
-                    ra::StringToValue<T>::get(word,
-                                              deref<T,R>::access(p, current_shape));
+                    StringToValue<T>::get(word,
+                                          Deref<T,R>::access(p, current_shape));
                 if (shape)
                     if (shape[current_depth] < current_shape[current_depth])
                         shape[current_depth] = current_shape[current_depth];
@@ -2266,6 +2214,12 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
 #undef profileSay
 #undef checkOrSay
 // 
+
+
+// Global namespace stuff
+
+#define EXTENT(A,I) radetail::extent_given_byte_size(A,I,sizeof(A))
+#define RARRAY(A)   radetail::make_rarray_given_byte_size(A,sizeof(A))
 
 using ra::rarray; // for now.
 
