@@ -20,7 +20,30 @@
 #include <stdexcept>
 #include <cstdlib>
 
-// Define internal types in own namespace
+#ifdef TRACETEST
+#define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
+#else
+#define profileSay(a) 
+#endif
+
+#ifdef BOUNDSCHECK
+#define checkOrSay(a, b) if (not(a)) throw std::out_of_range(b)
+#ifdef SKIPINTERMEDIATE
+#undef SKIPINTERMEDIATE
+#endif
+#else
+#define checkOrSay(a, b) 
+#endif
+
+#if __cplusplus <= 199711L
+#define nullptr 0 
+#endif
+
+// Forward definitions of ra::rarray<T,R> and radetail::subarray<T,R>
+namespace ra       { template<typename T,int R> class rarray;   }
+namespace radetail { template<typename T,int R> class subarray; }
+
+// Define internal types needed by ra::rarray, in a separate namespace
 
 namespace radetail
 {
@@ -35,8 +58,8 @@ namespace radetail
 //    ...
 template<typename T,int R> 
 struct PointerArray {
-    typedef typename PointerArray<T,R-1>::type const*    type;     // const shape, recursive
-    typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type;// non-const variant
+    typedef typename PointerArray<T,R-1>::type const*    type;         // const shape, recursive
+    typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type; // non-const variant
 };
 template<typename T> 
 struct PointerArray<T,1> { // We end the recursion by specifically defining the R=1 case
@@ -45,7 +68,6 @@ struct PointerArray<T,1> { // We end the recursion by specifically defining the 
 };
 
 // Unconst<T>::type = T , unless T=const U, in which case Unconst<const T>::type = T .
-//
 template<typename T> 
 struct Unconst { 
     typedef T type; // non-stripping, intended for typed without const
@@ -55,10 +77,31 @@ struct Unconst<const T> {  // Override non-const-stripped type with a stripped o
     typedef T type; // no const!
 };
 
-// Forward definition subarray<T,R> for use in class rarray<T,R>:
-template<typename T,int R> class subarray;
+// Iterator<T> acts like T* with bounds checking
+template<typename T>
+class Iterator {
+  public:
+    T&        operator*   ();                                          // dereference
+    Iterator& operator++  ();                                          // pre-incrememt
+    Iterator  operator++ (int);                                        // post-increment
+    bool      operator== (const Iterator<T>& other);                   // comparison: equal to
+    bool      operator!= (const Iterator<T>& other);                   // comparison: not equal to
+    bool      operator<  (const Iterator<T>& other);                   // comparison: less than
+    bool      operator>  (const Iterator<T>& other);                   // comparison: greater than
+    bool      operator<= (const Iterator<T>& other);                   // comparison: less than or equal to
+    bool      operator>= (const Iterator<T>& other);                   // comparison: greater than or equal to
+  private:
+    T*  pointer_;
+    T*  pointer_min_;
+    T*  pointer_max_plus_one_;
+    Iterator(T* ptr, int size);
+    template<typename S,int R> friend class ra::rarray;
+    template<typename S,int R> friend class radetail::subarray;
+};
+
 
 }  // end namespace radetail (to be continued)
+
 
 //------------------------------------------------//
 //                                                //
@@ -83,45 +126,45 @@ class rarray {
     typedef typename radetail::PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
 
     rarray();                                                          // constructor leaving rarray uninitialized 
-    rarray(int n0, int n1);                                            // constructor creating own buffer for R=2
-    rarray(int n0, int n1, int n2);                                    // constructor creating own buffer for R=3
-    rarray(int n0, int n1, int n2, int n3);                            // constructor creating own buffer for R=4
-    rarray(int n0, int n1, int n2, int n3, int n4);                    // constructor creating own buffer for R=5
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5);            // constructor creating own buffer for R=6
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6); 
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7); 
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8); 
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9); 
-    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10); 
-    rarray(const int* extent);                                         // constructor creating own buffer for any R (the only way for R>6)
-    rarray(T* buffer, int n0, int n1);                                 // constructor from an existing buffer for R=2..11
-    rarray(T* buffer, int n0, int n1, int n2);                         // constructor from an existing buffer for R=3
-    rarray(T* buffer, int n0, int n1, int n2, int n3);                 // constructor from an existing buffer for R=4
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4);         // constructor from an existing buffer for R=5
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5); // constructor from an existing buffer for R=6
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6); 
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7); 
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8); 
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9); 
-    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10); 
-    rarray(T* buffer, const int* extent);                              // constructor from an existing buffer for any R (the only way for R>11)
+    rarray(int n0, int n1);                                            // constructor creating its own buffer for R=2
+    rarray(int n0, int n1, int n2);                                                                            // R=3
+    rarray(int n0, int n1, int n2, int n3);                                                                    // R=4
+    rarray(int n0, int n1, int n2, int n3, int n4);                                                            // R=5
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5);                                                    // R=6
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6);                                            // R=7
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7);                                    // R=8
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8);                            // R=9 
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);                    // R=10
+    rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);           // R=11
+    rarray(const int* extent);                                                                                 // R>11
+    rarray(T* buffer, int n0, int n1);                                 // constructor from an existing buffer for R=2
+    rarray(T* buffer, int n0, int n1, int n2);                                                                 // R=3
+    rarray(T* buffer, int n0, int n1, int n2, int n3);                                                         // R=4
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4);                                                 // R=5
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5);                                         // R=6
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6);                                 // R=7 
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7);                         // R=8
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8);                 // R=9
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);         // R=10
+    rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);// R=11
+    rarray(T* buffer, const int* extent);                                                                      // R>11
     rarray(const rarray<T,R> &a);                                      // copy constructor
     rarray(const radetail::subarray<T,R> &a);                          // copy constructor
     rarray<T,R>& operator=(const rarray<T,R> &a);                      // assignment operator
     rarray<T,R>& operator=(const radetail::subarray<T,R> &a);          // assignment operator
     ~rarray();                                                         // destructor
     void clear();                                                      // make undefined
-    void reshape(int n0, int n1);                                      // reshape without changing the underlying buffer for R=2
-    void reshape(int n0, int n1, int n2);                              // reshape without changing the underlying buffer for R=3
-    void reshape(int n0, int n1, int n2, int n3);                      // reshape without changing the underlying buffer for R=4
-    void reshape(int n0, int n1, int n2, int n3, int n4);              // reshape without changing the underlying buffer for R=5
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5);      // reshape without changing the underlying buffer for R=6
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6);
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7);
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8);
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);
-    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);
-    void reshape(const int* extent);                                   // reshape without changing the underlying buffer for any R (the only way for R>6)
+    void reshape(int n0, int n1);                                      // reshape keeping the underlying data for R=2
+    void reshape(int n0, int n1, int n2);                                                                      // R=3
+    void reshape(int n0, int n1, int n2, int n3);                                                              // R=4
+    void reshape(int n0, int n1, int n2, int n3, int n4);                                                      // R=5
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5);                                              // R=6
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6);                                      // R=7
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7);                              // R=8
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8);                      // R=9
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);              // R=10
+    void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);     // R=11
+    void reshape(const int* extent);                                                                           // R>11
 
     bool                is_clear()           const;                    // check if uninitialized
     rarray<T,R>         copy()               const;                    // return a copy
@@ -373,7 +416,7 @@ template<typename T, int R>
 void read_and_parse_shape(std::istream & in, int* shape, typename PointerArray<T,R>::type p = 0);
 
 // Template functions to detemine the dimensions of automatic arrays, for use in the EXTENT macro
-// To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatica array
+// To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
 template<typename A>                                                              int extent_given_byte_size(A a[], int i, int byte_size); 
 template<typename A,int Z>                                                        int extent_given_byte_size(A a[][Z], int i, int byte_size);
 template<typename A,int Y,int Z>                                                  int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);
@@ -385,7 +428,7 @@ template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                  
 template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              int extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size);
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
-template<typename A,int R>                                                        int extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size);
+template<typename A,int R>                                                        int extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size); // use rarray's extent function
 // Template functions to convert automatic arrays, for conversion with RARRAY macro
 // To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
 template<typename A>                                                              ra::rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size); 
@@ -399,7 +442,7 @@ template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                  
 template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              ra::rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        ra::rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  ra::rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);
-template<typename A,int R>                                                        ra::rarray<A,R> make_rarray_given_byte_size(ra::rarray<A,R> a, int byte_size); 
+template<typename A,int R>                                                        ra::rarray<A,R> make_rarray_given_byte_size(ra::rarray<A,R> a, int byte_size); // trivial action for rarray
 
 } // end namespace radetail
 
@@ -410,27 +453,6 @@ template<typename A,int R>                                                      
 //                                                //
 //------------------------------------------------//
 
-
-#ifdef TRACETEST
-    #define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
-#else
-    #define profileSay(a) 
-#endif
-
-#ifdef BOUNDSCHECK
-    #define checkOrSay(a, b) if (not(a)) throw std::out_of_range(b)
-    // Boundschecking needs to switch off SKIPINTERMEDIATE if it
-    // was set lest only the first dimension gets checked.
-    #ifdef SKIPINTERMEDIATE
-        #undef SKIPINTERMEDIATE
-    #endif
-#else
-    #define checkOrSay(a, b) 
-#endif
-
-#if __cplusplus <= 199711L
-    #define nullptr 0 
-#endif
 
 //----------------------------------------------------------------------//
 
@@ -1058,6 +1080,146 @@ T* radetail::subarray<T,1>::data() const
 {
     profileSay("T* subarray<T,1>::data()");
     return ra::rarray<T,1>::base(parray_);
+}
+
+// rarray begin/end methods
+
+template<typename T,int R>
+typename ra::rarray<T,R>::iterator 
+ra::rarray<T,R>::begin()
+{
+    profileSay("iterator rarray<T,R>::begin()");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer();
+}
+
+template<typename T,int R>
+typename ra::rarray<T,R>::const_iterator 
+ra::rarray<T,R>::cbegin() const 
+{
+    profileSay("const_iterator rarray<T,R>::cbegin() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer();
+}
+
+template<typename T, int R>
+typename ra::rarray<T,R>::iterator 
+ra::rarray<T,R>::end()
+{
+    profileSay("iterator rarray<T,1>::end()");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer()+size();
+}
+
+template<typename T, int R>
+typename ra::rarray<T,R>::const_iterator 
+ra::rarray<T,R>::cend() const 
+{
+    profileSay("const_iterator rarray<T,1>::cend() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer()+size();
+}
+
+template<typename T>
+typename ra::rarray<T,1>::iterator 
+ra::rarray<T,1>::begin()
+{
+    profileSay("iterator rarray<T,1>::begin()");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer();
+}
+
+template<typename T>
+typename ra::rarray<T,1>::const_iterator 
+ra::rarray<T,1>::cbegin() const 
+{
+    profileSay("const_iterator rarray<T,1>::cbegin() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer();
+}
+
+template<typename T>
+typename ra::rarray<T,1>::iterator 
+ra::rarray<T,1>::end()
+{
+    profileSay("iterator rarray<T,1>::end()");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer()+size();
+}
+
+template<typename T>
+typename ra::rarray<T,1>::const_iterator 
+ra::rarray<T,1>::cend() const 
+{
+    profileSay("const_iterator rarray<T,1>::cend() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    return get_buffer()+size();
+}
+
+// ...for subarray
+
+template<typename T,int R> 
+typename radetail::subarray<T,R>::iterator 
+radetail::subarray<T,R>::begin() const
+{
+    profileSay("T* subarray<T,R>::begin()");
+    return ra::rarray<T,R>::base(parray_);
+}
+
+template<typename T,int R> 
+typename radetail::subarray<T,R>::const_iterator 
+radetail::subarray<T,R>::cbegin() const
+{
+    profileSay("T* subarray<T,R>::cbegin()");
+    return ra::rarray<T,R>::base(parray_);
+}
+
+template<typename T, int R> 
+typename radetail::subarray<T,R>::iterator 
+radetail::subarray<T,R>::end() const
+{
+    profileSay("T* subarray<T,R>::end()");
+    return ra::rarray<T,R>::base(parray_) + size();
+}
+
+template<typename T, int R> 
+typename radetail::subarray<T,R>::const_iterator 
+radetail::subarray<T,R>::cend() const
+{
+    profileSay("T* subarray<T,R>::cend()");
+    return ra::rarray<T,R>::base(parray_) + size();
+}
+
+template<typename T> 
+typename radetail::subarray<T,1>::iterator 
+radetail::subarray<T,1>::begin() const
+{
+    profileSay("T* subarray<T,1>::begin()");
+    return ra::rarray<T,1>::base(parray_);
+}
+
+template<typename T> 
+typename radetail::subarray<T,1>::const_iterator 
+radetail::subarray<T,1>::cbegin() const
+{
+    profileSay("T* subarray<T,1>::cbegin()");
+    return ra::rarray<T,1>::base(parray_);
+}
+
+template<typename T> 
+typename radetail::subarray<T,1>::iterator 
+radetail::subarray<T,1>::end() const
+{
+    profileSay("T* subarray<T,1>::end()");
+    return ra::rarray<T,1>::base(parray_) + size();
+}
+
+template<typename T> 
+typename radetail::subarray<T,1>::const_iterator 
+radetail::subarray<T,1>::cend() const
+{
+    profileSay("T* subarray<T,1>::cend()");
+    return ra::rarray<T,1>::base(parray_) + size();
 }
 
 // rarray method to return T*const*.. acting similarly to this rarray
@@ -1727,6 +1889,112 @@ T* ra::rarray<T,1>::base(parray_t parray)
     return reinterpret_cast<T*>(result);
 }
 
+// Iterator<T> acts like T* with bounds checking
+
+// Iterator dereference
+template<typename T>
+T& radetail::Iterator<T>::operator*()
+{
+    profileSay("T& Iterator<T>::operator*()");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
+    return *pointer_;
+}           
+
+// Iterator pre-incrememt
+template<typename T>
+radetail::Iterator<T>& radetail::Iterator<T>::operator++()
+{
+    profileSay("Iterator<T> Iterator<T>::operator++()");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
+    ++pointer_;
+    return *this;
+}
+
+// Iterator post-increment
+template<typename T>
+radetail::Iterator<T> radetail::Iterator<T>::operator++(int)
+{
+    profileSay("Iterator<T> Iterator<T>::operator++(int)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
+    radetail::Iterator<T> saved = *this;
+    ++pointer_;
+    return saved;
+}
+
+// Iterator comparison: equal to
+template<typename T>
+bool radetail::Iterator<T>::operator==(const Iterator<T>& other)
+{
+    profileSay("bool Iterator<T>::operator==(const Iterator<T>&)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+    checkOrSay(other.pointer_ != nullptr and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ > other.pointer_min_, "invalid iterator 2");
+    return pointer_ == other.pointer_;
+}
+
+// Iterator comparison: not equal to
+template<typename T>
+bool radetail::Iterator<T>::operator!=(const Iterator<T>& other)
+{
+    profileSay("bool Iterator<T>::operator!=(const Iterator<T>&)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+    checkOrSay(other.pointer_ != nullptr and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ > other.pointer_min_, "invalid iterator 2");
+    return pointer_ != other.pointer_;
+}
+
+// Iterator comparison: less than
+template<typename T>
+bool radetail::Iterator<T>::operator<(const Iterator<T>& other)
+{
+    profileSay("bool Iterator<T>::operator<(const Iterator<T>&)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+    checkOrSay(other.pointer_ != nullptr and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ > other.pointer_min_, "invalid iterator 2");
+    return pointer_ < other.pointer_;
+}
+
+// Iterator comparison: greater than
+template<typename T>
+bool radetail::Iterator<T>::operator>(const Iterator<T>& other)
+{
+    profileSay("bool Iterator<T>::operator>(const Iterator<T>&)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+    checkOrSay(other.pointer_ != nullptr and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ > other.pointer_min_, "invalid iterator 2");
+    return pointer_ > other.pointer_;
+}
+
+// Iterator comparison: less than or equal to
+template<typename T>
+bool radetail::Iterator<T>::operator<=(const Iterator<T>& other)
+{
+    profileSay("bool Iterator<T>::operator<=(const Iterator<T>&)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+    checkOrSay(other.pointer_ != nullptr and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ > other.pointer_min_, "invalid iterator 2");
+    return pointer_ <= other.pointer_;
+}
+
+// Iterator comparison: greater than or equal to
+template<typename T>
+bool radetail::Iterator<T>::operator>=(const Iterator<T>& other)
+{
+    profileSay("bool Iterator<T>::operator>=(const Iterator<T>&)");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+    checkOrSay(other.pointer_ != nullptr and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ > other.pointer_min_, "invalid iterator 2");
+    return pointer_ >= other.pointer_;
+}
+
+template<typename T>
+radetail::Iterator<T>::Iterator(T* ptr, int size)
+  : pointer_(ptr),
+    pointer_min_(ptr),
+    pointer_max_plus_one_(ptr+size)
+{
+    profileSay("Iterator<T>::Iterator(T*,int)");
+    checkOrSay(pointer_ != nullptr and size >=0, "invalid construction of iterator");
+    checkOrSay(pointer_ != nullptr and pointer_ >= pointer_min_ and pointer_max_plus_one_ > pointer_min_, "invalid iterator 1");
+}
+
 // find shape of automatic arrays, given the size of the array
 
 template<typename A>
@@ -2128,12 +2396,15 @@ void radetail::StringToValue<std::string>::get(const std::string& input, std::st
 }
 
 template<typename T, int R>
-T& radetail::Deref<T,R>::access(typename PointerArray<T,R>::type p, const int* indices) {
+T& radetail::Deref<T,R>::access(typename PointerArray<T,R>::type p, const int* indices) 
+{
     profileSay("Deref<T,R>::access(PointerArray<T,R>::type,const int*)");
     return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
 }
+
 template<typename T>
-T& radetail::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices) {
+T& radetail::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices) 
+{
     profileSay("Deref<T,1>::access(PointerArray<T,1>::type,const int*)");
     return p[indices[0]-1];
 }
@@ -2247,17 +2518,16 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
     }
 }
 
-// get rid of the macros
+// Get rid of the macros
 #undef profileSay
 #undef checkOrSay
-// 
 
 
 // Global namespace stuff
+// (also in global namespace: operator<< and operator>> for rarray and subarray)
 
 #define EXTENT(A,I) radetail::extent_given_byte_size(A,I,sizeof(A))
 #define RARRAY(A)   radetail::make_rarray_given_byte_size(A,sizeof(A))
-
 using ra::rarray; // for now.
 
 #endif
