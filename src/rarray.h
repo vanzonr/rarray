@@ -118,8 +118,10 @@ template<typename T,int R>
 class rarray {
 
   public: 
-    typedef T*        iterator;                                        // iterator type
-    typedef const T*  const_iterator;                                  // iterator type for constant access
+    // typedef T*        iterator;                                        // iterator type
+    // typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef radetail::Iterator<T>  iterator;
+    typedef radetail::Iterator<const T>  const_iterator;
     typedef int       difference_type;                                 // difference type for indices
     typedef int       size_type;                                       // type of indices
     typedef typename radetail::PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
@@ -178,8 +180,10 @@ class rarray {
     rarray<const T,R>&  const_ref()          const;                    // create a reference to this that treats elements as constant:
 
     iterator            begin();                                       // start of the *content*
+    const_iterator      begin()              const;
     const_iterator      cbegin()             const;
     iterator            end();                                         // end of the *content*
+    const_iterator      end()                const;
     const_iterator      cend()               const;
 
     // access elements 
@@ -219,8 +223,10 @@ template<typename T>
 class rarray<T,1> {
 
   public:
-    typedef T*        iterator;                                        // iterator type
-    typedef const T*  const_iterator;                                  // iterator type for constant access
+    //typedef T*        iterator;                                        // iterator type
+    //typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef radetail::Iterator<T>  iterator;
+    typedef radetail::Iterator<const T>  const_iterator;
     typedef int       difference_type;                                 // difference type for indices
     typedef int       size_type;                                       // type of indices
     typedef typename radetail::PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
@@ -252,8 +258,10 @@ class rarray<T,1> {
     rarray<const T,1>&  const_ref()          const;                    // create reference to this that treats elements as constant
 
     iterator            begin();                                       // start of the *content*
+    const_iterator      begin()              const;
     const_iterator      cbegin()             const;
     iterator            end();                                         // end of the *content*
+    const_iterator      end()                const;
     const_iterator      cend()               const;
 
     // accesselements through intermediate object:
@@ -308,8 +316,10 @@ template<typename T,int R>
 class subarray {
 
   public:
-    typedef T*        iterator;                                        // iterator type
-    typedef const T*  const_iterator;                                  // iterator type for constant access
+    //typedef T*        iterator;                                        // iterator type
+    //typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef radetail::Iterator<T>  iterator;
+    typedef radetail::Iterator<const T>  const_iterator;
     typedef int       difference_type;                                 // difference type for indices
     typedef int       size_type;                                       // type of indices
     typedef typename PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
@@ -345,8 +355,10 @@ class subarray {
 template<typename T> class subarray<T,1> {
 
   public:
-    typedef T*        iterator;                                        // iterator type
-    typedef const T*  const_iterator;                                  // iterator type for constant access
+    //typedef T*        iterator;                                        // iterator type
+    //typedef const T*  const_iterator;                                  // iterator type for constant access
+    typedef radetail::Iterator<T>  iterator;
+    typedef radetail::Iterator<const T>  const_iterator;
     typedef int       difference_type;                                 // difference type for indices
     typedef int       size_type;                                       // type of indices
     typedef typename PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
@@ -1090,7 +1102,18 @@ ra::rarray<T,R>::begin()
 {
     profileSay("iterator rarray<T,R>::begin()");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer();
+    //return get_buffer();
+    return iterator(get_buffer(), size());
+}
+
+template<typename T,int R>
+typename ra::rarray<T,R>::const_iterator 
+ra::rarray<T,R>::begin() const 
+{
+    profileSay("const_iterator rarray<T,R>::begin() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    //return get_buffer();
+    return const_iterator(get_buffer(), size());
 }
 
 template<typename T,int R>
@@ -1099,25 +1122,38 @@ ra::rarray<T,R>::cbegin() const
 {
     profileSay("const_iterator rarray<T,R>::cbegin() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer();
+    //return get_buffer();
+    return const_iterator(get_buffer(), size());
 }
 
 template<typename T, int R>
 typename ra::rarray<T,R>::iterator 
 ra::rarray<T,R>::end()
 {
-    profileSay("iterator rarray<T,1>::end()");
+    profileSay("iterator rarray<T,R>::end()");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer()+size();
+    //return get_buffer()+size();
+    return iterator(get_buffer()+size(), 0);
+}
+
+template<typename T, int R>
+typename ra::rarray<T,R>::const_iterator 
+ra::rarray<T,R>::end() const 
+{
+    profileSay("const_iterator rarray<T,R>::end() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    //return get_buffer()+size();
+    return const_iterator(get_buffer()+size(), 0);
 }
 
 template<typename T, int R>
 typename ra::rarray<T,R>::const_iterator 
 ra::rarray<T,R>::cend() const 
 {
-    profileSay("const_iterator rarray<T,1>::cend() const");
+    profileSay("const_iterator rarray<T,R>::cend() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer()+size();
+    //return get_buffer()+size();
+    return const_iterator(get_buffer()+size(), 0);
 }
 
 template<typename T>
@@ -1126,7 +1162,18 @@ ra::rarray<T,1>::begin()
 {
     profileSay("iterator rarray<T,1>::begin()");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer();
+    //return get_buffer();
+    return iterator(get_buffer(), size());
+}
+
+template<typename T>
+typename ra::rarray<T,1>::const_iterator 
+ra::rarray<T,1>::begin() const 
+{
+    profileSay("const_iterator rarray<T,1>::begin() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    //return get_buffer();
+    return const_iterator(get_buffer(), size());
 }
 
 template<typename T>
@@ -1135,7 +1182,8 @@ ra::rarray<T,1>::cbegin() const
 {
     profileSay("const_iterator rarray<T,1>::cbegin() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer();
+    //return get_buffer();
+    return const_iterator(get_buffer(), size());
 }
 
 template<typename T>
@@ -1144,7 +1192,18 @@ ra::rarray<T,1>::end()
 {
     profileSay("iterator rarray<T,1>::end()");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer()+size();
+    //return get_buffer()+size();
+    return iterator(get_buffer()+size(), 0);
+}
+
+template<typename T>
+typename ra::rarray<T,1>::const_iterator 
+ra::rarray<T,1>::end() const 
+{
+    profileSay("const_iterator rarray<T,1>::end() const");
+    checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
+    //return get_buffer()+size();
+    return const_iterator(get_buffer()+size(), 0);
 }
 
 template<typename T>
@@ -1153,7 +1212,8 @@ ra::rarray<T,1>::cend() const
 {
     profileSay("const_iterator rarray<T,1>::cend() const");
     checkOrSay(parray_!=nullptr, "attempt at using uninitialized rarray");
-    return get_buffer()+size();
+    //return get_buffer()+size();
+    return const_iterator(get_buffer()+size(), 0);
 }
 
 // ...for subarray
@@ -1163,7 +1223,8 @@ typename radetail::subarray<T,R>::iterator
 radetail::subarray<T,R>::begin() const
 {
     profileSay("T* subarray<T,R>::begin()");
-    return ra::rarray<T,R>::base(parray_);
+    //return ra::rarray<T,R>::base(parray_);
+    return iterator(ra::rarray<T,R>::base(parray_), size());
 }
 
 template<typename T,int R> 
@@ -1171,7 +1232,8 @@ typename radetail::subarray<T,R>::const_iterator
 radetail::subarray<T,R>::cbegin() const
 {
     profileSay("T* subarray<T,R>::cbegin()");
-    return ra::rarray<T,R>::base(parray_);
+    //return ra::rarray<T,R>::base(parray_);
+    return const_iterator(ra::rarray<T,R>::base(parray_), size());
 }
 
 template<typename T, int R> 
@@ -1179,7 +1241,8 @@ typename radetail::subarray<T,R>::iterator
 radetail::subarray<T,R>::end() const
 {
     profileSay("T* subarray<T,R>::end()");
-    return ra::rarray<T,R>::base(parray_) + size();
+    //return ra::rarray<T,R>::base(parray_) + size();
+    return iterator(ra::rarray<T,R>::base(parray_) + size(), 0);
 }
 
 template<typename T, int R> 
@@ -1187,7 +1250,8 @@ typename radetail::subarray<T,R>::const_iterator
 radetail::subarray<T,R>::cend() const
 {
     profileSay("T* subarray<T,R>::cend()");
-    return ra::rarray<T,R>::base(parray_) + size();
+    //return ra::rarray<T,R>::base(parray_) + size();
+    return const_iterator(ra::rarray<T,R>::base(parray_) + size(), 0);
 }
 
 template<typename T> 
@@ -1195,7 +1259,8 @@ typename radetail::subarray<T,1>::iterator
 radetail::subarray<T,1>::begin() const
 {
     profileSay("T* subarray<T,1>::begin()");
-    return ra::rarray<T,1>::base(parray_);
+    //return ra::rarray<T,1>::base(parray_);
+    return iterator(ra::rarray<T,1>::base(parray_), size());
 }
 
 template<typename T> 
@@ -1203,7 +1268,8 @@ typename radetail::subarray<T,1>::const_iterator
 radetail::subarray<T,1>::cbegin() const
 {
     profileSay("T* subarray<T,1>::cbegin()");
-    return ra::rarray<T,1>::base(parray_);
+    //return ra::rarray<T,1>::base(parray_);
+    return const_iterator(ra::rarray<T,1>::base(parray_), size());
 }
 
 template<typename T> 
@@ -1211,7 +1277,8 @@ typename radetail::subarray<T,1>::iterator
 radetail::subarray<T,1>::end() const
 {
     profileSay("T* subarray<T,1>::end()");
-    return ra::rarray<T,1>::base(parray_) + size();
+    //return ra::rarray<T,1>::base(parray_) + size();
+    return iterator(ra::rarray<T,1>::base(parray_) + size(), 0);
 }
 
 template<typename T> 
@@ -1219,7 +1286,8 @@ typename radetail::subarray<T,1>::const_iterator
 radetail::subarray<T,1>::cend() const
 {
     profileSay("T* subarray<T,1>::cend()");
-    return ra::rarray<T,1>::base(parray_) + size();
+    //return ra::rarray<T,1>::base(parray_) + size();
+    return const_iterator(ra::rarray<T,1>::base(parray_) + size(), 0);
 }
 
 // rarray method to return T*const*.. acting similarly to this rarray
@@ -2235,7 +2303,7 @@ ra::rarray<A,6> radetail::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int 
 template<typename A,int U,int V,int W,int X,int Y,int Z>
 ra::rarray<A,7> radetail::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size) 
 {
-    profileSay("rarray<A,6> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
+    profileSay("rarray<A,7> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
     const int t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
     return ra::rarray<A,7>(******a,t,U,V,W,X,Y,Z);
 }
@@ -2243,7 +2311,7 @@ ra::rarray<A,7> radetail::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], i
 template<typename A,int T,int U,int V,int W,int X,int Y,int Z>
 ra::rarray<A,8> radetail::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size) 
 {
-    profileSay("rarray<A,6> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
+    profileSay("rarray<A,8> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
     const int s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
     return ra::rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z);
 }

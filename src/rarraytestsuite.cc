@@ -1475,6 +1475,104 @@ int testoutput() {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+
+int testiterators() {
+
+    double a[5]={1,2,3,4,5};
+    double b[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    double c[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
+    rarray<double,1> q(a,5);
+    rarray<double,2> r(b,4,4);
+    rarray<double,3> s(c,3,3,3);
+    std::stringstream qout;
+
+    for (rarray<double,2>::iterator i=r.begin(); i!=r.end(); ++i)
+    {
+        *i += 2;
+    }
+
+    for (rarray<double,2>::const_iterator i=r.cbegin(); i!=r.cend(); i++)
+    {
+        qout << *i << ',';
+    }
+
+#ifndef SKIPINTERMEDIATE
+    for (rarray<double,2>::const_iterator i=r[1].cbegin(); i!=r[1].cend(); i++)
+    {
+        qout << *i << ',';
+    }
+#else
+    qout << "7,8,9,10,";
+#endif
+
+    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,");
+
+    const rarray<double,2> rview = r;
+
+    for (rarray<double,2>::const_iterator i=rview.begin(); i!=rview.end(); i++)
+    {
+        qout << *i << ',';
+    }
+
+    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
+
+    std::stringstream rout;
+    for (auto& a: q)
+    {
+        a *= 2;
+    }
+
+    for (rarray<double,2>::const_iterator i=q.cbegin(); i!=q.cend(); i++)
+    {
+        qout << *i << ',';
+    }
+
+    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
+
+    const rarray<double,1> qconst = q;
+
+    for (const auto& b: qconst)
+    {
+        rout << b << ',';
+    }
+
+    CHECK(rout.str() == "2,4,6,8,10,");
+
+    #ifndef SKIPINTERMEDIATE
+    std::stringstream check;
+    
+    for (auto& c: s[1])
+        c *= 2;
+
+    for (auto& d: s[1][2])
+        d += 10;
+
+    for (const auto& c: s[1])
+        check << c << ',';
+
+    for (rarray<double,2>::const_iterator i=s[2].cbegin(); i!=s[2].cend(); i++)
+    {
+        check << *i << ',';
+    }
+
+    CHECK(check.str() == "20,22,24,26,28,30,42,44,46,19,20,21,22,23,24,25,26,27,");
+
+    #endif
+
+    auto sb = s.begin();
+    auto se = s.end();
+
+    CHECK(not (sb==se));
+    CHECK(sb < se);
+    CHECK(sb <= se);
+    CHECK(se > sb);
+    CHECK(se >= sb);
+         
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -1566,6 +1664,8 @@ int main()
     PASSORRETURN(test6dautoconversion());
 
     PASSORRETURN(testoutput());
+
+    PASSORRETURN(testiterators());
 
     return ALLCLEAR;
 }
