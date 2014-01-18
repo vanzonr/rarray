@@ -20,14 +20,21 @@
 #include <stdexcept>
 #include <cstdlib>
 
+// When running rarraytestsuite.cc compiled with -DTRACETEST, the
+// following macro produced output to be used to determine which
+// functions are exercised.
 #ifdef TRACETEST
 #define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #else
 #define profileSay(a) 
 #endif
 
+// Compiling with -DBOUNDSCHECK switches on the checkOrSay macro to
+// check its first argument and throw an exception if it is not true.
+// checkOrSay is intended to be used for bound checks.
 #ifdef BOUNDSCHECK
 #define checkOrSay(a, b) if (not(a)) throw std::out_of_range(b)
+// BOUNDCHECK is incompatible with SKIPINTERMEDIATE (see below)
 #ifdef SKIPINTERMEDIATE
 #undef SKIPINTERMEDIATE
 #endif
@@ -43,11 +50,13 @@
 namespace ra       { template<typename T,int R> class rarray;   }
 namespace radetail { template<typename T,int R> class subarray; }
 
-// Define internal types needed by ra::rarray, in a separate namespace
+// Define internal types needed by class rarray, in a separate namespace
 
 namespace radetail
 {
 
+// Need a generic way to express a pointer-to-a-pointer-to-a-pointer etc.
+// 
 //    PointerArray<T,1>::type   =    T*
 //    PointerArray<T,2>::type   =    T*const*
 //    PointerArray<T,3>::type   =    T*const*const*
@@ -67,6 +76,7 @@ struct PointerArray<T,1> { // We end the recursion by specifically defining the 
     typedef T* noconst_type; 
 };
 
+// Need a way to remove the const from a type:
 // Unconst<T>::type = T , unless T=const U, in which case Unconst<const T>::type = T .
 template<typename T> 
 struct Unconst { 
@@ -77,7 +87,7 @@ struct Unconst<const T> {  // Override non-const-stripped type with a stripped o
     typedef T type; // no const!
 };
 
-// Iterator<T> acts like T* with bounds checking
+// Iterator<T> acts like T* but allows (optional) bounds checking switched on by BOUNDSCHECK
 template<typename T>
 class Iterator {
   public:
@@ -110,7 +120,7 @@ class Iterator {
 //------------------------------------------------//
 
 
-// Definition class rarray<T,R>
+// class rarray<T,R> is the only thing in namespace ra
 
 namespace ra {
 
@@ -118,12 +128,10 @@ template<typename T,int R>
 class rarray {
 
   public: 
-    // typedef T*        iterator;                                        // iterator type
-    // typedef const T*  const_iterator;                                  // iterator type for constant access
-    typedef radetail::Iterator<T>  iterator;
-    typedef radetail::Iterator<const T>  const_iterator;
-    typedef int       difference_type;                                 // difference type for indices
-    typedef int       size_type;                                       // type of indices
+    typedef int                                                difference_type;  // difference type for indices
+    typedef int                                                size_type;        // type of indices
+    typedef radetail::Iterator<T>                              iterator;         // iterator type
+    typedef radetail::Iterator<const T>                        const_iterator;   // iterator type for constant access
     typedef typename radetail::PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
     typedef typename radetail::PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
 
@@ -155,7 +163,7 @@ class rarray {
     rarray<T,R>& operator=(const rarray<T,R> &a);                      // assignment operator
     rarray<T,R>& operator=(const radetail::subarray<T,R> &a);          // assignment operator
     ~rarray();                                                         // destructor
-    void clear();                                                      // make undefined
+    void clear();                                                      // clean up routine, make undefined
     void reshape(int n0, int n1);                                      // reshape keeping the underlying data for R=2
     void reshape(int n0, int n1, int n2);                                                                      // R=3
     void reshape(int n0, int n1, int n2, int n3);                                                              // R=4
@@ -179,12 +187,12 @@ class rarray {
     noconst_parray_t    noconst_ptr_array()  const;                    // return a T**.. acting similarly to this rarray when using []:    
     rarray<const T,R>&  const_ref()          const;                    // create a reference to this that treats elements as constant:
 
-    iterator            begin();                                       // start of the *content*
-    const_iterator      begin()              const;
-    const_iterator      cbegin()             const;
-    iterator            end();                                         // end of the *content*
-    const_iterator      end()                const;
-    const_iterator      cend()               const;
+    iterator            begin();                                       // start of the content
+    const_iterator      begin()              const;                    // start of the content, when *this is constant
+    const_iterator      cbegin()             const;                    // start of the content, when *this can be constant and you need to be explicit
+    iterator            end();                                         // end of the content
+    const_iterator      end()                const;                    // end of the content, when *this is constant
+    const_iterator      cend()               const;                    // end of the content, when *this is constant and you need to be explicit about that
 
     // access elements 
    #ifndef SKIPINTERMEDIATE
@@ -209,7 +217,6 @@ class rarray {
     void init_shallow(parray_t parray, const int* extent);             // setup new rarray object
     void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     void init_data(const int* extent, int extenttot);                  // setup new rarray object
-    void fini();                                                       // cleanup routine
     static parray_t new_except_base(T* buffer, const int* extent);     // allocate the chain of pointers, except the base
     static T*       base(parray_t parray);                             // find base of a chain of pointers:
 
@@ -223,12 +230,10 @@ template<typename T>
 class rarray<T,1> {
 
   public:
-    //typedef T*        iterator;                                        // iterator type
-    //typedef const T*  const_iterator;                                  // iterator type for constant access
-    typedef radetail::Iterator<T>  iterator;
-    typedef radetail::Iterator<const T>  const_iterator;
-    typedef int       difference_type;                                 // difference type for indices
-    typedef int       size_type;                                       // type of indices
+    typedef int                                                difference_type;  // difference type for indices
+    typedef int                                                size_type;        // type of indices
+    typedef radetail::Iterator<T>                              iterator;         // iterator type
+    typedef radetail::Iterator<const T>                        const_iterator;   // iterator type for constant access
     typedef typename radetail::PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
     typedef typename radetail::PointerArray<T,1>::noconst_type noconst_parray_t; // conforming shorthand for T*
 
@@ -242,7 +247,7 @@ class rarray<T,1> {
     rarray<T,1>& operator=(const rarray<T,1> &a);                      // assignment operator
     rarray<T,1>& operator=(const radetail::subarray<T,1> &a);          // assignment operator
     ~rarray();                                                         // destructor
-    void clear();                                                      // make uninitialized again
+    void clear();                                                      // clean up routine, make uninitialized again
     void reshape(int n0);                                              // to change shape (only shrinking is defined)
     void reshape(const int* extent);                                   // for conformity
 
@@ -257,12 +262,12 @@ class rarray<T,1> {
     noconst_parray_t    noconst_ptr_array()  const;                    // return  T**... acting similarly to this rarray when using []
     rarray<const T,1>&  const_ref()          const;                    // create reference to this that treats elements as constant
 
-    iterator            begin();                                       // start of the *content*
-    const_iterator      begin()              const;
-    const_iterator      cbegin()             const;
-    iterator            end();                                         // end of the *content*
-    const_iterator      end()                const;
-    const_iterator      cend()               const;
+    iterator            begin();                                       // start of the content
+    const_iterator      begin()              const;                    // start of the content, when *this is constant
+    const_iterator      cbegin()             const;                    // start of the content, when *this is constant and you need to be explicit
+    iterator            end();                                         // end of the content
+    const_iterator      end()                const;                    // end of the content, when *this is constant
+    const_iterator      cend()               const;                    // end of the content, when *this is constant, and you need to be explicit about it
 
     // accesselements through intermediate object:
    #ifndef SKIPINTERMEDIATE
@@ -287,7 +292,6 @@ class rarray<T,1> {
     void init_shallow(parray_t parray, const int* extent);             // setup new rarray object
     void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     void init_data(const int* extent, int extenttot);                  // setup new rarray object
-    void fini() ;                                                      // cleanup routine
     static parray_t new_except_base(T* buffer, const int* extent);     // allocate the chain of pointers, except the base
     static T* base(parray_t parray) ;                                  // find base of a chain of pointers
 
@@ -295,9 +299,7 @@ class rarray<T,1> {
 
 }; // end definition rarray<T,1>
 
-// End Definition class rarray<T,R>
-
-} // End NAMESPACE ra
+} // end namespace ra
 
 // Input/output streaming operators in global namespace
 template<typename T,int R>  std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
@@ -316,12 +318,10 @@ template<typename T,int R>
 class subarray {
 
   public:
-    //typedef T*        iterator;                                        // iterator type
-    //typedef const T*  const_iterator;                                  // iterator type for constant access
-    typedef radetail::Iterator<T>  iterator;
-    typedef radetail::Iterator<const T>  const_iterator;
-    typedef int       difference_type;                                 // difference type for indices
-    typedef int       size_type;                                       // type of indices
+    typedef int                                      difference_type;  // difference type for indices
+    typedef int                                      size_type;        // type of indices
+    typedef radetail::Iterator<T>                    iterator;         // iterator type
+    typedef radetail::Iterator<const T>              const_iterator;   // iterator type for constant access
     typedef typename PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
     typedef typename PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
     
@@ -355,12 +355,10 @@ class subarray {
 template<typename T> class subarray<T,1> {
 
   public:
-    //typedef T*        iterator;                                        // iterator type
-    //typedef const T*  const_iterator;                                  // iterator type for constant access
-    typedef radetail::Iterator<T>  iterator;
-    typedef radetail::Iterator<const T>  const_iterator;
-    typedef int       difference_type;                                 // difference type for indices
-    typedef int       size_type;                                       // type of indices
+    typedef int                                      difference_type;  // difference type for indices
+    typedef int                                      size_type;        // type of indices
+    typedef radetail::Iterator<T>                    iterator;         // iterator type
+    typedef radetail::Iterator<const T>              const_iterator;   // iterator type for constant access
     typedef typename PointerArray<T,1>::type         parray_t;         // conforming shorthand for T*
     typedef typename PointerArray<T,1>::noconst_type noconst_parray_t; // conforming shorthand for T*
 
@@ -394,8 +392,9 @@ template<typename T>        std::ostream& text_output(std::ostream &o, const ra:
 template<typename T,int R>  std::ostream& text_output(std::ostream &o, const subarray<T,R>& r);
 template<typename T>        std::ostream& text_output(std::ostream &o, const subarray<T,1>& r);
 
-// End Definition class subarray <T,R>
 
+// We need to be able to get a reference in a pointer-to-pointer structure given indices.
+//
 // Deref<T,1>(T*   p, int* i) where i->{n1}        =  p[n1]
 // Deref<T,2>(T**  p, int* i) where i->{n1,n2}     =  p[n1][n2]
 // Deref<T,3>(T*** p, int* i) where i->{n1,n2,n3}  =  p[n1][n2][n3]
@@ -409,11 +408,8 @@ struct Deref<T,1>  // R=1 is special
 {
     static T& access(typename PointerArray<T,1>::type p, const int* indices);
 };
-// End Definition Deref<T,R>
 
-//
-// Convert a string to a value, for operator>>
-//
+// Convert a string to a value, needed for operator>> .
 template<typename T>
 struct StringToValue {
     static void get(const std::string& input, T& output);
@@ -468,8 +464,6 @@ template<typename A,int R>                                                      
 
 //----------------------------------------------------------------------//
 
-// rarray<T,R> and subarray<T,R> constructors:
-
 // Constructors creating their own buffer:
 
 // constructor for an undefined array:
@@ -485,7 +479,7 @@ ra::rarray<T,R>::rarray()
     profileSay("rarray<T,R>::rarray()");
 }
 
-// R=1 case of the same
+// R=1 case of constructor for an undefined array
 template<typename T>
 ra::rarray<T,1>::rarray() 
   : parray_(nullptr), 
@@ -803,7 +797,7 @@ ra::rarray<T,R>::~rarray()
 {
     // destructor
     profileSay("rarray<T,R>::~rarray()");
-    fini();
+    clear();
 }
 
 template<typename T>
@@ -811,28 +805,13 @@ ra::rarray<T,1>::~rarray()
 {
     // destructor
     profileSay("rarray<T,1>::~rarray()");
-    fini();
+    clear();
 }
 
-// public cleanup routine
-template<typename T,int R>
-void ra::rarray<T,R>::clear()
-{
-    profileSay("void rarray<T,R>::clear()");
-    fini();
-}
-
-template<typename T>
-void ra::rarray<T,1>::clear()
-{
-    profileSay("void rarray<T,1>::clear()");
-    fini();
-}
-
-// check if uninitialized
 template<typename T,int R>
 bool ra::rarray<T,R>::is_clear() const
 {
+    // check if uninitialized
     profileSay("bool rarray<T,R>::is_clear()");
     return parray_ == nullptr;
 }
@@ -840,6 +819,7 @@ bool ra::rarray<T,R>::is_clear() const
 template<typename T>
 bool ra::rarray<T,1>::is_clear() const
 {
+    // check if uninitialized
     profileSay("bool rarray<T,1>::is_clear()");
     return parray_ == nullptr;
 }
@@ -1501,7 +1481,7 @@ ra::rarray<T,R>& ra::rarray<T,R>::operator=(const ra::rarray<T,R> &a)
 {
     profileSay("rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R>&)");
     if (&a != this) {
-        fini();
+        clear();
         extent_ = const_cast<int*>(a.extent_);
         init_shallow(a.parray_, a.extent_, a.entire_, a.rcount_);
         ismine_ = a.ismine_;
@@ -1514,7 +1494,7 @@ ra::rarray<T,1>& ra::rarray<T,1>::operator=(const ra::rarray<T,1> &a)
 {
     profileSay("rarray<T,1>& rarray<T,1>::operator=(const rarray<T,1>&)");
     if (&a != this) {
-        fini();
+        clear();
         extent_ = const_cast<int*>(a.extent_);
         init_shallow(a.parray_, a.extent_, a.entire_, a.rcount_);
         ismine_ = a.ismine_;
@@ -1526,7 +1506,7 @@ template<typename T,int R>
 ra::rarray<T,R>& ra::rarray<T,R>::operator=(const radetail::subarray<T,R> &a) 
 {
     profileSay("rarray<T,R>& rarray<T,R>::operator=(const subarray<T,R>&)");
-    fini();
+    clear();
     extent_ = const_cast<int*>(a.extent_);
     init_shallow(a.parray_, a.extent_);
     return *this;
@@ -1536,7 +1516,7 @@ template<typename T>
 ra::rarray<T,1>& ra::rarray<T,1>::operator=(const radetail::subarray<T,1> &a) 
 {
     profileSay("rarray<T,1>& rarray<T,1>::operator=(const subarray<T,1>&)");
-    fini();
+    clear();
     extent_ = const_cast<int*>(a.extent_);
     init_shallow(a.parray_, a.extent_);
     return *this;
@@ -1680,7 +1660,7 @@ void ra::rarray<T,R>::reshape(const int* extent)
         } else { // if this has other references to it, create a new view
             T* buffer = get_buffer();    // get buffer address
             ismine_ = false;             // protect buffer from being deleted
-            fini();                      // deallocate everything else
+            clear();                      // deallocate everything else
             init_parray(buffer, extent); // reallocate pointer arrays
         }
     }
@@ -1819,7 +1799,7 @@ void ra::rarray<T,1>::reshape(const int* extent)
         } else {
             T* buffer = get_buffer();    // get buffer address        
             ismine_ = false;             // protect buffer from being deleted
-            fini();                      // deallocate everything else
+            clear();                      // deallocate everything else
             init_parray(buffer, extent); // reallocate pointer arrays
         }
     }
@@ -1839,9 +1819,9 @@ void ra::rarray<T,1>::reshape(int n0) //for R=1
 //  rarray private cleanup routine
 
 template<typename T,int R>
-void ra::rarray<T,R>::fini() 
+void ra::rarray<T,R>::clear() 
 {
-    profileSay("void rarray<T,R>::fini()");
+    profileSay("void rarray<T,R>::clear()");
     if (parray_ != nullptr and entire_) {
         (*rcount_)--;
         if (*rcount_==0) {
@@ -1857,9 +1837,9 @@ void ra::rarray<T,R>::fini()
 }
 
 template<typename T>
-void ra::rarray<T,1>::fini() 
+void ra::rarray<T,1>::clear() 
 {
-    profileSay("void rarray<T,1>::fini()");
+    profileSay("void rarray<T,1>::clear()");
     if (parray_ != nullptr and entire_) {
         (*rcount_)--;
         if (*rcount_==0) {
