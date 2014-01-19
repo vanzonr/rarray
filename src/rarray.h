@@ -24,6 +24,7 @@
 // following macro produced output to be used to determine which
 // functions are exercised.
 #ifdef TRACETEST
+//#define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #define profileSay(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #else
 #define profileSay(a) 
@@ -805,9 +806,9 @@ DUPLICATE_BODY(
 template<typename T COMMA int R> ra::rarray<T COMMA R>::~rarray(),
 template<typename T>             ra::rarray<T COMMA 1>::~rarray(),
 {
-     // destructor
-     profileSay("rarray<T,R>::~rarray()");
-     clear();
+    // destructor
+    profileSay("rarray<T,R>::~rarray()");
+    clear();
 })
 
 DUPLICATE_BODY(

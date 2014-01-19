@@ -1469,7 +1469,7 @@ int testoutput() {
     CHECK(A[1][0] == B[1][0]);
     CHECK(A[1][1] == B[1][1]);
 
-    float autoarr[2][2][2][2] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    float autoarr[2][2][2][2] = {{{{1,2},{3,4}},{{5,6},{7,8}}},{{{9,10},{11,12}},{{13,14},{15,16}}}};
     const std::string outcheck = "{{{{1,2},{3,4}},{{5,6},{7,8}}},{{{9,10},{11,12}},{{13,14},{15,16}}}}";
     std::stringstream sautoarr;
     sautoarr << RARRAY(autoarr);
@@ -1646,7 +1646,7 @@ struct array {
 array<compound,3> operator+(const array<compound,3> &a,
                             const array<compound,3> &b)
 {
-    array<compound,3> result = {a[0]+b[0],a[1]+b[1],a[2]+b[2]};
+    array<compound,3> result = {{a[0]+b[0],a[1]+b[1],a[2]+b[2]}};
     return result;
 }
 
@@ -1656,8 +1656,8 @@ int main()
 {
     double d1 = -2.2, d2 = 7.1;
     compound c1(1,2), c2(-7,13);
-    array<compound,3> a1 = {compound(1,2),compound(3,4),compound(5,6)};
-    array<compound,3> a2 = {compound(-1,-2),compound(3,-4),compound(5,-6)};
+    array<compound,3> a1 = {{compound(1,2),compound(3,4),compound(5,6)}};
+    array<compound,3> a2 = {{compound(-1,-2),compound(3,-4),compound(5,-6)}};
 
     PASSORRETURN(testconstructors<double>());
     PASSORRETURN(testconstructors<compound>());
