@@ -3,6 +3,10 @@
 //
 // testsuite for rarray.h
 //
+// ${CXX} rarraytestsuite.cc -o rarraytestsuite
+// ${CXX} -DBOUNDSCHECK rarraytestsuite.cc -o rarraytestsuite-bc
+// ${CXX} -DSKIPINTERMEDIATE rarraytestsuite.cc -o rarraytestsuite-si
+//
 #include "rarray.h"
 #include <iostream>
 #include <cassert>
@@ -1090,7 +1094,7 @@ int testreshape()
     CHECK(c[6][6][3] == 6);
     d.reshape(2,2,2,2);
     e.reshape(13,7,10,2,4);
-    f.reshape(21,5,6,1,13,10);
+    f.reshape(5,6,1,13,10,7);
     g.reshape(dimr);
     return ALLCLEAR;
 }
