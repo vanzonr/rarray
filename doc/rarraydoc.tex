@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{January 12, 2014\vspace{-7mm}}
+\date{January 20, 2014\vspace{-7mm}}
 
 \maketitle
 
@@ -47,7 +47,7 @@ Usually faster than alternatives,
 
 Uses the same accessors as compile-time (automatic) arrays,
 
-Data is guarranteed to be contiguous.
+Data is guarranteed to be contiguous for easy interfacing with libraries.
 
 \noindent\textbf{How:}
 
@@ -62,8 +62,8 @@ The header file \texttt{rarray.h} provides the type \texttt{rarray<T,R>}, where 
 \\
 \rule{0pt}{14pt}Define a \texttt{n$\times$m$\times$k} array of \texttt{float}s with&
 \\
-data already allocated at a pointer \texttt{p}:&
-\texttt{rarray<float,3> c(p,n,m,k);}
+data already allocated at a pointer \texttt{ptr}:&
+\texttt{rarray<float,3> c(ptr,n,m,k);}
 \\
 \rule{0pt}{14pt}Element i,j,k of the array \texttt{b}:&
 \texttt{b[i][j][k]}
@@ -211,6 +211,7 @@ The guarrantee of contiguity means strided arrays are not supported.
   deep {\tt copy} method.
 \item Elements are accessible using repeated square brackets, like C/C++ arrays.
 \item Can be emptied with the {\tt clear} method.
+\item Can be filled with a uniform value with the {\tt fill} method.
 \item Can be reshaped.
 \item Automatic C-style arrays can be converted to rarrays using {\tt RARRAY}.
 \item Checks index bounds if the preprocessor
@@ -430,6 +431,7 @@ public:
  void         reshape(int extent0, ...); // change shape (not data)
  void         reshape(const int*extent); // change shape (not data)
  void         clear();                   // release memory
+ void         fill(const T& value);      // fill with uniform value
  bool         is_clear();         const; // check if uninitialized;
  rarray<T,R>  copy()              const; // deep copy
  const int*   shape()             const; // all extents as C-style array
@@ -500,6 +502,10 @@ Same as the previous reshape method, but takes an array of new dimensions as an 
 \noindent\textbf{Definition:} \texttt{void clear();}
 
 This method release memory the memory associated with the rarray. If the rarray was created by providing a pre-existing buffer for the data, the memory of this buffer does not released.
+
+\noindent\textbf{Definition:} \texttt{void fill(const T& value);}
+
+This method fills the array with a uniform value \texttt{value}.
 
 \noindent\textbf{Definition:} \texttt{bool is\_clear();}
 
@@ -737,7 +743,7 @@ The memory overhead here comes from having to store the dimensions and a pointer
 
 \subsection{Performance overhead using the rarray class}
 
-When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 - 4.8.2 and, icc 12.1.5 on x86, and with xlC 12.1 on power 6).
+When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on x86, and with xlC 12.1 on power 6).
 So in that sense, no there is no performance overhead.  However, with \texttt{{\tt AR\_BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
 
 Let us give a bit more details as to why there should not be any performance overhead. Temporary intermediate expression in a multi-bracketed expression (such as a[5] in a[5][6][7]) are represented by an intermediate class called rarray\_intermediate. This prevents assignment to such expressions and allows the optional bound checking to work.  Most compilers (gcc, intel) can optimize these intermediate classes away when bounds checking is off. However

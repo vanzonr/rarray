@@ -2298,6 +2298,28 @@ int testiterators() {
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+int testfill()
+{
+    rarray<float,2> a(3,3);
+    a.fill(1.23);
+    for (int i=0;i<EXTENT(a,0);i++) {
+        for (int j=0;j<EXTENT(a,1);j++) {
+            CHECK(a[i][j]=1.23);
+        }
+    }
+    
+    rarray<float,1> b(5);
+    b.fill(1.24);
+    for (int i=0;i<EXTENT(a,0);i++) {
+        CHECK(b[i]=1.24);
+    }
+    
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 class compound 
@@ -2406,6 +2428,8 @@ int main()
     PASSORRETURN(testiterators());
 
     PASSORRETURN(test711autoconversion());
+
+    PASSORRETURN(testfill());
 
     return ALLCLEAR;
 }

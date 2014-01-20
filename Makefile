@@ -1,6 +1,7 @@
 # Makefile for rarray.h
 #
 # To build and run unit tests:            make test
+# To run unit tests through valgrind:     make valgrindtest
 # To check code coverage of tests:        make covertest
 # To build and run benchmark test:        make benchmark
 # To build the documentation:             make doc
@@ -25,9 +26,9 @@ TESTNAME=rarraytestsuite
 BENCHMARKNAME=rarray4dspeed
 PASS=pass
 
-all: test covertest benchmark doctest
+all: test valgrindtest covertest benchmark doctest
 
-.PHONY: clean test covertest benchmark install doctest doc
+.PHONY: clean test covertest benchmark install doctest doc valgrindtest
 
 install: src/rarray.h doc/rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
@@ -63,6 +64,9 @@ doctestgenerator.sh: doc/rarraydoc.tex
 
 test: $(TESTNAME)
 	./$(TESTNAME)
+
+valgrindtest: $(TESTNAME)
+	valgrind --tool=memcheck $(TESTNAME)
 
 $(TESTNAME): $(TESTNAME).o
 	$(CCL) $(LDFLAGS) -o $@ $^ $(LDLIBS)
