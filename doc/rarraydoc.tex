@@ -215,7 +215,7 @@ The guarrantee of contiguity means strided arrays are not supported.
   constant {\tt BOUNDSCHECK} is defined. 
 \item A method {\tt is\_clear} to check if the rarray is uninitialized.
 \item A method to get the number of elements in each
-  dimension (\texttt{extent}), or in all dimensions (\texttt{extents}).
+  dimension (\texttt{extent}), or in all dimensions (\texttt{shape}).
 \item A method to obtain the total number of elements in the
   array (\texttt{size}).
 \item A method to make the data type of the array const
@@ -269,6 +269,8 @@ for the content. The data pointer can also be retrieved using
 \texttt{s.data()}. 
 
 Even in the former case (\texttt{rarray<float,3> s(256,256,256)}), one can release the memory of this array by calling \texttt{s.clear()} before the rarray goes out of scope.
+
+The construction specifying a number of extents as arguments works for arrays with rank up to and including 11. For arrays with larger rank, you have to pass an pointer to the array of extents.
 
 \subsection{Accessing the elements}
 
@@ -357,7 +359,7 @@ If the preprocessor constant \texttt{{\tt BOUNDSCHECK}} is defined, an
 \item an index is too small or too large;
 \item the size of dimension is requested that does not exist (in a call to \texttt{extent(int i)});
 \item a constructor is called with a zero pointer for the buffer or for the dimensions array;
-\item a constructor is called with too few or too many arguments (for \texttt{R}$<=6$).
+\item a constructor is called with too few or too many arguments (for \texttt{R}$<=11$).
 \end{itemize}
 \texttt{{\tt BOUNDSCHECK}} can be defined by
 adding the {\tt -DBOUNDSCHECK} argument to the compilation command, or
@@ -415,7 +417,7 @@ template<typename T, int R>
 class rarray {
 public:    
  rarray();                               // create uninitialized array
- rarray(int extent0, ...);               // constructor for R<7
+ rarray(int extent0, ...);               // constructor for R<=11
  rarray(const int* extents);             // alternative: extents in array
  rarray(T* data, int extent0, ...);      // construct with existing data
  rarray(T* data, const int* extents);    // alternative: extents in array
@@ -426,7 +428,7 @@ public:
  void         clear();                   // release memory
  bool         is_clear();         const; // check if uninitialized;
  rarray<T,R>  copy()              const; // deep copy
- const int*   extents()           const; // all extents as C-style array
+ const int*   shape()             const; // all extents as C-style array
  int          extent(int i)       const; // extent in dimension i
  int          size()              const; // total number of elements
  T*           data()              const; // start of internal buffer
@@ -450,7 +452,7 @@ public:
 This method returns the size of dimension \texttt{i}.
 
 %\subsubsection{Get size in each dimension: \tt extent}
-\noindent\textbf{Definition:} \texttt{const int* extents() const;}
+\noindent\textbf{Definition:} \texttt{const int* shape() const;}
 
 This method returns the size of all dimensions as a c array. 
 
@@ -485,9 +487,9 @@ This method creates reference to this with const elements.
 
 \noindent\textbf{Definition:} \texttt{void reshape(int extent0, ...);}
 
-This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size. If the rarray was a reference to another rarray, the reference will get destroyed even though the data is still shared.
+This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size. If the rarray was a reference to another rarray, the reference will get destroyed even though the data is still shared. This works only for arrays with rank up to and including 11.
 
-\noindent\textbf{Definition:} \texttt{void reshape(const int* extent);}
+\noindent\textbf{Definition:} \texttt{void reshape(const int* extents);}
 
 Same as the previous reshape method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank seven or higher.
 
