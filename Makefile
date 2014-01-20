@@ -101,7 +101,7 @@ profiletests: src/$(TESTNAME).cc src/rarray.h
 
 profilenitests: src/$(TESTNAME).cc src/rarray.h
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
-	$(CXX) -DSKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DTRACETEST src/$(TESTNAME).cc -o profilenitests
+	$(CXX) -DSKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DTRACETEST src/$(TESTNAME).cc -o profilenitests
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@echo "Summary:"

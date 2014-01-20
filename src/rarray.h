@@ -1820,7 +1820,7 @@ template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
 int radetail::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
 {
     profileSay("int extent_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int,int)");
-    checkOrSay(i>=0 and i<10, "wrong dimension");
+    checkOrSay(i>=0 and i<11, "wrong dimension");
     switch (i) {
        case 0:   return byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
        case 1:   return Q;
