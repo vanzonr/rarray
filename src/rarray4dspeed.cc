@@ -345,49 +345,49 @@ int main(int argc,char**argv)
 
     switch (thiscase) {
     case 0: 
-        printf("exact: ");
+        printf("exact:   \t");
         fflush(stdout);
         answer = case_exact(repeat);
         break;
     case 1: 
-        printf("rarray: ");
+        printf("rarray:   \t");
         fflush(stdout);
         answer = case_rarray(repeat);
         break;
     case 2: 
-        printf("automatic: ");
+        printf("automatic:\t");
         fflush(stdout);
         answer = case_auto(repeat);
         break;
     case 3: 
-        printf("dynamic: ");
+        printf("dynamic:\t");
         fflush(stdout);
         answer = case_dyn(repeat);
         break;
     case 4: 
-        printf("boost: ");
+        printf("boost:   \t");
         fflush(stdout);
         answer = case_boost(repeat);
         break;
     case 5: 
         break;
     case 6: 
-        printf("vector: ");
+        printf("vector:   \t");
         fflush(stdout);
         answer = case_vector(repeat);
         break;
     case 7: 
-        printf("blitz1: ");
+        printf("blitz1:   \t");
         fflush(stdout);
         answer = case_blitz_1(repeat);
         break;
     case 8: 
-        printf("blitz2: ");
+        printf("blitz2:   \t");
         fflush(stdout);
         answer = case_blitz_2(repeat);
         break;
     case 9: 
-        printf("eigen: ");
+        printf("eigen:   \t");
         fflush(stdout);
         answer = case_eigen(repeat);
         break;
@@ -395,11 +395,11 @@ int main(int argc,char**argv)
 
     double eps = 1e-6;
 
-    if (fabs(1-answer/check)<eps)
-        printf("%lf matches exact result!\n", answer/n/n);
-    else
+    if (fabs(1-answer/check)>eps)
         printf("%lf does not match exact result of %lf\n", 
                answer/n/n, check/n/n);
+    // else
+    //     printf("%lf matches exact result!\n", answer/n/n);
 
     stopwatchStop(&s);
 }

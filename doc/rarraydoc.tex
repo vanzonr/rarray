@@ -1,5 +1,5 @@
-\documentclass[12pt,twoside]{article}
-\usepackage{a4wide,fancyhdr,hyperref,framed}
+\documentclass[11pt,twoside]{article}
+\usepackage{a4wide,fancyhdr,hyperref,framed,charter}
 \setcounter{tocdepth}{1}
 \pagestyle{fancy}
 \renewcommand{\sectionmark}[1]{\markright{\thesection\quad #1}}
@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{\small January 12, 2014\vspace{-7mm}}
+\date{January 12, 2014\vspace{-7mm}}
 
 \maketitle
 
@@ -156,6 +156,7 @@ library is to be a minimal interface for runtime multidimensional arrays with
 
 \noindent{\bf Example:\vspace{-7pt}}
 \begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   #include "rarray.h"
   int main() 
@@ -164,6 +165,7 @@ library is to be a minimal interface for runtime multidimensional arrays with
      a[1][2][3] = 105;
   }
 \end{verbatim}%
+%END TEST THIS
 \vspace{-14pt}%
 \end{framed}
 
@@ -212,7 +214,7 @@ The guarrantee of contiguity means strided arrays are not supported.
 \item Can be reshaped.
 \item Automatic C-style arrays can be converted to rarrays using {\tt RARRAY}.
 \item Checks index bounds if the preprocessor
-  constant {\tt BOUNDSCHECK} is defined. 
+  constant {\tt AR\_BOUNDSCHECK} is defined. 
 \item A method {\tt is\_clear} to check if the rarray is uninitialized.
 \item A method to get the number of elements in each
   dimension (\texttt{extent}), or in all dimensions (\texttt{shape}).
@@ -353,7 +355,7 @@ The last example intentionally also has side effects, as the original rarray tha
 In both cases, the total size of the new shape should be less or equal to that of the old shape, because no additional data is allocated by the reshape method. 
 \subsection{Optional bounds checking}
 
-If the preprocessor constant \texttt{{\tt BOUNDSCHECK}} is defined, an
+If the preprocessor constant \texttt{{\tt AR\_BOUNDSCHECK}} is defined, an
 \texttt{out\_of\_bounds} exception is thrown~if
 \begin{itemize}\itemsep0pt\parskip3pt
 \item an index is too small or too large;
@@ -361,12 +363,12 @@ If the preprocessor constant \texttt{{\tt BOUNDSCHECK}} is defined, an
 \item a constructor is called with a zero pointer for the buffer or for the dimensions array;
 \item a constructor is called with too few or too many arguments (for \texttt{R}$<=11$).
 \end{itemize}
-\texttt{{\tt BOUNDSCHECK}} can be defined by
-adding the {\tt -DBOUNDSCHECK} argument to the compilation command, or
-by \texttt{{\tt\#define BOUNDSCHECK}} before
+\texttt{{\tt AR\_BOUNDSCHECK}} can be defined by
+adding the {\tt -DAR\_BOUNDSCHECK} argument to the compilation command, or
+by \texttt{{\tt\#define AR\_BOUNDSCHECK}} before
 the \texttt{{\tt\#include "rarray.h"}} in the source.
 %\\
-%Regardless of \texttt{{\tt BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
+%Regardless of \texttt{{\tt AR\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
 
 \section{Comparison with standard alternatives}
 
@@ -386,6 +388,7 @@ one.
 Using rarray also has benefits over another common \cxx\ 
 solution using the STL:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   #include <vector>
   int main() {
@@ -399,7 +402,8 @@ solution using the STL:
      }
      v[1][2][3] = 105;           // assign to element (for example)
   }
-\end{verbatim}
+\end{verbatim}%
+%END TEST THIS
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 \noindent
 which is complicated, is non-contiguous in memory, and likely
@@ -513,6 +517,7 @@ This method creates deep copy of the rarray, i.e., an independent rarray with th
 It is possible to convert C-style automatic arrays to rarrays using the {\tt RARRAY} macro (which calls some templated functions under the hood).  You can apply {\tt RARRAY} to any automatic array of rank six or less, and even to a rarray (which essentially does nothing). 
 The main convenience of this is that one can write functions that take rarray argument(s) and pass automatic arrays to them. Another use is in initializing a rarray. For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
 #include <iostream>
 #include "rarray.h"
@@ -532,7 +537,8 @@ int main() {
     rarray<float,2> a = RARRAY(printme).copy();
     print2d(a);
 }
-\end{verbatim}
+\end{verbatim}%
+%END TEST THIS
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 
 
@@ -542,19 +548,21 @@ int main() {
 A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elements are not changed by it. Because \cxx\ cannot convert a reference to a \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}}, one has to use the \texttt{const\_ref} method to do this for you.
 For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   float add(const rarray<const float,2> &s)   {
      float x = 0.0;
      for (int i=0; i<s.extent(0); i++)
         for (int j=0; j<s.extent(1); j++)
-           x += a[i][j];
+           x += s[i][j];
      return x;
   }
   int main() {
      rarray<float,2> s(40, 40);
      float z = add(s.const_ref()); // because add() takes <const float>
   }
-\end{verbatim}
+\end{verbatim}%
+%END TEST THIS
 \vspace{-14pt}
 \end{framed}\vspace{-8pt}
 
@@ -584,6 +592,7 @@ functions using the syntax \texttt{s.data()}, which yields a
 
 \noindent{\bf Example 1:}
 \begin{framed}\vspace{-9pt}%
+%TEST THIS
 \begin{verbatim}
   void fill1(float* a, int n1, int n2, float z) {
      for (int i=0; i<n1*n2; i++)
@@ -593,23 +602,28 @@ functions using the syntax \texttt{s.data()}, which yields a
      rarray<float,2> s(40, 40);
      fill1(s.data(), s.extent(0), s.extent(1), 3.14);
   }
-\end{verbatim}
+\end{verbatim}%
+%END TEST THIS
 \end{framed}
+
+\pagebreak[4]
 
 \noindent{\bf Example 2:}
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   float add2(const float* a, int n1, int n2) {
      float x = 0.0;
      for (int i=0; i<n1*n2; i++)
-         x += s[i];
+         x += a[i];
      return x;
   }
   int main() {
      rarray<float,2> s(40, 40);
      float z = add2(s.data(), s.extent(0), s.extent(1));
   }
-\end{verbatim}
+\end{verbatim}%
+%END TEST THIS
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 
 \noindent
@@ -625,6 +639,7 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
 \noindent
 {\bf Example 1:}
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   void fill3(float*const* a, int n1, int n2, float z) {
      for (int i=0; i<n1; i++)
@@ -635,25 +650,29 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
      rarray<float,2> s(40, 40);
      fill3(s.ptr_array(), s.extent(0), s.extent(1), 3.14);
   }
-\end{verbatim}
+\end{verbatim}%
+%END TEST THIS
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 
 \noindent
 {\bf Example 2:}
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   float add4(const float*const* a, int n1, int n2) {
      float x = 0.0;
      for (int i=0; i<n1; i++)
         for (int j=0; j<n2; j++)
-           x += s[i][j];
+           x += a[i][j];
      return x;
   }
   int main() {
      rarray<float,2> s(40, 40);
-     float z = add4(s.ptr_array());
+     float z = add4(s.ptr_array(), 40, 40);
   }
-\end{verbatim}\vspace{-14pt}
+\end{verbatim}%
+%END TEST THIS
+\vspace{-14pt}
 \end{framed}
 
 \noindent
@@ -669,6 +688,7 @@ Generating a T** from a rarray object, one could change the internal structure o
 \noindent
 {\bf Example:}
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   void fill5(float** a, int n1, int n2, float z) {
      for (int i=0; i<n1; i++)
@@ -679,7 +699,9 @@ Generating a T** from a rarray object, one could change the internal structure o
      rarray<float,2> s(40, 40);
      fill5(s.noconst_ptr_array(), s.extent(0), s.extent(1), 3.14);
   }
-\end{verbatim}\vspace{-14pt}
+\end{verbatim}%
+%END TEST THIS
+\vspace{-14pt}
 \end{framed}
 
 \subsection{Conversion to a {\tt const T**}}
@@ -689,19 +711,22 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
 \noindent
 {\bf Example:}
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
 \begin{verbatim}
   float add6(const float** a, int n1, int n2) {
      float x = 0.0;
      for (int i=0; i<n1; i++)
         for (int j=0; j<n2; j++)
-           x += s[i][j];
+           x += a[i][j];
      return x;
   }
   int main() {
      rarray<float,2> s(40, 40);
-     float z = add6(s.const_ref().noconst_ptr_array());
+     float z = add6(s.const_ref().noconst_ptr_array(), 40, 40);
   }
-\end{verbatim}\vspace{-14pt}
+\end{verbatim}%
+%END TEST THIS
+\vspace{-14pt}
 \end{framed}
 
 \section{Overheads}
@@ -713,26 +738,14 @@ The memory overhead here comes from having to store the dimensions and a pointer
 \subsection{Performance overhead using the rarray class}
 
 When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 - 4.8.2 and, icc 12.1.5 on x86, and with xlC 12.1 on power 6).
-So in that sense, no there is no performance overhead.  
-However, with \texttt{{\tt BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
+So in that sense, no there is no performance overhead.  However, with \texttt{{\tt AR\_BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
 
-Let us give a bit more details as to why there should not be any
-performance overhead. Temporary intermediate expression in a
-multi-bracketed expression (such as a[5] in a[5][6][7]) are
-represented by an intermediate class called rarray\_intermediate.
-This prevents assignment to such expressions and allows the optional
-bound checking to work.  Most compilers (gcc, intel) can optimize
-these intermediate classes away when bounds checking is off. However
-some compilers (e.g. pgi) cannot do this and suffer from speed
-degredation because of these intermediate objects.
+Let us give a bit more details as to why there should not be any performance overhead. Temporary intermediate expression in a multi-bracketed expression (such as a[5] in a[5][6][7]) are represented by an intermediate class called rarray\_intermediate. This prevents assignment to such expressions and allows the optional bound checking to work.  Most compilers (gcc, intel) can optimize these intermediate classes away when bounds checking is off. However
+some compilers (e.g. pgi) cannot do this and suffer from speed degredation because of these intermediate objects.
 
-To get full speedup for these less-optimizing compilers, you can
-define the preprocessor constant SKIPINTERMEDIATE (usually with a
--DSKIPINTERMEDIATE compiler option).  Intermediate expression in a
-multi-bracketed expression are then replaced by bare
-pointers-to-pointers.
+To get full speedup for these less-optimizing compilers, you can define the preprocessor constant \texttt{AR\_SKIPINTERMEDIATE} (usually with a \texttt{-DAR\_SKIPINTERMEDIATE} compiler option).  Intermediate expression in a multi-bracketed expression are then replaced by bare pointers-to-pointers.
 
-Note that when BOUNDSCHECK is set, it will switch off SKIPINTERMEDIATE.
+Note that when \texttt{AR\_BOUNDSCHECK} is set, it will switch off \texttt{AR\_SKIPINTERMEDIATE}.
 
 \subsection{Compilation overhead using the rarray class}
 

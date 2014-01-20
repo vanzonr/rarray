@@ -1,12 +1,11 @@
 # Makefile for rarray.h
 #
-# To build and run unit tests:      make test
-#
-# To check code coverage of tests:  make testcover
-#
-# To build and run benchmark test:  make benchmark
-# 
-# To install rarray.h:              make [PREFIX=directory]
+# To build and run unit tests:            make test
+# To check code coverage of tests:        make covertest
+# To build and run benchmark test:        make benchmark
+# To build the documentation:             make doc
+# To test the code in the documentation:  make doctest
+# To install rarray.h:                    make [PREFIX=directory]
 #
 PREFIX?=/usr/local
 CXX?=g++
@@ -26,14 +25,41 @@ TESTNAME=rarraytestsuite
 BENCHMARKNAME=rarray4dspeed
 PASS=pass
 
+all: test covertest benchmark doctest
 
-all: test covertest benchmark
+.PHONY: clean test covertest benchmark install doctest doc
 
-.PHONY: clean test covertest benchmark install
-
-install: src/rarray.h
+install: src/rarray.h doc/rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
 	cp src/rarray.h ${PREFIX}/include/rarrar.h
+	mkdir -p ${PREFIX}/share/doc/rarray
+	cp doc/rarraydoc.pdf ${PREFIX}/share/doc/rarray
+
+doc: doc/rarraydoc.pdf
+
+doc/rarraydoc.pdf: doc/rarraydoc.tex
+	(cd doc; pdflatex rarraydoc.tex; cd ..)
+
+doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x
+	./doc1.x
+	./doc2.x
+	./doc3.x
+	./doc4.x
+	./doc5.x
+	./doc6.x
+	./doc7.x
+	./doc8.x
+	./doc9.x
+	./doc10.x
+
+doc%.x: doc%.cc
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Isrc -o $@ $< $(LDLIBS)
+
+doc%.cc: doctestgenerator.sh
+	sh doctestgenerator.sh
+
+doctestgenerator.sh: doc/rarraydoc.tex 
+	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' doc/rarraydoc.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include "rarray.h"/' | grep -v verbatim> doctestgenerator.sh
 
 test: $(TESTNAME)
 	./$(TESTNAME)
@@ -110,6 +136,9 @@ summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@wc -l missing_from_test.txt
 
 clean:
-	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARKNAME).o $(PASS).o profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
+	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARKNAME).o $(PASS).o profiletests profilenitests \
+	output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
+	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
+	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh
 
 
