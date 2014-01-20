@@ -12,7 +12,7 @@ PREFIX?=/usr/local
 CXX?=g++
 CCL?=${CXX}  
 
-MORECPPFLAGS=-DBOUNDSCHECK -Wall
+MORECPPFLAGS=-DAR_BOUNDSCHECK -Wall
 CXXFLAGS?=-g -std=c++11 
 LDFLAGS?=-g
 LDLIBS?= 
@@ -74,7 +74,7 @@ covertest: \
 
 coverage_in_code.txt: src/rarray.h
 	@echo "Extracting lines from array.h that generate profile messages"
-	\grep -n profileSay src/rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   profileSay("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
+	\grep -n AR_PROFILESAY src/rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   AR_PROFILESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
 
 coverage_in_test.txt: output_from_test.txt output_from_nitest.txt 
 	@echo "Filtering profile messages from test output"
@@ -97,11 +97,11 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 
 profiletests: src/$(TESTNAME).cc src/rarray.h
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DTRACETEST src/$(TESTNAME).cc -o profiletests
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DAR_TRACETEST src/$(TESTNAME).cc -o profiletests
 
 profilenitests: src/$(TESTNAME).cc src/rarray.h
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
-	$(CXX) -DSKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DTRACETEST src/$(TESTNAME).cc -o profilenitests
+	$(CXX) -DAR_SKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DAR_TRACETEST src/$(TESTNAME).cc -o profilenitests
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@echo "Summary:"
