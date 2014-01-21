@@ -40,7 +40,7 @@ installed, and type
 
    make doc
 
-To in install the header and documentation to PATH/include and PATH/share/doc, respectively, type
+To install the header and documentation to PATH/include and PATH/share/doc, respectively, type
 
    make install
 
@@ -74,12 +74,12 @@ rarraydoc.tex:      LaTeX source of the documentation
 rarraytestsuite.cc: regression test suite (not using Boost.Test yet)
 
 rarray2dspeed.cc:   benchmark code for 2d arrays comparing rarray,
-                    blitz, eigen, dynamic and automatic arrays
+                    blitz, eigen, boost, dynamic and automatic arrays
 
 rarray2dspeedf.f90: fortran benchmark code for 2d arrays for comparison.
 
 rarray4dspeed.cc:   benchmark code for 4d arrays comparing rarray,
-                    blitz, eigen, dynamic and automatic arrays
+                    blitz, eigen, biist. dynamic and automatic arrays
 
 rarray4dspeedf.f90: fortran benchmark code for 4d arrays for comparison.
 

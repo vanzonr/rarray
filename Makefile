@@ -75,9 +75,9 @@ $(TESTNAME).o: src/$(TESTNAME).cc src/rarray.h compiler.mk
 
 benchmark: benchmark2 benchmark4
 
-benchmark2: $(BENCHMARK2NAME) # $(BENCHMARK2NAME)f
+benchmark2: $(BENCHMARK2NAME) $(BENCHMARK2NAME)f
 	@echo benchmark on a 2d array example
-	@./$(BENCHMARK2NAME) 1
+
 	@(ulimit -s unlimited; ./$(BENCHMARK2NAME) 2) 
 	@./$(BENCHMARK2NAME) 3
 	@./$(BENCHMARK2NAME) 4
@@ -85,10 +85,11 @@ benchmark2: $(BENCHMARK2NAME) # $(BENCHMARK2NAME)f
 	@./$(BENCHMARK2NAME) 7
 	@./$(BENCHMARK2NAME) 8
 	@./$(BENCHMARK2NAME) 9
-#	@./$(BENCHMARK2NAME)f
+	@./$(BENCHMARK2NAME)f
 
 benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAME)f
 	@echo benchmark on a 4d array example
+	@./$(BENCHMARK4NAME) 0
 	@./$(BENCHMARK4NAME) 1
 	@(ulimit -s unlimited; ./$(BENCHMARK4NAME) 2) 
 	@./$(BENCHMARK4NAME) 3
@@ -104,6 +105,9 @@ $(BENCHMARK2NAME): $(BENCHMARK2NAME).o $(PASS).o compiler.mk
 
 $(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o compiler.mk
 	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK4NAME).o $(PASS).o $(LDLIBS)
+
+$(BENCHMARK2NAME)f: src/$(BENCHMARK2NAME)f.f90 $(PASS)f.o compiler.mk
+	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ src/$(BENCHMARK2NAME)f.f90 $(PASS)f.o 
 
 $(BENCHMARK4NAME)f: src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o compiler.mk
 	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o 

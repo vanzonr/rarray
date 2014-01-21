@@ -26,7 +26,7 @@ program rarray4dspeedf
   endif
   exact = (1.0*n)**4*check+(1.0*n)**4*(n-1)*repeat
   
-  write (*,'(A)',advance='NO'), "fortran dynamic: "
+  write (*,'(A)',advance='no'), "fortran: "
     
   call system_clock(countstart,countrate,countmax)
 
@@ -79,13 +79,11 @@ program rarray4dspeedf
 
   
   !check result
-  if (ABS(1-answer/exact)<eps) then
-     print *, answer/n/n, "matches exact result!"
-  else
+  if (ABS(1-answer/exact)>=eps) then
      print *, answer/n/n, "does not match exact result of ", exact/n/n
   endif
 
-  write (*,*),'#',(1.0*countfinish-1.0*countstart)/(1.0*countrate), "sec elapsed"
+  write (*,*), (1.0*countfinish-1.0*countstart)/(1.0*countrate), "s elapsed"
 
 end program rarray4dspeedf
 

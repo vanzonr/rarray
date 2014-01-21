@@ -52,7 +52,6 @@ double case_rarray(int repeat)
 {
     double d = 0.0;
     rarray<float,4> a(n,n,n,n), b(n,n,n,n), c(n,n,n,n);
-    //float[****] a[n][n][n][n], b[n][n][n][n], c[n][n][n][n];
     while (repeat--) {
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
