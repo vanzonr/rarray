@@ -8,19 +8,17 @@
 # To test the code in the documentation:  make doctest
 # To install rarray.h:                    make [PREFIX=directory]
 #
-PREFIX?=/usr/local
-CXX?=g++
-CCL?=${CXX}  
 
-MORECPPFLAGS=-DAR_BOUNDSCHECK -Wall
-CXXFLAGS?=-g -std=c++11 
+include compiler.mk
+
+PREFIX?=/usr/local
+
+CCL?=${CXX}  
 LDFLAGS?=-g
 LDLIBS?= 
-
-CPPFLAGSOPT?=-DNDEBUG
-CXXFLAGSOPT?=-O3 -fstrict-aliasing -ffast-math -march=native
 LDFLAGSOPT?=
 LDLIBSOPT?=
+MORECPPFLAGS=-DAR_BOUNDSCHECK
 
 TESTNAME=rarraytestsuite
 BENCHMARK2NAME=rarray2dspeed
@@ -69,10 +67,10 @@ test: $(TESTNAME)
 valgrindtest: $(TESTNAME)
 	valgrind --tool=memcheck $(TESTNAME)
 
-$(TESTNAME): $(TESTNAME).o
-	$(CCL) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+$(TESTNAME): $(TESTNAME).o compiler.mk
+	$(CCL) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(TESTNAME).o: src/$(TESTNAME).cc src/rarray.h
+$(TESTNAME).o: src/$(TESTNAME).cc src/rarray.h compiler.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 benchmark: benchmark2 benchmark4
@@ -101,25 +99,25 @@ benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAME)f
 	@./$(BENCHMARK4NAME) 9
 	@./$(BENCHMARK4NAME)f
 
-$(BENCHMARK2NAME): $(BENCHMARK2NAME).o $(PASS).o
-	$(CCL) $(LDFLAGSOPT) -o $@ $^ $(LDLIBS)
+$(BENCHMARK2NAME): $(BENCHMARK2NAME).o $(PASS).o compiler.mk
+	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK2NAME).o $(PASS).o $(LDLIBS)
 
-$(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o
-	$(CCL) $(LDFLAGSOPT) -o $@ $^ $(LDLIBS)
+$(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o compiler.mk
+	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK4NAME).o $(PASS).o $(LDLIBS)
 
-$(BENCHMARK4NAME)f: src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o
-	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ $^
+$(BENCHMARK4NAME)f: src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o compiler.mk
+	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o 
 
-$(PASS)f.o: src/$(PASS)f.f90
-	$(FC) -c -O0 -g -o $@ $^
+$(PASS)f.o: src/$(PASS)f.f90 compiler.mk
+	$(FC) -c -O0 -g -o $@ $<
 
-$(BENCHMARK2NAME).o: src/$(BENCHMARK2NAME).cc src/rarray.h
+$(BENCHMARK2NAME).o: src/$(BENCHMARK2NAME).cc src/rarray.h compiler.mk
 	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4NAME).o: src/$(BENCHMARK4NAME).cc src/rarray.h
+$(BENCHMARK4NAME).o: src/$(BENCHMARK4NAME).cc src/rarray.h compiler.mk
 	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(PASS).o: src/$(PASS).cc
+$(PASS).o: src/$(PASS).cc compiler.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 covertest: \
@@ -152,23 +150,23 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 	comm -2 -3 _coverage_in_code.txt _coverage_in_test.txt | sort -n > missing_from_test.txt
 	rm -f _coverage_in_code.txt _coverage_in_test.txt
 
-profiletests: src/$(TESTNAME).cc src/rarray.h
+profiletests: src/$(TESTNAME).cc src/rarray.h compiler.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DAR_TRACETEST src/$(TESTNAME).cc -o profiletests
 
-profilenitests: src/$(TESTNAME).cc src/rarray.h
+profilenitests: src/$(TESTNAME).cc src/rarray.h compiler.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
 	$(CXX) -DAR_SKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DAR_TRACETEST src/$(TESTNAME).cc -o profilenitests
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
-	@echo "Summary:"
+c	@echo "Summary:"
 	@wc -l coverage_in_code.txt
 	@wc -l coverage_in_test.txt
 	@wc -l missing_from_test.txt
 
 clean:
-	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARK4NAME).o $(PASS).o profiletests profilenitests \
-	output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
+	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARK4NAME).o $(BENCHMARK2NAME).o $(PASS).o $(PASS)f.o \
+	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh \
 	doc/rarraydoc.aux doc/rarraydoc.log doc/rarraydoc.out doc/rarraydoc.pdf

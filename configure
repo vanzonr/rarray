@@ -1,0 +1,95 @@
+#!/bin/bash
+# Not an autotools configure, just detects compiler for rarray.h 's Makefile
+# Ramses van Zon, January 2014
+
+set -e
+
+if [ "$1" == "--help" ]; then
+    
+    echo "Detects compiler. Usage: configure [--prefix=PATH]"
+    false
+    
+else
+    
+    if [ "${1:0:9}" == "--prefix=" ]; then
+        prefix="${1:9}"
+        shift
+    elif [ "$1" == "--prefix" ]; then
+        prefix="$2"
+        shift 2
+    else
+        prefix="/usr/local"
+    fi
+    echo "Installation prefix set to '$prefix'."
+    
+    echo -n "Selecting C++ compiler... "
+        
+    if [ -n "$CXX" ]; then
+        if ! which g++ >& /dev/null; then
+            echo "Warning: CXX variable does not point a valid compiler"
+            CXX=
+        fi
+    fi
+
+    if [ -z "$CXX" ]; then
+
+        which g++ >& /dev/null
+        if [ $? == '0' ]; then
+            CXX=g++
+        fi
+        which icpc >& /dev/null
+        if [ $? == '0' ]; then
+            CXX=icpc
+        fi       
+        which xlc++ >& /dev/null
+        if [ $? == '0' ]; then
+            CXX=xlc++
+        fi        
+        which clang >& /dev/null
+        if [ $? == '0' ]; then
+            CXX=clang
+        fi        
+        which clang++ >& /dev/null
+        if [ $? == '0' ]; then
+            CXX=clang++
+        fi        
+    fi
+    
+    filename=""
+    case $CXX in
+        g++)
+            echo "GNU compiler"
+            filename="compiler.gnu.mk"
+            ;;
+        icpc)
+            echo "Intel compiler"
+            filename="compiler.intel.mk"
+            ;;
+        xlc++)
+            echo "IBM compiler"
+            filename="compiler.ibm.mk"
+            ;;
+        clang++)
+            echo "CLANG compiler"
+            filename="compiler.clang.mk"
+            ;;
+        clang)
+            echo "CLANG compiler"
+            filename="compiler.clang.mk"
+            ;;
+    esac
+    
+    if [ -n "$filename" ]; then        
+        echo "Copying $filename to compiler.mk"
+        cp -f compiler.gnu.mk compiler.mk
+        echo "PREFIX=$prefix" >> compiler.mk
+        echo "Use 'make test' to test rarray.h"
+        echo "Use 'make benchmark' to benchmark rarray.h"
+        echo "Use 'make install' to install rarray.h"
+    else
+        echo "compiler not found"
+        false
+    fi
+    
+fi
+

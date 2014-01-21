@@ -265,7 +265,7 @@ double case_blitz_2(int repeat)
 int main(int argc,char**argv) 
 {
     Stopwatch s = START;
-    double answer;
+    double answer = 0.0;
     int thiscase = (argc==1)?1:atoi(argv[1]);
 
     switch (thiscase) {
