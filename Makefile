@@ -23,7 +23,8 @@ LDFLAGSOPT?=
 LDLIBSOPT?=
 
 TESTNAME=rarraytestsuite
-BENCHMARKNAME=rarray4dspeed
+BENCHMARK2NAME=rarray2dspeed
+BENCHMARK4NAME=rarray4dspeed
 PASS=pass
 
 all: test valgrindtest covertest benchmark doctest
@@ -74,22 +75,48 @@ $(TESTNAME): $(TESTNAME).o
 $(TESTNAME).o: src/$(TESTNAME).cc src/rarray.h
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
+benchmark: benchmark2 benchmark4
 
-benchmark: $(BENCHMARKNAME)
+benchmark2: $(BENCHMARK2NAME) # $(BENCHMARK2NAME)f
+	@echo benchmark on a 2d array example
+	@./$(BENCHMARK2NAME) 1
+	@(ulimit -s unlimited; ./$(BENCHMARK2NAME) 2) 
+	@./$(BENCHMARK2NAME) 3
+	@./$(BENCHMARK2NAME) 4
+	@./$(BENCHMARK2NAME) 6
+	@./$(BENCHMARK2NAME) 7
+	@./$(BENCHMARK2NAME) 8
+	@./$(BENCHMARK2NAME) 9
+#	@./$(BENCHMARK2NAME)f
+
+benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAME)f
 	@echo benchmark on a 4d array example
-	@./$(BENCHMARKNAME) 1
-	@(ulimit -s unlimited; ./$(BENCHMARKNAME) 2) 
-	@./$(BENCHMARKNAME) 3
-	@./$(BENCHMARKNAME) 4
-	@./$(BENCHMARKNAME) 6
-	@./$(BENCHMARKNAME) 7
-	@./$(BENCHMARKNAME) 8
-	@./$(BENCHMARKNAME) 9
+	@./$(BENCHMARK4NAME) 1
+	@(ulimit -s unlimited; ./$(BENCHMARK4NAME) 2) 
+	@./$(BENCHMARK4NAME) 3
+	@./$(BENCHMARK4NAME) 4
+	@./$(BENCHMARK4NAME) 6
+	@./$(BENCHMARK4NAME) 7
+	@./$(BENCHMARK4NAME) 8
+	@./$(BENCHMARK4NAME) 9
+	@./$(BENCHMARK4NAME)f
 
-$(BENCHMARKNAME): $(BENCHMARKNAME).o $(PASS).o
+$(BENCHMARK2NAME): $(BENCHMARK2NAME).o $(PASS).o
 	$(CCL) $(LDFLAGSOPT) -o $@ $^ $(LDLIBS)
 
-$(BENCHMARKNAME).o: src/$(BENCHMARKNAME).cc src/rarray.h
+$(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o
+	$(CCL) $(LDFLAGSOPT) -o $@ $^ $(LDLIBS)
+
+$(BENCHMARK4NAME)f: src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o
+	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ $^
+
+$(PASS)f.o: src/$(PASS)f.f90
+	$(FC) -c -O0 -g -o $@ $^
+
+$(BENCHMARK2NAME).o: src/$(BENCHMARK2NAME).cc src/rarray.h
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+
+$(BENCHMARK4NAME).o: src/$(BENCHMARK4NAME).cc src/rarray.h
 	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: src/$(PASS).cc
@@ -140,7 +167,7 @@ summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@wc -l missing_from_test.txt
 
 clean:
-	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARKNAME).o $(PASS).o profiletests profilenitests \
+	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARK4NAME).o $(PASS).o profiletests profilenitests \
 	output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh \

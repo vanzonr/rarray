@@ -345,49 +345,49 @@ int main(int argc,char**argv)
 
     switch (thiscase) {
     case 0: 
-        printf("exact:   \t");
+        printf("exact:     ");
         fflush(stdout);
         answer = case_exact(repeat);
         break;
     case 1: 
-        printf("rarray:   \t");
+        printf("rarray:    ");
         fflush(stdout);
         answer = case_rarray(repeat);
         break;
     case 2: 
-        printf("automatic:\t");
+        printf("automatic: ");
         fflush(stdout);
         answer = case_auto(repeat);
         break;
     case 3: 
-        printf("dynamic:\t");
+        printf("dynamic:   ");
         fflush(stdout);
         answer = case_dyn(repeat);
         break;
     case 4: 
-        printf("boost:   \t");
+        printf("boost:     ");
         fflush(stdout);
         answer = case_boost(repeat);
         break;
     case 5: 
         break;
     case 6: 
-        printf("vector:   \t");
+        printf("vector:    ");
         fflush(stdout);
         answer = case_vector(repeat);
         break;
     case 7: 
-        printf("blitz1:   \t");
+        printf("blitz1:    ");
         fflush(stdout);
         answer = case_blitz_1(repeat);
         break;
     case 8: 
-        printf("blitz2:   \t");
+        printf("blitz2:    ");
         fflush(stdout);
         answer = case_blitz_2(repeat);
         break;
     case 9: 
-        printf("eigen:   \t");
+        printf("eigen:     ");
         fflush(stdout);
         answer = case_eigen(repeat);
         break;
