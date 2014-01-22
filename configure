@@ -6,7 +6,7 @@ set -e
 
 if [ "$1" == "--help" ]; then
     
-    echo "Detects compiler. Usage: configure [--prefix=PATH]"
+    echo "Detects compiler and libraries. Usage: configure [--prefix=PATH]"
     false
     
 else
@@ -24,60 +24,16 @@ else
     
     echo -n "Selecting C++ compiler... "
         
-    if [ -n "$CXX" ]; then
-        if ! which g++ >& /dev/null; then
-            echo "Warning: CXX variable does not point a valid compiler"
-            CXX=
+    for compiler in $CXX clang++ xlc++ icpc g++; do
+        if which $compiler >& /dev/null; then
+            compincmk="compiler.${compiler}.mk"
+            if [ -f "$compincmk" ]; then                    
+                echo $compiler
+                CXX=$compiler
+                break;
+            fi
         fi
-    fi
-
-    if [ -z "$CXX" ]; then
-
-        which g++ >& /dev/null
-        if [ $? == '0' ]; then
-            CXX=g++
-        fi
-        which icpc >& /dev/null
-        if [ $? == '0' ]; then
-            CXX=icpc
-        fi       
-        which xlc++ >& /dev/null
-        if [ $? == '0' ]; then
-            CXX=xlc++
-        fi        
-        which clang >& /dev/null
-        if [ $? == '0' ]; then
-            CXX=clang
-        fi        
-        which clang++ >& /dev/null
-        if [ $? == '0' ]; then
-            CXX=clang++
-        fi        
-    fi
-    
-    compincmk=""
-    case $CXX in
-        g++)
-            echo "GNU compiler"
-            compincmk="compiler.gnu.mk"
-            ;;
-        icpc)
-            echo "Intel compiler"
-            compincmk="compiler.intel.mk"
-            ;;
-        xlc++)
-            echo "IBM compiler"
-            compincmk="compiler.ibm.mk"
-            ;;
-        clang++)
-            echo "CLANG compiler"
-            compincmk="compiler.clang.mk"
-            ;;
-        clang)
-            echo "CLANG compiler"
-            compincmk="compiler.clang.mk"
-            ;;
-    esac
+    done
     
     if [ -n "$compincmk" ]; then        
         echo "Copying $compincmk to compiler.mk"

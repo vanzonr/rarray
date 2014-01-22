@@ -33,6 +33,10 @@ all: test valgrindtest covertest benchmark doctest
 
 .PHONY: clean test covertest benchmark install doctest doc valgrindtest
 
+compiler.mk:
+	echo "Error: Run configure to create compiler.mk"
+	false
+
 install: src/rarray.h doc/rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
 	cp src/rarray.h ${PREFIX}/include/rarrar.h
@@ -44,7 +48,7 @@ doc: doc/rarraydoc.pdf
 doc/rarraydoc.pdf: doc/rarraydoc.tex
 	(cd doc; pdflatex rarraydoc.tex; cd ..)
 
-doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x
+doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x compiler.mk
 	./doc1.x
 	./doc2.x
 	./doc3.x
@@ -178,5 +182,8 @@ clean:
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh \
 	doc/rarraydoc.aux doc/rarraydoc.log doc/rarraydoc.out doc/rarraydoc.pdf
+
+distclean: clean
+	rm -f compiler.mk rarray2dspeed rarray2dspeedf rarray4dspeed rarray4dspeedf rarraytestsuite
 
 
