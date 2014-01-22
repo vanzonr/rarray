@@ -1,16 +1,18 @@
 #!/bin/bash
-# Not an autotools configure, just detects compiler for rarray.h 's Makefile
+# NOT an autotools configure, just detects compiler for rarray.h 's Makefile
 # Ramses van Zon, January 2014
 
+# stop immediately when there is an error
 set -e
 
-if [ "$1" == "--help" ]; then
-    
-    echo "Detects compiler and libraries. Usage: configure [--prefix=PATH]"
-    false
-    
+if [[ "$1" == "--help" ]]; then
+    # print help message
+    echo "This configure script detects compiler for rarray.h 's Makefile"
+    echo "Usage: [CXX=<COMPILER>] configure [--prefix=<PATH>]"
+    false   
 else
     
+    # determine prefix
     if [ "${1:0:9}" == "--prefix=" ]; then
         prefix="${1:9}"
         shift
@@ -18,32 +20,50 @@ else
         prefix="$2"
         shift 2
     else
-        prefix="/usr/local"
+        prefix="/usr"
     fi
-    echo "Installation prefix set to '$prefix'."
+    echo "Installation prefix set to '${prefix}'."
     
     echo -n "Selecting C++ compiler... "
-        
-    for compiler in $CXX clang++ xlc++ icpc g++; do
-        if which $compiler >& /dev/null; then
-            compincmk="compiler.${compiler}.mk"
-            if [ -f "$compincmk" ]; then                    
-                echo $compiler
-                CXX=$compiler
+    # compiler must be in the set 
+    compilerset="clang++ xlc++ icpc g++"
+    # or be specified in the environment variable CXX
+    compilerset="${CXX} ${compilerset}"
+    for compiler in ${compilerset}; do
+        if which ${compiler} >& /dev/null; then
+            CXXMKINC="compiler.${compiler}.mk"  #for each compiler there is an include makefile
+            if [ -f "${CXXMKINC}" ]; then
+                echo ${compiler}
+                CXX=${compiler}
                 break;
+            else
+                echo "Compiler $compiler does not have an associated compiler.${compiler}.mk file"
             fi
         fi
     done
-    
-    if [ -n "$compincmk" ]; then        
-        echo "Copying $compincmk to compiler.mk"
-        cp -f $compincmk compiler.mk
-        echo "PREFIX=$prefix" >> compiler.mk
-        echo "Use 'make test' to test rarray.h"
-        echo "Use 'make benchmark' to benchmark rarray.h"
-        echo "Use 'make install' to install rarray.h"
+   
+    # ${CXX} and ${CXXMKINC} should be defined now
+    if [ -n "${CXX}" ]; then        
+        echo "Generating config.mk from ${CXXMKINC}"
+        FC=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
+        if which $FC >& /dev/null; then
+            cp -f ${CXXMKINC} config.mk
+        else
+            echo "WARNING: Omitting non-exising fortran compiler ${FC}."
+            grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
+        fi
+        # add prefix to the makefile include file
+        echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
+        # print what to do next
+        echo "To build and run unit tests:            make test"
+        echo "To run unit tests through valgrind:     make valgrindtest"
+        echo "To check code coverage of tests:        make covertest"
+        echo "To build and run benchmark test:        make benchmark"
+        echo "To build the documentation:             make doc"
+        echo "To test the code in the documentation:  make doctest"
+        echo "To install rarray.h:                    make [PREFIX=directory]"
     else
-        echo "compiler not found"
+        echo "ERROR: Compiler not found"
         false
     fi
     

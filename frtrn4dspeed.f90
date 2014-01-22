@@ -26,7 +26,7 @@ program rarray4dspeedf
   endif
   exact = (1.0*n)**4*check+(1.0*n)**4*(n-1)*repeat
   
-  write (*,'(A)',advance='no'), "fortran: "
+  write (*,'(A)',advance='no'), "fortran:   #"
     
   call system_clock(countstart,countrate,countmax)
 
@@ -83,7 +83,7 @@ program rarray4dspeedf
      print *, answer/n/n, "does not match exact result of ", exact/n/n
   endif
 
-  write (*,*), (1.0*countfinish-1.0*countstart)/(1.0*countrate), "s elapsed"
+  print '(F5.3A9)', (1.0*countfinish-1.0*countstart)/(1.0*countrate), "s elapsed"
 
 end program rarray4dspeedf
 
