@@ -55,33 +55,33 @@ else
         fi        
     fi
     
-    filename=""
+    compincmk=""
     case $CXX in
         g++)
             echo "GNU compiler"
-            filename="compiler.gnu.mk"
+            compincmk="compiler.gnu.mk"
             ;;
         icpc)
             echo "Intel compiler"
-            filename="compiler.intel.mk"
+            compincmk="compiler.intel.mk"
             ;;
         xlc++)
             echo "IBM compiler"
-            filename="compiler.ibm.mk"
+            compincmk="compiler.ibm.mk"
             ;;
         clang++)
             echo "CLANG compiler"
-            filename="compiler.clang.mk"
+            compincmk="compiler.clang.mk"
             ;;
         clang)
             echo "CLANG compiler"
-            filename="compiler.clang.mk"
+            compincmk="compiler.clang.mk"
             ;;
     esac
     
-    if [ -n "$filename" ]; then        
-        echo "Copying $filename to compiler.mk"
-        cp -f compiler.gnu.mk compiler.mk
+    if [ -n "$compincmk" ]; then        
+        echo "Copying $compincmk to compiler.mk"
+        cp -f $compincmk compiler.mk
         echo "PREFIX=$prefix" >> compiler.mk
         echo "Use 'make test' to test rarray.h"
         echo "Use 'make benchmark' to benchmark rarray.h"

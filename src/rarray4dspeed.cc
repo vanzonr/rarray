@@ -231,8 +231,9 @@ double case_vector(int repeat)
 
 double case_eigen(int repeat) 
 {
-    using namespace Eigen;
     double d = 0.0;
+#ifndef NOEIGEN3
+    using namespace Eigen;
     Matrix<Matrix<float,Dynamic,Dynamic>,Dynamic,Dynamic> a(n,n);
     Matrix<Matrix<float,Dynamic,Dynamic>,Dynamic,Dynamic> b(n,n);
     Matrix<Matrix<float,Dynamic,Dynamic>,Dynamic,Dynamic> c(n,n);
@@ -265,6 +266,7 @@ double case_eigen(int repeat)
                         d += c(i,j)(k,l);
         pass(&(c(0,0)(0,0)),(float*)&d,repeat);
     }
+#endif
     return d;
 }
 

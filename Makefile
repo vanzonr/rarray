@@ -13,12 +13,16 @@ include compiler.mk
 
 PREFIX?=/usr/local
 
+FC?=gfortran
 CCL?=${CXX}  
 LDFLAGS?=-g
 LDLIBS?= 
 LDFLAGSOPT?=
 LDLIBSOPT?=
 MORECPPFLAGS=-DAR_BOUNDSCHECK
+CXXFLAGSOPT?=-O2
+FFLAGSOPT?=-O2
+MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS
 
 TESTNAME=rarraytestsuite
 BENCHMARK2NAME=rarray2dspeed
@@ -107,19 +111,19 @@ $(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o compiler.mk
 	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK4NAME).o $(PASS).o $(LDLIBS)
 
 $(BENCHMARK2NAME)f: src/$(BENCHMARK2NAME)f.f90 $(PASS)f.o compiler.mk
-	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ src/$(BENCHMARK2NAME)f.f90 $(PASS)f.o 
+	$(FC) $(FFLAGSOPT) -o $@ src/$(BENCHMARK2NAME)f.f90 $(PASS)f.o 
 
 $(BENCHMARK4NAME)f: src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o compiler.mk
-	$(FC) -O3 -march=native -fstrict-aliasing -ffast-math -o $@ src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o 
+	$(FC) $(FFLAGSOPT) -o $@ src/$(BENCHMARK4NAME)f.f90 $(PASS)f.o 
 
 $(PASS)f.o: src/$(PASS)f.f90 compiler.mk
 	$(FC) -c -O0 -g -o $@ $<
 
 $(BENCHMARK2NAME).o: src/$(BENCHMARK2NAME).cc src/rarray.h compiler.mk
-	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(BENCHMARK4NAME).o: src/$(BENCHMARK4NAME).cc src/rarray.h compiler.mk
-	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: src/$(PASS).cc compiler.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CXXFLAGS) -c -o $@ $<
