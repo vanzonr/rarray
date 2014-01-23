@@ -97,7 +97,7 @@ benchmark2: $(BENCHMARK2NAME) $(BENCHMARK2NAMEF)
 	@./$(BENCHMARK2NAME) 9
 	@./$(BENCHMARK2NAMEF)
 
-benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAME)f
+benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAMEF)
 	@echo benchmark on a 4d array example
 	@./$(BENCHMARK4NAME) 1
 	@(ulimit -s unlimited; ./$(BENCHMARK4NAME) 2) 

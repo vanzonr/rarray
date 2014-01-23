@@ -213,6 +213,9 @@ class rarray {
     iterator            end();                                         // end of the content
     const_iterator      end()                const;                    // end of the content, when *this is constant
     const_iterator      cend()               const;                    // end of the content, when *this is constant and you need to be explicit about that
+    int*                index(const T& a, int* index) const;           // if a an element in the array, get the indices of that element
+    int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
+    int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
 
     // access elements 
    #ifndef AR_SKIPINTERMEDIATE
@@ -292,6 +295,9 @@ class rarray<T,1> {
     iterator            end();                                         // end of the content
     const_iterator      end()                const;                    // end of the content, when *this is constant
     const_iterator      cend()               const;                    // end of the content, when *this is constant, and you need to be explicit about it
+    int*                index(const T& a, int* index) const;           // if a an element in the array, get the indices of that element
+    int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
+    int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
 
     // accesselements through intermediate object:
    #ifndef AR_SKIPINTERMEDIATE
@@ -358,12 +364,15 @@ class subarray {
     parray_t             ptr_array()          const;                   // return T*const*.. acting similarly when using []
     noconst_parray_t     noconst_ptr_array()  const;                   // return T**.. acting similarly to this rarray when using []
     subarray<const T,R>& const_ref()          const;                   // create a reference to this treating elements as constant
-    subarray<T,R-1>      operator[](int i)    const;                   // element access
+    void                 fill(const T& value);                         // fill with uniform value
     iterator             begin()              const;                   // start of the *content*
     iterator             end()                const;                   // end of the *content*
     const_iterator       cbegin()             const;                   // start of the *content* (const version)
     const_iterator       cend()               const;                   // end of the *content* (const version)
-    void                 fill(const T& value);                         // fill with uniform value
+    int*                 index(const T& a, int* index) const;          // if a an element in the array, get the indices of that element
+    int*                 index(const iterator& i, int* index);         // if i points at an element in the array, get the indices of that element
+    int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
+    subarray<T,R-1>      operator[](int i)    const;                   // element access
 
   protected:
     parray_t   const  parray_;                                         // start of the pointer array
@@ -398,12 +407,15 @@ template<typename T> class subarray<T,1> {
     parray_t             ptr_array()          const;                   // return T*const*.. acting similarly to this rarray when using []
     noconst_parray_t     noconst_ptr_array()  const;                   // return T**.. acting similarly to this rarray when using []
     subarray<const T,1>& const_ref()          const;                   // create a reference to this that treats elements as constant
-    T&                   operator[](int i)    const;                   // element access
+    void                 fill(const T& value);                         // fill with uniform value
     iterator             begin()              const;                   // start of the *content*
     iterator             end()                const;                   // end of the *content*
     const_iterator       cbegin()             const;                   // start of the *content* (const version)
     const_iterator       cend()               const;                   // end of the *content* (const version)
-    void                 fill(const T& value);                         // fill with uniform value
+    int*                 index(const T& a, int* index) const;          // if a an element in the array, get the indices of that element
+    int*                 index(const iterator& i, int* index);         // if i points at an element in the array, get the indices of that element
+    int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
+    T&                   operator[](int i)    const;                   // element access
 
   protected:
     parray_t   const   parray_;                                        // start of the pointer array
@@ -1012,6 +1024,44 @@ template<typename T>                typename radetail::subarray<T AR_COMMA 1>::c
     AR_PROFILESAY("T* subarray<T,1>::cend()");
     return const_iterator(ra::rarray<T AR_COMMA rank>::base(parray_) + size(), 0);
 })
+
+// retrieve indices of an element
+AR_QUADRUPLICATE_BODY(
+template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const iterator&i, int* ind),
+template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const const_iterator&i, int* ind) const,
+template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
+template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
+{
+    AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
+    AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
+    AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
+    // return pointer of type T* to the internal data
+    int linearindex = &(*i) - get_buffer();
+    int j = rank;
+    while (j-->0) {
+        ind[j] = linearindex % extent[j];
+        linearindex /= extent[j];
+    }
+    return ind;
+})
+
+AR_DUPLICATE_BODY(
+template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const T& a, int* ind) const,
+template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
+{
+    AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
+    AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
+    AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
+    // return pointer of type T* to the internal data
+    int linearindex = &a - get_buffer();
+    int j = rank;
+    while (j-->0) {
+        ind[j] = linearindex % extent[j];
+        linearindex /= extent[j];
+    }
+    return ind;
+})
+// to do sub arrays
 
 // rarray method to return T*const*.. acting similarly to this rarray
 // when using []:
