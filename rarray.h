@@ -374,7 +374,7 @@ class subarray {
     int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
     subarray<T,R-1>      operator[](int i)    const;                   // element access
 
-  protected:
+  private:
     parray_t   const  parray_;                                         // start of the pointer array
     const int* const  extent_;                                         // number of elements in each dimension
 
@@ -383,6 +383,8 @@ class subarray {
     friend class ra::rarray<T,R+1>;                                    // be called by these
     friend class subarray<T,R+1>;                                      // classes.
     friend class ra::rarray<typename Unconst<T>::type,R+1>;
+
+    T*   get_buffer() const;                                           // get start of current contiguous buffer
 
 }; // end definition subarray<T,R>
 
@@ -417,7 +419,7 @@ template<typename T> class subarray<T,1> {
     int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
     T&                   operator[](int i)    const;                   // element access
 
-  protected:
+  private:
     parray_t   const   parray_;                                        // start of the pointer array
     const int* const   extent_;                                        // number of elements in each dimension
 
@@ -426,6 +428,8 @@ template<typename T> class subarray<T,1> {
     friend class ra::rarray<T,2>;
     friend class subarray<T,2>;
     friend class ra::rarray<typename Unconst<T>::type,2>;
+
+    T*   get_buffer() const;                                           // get start of current contiguous buffer
 
 };  // end of class template definition of subarray<T,1>.
 
@@ -522,6 +526,23 @@ template<typename A,int R>                                                      
     header2 body                                                        \
     header3 body                                                        \
     header4 body
+#define AR_SEXTUPLICATE_BODY(header1,header2,header3,header4,header5,header6,body) \
+    header1 body                                                        \
+    header2 body                                                        \
+    header3 body                                                        \
+    header4 body                                                        \
+    header5 body                                                        \
+    header6 body
+
+#define AR_OCTUPLICATE_BODY(header1,header2,header3,header4,header5,header6,header7,header8,body) \
+    header1 body                                                        \
+    header2 body                                                        \
+    header3 body                                                        \
+    header4 body                                                        \
+    header5 body                                                        \
+    header6 body                                                        \
+    header7 body                                                        \
+    header8 body
 
 AR_DUPLICATE_BODY(
 template<typename T AR_COMMA int R> ra::rarray<T AR_COMMA R>::rarray(),
@@ -926,12 +947,13 @@ template<typename T>                int radetail::subarray<T AR_COMMA 1>::size()
     return result;
 })
 
-
-AR_QUADRUPLICATE_BODY(
+AR_SEXTUPLICATE_BODY(
 template<typename T AR_COMMA int R>       T* ra::rarray<T AR_COMMA R>::data(),
 template<typename T AR_COMMA int R> const T* ra::rarray<T AR_COMMA R>::data() const,
 template<typename T>                      T* ra::rarray<T AR_COMMA 1>::data(),
 template<typename T>                const T* ra::rarray<T AR_COMMA 1>::data() const,
+template<typename T AR_COMMA int R> T* radetail::subarray<T AR_COMMA R>::data() const,
+template<typename T>                T* radetail::subarray<T AR_COMMA 1>::data() const,
 {
     AR_PROFILESAY("(const) T* rarray<T,R>::data() (const)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
@@ -939,120 +961,80 @@ template<typename T>                const T* ra::rarray<T AR_COMMA 1>::data() co
     return get_buffer();
 })
 
-// ...for subarray
-
-AR_DUPLICATE_BODY(
-template<typename T AR_COMMA int R> T* radetail::subarray<T AR_COMMA R>::data() const,
-template<typename T>                T* radetail::subarray<T AR_COMMA 1>::data() const,
-{
-    AR_PROFILESAY("T* subarray<T,1>::data()");
-    return ra::rarray<T AR_COMMA rank>::base(parray_);
-})
-
 // rarray begin/end methods
 
-AR_DUPLICATE_BODY(
+AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::iterator ra::rarray<T AR_COMMA R>::begin(),
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::iterator ra::rarray<T AR_COMMA 1>::begin(),
+template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::begin() const,
+template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::begin() const,
 {
     AR_PROFILESAY("iterator rarray<T,R>::begin()");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return iterator(get_buffer(), size());
- })
+})
 
-AR_QUADRUPLICATE_BODY(
+AR_SEXTUPLICATE_BODY(
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::begin() const,
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::cbegin() const, 
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::begin() const, 
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::cbegin() const, 
+template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cbegin() const,
+template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cbegin() const,
 {
     AR_PROFILESAY("const_iterator rarray<T,R>::begin() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return const_iterator(get_buffer(), size());
  })
 
-AR_DUPLICATE_BODY(
+AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::iterator ra::rarray<T AR_COMMA R>::end(),
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::iterator ra::rarray<T AR_COMMA 1>::end(),
+template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::end() const,
+template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::end() const,
 {
     AR_PROFILESAY("iterator rarray<T,R>::end()");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return iterator(get_buffer()+size(), 0);
 })
 
-AR_QUADRUPLICATE_BODY(
+AR_SEXTUPLICATE_BODY(
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::end() const, 
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::cend() const, 
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::end() const, 
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::cend() const, 
+template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cend() const,
+template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cend() const,
 {
     AR_PROFILESAY("const_iterator rarray<T,R>::(c)end() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return const_iterator(get_buffer()+size(), 0);
 })
 
-// ...for subarray
-
-AR_DUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::begin() const,
-template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::begin() const,
-{
-    AR_PROFILESAY("T* subarray<T,R>::begin()");
-    return iterator(ra::rarray<T AR_COMMA rank>::base(parray_), size());
-})
-
-AR_DUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cbegin() const,
-template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cbegin() const,
-{
-    AR_PROFILESAY("T* subarray<T,R>::cbegin()");
-    return const_iterator(ra::rarray<T AR_COMMA rank>::base(parray_), size());
-})
-
-AR_DUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::end() const,
-template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::end() const,
-{
-    AR_PROFILESAY("T* subarray<T,R>::end()");
-    return iterator(ra::rarray<T AR_COMMA rank>::base(parray_) + size(), 0);
-})
-
-AR_DUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cend() const,
-template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cend() const,
-{
-    AR_PROFILESAY("T* subarray<T,1>::cend()");
-    return const_iterator(ra::rarray<T AR_COMMA rank>::base(parray_) + size(), 0);
-})
-
 // retrieve indices of an element
-AR_QUADRUPLICATE_BODY(
+AR_OCTUPLICATE_BODY(
 template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const iterator&i, int* ind),
 template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const const_iterator&i, int* ind) const,
 template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
 template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
+template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const iterator&i, int* ind),
+template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const const_iterator&i, int* ind) const,
+template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
+template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
 {
     AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
-    AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
-    AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
-    // return pointer of type T* to the internal data
-    int linearindex = &(*i) - get_buffer();
-    int j = rank;
-    while (j-->0) {
-        ind[j] = linearindex % extent[j];
-        linearindex /= extent[j];
-    }
-    return ind;
+    return index(&(*i), ind);
 })
 
-AR_DUPLICATE_BODY(
+AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const T& a, int* ind) const,
 template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
+template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const T& a, int* ind) const,
+template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
 {
     AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
-    // return pointer of type T* to the internal data
     int linearindex = &a - get_buffer();
     int j = rank;
     while (j-->0) {
@@ -1061,7 +1043,6 @@ template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const T
     }
     return ind;
 })
-// to do sub arrays
 
 // rarray method to return T*const*.. acting similarly to this rarray
 // when using []:
@@ -1121,8 +1102,6 @@ template<typename T>                void radetail::subarray<T AR_COMMA 1>::fill(
     for (iterator i=begin(); i!=end(); i++)
         *i = value;
 })
-
-
 
 #ifndef AR_SKIPINTERMEDIATE
 template<typename T,int R> radetail::subarray<const T,R-1> ra::rarray<T,R>::operator[](int i) const
@@ -1227,14 +1206,15 @@ template<typename T>                ra::rarray<T AR_COMMA 1>& ra::rarray<T AR_CO
     return *this;
 })
 
-AR_DUPLICATE_BODY(
+AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> T* ra::rarray<T AR_COMMA R>::get_buffer() const,
 template<typename T>                T* ra::rarray<T AR_COMMA 1>::get_buffer() const,
-{ 
-    // get start of current contiguous buffer
-    AR_PROFILESAY("T* rarray<T,R>::get_buffer()");
-    return base(parray_); 
- })
+template<typename T AR_COMMA int R> T* radetail::subarray<T AR_COMMA R>::get_buffer() const,
+template<typename T>                T* radetail::subarray<T AR_COMMA 1>::get_buffer() const,
+{
+    AR_PROFILESAY("T* subarray<T,R>::data()");
+    return ra::rarray<T AR_COMMA rank>::base(parray_);
+})
 
 template<typename T,int R>
 void ra::rarray<T,R>::init_shallow(parray_t parray, const int*  extent, bool entire, int* rcount)
@@ -2016,19 +1996,13 @@ ra::rarray<T,R> radetail::make_rarray_given_byte_size(ra::rarray<T,R> a, int byt
     return a;
 }
 
-template<typename T,int R>
-std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r)
+AR_DUPLICATE_BODY(
+template<typename T AR_COMMA int R> std::ostream& operator<<(std::ostream &o, const ra::rarray<T AR_COMMA R>& r),
+template<typename T AR_COMMA int R> std::ostream& operator<<(std::ostream &o, const radetail::subarray<T AR_COMMA R>& r),
 {
     AR_PROFILESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
     return radetail::text_output(o,r);
-}
-
-template<typename T,int R>
-std::ostream& operator<<(std::ostream &o, const radetail::subarray<T,R>& r)
-{
-    AR_PROFILESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
-    return radetail::text_output(o,r);
-}
+})
 
 template<typename T,int R>
 std::ostream& radetail::text_output(std::ostream &o, const ra::rarray<T,R>& r)
