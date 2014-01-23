@@ -1,4 +1,25 @@
-# Makefile for rarray.h
+# 
+# Makefile - make file for rarray.h
+#
+# Copyright (c) 2013-2014  Ramses van Zon
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 #
 # To build and run unit tests:            make test
 # To run unit tests through valgrind:     make valgrindtest
@@ -20,7 +41,7 @@ LDFLAGSOPT?=
 LDLIBSOPT?=
 CXXFLAGSOPT?=-O2
 MORECPPFLAGS=-DAR_BOUNDSCHECK
-MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS
+MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG
 FC?=gfortran
 FFLAGS?=-O2
 
@@ -118,16 +139,16 @@ $(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o config.mk
 $(BENCHMARK2NAMEF): $(BENCHMARK2NAMEF).f90 $(PASS)f.o config.mk
 	$(FC) $(FFLAGS) -o $@ $(BENCHMARK2NAMEF).f90 $(PASS)f.o 
 
-$(BENCHMARK4NAME)f: $(BENCHMARK4NAME)f.f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ $(BENCHMARK4NAME)f.f90 $(PASS)f.o 
+$(BENCHMARK4NAMEF): $(BENCHMARK4NAMEF).f90 $(PASS)f.o config.mk
+	$(FC) $(FFLAGS) -o $@ $(BENCHMARK4NAMEF).f90 $(PASS)f.o 
 
 $(PASS)f.o: $(PASS)f.f90 config.mk
 	$(FC) -c -O0 -g -o $@ $<
 
-$(BENCHMARK2NAME).o: $(BENCHMARK2NAME).cc rarray.h config.mk
+$(BENCHMARK2NAME).o: $(BENCHMARK2NAME).cc rarray.h elapsed.h config.mk
 	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4NAME).o: $(BENCHMARK4NAME).cc rarray.h config.mk
+$(BENCHMARK4NAME).o: $(BENCHMARK4NAME).cc rarray.h elapsed.h config.mk
 	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: $(PASS).cc config.mk

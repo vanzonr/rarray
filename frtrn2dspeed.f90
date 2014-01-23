@@ -1,7 +1,27 @@
-! rarray2dspeedf.f90 
-! Ramses van Zon
-! Jan 21, 2014
-program rarray4dspeedf
+!
+! frtrn2dspeed.f90 -Speed test for 2d fortran arrays for comparison with rarray2dspeed.cc. 
+!
+! Copyright (c) 2013-2014  Ramses van Zon
+!
+! Permission is hereby granted, free of charge, to any person obtaining a copy
+! of this software and associated documentation files (the "Software"), to deal
+! in the Software without restriction, including without limitation the rights
+! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is
+! furnished to do so, subject to the following conditions:
+!
+! The above copyright notice and this permission notice shall be included in
+! all copies or substantial portions of the Software.
+!
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
+!
+program frtrn4dspeed
   !
   ! Speed test for 2d fortran arrays for comparison with rarray2dspeed.cc. 
   !
@@ -24,7 +44,7 @@ program rarray4dspeedf
   endif
   exact = (1.0*n)*(1.0*n)*check;
   
-  write (*,'(A)',advance='no'), "fortran:   #"
+  write (*,'(A)',advance='no'), "fortran:   "
 
   call system_clock(countstart,countrate,countmax)
 
@@ -70,5 +90,5 @@ program rarray4dspeedf
 
   print '(F5.3A9)',(1.0*countfinish-1.0*countstart)/(1.0*countrate), "s elapsed"
 
-end program rarray4dspeedf
+end program frtrn4dspeed
 
