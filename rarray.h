@@ -37,7 +37,6 @@
 // following macro produced output to be used to determine which
 // functions are exercised.
 #ifdef AR_TRACETEST
-//#define AR_PROFILESAY(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #define AR_PROFILESAY(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #else
 #define AR_PROFILESAY(a) 
@@ -213,6 +212,9 @@ class rarray {
     iterator            end();                                         // end of the content
     const_iterator      end()                const;                    // end of the content, when *this is constant
     const_iterator      cend()               const;                    // end of the content, when *this is constant and you need to be explicit about that
+    int                 index(const T& a, int i) const;                // if a an element in the array, get index i of that element
+    int                 index(const iterator& iter, int i);             // if i points at an element in the array, get index i of that element
+    int                 index(const const_iterator& iter, int i) const; // if i points at an element in the array, get index i of that element
     int*                index(const T& a, int* index) const;           // if a an element in the array, get the indices of that element
     int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
     int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
@@ -295,6 +297,9 @@ class rarray<T,1> {
     iterator            end();                                         // end of the content
     const_iterator      end()                const;                    // end of the content, when *this is constant
     const_iterator      cend()               const;                    // end of the content, when *this is constant, and you need to be explicit about it
+    int                 index(const T& a, int i) const;                // if a an element in the array, get index i of that element
+    int                 index(const iterator& iter, int i);            // if i points at an element in the array, get index i of that element
+    int                 index(const const_iterator& iter, int i) const;// if i points at an element in the array, get index i of that element
     int*                index(const T& a, int* index) const;           // if a an element in the array, get the indices of that element
     int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
     int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
@@ -369,6 +374,9 @@ class subarray {
     iterator             end()                const;                   // end of the *content*
     const_iterator       cbegin()             const;                   // start of the *content* (const version)
     const_iterator       cend()               const;                   // end of the *content* (const version)
+    int                  index(const T& a, int i) const;               // if a an element in the array, get index i of that element
+    int                  index(const iterator& iter, int i);           // if i points at an element in the array, get index i of that element
+    int                  index(const const_iterator& iter, int i)const;// if i points at an element in the array, get index i of that element
     int*                 index(const T& a, int* index) const;          // if a an element in the array, get the indices of that element
     int*                 index(const iterator& i, int* index);         // if i points at an element in the array, get the indices of that element
     int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
@@ -414,6 +422,9 @@ template<typename T> class subarray<T,1> {
     iterator             end()                const;                   // end of the *content*
     const_iterator       cbegin()             const;                   // start of the *content* (const version)
     const_iterator       cend()               const;                   // end of the *content* (const version)
+    int                  index(const T& a, int i) const;               // if a an element in the array, get index i of that element
+    int                  index(const iterator& iter, int i);           // if i points at an element in the array, get index i of that element
+    int                  index(const const_iterator& iter, int i)const;// if i points at an element in the array, get index i of that element
     int*                 index(const T& a, int* index) const;          // if a an element in the array, get the indices of that element
     int*                 index(const iterator& i, int* index);         // if i points at an element in the array, get the indices of that element
     int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
@@ -964,8 +975,8 @@ template<typename T>                T* radetail::subarray<T AR_COMMA 1>::data() 
 // rarray begin/end methods
 
 AR_QUADRUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::iterator ra::rarray<T AR_COMMA R>::begin(),
-template<typename T>                typename ra::rarray<T AR_COMMA 1>::iterator ra::rarray<T AR_COMMA 1>::begin(),
+template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::iterator         ra::rarray<T AR_COMMA R>::begin(),
+template<typename T>                typename         ra::rarray<T AR_COMMA 1>::iterator         ra::rarray<T AR_COMMA 1>::begin(),
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::begin() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::begin() const,
 {
@@ -975,10 +986,10 @@ template<typename T>                typename radetail::subarray<T AR_COMMA 1>::i
 })
 
 AR_SEXTUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::begin() const,
-template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::cbegin() const, 
-template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::begin() const, 
-template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::cbegin() const, 
+template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::const_iterator         ra::rarray<T AR_COMMA R>::begin() const,
+template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::const_iterator         ra::rarray<T AR_COMMA R>::cbegin() const, 
+template<typename T>                typename         ra::rarray<T AR_COMMA 1>::const_iterator         ra::rarray<T AR_COMMA 1>::begin() const, 
+template<typename T>                typename         ra::rarray<T AR_COMMA 1>::const_iterator         ra::rarray<T AR_COMMA 1>::cbegin() const, 
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cbegin() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cbegin() const,
 {
@@ -988,8 +999,8 @@ template<typename T>                typename radetail::subarray<T AR_COMMA 1>::c
  })
 
 AR_QUADRUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::iterator ra::rarray<T AR_COMMA R>::end(),
-template<typename T>                typename ra::rarray<T AR_COMMA 1>::iterator ra::rarray<T AR_COMMA 1>::end(),
+template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::iterator ra::rarray<T AR_COMMA R>::end(),
+template<typename T>                typename         ra::rarray<T AR_COMMA 1>::iterator ra::rarray<T AR_COMMA 1>::end(),
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::end() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::end() const,
 {
@@ -999,10 +1010,10 @@ template<typename T>                typename radetail::subarray<T AR_COMMA 1>::i
 })
 
 AR_SEXTUPLICATE_BODY(
-template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::end() const, 
-template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::cend() const, 
-template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::end() const, 
-template<typename T>                typename ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::cend() const, 
+template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::end() const, 
+template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::const_iterator ra::rarray<T AR_COMMA R>::cend() const, 
+template<typename T>                typename         ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::end() const, 
+template<typename T>                typename         ra::rarray<T AR_COMMA 1>::const_iterator ra::rarray<T AR_COMMA 1>::cend() const, 
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cend() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cend() const,
 {
@@ -1013,10 +1024,10 @@ template<typename T>                typename radetail::subarray<T AR_COMMA 1>::c
 
 // retrieve indices of an element
 AR_OCTUPLICATE_BODY(
-template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const iterator&i, int* ind),
-template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const const_iterator&i, int* ind) const,
-template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
-template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
+template<typename T AR_COMMA int R> int*         ra::rarray<T AR_COMMA R>::index(const iterator&i, int* ind),
+template<typename T AR_COMMA int R> int*         ra::rarray<T AR_COMMA R>::index(const const_iterator&i, int* ind) const,
+template<typename T>                int*         ra::rarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
+template<typename T>                int*         ra::rarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
 template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const iterator&i, int* ind),
 template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const const_iterator&i, int* ind) const,
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
@@ -1027,8 +1038,8 @@ template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index
 })
 
 AR_QUADRUPLICATE_BODY(
-template<typename T AR_COMMA int R> int* ra::rarray<T AR_COMMA R>::index(const T& a, int* ind) const,
-template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
+template<typename T AR_COMMA int R> int*         ra::rarray<T AR_COMMA R>::index(const T& a, int* ind) const,
+template<typename T>                int*         ra::rarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
 template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const T& a, int* ind) const,
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
 {
@@ -1036,12 +1047,45 @@ template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
     int linearindex = &a - get_buffer();
+    AR_CHECKORSAY(linearindex >=0 and linearindex <= size(), "element not in array");
     int j = rank;
     while (j-->0) {
         ind[j] = linearindex % extent_[j];
         linearindex /= extent_[j];
     }
     return ind;
+})
+
+// retrieve indices of an element
+AR_OCTUPLICATE_BODY(
+template<typename T AR_COMMA int R> int         ra::rarray<T AR_COMMA R>::index(const iterator&iter, int i),
+template<typename T AR_COMMA int R> int         ra::rarray<T AR_COMMA R>::index(const const_iterator&iter, int i) const,
+template<typename T>                int         ra::rarray<T AR_COMMA 1>::index(const iterator&iter, int i),
+template<typename T>                int         ra::rarray<T AR_COMMA 1>::index(const const_iterator&iter, int i) const,
+template<typename T AR_COMMA int R> int radetail::subarray<T AR_COMMA R>::index(const iterator&iter, int i),
+template<typename T AR_COMMA int R> int radetail::subarray<T AR_COMMA R>::index(const const_iterator&iter, int i) const,
+template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(const iterator&iter, int i),
+template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(const const_iterator&iter, int i) const,
+{
+    AR_PROFILESAY("in* rarray<T,R>::index((const_)iterator&,int) (const)");
+    return index(*iter, i);
+})
+
+AR_QUADRUPLICATE_BODY(
+template<typename T AR_COMMA int R> int         ra::rarray<T AR_COMMA R>::index(const T& a, int i) const,
+template<typename T>                int         ra::rarray<T AR_COMMA 1>::index(const T& a, int i) const,
+template<typename T AR_COMMA int R> int radetail::subarray<T AR_COMMA R>::index(const T& a, int i) const,
+template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(const T& a, int i) const,
+{
+    AR_PROFILESAY("int rarray<T,R>::index((const) T&,int) (const)");
+    AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
+    AR_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
+    int linearindex = &a - get_buffer();
+    AR_CHECKORSAY(linearindex >=0 and linearindex <= size(), "element not in array");
+    for (int j = rank-1; j > i; j--) 
+        linearindex /= extent_[j];
+    return  linearindex % extent_[i];
+
 })
 
 // rarray method to return T*const*.. acting similarly to this rarray
@@ -2234,6 +2278,8 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
 #undef AR_CHECKORSAY
 #undef AR_DUPLICATE_BODY
 #undef AR_QUADRUPLICATE_BODY
+#undef AR_SEXTUPLICATE_BODY
+#undef AR_OCTUPLICATE_BODY
 #undef AR_COMMA
 
 // Global namespace stuff

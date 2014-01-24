@@ -2346,18 +2346,34 @@ int testindex()
     CHECK(*a.index(a[3],&ind)==3);
     CHECK(*a.index(a[4],&ind)==4);
     CHECK(*a.index(a[5],&ind)==5);
+    CHECK(a.index(a[0],0)==0);
+    CHECK(a.index(a[1],0)==1);
+    CHECK(a.index(a[2],0)==2);
+    CHECK(a.index(a[3],0)==3);
+    CHECK(a.index(a[4],0)==4);
+    CHECK(a.index(a[5],0)==5);
     for (auto i=a.begin(); i != a.end(); i++) {
         a.index(i,&ind);
+        int ind2=a.index(i,0);
+        CHECK(ind==ind2);
         *i = ind+1;
     }
     for (auto& element: a)
         element *= a.index(element,&ind)[0];
+    for (auto& element: a)
+        element *= a.index(element,0);
     CHECK(a[0]==0);
     CHECK(a[1]==2);
-    CHECK(a[2]==6);
-    CHECK(a[3]==12);
-    CHECK(a[4]==20);
-    CHECK(a[5]==30);
+    CHECK(a[2]==12)
+    CHECK(a[3]==36);
+    CHECK(a[4]==80);
+    CHECK(a[5]==150);
+
+    rarray<float,3> z(2,3,4);
+    CHECK(z.index(z[1][2][3],0)==1);
+    CHECK(z.index(z[1][2][3],1)==2);
+    CHECK(z.index(z[1][2][3],2)==3);
+
 
     rarray<float,3> b(2,2,2);
     int i[3];
