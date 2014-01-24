@@ -2334,6 +2334,85 @@ int testfill()
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+int testindex()
+{
+
+    rarray<float,1> a(6);
+    int ind;
+    CHECK(*a.index(a[0],&ind)==0);
+    CHECK(*a.index(a[1],&ind)==1);
+    CHECK(*a.index(a[2],&ind)==2);
+    CHECK(*a.index(a[3],&ind)==3);
+    CHECK(*a.index(a[4],&ind)==4);
+    CHECK(*a.index(a[5],&ind)==5);
+    for (auto i=a.begin(); i != a.end(); i++) {
+        a.index(i,&ind);
+        *i = ind+1;
+    }
+    for (auto& element: a)
+        element *= a.index(element,&ind)[0];
+    CHECK(a[0]==0);
+    CHECK(a[1]==2);
+    CHECK(a[2]==6);
+    CHECK(a[3]==12);
+    CHECK(a[4]==20);
+    CHECK(a[5]==30);
+
+    rarray<float,3> b(2,2,2);
+    int i[3];
+    CHECK(b.index(b[0][0][0],i)==i);
+    CHECK(b.index(b[0][0][0],i)[0]==0);
+    CHECK(b.index(b[0][0][1],i)[0]==0);
+    CHECK(b.index(b[0][1][0],i)[0]==0);
+    CHECK(b.index(b[0][1][1],i)[0]==0);
+    CHECK(b.index(b[1][0][0],i)[0]==1);
+    CHECK(b.index(b[1][0][1],i)[0]==1);
+    CHECK(b.index(b[1][1][0],i)[0]==1);
+    CHECK(b.index(b[1][1][1],i)[0]==1);
+    CHECK(b.index(b[0][0][0],i)[1]==0);
+    CHECK(b.index(b[0][0][1],i)[1]==0);
+    CHECK(b.index(b[0][1][0],i)[1]==1);
+    CHECK(b.index(b[0][1][1],i)[1]==1);
+    CHECK(b.index(b[1][0][0],i)[1]==0);
+    CHECK(b.index(b[1][0][1],i)[1]==0);
+    CHECK(b.index(b[1][1][0],i)[1]==1);
+    CHECK(b.index(b[1][1][1],i)[1]==1);
+    CHECK(b.index(b[0][0][0],i)[2]==0);
+    CHECK(b.index(b[0][0][1],i)[2]==1);
+    CHECK(b.index(b[0][1][0],i)[2]==0);
+    CHECK(b.index(b[0][1][1],i)[2]==1);
+    CHECK(b.index(b[1][0][0],i)[2]==0);
+    CHECK(b.index(b[1][0][1],i)[2]==1);
+    CHECK(b.index(b[1][1][0],i)[2]==0);
+    CHECK(b.index(b[1][1][1],i)[2]==1);
+
+    float rbuf[3][3] = { {0,0,0}, 
+                         {1,1,1}, 
+                         {2,2,2} }; 
+    float cbuf[3][3] = { {0,1,2}, 
+                         {0,1,2},
+                         {0,1,2} }; 
+    rarray<float,2> r = RARRAY(rbuf);
+    rarray<float,2> c = RARRAY(cbuf);
+
+    for (auto i=r.begin(); i != r.end(); i++) {
+        int ind[2];
+        r.index(*i,ind);
+        CHECK(ind[0]==*i);
+    }
+    
+    for (auto i=c.begin(); i != c.end(); i++) {
+        int ind[2];
+        c.index(i,ind);
+        CHECK(ind[1]==*i);
+    }
+    
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 class compound 
@@ -2444,6 +2523,8 @@ int main()
     PASSORRETURN(test711autoconversion());
 
     PASSORRETURN(testfill());
+
+    PASSORRETURN(testindex());
 
     return ALLCLEAR;
 }

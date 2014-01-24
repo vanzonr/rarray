@@ -107,15 +107,15 @@ struct Unconst<const T> {  // Override non-const-stripped type with a stripped o
 template<typename T>
 class Iterator {
   public:
-    T&        operator*   ();                                          // dereference
+    T&        operator*   () const;                                    // dereference
     Iterator& operator++  ();                                          // pre-incrememt
     Iterator  operator++ (int);                                        // post-increment
-    bool      operator== (const Iterator<T>& other);                   // comparison: equal to
-    bool      operator!= (const Iterator<T>& other);                   // comparison: not equal to
-    bool      operator<  (const Iterator<T>& other);                   // comparison: less than
-    bool      operator>  (const Iterator<T>& other);                   // comparison: greater than
-    bool      operator<= (const Iterator<T>& other);                   // comparison: less than or equal to
-    bool      operator>= (const Iterator<T>& other);                   // comparison: greater than or equal to
+    bool      operator== (const Iterator<T>& other) const;             // comparison: equal to
+    bool      operator!= (const Iterator<T>& other) const;             // comparison: not equal to
+    bool      operator<  (const Iterator<T>& other) const;             // comparison: less than
+    bool      operator>  (const Iterator<T>& other) const;             // comparison: greater than
+    bool      operator<= (const Iterator<T>& other) const;             // comparison: less than or equal to
+    bool      operator>= (const Iterator<T>& other) const;             // comparison: greater than or equal to
   private:
     T*  pointer_;
     T*  pointer_min_;
@@ -1023,7 +1023,7 @@ template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
 {
     AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
-    return index(&(*i), ind);
+    return index(*i, ind);
 })
 
 AR_QUADRUPLICATE_BODY(
@@ -1032,14 +1032,14 @@ template<typename T>                int* ra::rarray<T AR_COMMA 1>::index(const T
 template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const T& a, int* ind) const,
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
 {
-    AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
+    AR_PROFILESAY("int* rarray<T,R>::index((const) T&,int*) (const)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
     int linearindex = &a - get_buffer();
     int j = rank;
     while (j-->0) {
-        ind[j] = linearindex % extent[j];
-        linearindex /= extent[j];
+        ind[j] = linearindex % extent_[j];
+        linearindex /= extent_[j];
     }
     return ind;
 })
@@ -1609,7 +1609,7 @@ T* ra::rarray<T,1>::base(parray_t parray)
 
 
 template<typename T>
-T& radetail::Iterator<T>::operator*()
+T& radetail::Iterator<T>::operator*() const
 {
     // Iterator dereference
     AR_PROFILESAY("T& Iterator<T>::operator*()");
@@ -1642,7 +1642,7 @@ radetail::Iterator<T> radetail::Iterator<T>::operator++(int)
 }
 
 template<typename T>
-bool radetail::Iterator<T>::operator==(const Iterator<T>& other)
+bool radetail::Iterator<T>::operator==(const Iterator<T>& other) const
 {
     // Iterator comparison: equal to
     AR_PROFILESAY("bool Iterator<T>::operator==(const Iterator<T>&)");
@@ -1652,7 +1652,7 @@ bool radetail::Iterator<T>::operator==(const Iterator<T>& other)
 }
 
 template<typename T>
-bool radetail::Iterator<T>::operator!=(const Iterator<T>& other)
+bool radetail::Iterator<T>::operator!=(const Iterator<T>& other) const
 {
     // Iterator comparison: not equal to
     AR_PROFILESAY("bool Iterator<T>::operator!=(const Iterator<T>&)");
@@ -1662,7 +1662,7 @@ bool radetail::Iterator<T>::operator!=(const Iterator<T>& other)
 }
 
 template<typename T>
-bool radetail::Iterator<T>::operator<(const Iterator<T>& other)
+bool radetail::Iterator<T>::operator<(const Iterator<T>& other) const
 {
     // Iterator comparison: less than
     AR_PROFILESAY("bool Iterator<T>::operator<(const Iterator<T>&)");
@@ -1672,7 +1672,7 @@ bool radetail::Iterator<T>::operator<(const Iterator<T>& other)
 }
 
 template<typename T>
-bool radetail::Iterator<T>::operator>(const Iterator<T>& other)
+bool radetail::Iterator<T>::operator>(const Iterator<T>& other) const
 {
     // Iterator comparison: greater than
     AR_PROFILESAY("bool Iterator<T>::operator>(const Iterator<T>&)");
@@ -1682,7 +1682,7 @@ bool radetail::Iterator<T>::operator>(const Iterator<T>& other)
 }
 
 template<typename T>
-bool radetail::Iterator<T>::operator<=(const Iterator<T>& other)
+bool radetail::Iterator<T>::operator<=(const Iterator<T>& other) const
 {
     // Iterator comparison: less than or equal to
     AR_PROFILESAY("bool Iterator<T>::operator<=(const Iterator<T>&)");
@@ -1692,7 +1692,7 @@ bool radetail::Iterator<T>::operator<=(const Iterator<T>& other)
 }
 
 template<typename T>
-bool radetail::Iterator<T>::operator>=(const Iterator<T>& other)
+bool radetail::Iterator<T>::operator>=(const Iterator<T>& other) const
 {
     // Iterator comparison: greater than or equal to
     AR_PROFILESAY("bool Iterator<T>::operator>=(const Iterator<T>&)");
