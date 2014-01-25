@@ -213,8 +213,8 @@ class rarray {
     const_iterator      end()                const;                    // end of the content, when *this is constant
     const_iterator      cend()               const;                    // end of the content, when *this is constant and you need to be explicit about that
     int                 index(const T& a, int i) const;                // if a an element in the array, get index i of that element
-    int                 index(const iterator& iter, int i);             // if i points at an element in the array, get index i of that element
-    int                 index(const const_iterator& iter, int i) const; // if i points at an element in the array, get index i of that element
+    int                 index(const iterator& iter, int i);            // if i points at an element in the array, get index i of that element
+    int                 index(const const_iterator& iter, int i) const;// if i points at an element in the array, get index i of that element
     int*                index(const T& a, int* index) const;           // if a an element in the array, get the indices of that element
     int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
     int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
@@ -482,31 +482,31 @@ void read_and_parse_shape(std::istream & in, int* shape, typename PointerArray<T
 
 // Template functions to detemine the dimensions of automatic arrays, for use in the EXTENT macro
 // To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
-template<typename A>                                                              int extent_given_byte_size(A a[], int i, int byte_size); 
-template<typename A,int Z>                                                        int extent_given_byte_size(A a[][Z], int i, int byte_size);
-template<typename A,int Y,int Z>                                                  int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);
-template<typename A,int X,int Y,int Z>                                            int extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size);
-template<typename A,int W,int X,int Y,int Z>                                      int extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size);
-template<typename A,int V,int W,int X,int Y,int Z>                                int extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size);
-template<typename A,int U,int V,int W,int X,int Y,int Z>                          int extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size);
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    int extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size);
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              int extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size);
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);
+template<typename A>                                                              int extent_given_byte_size(A a[], int i, int byte_size);                               //for 1d array
+template<typename A,int Z>                                                        int extent_given_byte_size(A a[][Z], int i, int byte_size);                            //for 2d array
+template<typename A,int Y,int Z>                                                  int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);                         //for 3d array
+template<typename A,int X,int Y,int Z>                                            int extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size);                      //for 4d array
+template<typename A,int W,int X,int Y,int Z>                                      int extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size);                   //for 5d array
+template<typename A,int V,int W,int X,int Y,int Z>                                int extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size);                //for 6d array
+template<typename A,int U,int V,int W,int X,int Y,int Z>                          int extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size);             //for 7d array
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    int extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size);          //for 8d array
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              int extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size);       //for 9d array
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);    //for 10d array
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size); //for 11d array
 template<typename A,int R>                                                        int extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size); // use rarray's extent function
 // Template functions to convert automatic arrays, for conversion with RARRAY macro
 // To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
-template<typename A>                                                              ra::rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size); 
-template<typename A,int Z>                                                        ra::rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size); 
-template<typename A,int Y,int Z>                                                  ra::rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);
-template<typename A,int X,int Y,int Z>                                            ra::rarray<A,4>  make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size);
-template<typename A,int W,int X,int Y,int Z>                                      ra::rarray<A,5>  make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size);
-template<typename A,int V,int W,int X,int Y,int Z>                                ra::rarray<A,6>  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size);
-template<typename A,int U,int V,int W,int X,int Y,int Z>                          ra::rarray<A,7>  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size);
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    ra::rarray<A,8>  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size);
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              ra::rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        ra::rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  ra::rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);
+template<typename A>                                                              ra::rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size);                              //for 1d array
+template<typename A,int Z>                                                        ra::rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size);                           //for 2d array
+template<typename A,int Y,int Z>                                                  ra::rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);                        //for 3d array
+template<typename A,int X,int Y,int Z>                                            ra::rarray<A,4>  make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size);                     //for 4d array
+template<typename A,int W,int X,int Y,int Z>                                      ra::rarray<A,5>  make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size);                  //for 5d array
+template<typename A,int V,int W,int X,int Y,int Z>                                ra::rarray<A,6>  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size);               //for 6d array
+template<typename A,int U,int V,int W,int X,int Y,int Z>                          ra::rarray<A,7>  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size);            //for 7d array
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    ra::rarray<A,8>  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size);         //for 8d array
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              ra::rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);      //for 9d array
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        ra::rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);   //for 10d array
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  ra::rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);//for 11d array
 template<typename A,int R>                                                        ra::rarray<A,R> make_rarray_given_byte_size(ra::rarray<A,R> a, int byte_size); // trivial action for rarray
 
 } // end namespace radetail
@@ -935,12 +935,11 @@ template<typename T>                const int*         ra::rarray<T AR_COMMA 1>:
 template<typename T AR_COMMA int R> const int* radetail::subarray<T AR_COMMA R>::shape() const,
 template<typename T>                const int* radetail::subarray<T AR_COMMA 1>::shape() const,
 {
+    // retrieve pointer to array of extents
     AR_PROFILESAY("const int* sub/rarray<T,R>::shape() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return extent_;
 })
-
-// rarray method to retrieve the total number of elements
 
 AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> int         ra::rarray<T AR_COMMA R>::size() const, 
@@ -948,10 +947,10 @@ template<typename T>                int         ra::rarray<T AR_COMMA 1>::size()
 template<typename T AR_COMMA int R> int radetail::subarray<T AR_COMMA R>::size() const,
 template<typename T>                int radetail::subarray<T AR_COMMA 1>::size() const,
 { 
-    AR_PROFILESAY("int sub/rarray<T,R>::size() const");
-    AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     // Retrieve array sizes in all dimensions. 
     // Needs to be computed, as this information is not stored.
+    AR_PROFILESAY("int sub/rarray<T,R>::size() const");
+    AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     int result = 1;        
     for (int i=0; i<rank; i++)
         result *= extent_[i];
@@ -959,16 +958,16 @@ template<typename T>                int radetail::subarray<T AR_COMMA 1>::size()
 })
 
 AR_SEXTUPLICATE_BODY(
-template<typename T AR_COMMA int R>       T* ra::rarray<T AR_COMMA R>::data(),
-template<typename T AR_COMMA int R> const T* ra::rarray<T AR_COMMA R>::data() const,
-template<typename T>                      T* ra::rarray<T AR_COMMA 1>::data(),
-template<typename T>                const T* ra::rarray<T AR_COMMA 1>::data() const,
-template<typename T AR_COMMA int R> T* radetail::subarray<T AR_COMMA R>::data() const,
-template<typename T>                T* radetail::subarray<T AR_COMMA 1>::data() const,
+template<typename T AR_COMMA int R>       T*         ra::rarray<T AR_COMMA R>::data(),
+template<typename T AR_COMMA int R> const T*         ra::rarray<T AR_COMMA R>::data() const,
+template<typename T>                      T*         ra::rarray<T AR_COMMA 1>::data(),
+template<typename T>                const T*         ra::rarray<T AR_COMMA 1>::data() const,
+template<typename T AR_COMMA int R>       T* radetail::subarray<T AR_COMMA R>::data() const,
+template<typename T>                      T* radetail::subarray<T AR_COMMA 1>::data() const,
 {
+    // return pointer of type T* to the internal data
     AR_PROFILESAY("(const) T* rarray<T,R>::data() (const)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
-    // return pointer of type T* to the internal data
     return get_buffer();
 })
 
@@ -980,6 +979,7 @@ template<typename T>                typename         ra::rarray<T AR_COMMA 1>::i
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::begin() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::begin() const,
 {
+    // get iterator to first element. iterators remember their size
     AR_PROFILESAY("iterator rarray<T,R>::begin()");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return iterator(get_buffer(), size());
@@ -993,6 +993,7 @@ template<typename T>                typename         ra::rarray<T AR_COMMA 1>::c
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cbegin() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cbegin() const,
 {
+    // get const iterator to first element. iterators remember their size.
     AR_PROFILESAY("const_iterator rarray<T,R>::begin() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return const_iterator(get_buffer(), size());
@@ -1004,6 +1005,7 @@ template<typename T>                typename         ra::rarray<T AR_COMMA 1>::i
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::iterator radetail::subarray<T AR_COMMA R>::end() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::iterator radetail::subarray<T AR_COMMA 1>::end() const,
 {
+    // get iterator to just past last element. as there is nothing there, this iterators has no size
     AR_PROFILESAY("iterator rarray<T,R>::end()");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return iterator(get_buffer()+size(), 0);
@@ -1017,6 +1019,7 @@ template<typename T>                typename         ra::rarray<T AR_COMMA 1>::c
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::const_iterator radetail::subarray<T AR_COMMA R>::cend() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::const_iterator radetail::subarray<T AR_COMMA 1>::cend() const,
 {
+    // get const iterator to just past last element. as there is nothing there, this iterators has no size
     AR_PROFILESAY("const_iterator rarray<T,R>::(c)end() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return const_iterator(get_buffer()+size(), 0);
@@ -1033,6 +1036,7 @@ template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const iterator&i, int* ind),
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const const_iterator&i, int* ind) const,
 {
+    // retrieve indexes within *this of the element pointed to by i. puts them in preexisting array and returns pointer
     AR_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
     return index(*i, ind);
 })
@@ -1043,6 +1047,7 @@ template<typename T>                int*         ra::rarray<T AR_COMMA 1>::index
 template<typename T AR_COMMA int R> int* radetail::subarray<T AR_COMMA R>::index(const T& a, int* ind) const,
 template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index(const T& a, int* ind) const,
 {
+    // retrieve indexes within *this of the element a. puts them in preexisting array and returns pointer
     AR_PROFILESAY("int* rarray<T,R>::index((const) T&,int*) (const)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
@@ -1067,6 +1072,7 @@ template<typename T AR_COMMA int R> int radetail::subarray<T AR_COMMA R>::index(
 template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(const iterator&iter, int i),
 template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(const const_iterator&iter, int i) const,
 {
+    // retrieve index in dimension i within *this of the element pointed to by i
     AR_PROFILESAY("in* rarray<T,R>::index((const_)iterator&,int) (const)");
     return index(*iter, i);
 })
@@ -1077,6 +1083,7 @@ template<typename T>                int         ra::rarray<T AR_COMMA 1>::index(
 template<typename T AR_COMMA int R> int radetail::subarray<T AR_COMMA R>::index(const T& a, int i) const,
 template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(const T& a, int i) const,
 {
+    // retrieve index in dimension i within *this of the element a
     AR_PROFILESAY("int rarray<T,R>::index((const) T&,int) (const)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
@@ -1088,21 +1095,17 @@ template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(
 
 })
 
-// rarray method to return T*const*.. acting similarly to this rarray
-// when using []:
-
 AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> typename ra::rarray<T AR_COMMA R>::parray_t                 ra::rarray<T AR_COMMA R>::ptr_array() const,
 template<typename T>                typename ra::rarray<T AR_COMMA 1>::parray_t                 ra::rarray<T AR_COMMA 1>::ptr_array() const, 
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::parray_t radetail::subarray<T AR_COMMA R>::ptr_array() const,
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::parray_t radetail::subarray<T AR_COMMA 1>::ptr_array() const,
 {
+    // return T*const*.. acting similarly to this rarray when using []
     AR_PROFILESAY("sub/rarray<T,R>::parray_t sub/rarray<T,R>::ptr_array() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined array");
     return parray_;
 })
-
-// rarray method to return  T**.. acting similarly to this rarray when using []
 
 AR_QUADRUPLICATE_BODY(
 template<typename T AR_COMMA int R> typename         ra::rarray<T AR_COMMA R>::noconst_parray_t         ra::rarray<T AR_COMMA R>::noconst_ptr_array() const, 
@@ -1110,27 +1113,27 @@ template<typename T>                typename         ra::rarray<T AR_COMMA 1>::n
 template<typename T AR_COMMA int R> typename radetail::subarray<T AR_COMMA R>::noconst_parray_t radetail::subarray<T AR_COMMA R>::noconst_ptr_array() const, 
 template<typename T>                typename radetail::subarray<T AR_COMMA 1>::noconst_parray_t radetail::subarray<T AR_COMMA 1>::noconst_ptr_array() const, 
 {
+    // return T**.. acting similarly to this rarray when using []
     AR_PROFILESAY("rarray<T,R>::noconst_parray_t sub/rarray<T,R>::noconst_ptr_array() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return const_cast<noconst_parray_t>(parray_);
 })
 
-// rarray method to create a reference to this that treats elements as constant
-
 AR_DUPLICATE_BODY(
 template<typename T AR_COMMA int R> ra::rarray<const T AR_COMMA R>& ra::rarray<T AR_COMMA R>::const_ref() const,
 template<typename T>                ra::rarray<const T AR_COMMA 1>& ra::rarray<T AR_COMMA 1>::const_ref() const,
 {
+    // create a reference to this that treats elements as constant
     AR_PROFILESAY("rarray<const T,R>& rarray<T,R>::const_ref() const");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     return (rarray<const T AR_COMMA rank>&)(*this);
  })
 
-// ...for subarray
 AR_DUPLICATE_BODY(
 template<typename T AR_COMMA int R> radetail::subarray<const T AR_COMMA R>& radetail::subarray<T AR_COMMA R>::const_ref() const,
 template<typename T>                radetail::subarray<const T AR_COMMA 1>& radetail::subarray<T AR_COMMA 1>::const_ref() const,
 {
+    // create a reference to this that treats elements as constant
     AR_PROFILESAY("subarray<const T,R>& subarray<T,R>::const_ref() const");
     return (subarray<const T,rank>&)(*this);
  })
@@ -1141,6 +1144,7 @@ template<typename T>                void         ra::rarray<T AR_COMMA 1>::fill(
 template<typename T AR_COMMA int R> void radetail::subarray<T AR_COMMA R>::fill(const T& value),
 template<typename T>                void radetail::subarray<T AR_COMMA 1>::fill(const T& value),
 {
+    // fill with constant value using iterators
     AR_PROFILESAY("void sub/rarray<T,R>::fill(const T&)");
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     for (iterator i=begin(); i!=end(); i++)
