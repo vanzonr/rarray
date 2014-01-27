@@ -42,11 +42,11 @@
 #define AR_PROFILESAY(a) 
 #endif
 
-// Compiling with -DBOUNDSCHECK switches on the checkOrSay macro to
+// Compiling with -DAR_BOUNDSCHECK switches on the checkOrSay macro to
 // check its first argument and throw an exception if it is not true.
 // checkOrSay is intended to be used for bound checks.
 #ifdef AR_BOUNDSCHECK
-#define AR_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(b)
+#define AR_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
 // BOUNDCHECK is incompatible with SKIPINTERMEDIATE (see below)
 #ifdef AR_SKIPINTERMEDIATE
 #undef AR_SKIPINTERMEDIATE
@@ -1052,7 +1052,7 @@ template<typename T>                int* radetail::subarray<T AR_COMMA 1>::index
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(ind!=AR_NULLPTR, "invalid index buffer");
     int linearindex = &a - get_buffer();
-    AR_CHECKORSAY(linearindex >=0 and linearindex <= size(), "element not in array");
+    AR_CHECKORSAY(linearindex >=0 and linearindex < size(), "element not in array");
     int j = rank;
     while (j-->0) {
         ind[j] = linearindex % extent_[j];
@@ -1088,10 +1088,10 @@ template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
     int linearindex = &a - get_buffer();
-    AR_CHECKORSAY(linearindex >=0 and linearindex <= size(), "element not in array");
+    AR_CHECKORSAY(false and linearindex >=0 and linearindex < size(), "element not in array");
     for (int j = rank-1; j > i; j--) 
         linearindex /= extent_[j];
-    return  linearindex % extent_[i];
+    return linearindex % extent_[i];
 
 })
 
@@ -2291,6 +2291,7 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
 
 #define EXTENT(A,I) radetail::extent_given_byte_size(A,I,sizeof(A))
 #define RARRAY(A)   radetail::make_rarray_given_byte_size(A,sizeof(A))
+#define INDEX(A,X,I) RARRAY(A).index(X,I)
 using ra::rarray; // for now.
 
 #endif

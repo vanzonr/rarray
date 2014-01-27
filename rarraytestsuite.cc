@@ -2352,6 +2352,12 @@ int testindex()
     CHECK(a.index(a[3],0)==3);
     CHECK(a.index(a[4],0)==4);
     CHECK(a.index(a[5],0)==5);
+    CHECK(INDEX(a,a[0],0)==0);
+    CHECK(INDEX(a,a[1],0)==1);
+    CHECK(INDEX(a,a[2],0)==2);
+    CHECK(INDEX(a,a[3],0)==3);
+    CHECK(INDEX(a,a[4],0)==4);
+    CHECK(INDEX(a,a[5],0)==5);
     for (auto i=a.begin(); i != a.end(); i++) {
         a.index(i,&ind);
         int ind2=a.index(i,0);

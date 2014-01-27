@@ -62,7 +62,7 @@ config.mk:
 
 install: rarray.h rarray.pdf
 	mkdir -p ${PREFIX}/include
-	cp rarray.h ${PREFIX}/include/rarrar.h
+	cp rarray.h ${PREFIX}/include/rarray.h
 	mkdir -p ${PREFIX}/share/rarray
 	cp rarray.pdf ${PREFIX}/share/rarray
 
