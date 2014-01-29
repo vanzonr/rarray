@@ -782,7 +782,7 @@ int testsliceconstructor()
     //   rarray(int,int,int)
     //   T* data();
     rarray<T,3> a(7,21,13);
-#ifdef AR_SKIPINTERMEDIATE
+#ifdef RA_SKIPINTERMEDIATE
     const T* tan=getconstdata(rarray<T,2>(&a[1][0][0],a.extent(1),a.extent(2)));
     T* tac = &a[1][0][0];
 #else
@@ -794,7 +794,7 @@ int testsliceconstructor()
     T* tac = a[1].data();
 #endif
     CHECK(tan==tac);
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
     CHECK(a[1].extent(0)==21);
     CHECK(a[1].extent(1)==13);
     CHECK(a[1].shape()[1]==13);
@@ -1128,7 +1128,7 @@ int test2dconversions()
     for (int i=0;i<n;i++)
       for (int j=0;j<m;j++)
         a[i][j]=(i+1)*10+j+1;
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
     rarray<float,1> a1 = a[1];
     a1=a[1]; // not really testing runtime
 #endif
@@ -1375,7 +1375,7 @@ int testassignment()
     CHECK(b.extent(0)==a.extent(0));
     CHECK(b.extent(1)==a.extent(1));
     CHECK(b.extent(2)==a.extent(2));
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
     rarray<float,2> e;
     e = a[2];
     CHECK(e.data()==a[2].data());
@@ -1393,7 +1393,7 @@ int testassignment()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
 int testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
 {
     const float* a1=a[1].data();
@@ -1412,7 +1412,7 @@ int testconstintermediatefunction(const rarray<float,3>& a, const float* data1ch
 
 int testconstintermediate()
 {
-#ifdef AR_SKIPINTERMEDIATE
+#ifdef RA_SKIPINTERMEDIATE
     return ALLCLEAR;
 #else
     rarray<float,3> a(7,8,9);
@@ -1438,7 +1438,7 @@ int testintermediateconversion()
 {
     rarray<float,2> a(10,10);
     a[2][7]=14;
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
     fill_1d_rarray(a[2], 13);
     CHECK(a[2][7]==13);
 #endif
@@ -2212,7 +2212,7 @@ int testiterators() {
         qout << *i << ',';
     }
 
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
     for (rarray<double,2>::const_iterator i=r[1].cbegin(); i!=r[1].cend(); i++)
     {
         qout << *i << ',';
@@ -2270,7 +2270,7 @@ int testiterators() {
 
     CHECK(rout.str() == "2,4,6,8,10,");
 
-    #ifndef AR_SKIPINTERMEDIATE
+    #ifndef RA_SKIPINTERMEDIATE
     std::stringstream check;
     
 #if __cplusplus <= 199711L
@@ -2476,7 +2476,7 @@ int testcomma_assignment()
     CHECK(a[2][3][0]==31);
     CHECK(a[2][3][1]==30);
 
-#ifndef AR_SKIPINTERMEDIATE
+#ifndef RA_SKIPINTERMEDIATE
 
     a[1]       = 100,101,102,103,104,105,106,107;
     a[2][1]    = 200,201;
@@ -2592,6 +2592,7 @@ int main()
     PASSORRETURN(testconstructors12dimbuf<double>());
     PASSORRETURN(testconstructors12dimbuf<compound>());
     PASSORRETURN((testconstructors12dimbuf<array<compound,3> >()));
+
 
     PASSORRETURN(testaccessors<double>(d1,d2));
     PASSORRETURN(testaccessors<compound>(c1,c2));

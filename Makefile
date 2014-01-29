@@ -40,7 +40,7 @@ LDLIBS?=
 LDFLAGSOPT?=
 LDLIBSOPT?=
 CXXFLAGSOPT?=-O2
-MORECPPFLAGS=-DAR_BOUNDSCHECK
+MORECPPFLAGS=-DRA_BOUNDSCHECK
 MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG
 FC?=gfortran
 FFLAGS?=-O2
@@ -163,7 +163,7 @@ covertest: \
 
 coverage_in_code.txt: rarray.h
 	@echo "Extracting lines from array.h that generate profile messages"
-	\grep -n AR_PROFILESAY rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   AR_PROFILESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
+	\grep -n RA_PROFILESAY rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_PROFILESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
 
 coverage_in_test.txt: output_from_test.txt output_from_nitest.txt 
 	@echo "Filtering profile messages from test output"
@@ -186,11 +186,11 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 
 profiletests: $(TESTNAME).cc rarray.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DAR_TRACETEST $(TESTNAME).cc -o profiletests
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests
 
 profilenitests: $(TESTNAME).cc rarray.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
-	$(CXX) -DAR_SKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DAR_TRACETEST $(TESTNAME).cc -o profilenitests
+	$(CXX) -DRA_SKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profilenitests
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@echo "Summary:"
