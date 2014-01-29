@@ -33,7 +33,7 @@
 #include <stdexcept>
 #include <cstdlib>
 
-// When running rarraytestsuite.cc compiled with -DTRACETEST, the
+// When running rarraytestsuite.cc compiled with -DAR_TRACETEST, the
 // following macro produced output to be used to determine which
 // functions are exercised.
 #ifdef AR_TRACETEST
@@ -64,6 +64,7 @@
 // Forward definitions of ra::rarray<T,R> and radetail::subarray<T,R>
 namespace ra       { template<typename T,int R> class rarray;   }
 namespace radetail { template<typename T,int R> class subarray; }
+namespace radetail { template<typename T>       class CommaOp; }
 
 // Define internal types needed by class rarray, in a separate namespace
 
@@ -120,8 +121,8 @@ class Iterator {
     T*  pointer_min_;
     T*  pointer_max_plus_one_;
     Iterator(T* ptr, int size);
-    template<typename S,int R> friend class ra::rarray;
-    template<typename S,int R> friend class radetail::subarray;
+    template<typename,int> friend class ra::rarray;
+    template<typename,int> friend class radetail::subarray;
 };
 
 
@@ -178,8 +179,9 @@ class rarray {
     rarray(T* buffer, const int* extent);                                                                      // R>11
     rarray(const rarray<T,R> &a);                                      // copy constructor
     rarray(const radetail::subarray<T,R> &a);                          // copy constructor
-    rarray<T,R>& operator=(const rarray<T,R> &a);                      // assignment operator
-    rarray<T,R>& operator=(const radetail::subarray<T,R> &a);          // assignment operator
+    rarray<T,R>& operator=(const rarray<T,R> &a);                      // array assignment operator
+    rarray<T,R>& operator=(const radetail::subarray<T,R> &a);          // array assignment operator
+    radetail::CommaOp<T> operator=(const T& e);                        // Comma separated element assignment
     ~rarray();                                                         // destructor
     void clear();                                                      // clean up routine, make undefined
     void reshape(int n0, int n1);                                      // reshape keeping the underlying data for R=2
@@ -274,6 +276,7 @@ class rarray<T,1> {
     rarray(const radetail::subarray<T,1> &a);                          // copy constructor    
     rarray<T,1>& operator=(const rarray<T,1> &a);                      // assignment operator
     rarray<T,1>& operator=(const radetail::subarray<T,1> &a);          // assignment operator
+    radetail::CommaOp<T> operator=( const T& e );                         // Comma separated element assignment
     ~rarray();                                                         // destructor
     void clear();                                                      // clean up routine, make undefined again
     void reshape(int n0);                                              // to change shape (only shrinking is defined)
@@ -381,6 +384,7 @@ class subarray {
     int*                 index(const iterator& i, int* index);         // if i points at an element in the array, get the indices of that element
     int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
     subarray<T,R-1>      operator[](int i)    const;                   // element access
+    CommaOp<T>           operator=(const T& e);                        // Comma separated element assignment
 
   private:
     parray_t   const  parray_;                                         // start of the pointer array
@@ -429,6 +433,7 @@ template<typename T> class subarray<T,1> {
     int*                 index(const iterator& i, int* index);         // if i points at an element in the array, get the indices of that element
     int*                 index(const const_iterator& i, int* ind)const;// if i points at an element in the array, get the indices of that element
     T&                   operator[](int i)    const;                   // element access
+    CommaOp<T>           operator=(const T& e);                        // Comma separated element assignment
 
   private:
     parray_t   const   parray_;                                        // start of the pointer array
@@ -449,6 +454,19 @@ template<typename T>        std::ostream& text_output(std::ostream &o, const ra:
 template<typename T,int R>  std::ostream& text_output(std::ostream &o, const subarray<T,R>& r);
 template<typename T>        std::ostream& text_output(std::ostream &o, const subarray<T,1>& r);
 
+// Class to facilitate assignment from a comma separated list
+template<typename T>
+class CommaOp {
+  public:
+    CommaOp& operator,(const T& e);                                    // puts the next number into the array.
+    ~CommaOp();                                                        // fills the rest of the array with zeros.   
+  private:
+    CommaOp(T* ptr, T* last); 
+    T *ptr_;                                                           // points to next element to be filled
+    T * const last_;                                                   // points to last element
+    template<typename,int> friend class ra::rarray;
+    template<typename,int> friend class radetail::subarray;
+};
 
 // We need to be able to get a reference in a pointer-to-pointer structure given indices.
 //
@@ -866,6 +884,50 @@ template<typename T>                ra::rarray<T AR_COMMA 1>::~rarray(),
     clear();
 })
 
+AR_QUADRUPLICATE_BODY(
+template<typename T AR_COMMA int R> radetail::CommaOp<T>         ra::rarray<T AR_COMMA R>::operator=(const T& e),
+template<typename T>                radetail::CommaOp<T>         ra::rarray<T AR_COMMA 1>::operator=(const T& e),
+template<typename T AR_COMMA int R> radetail::CommaOp<T> radetail::subarray<T AR_COMMA R>::operator=(const T& e),
+template<typename T>                radetail::CommaOp<T> radetail::subarray<T AR_COMMA 1>::operator=(const T& e),
+{
+    // Comma separated element assignment: puts the first one in and prepares for more
+    AR_PROFILESAY("CommaOp<T> rarray<T,R>::operator=(const T&)");
+    AR_CHECKORSAY(parray_!=AR_NULLPTR, "assignment to unsized array");
+    AR_CHECKORSAY(size()>0,"assignment with more elements than in array");
+    T* first = get_buffer();
+    *first = e;
+    radetail::CommaOp<T> co(first+1 AR_COMMA first+size()-1); 
+    return co;
+ })
+
+
+template<typename T> radetail::CommaOp<T>::CommaOp(T* ptr, T* last)
+: ptr_(ptr), last_(last)
+{ 
+    // fill remainder of array with zeros
+    AR_PROFILESAY("CommaOp<T>::CommaOp(T*,T*)");
+    AR_CHECKORSAY(ptr_!=AR_NULLPTR and last_!=AR_NULLPTR, "invalid comma operator");
+}
+
+template<typename T> radetail::CommaOp<T>& radetail::CommaOp<T>::operator,(const T& e)
+{ 
+    // puts the next number into the array.
+    AR_PROFILESAY("CommaOp<T>& CommaOp<T>::operator,(const T&e)");
+    AR_CHECKORSAY(ptr_!=AR_NULLPTR and last_!=AR_NULLPTR, "invalid comma operator");
+    AR_CHECKORSAY(ptr_<=last_, "assignment with more elements than in array");
+    *ptr_++ = e;
+    return *this; 
+}
+
+template<typename T> radetail::CommaOp<T>::~CommaOp()
+{ 
+    // fill remainder of array with zeros
+    AR_PROFILESAY("CommaOp<T>::~CommaOp()");
+    AR_CHECKORSAY(ptr_!=AR_NULLPTR and last_!=AR_NULLPTR, "invalid comma operator");
+    while (ptr_<=last_)
+        *ptr_++ = 0;
+}
+
 AR_DUPLICATE_BODY(
 template<typename T AR_COMMA int R> bool ra::rarray<T AR_COMMA R>::is_clear() const,
 template<typename T>                bool ra::rarray<T AR_COMMA 1>::is_clear() const,
@@ -1088,7 +1150,7 @@ template<typename T>                int radetail::subarray<T AR_COMMA 1>::index(
     AR_CHECKORSAY(parray_!=AR_NULLPTR, "attempt at using undefined rarray");
     AR_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
     int linearindex = &a - get_buffer();
-    AR_CHECKORSAY(false and linearindex >=0 and linearindex < size(), "element not in array");
+    AR_CHECKORSAY(linearindex >=0 and linearindex < size(), "element not in array");
     for (int j = rank-1; j > i; j--) 
         linearindex /= extent_[j];
     return linearindex % extent_[i];

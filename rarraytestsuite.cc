@@ -2433,6 +2433,85 @@ int testindex()
     return ALLCLEAR;
 }
 
+int testcomma_assignment()
+{
+    rarray<double,1> b(8);
+    b = 1,2,3,6,5,4;
+    CHECK(b[0]==1);
+    CHECK(b[1]==2);
+    CHECK(b[2]==3);
+    CHECK(b[3]==6);
+    CHECK(b[4]==5);
+    CHECK(b[5]==4);
+    CHECK(b[6]==0);
+    CHECK(b[7]==0);
+
+    rarray<double,3> a(3,4,2);
+
+    a =  1,2,    3,6,   5,4,   7,8, 
+         9,12,  11,10, 21,22, 23,26, 
+        25,24,  27,28, 29,32, 31,30;
+    CHECK(a[0][0][0]== 1);
+    CHECK(a[0][0][1]== 2);
+    CHECK(a[0][1][0]== 3);
+    CHECK(a[0][1][1]== 6);
+    CHECK(a[0][2][0]== 5);
+    CHECK(a[0][2][1]== 4);
+    CHECK(a[0][3][0]== 7);
+    CHECK(a[0][3][1]== 8);
+    CHECK(a[1][0][0]== 9);
+    CHECK(a[1][0][1]==12);
+    CHECK(a[1][1][0]==11);
+    CHECK(a[1][1][1]==10);
+    CHECK(a[1][2][0]==21);
+    CHECK(a[1][2][1]==22);
+    CHECK(a[1][3][0]==23);
+    CHECK(a[1][3][1]==26);
+    CHECK(a[2][0][0]==25);
+    CHECK(a[2][0][1]==24);
+    CHECK(a[2][1][0]==27);
+    CHECK(a[2][1][1]==28);
+    CHECK(a[2][2][0]==29);
+    CHECK(a[2][2][1]==32);
+    CHECK(a[2][3][0]==31);
+    CHECK(a[2][3][1]==30);
+
+#ifndef AR_SKIPINTERMEDIATE
+
+    a[1]       = 100,101,102,103,104,105,106,107;
+    a[2][1]    = 200,201;
+    a[2][2][0] = 300,301;   // on purpose using built-in comma operator which forgets the 301
+    a[2][3][0] = (300,301); // on purpose using built-in comma operator which forgets the 300
+    CHECK(a[0][0][0]== 1);
+    CHECK(a[0][0][1]== 2);
+    CHECK(a[0][1][0]== 3);
+    CHECK(a[0][1][1]== 6);
+    CHECK(a[0][2][0]== 5);
+    CHECK(a[0][2][1]== 4);
+    CHECK(a[0][3][0]== 7);
+    CHECK(a[0][3][1]== 8);
+    CHECK(a[1][0][0]==100);
+    CHECK(a[1][0][1]==101);
+    CHECK(a[1][1][0]==102);
+    CHECK(a[1][1][1]==103);
+    CHECK(a[1][2][0]==104);
+    CHECK(a[1][2][1]==105);
+    CHECK(a[1][3][0]==106);
+    CHECK(a[1][3][1]==107);
+    CHECK(a[2][0][0]==25);
+    CHECK(a[2][0][1]==24);
+    CHECK(a[2][1][0]==200);
+    CHECK(a[2][1][1]==201);
+    CHECK(a[2][2][0]==300);
+    CHECK(a[2][2][1]==32);
+    CHECK(a[2][3][0]==301);
+    CHECK(a[2][3][1]==30);
+
+#endif
+
+    return ALLCLEAR;
+}
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -2547,6 +2626,7 @@ int main()
     PASSORRETURN(testfill());
 
     PASSORRETURN(testindex());
+    PASSORRETURN(testcomma_assignment());
 
     return ALLCLEAR;
 }
