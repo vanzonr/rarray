@@ -77,7 +77,7 @@
 # endif
 #endif
 
-// routines using INLINEF will be force to inline
+// routines using INLINEF will be forced to inline
 // routines using INLINE_ will not: these were deemed to expensive to inline from a compilation point of view
 #define RA_INLINEF RA_INLINE
 #define RA_INLINE_ inline
@@ -133,15 +133,15 @@ class Iterator {
     RA_INLINEF Iterator  operator++ (int);                                        // post-increment
     RA_INLINEF bool      operator== (const Iterator<T>& other) const;             // comparison: equal to
     RA_INLINEF bool      operator!= (const Iterator<T>& other) const;             // comparison: not equal to
-    RA_INLINEF bool      operator<  (const Iterator<T>& other) const;             // comparison: less than
-    RA_INLINEF bool      operator>  (const Iterator<T>& other) const;             // comparison: greater than
-    RA_INLINEF bool      operator<= (const Iterator<T>& other) const;             // comparison: less than or equal to
-    RA_INLINEF bool      operator>= (const Iterator<T>& other) const;             // comparison: greater than or equal to
+    RA_INLINE_ bool      operator<  (const Iterator<T>& other) const;             // comparison: less than
+    RA_INLINE_ bool      operator>  (const Iterator<T>& other) const;             // comparison: greater than
+    RA_INLINE_ bool      operator<= (const Iterator<T>& other) const;             // comparison: less than or equal to
+    RA_INLINE_ bool      operator>= (const Iterator<T>& other) const;             // comparison: greater than or equal to
   private:
     T*  pointer_;
     T*  pointer_min_;
     T*  pointer_max_plus_one_;
-    RA_INLINEF Iterator(T* ptr, int size);
+    RA_INLINE_ Iterator(T* ptr, int size);
     template<typename,int> friend class ra::rarray;
     template<typename,int> friend class radetail::subarray;
 };
@@ -1775,7 +1775,7 @@ bool radetail::Iterator<T>::operator!=(const Iterator<T>& other) const
     return pointer_ != other.pointer_;
 }
 
-template<typename T> RA_INLINEF 
+template<typename T> RA_INLINE_ 
 bool radetail::Iterator<T>::operator<(const Iterator<T>& other) const
 {
     // Iterator comparison: less than
@@ -1785,7 +1785,7 @@ bool radetail::Iterator<T>::operator<(const Iterator<T>& other) const
     return pointer_ < other.pointer_;
 }
 
-template<typename T> RA_INLINEF 
+template<typename T> RA_INLINE_ 
 bool radetail::Iterator<T>::operator>(const Iterator<T>& other) const
 {
     // Iterator comparison: greater than
@@ -1795,7 +1795,7 @@ bool radetail::Iterator<T>::operator>(const Iterator<T>& other) const
     return pointer_ > other.pointer_;
 }
 
-template<typename T> RA_INLINEF 
+template<typename T> RA_INLINE_ 
 bool radetail::Iterator<T>::operator<=(const Iterator<T>& other) const
 {
     // Iterator comparison: less than or equal to
@@ -1805,7 +1805,7 @@ bool radetail::Iterator<T>::operator<=(const Iterator<T>& other) const
     return pointer_ <= other.pointer_;
 }
 
-template<typename T> RA_INLINEF 
+template<typename T> RA_INLINE_ 
 bool radetail::Iterator<T>::operator>=(const Iterator<T>& other) const
 {
     // Iterator comparison: greater than or equal to
@@ -1815,7 +1815,7 @@ bool radetail::Iterator<T>::operator>=(const Iterator<T>& other) const
     return pointer_ >= other.pointer_;
 }
 
-template<typename T> RA_INLINEF 
+template<typename T> RA_INLINE_ 
 radetail::Iterator<T>::Iterator(T* ptr, int size)
   : pointer_(ptr),
     pointer_min_(ptr),

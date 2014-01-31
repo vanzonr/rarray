@@ -2436,6 +2436,7 @@ int testindex()
 int testcomma_assignment()
 {
     rarray<double,1> b(8);
+    b.fill(0);
     b = 1,2,3,6,5,4;
     CHECK(b[0]==1);
     CHECK(b[1]==2);
