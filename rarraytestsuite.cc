@@ -29,6 +29,10 @@
 #include <string>
 #include <sstream>
 
+#if __cplusplus <= 199711L
+#define nullptr 0 
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -2364,10 +2368,17 @@ int testindex()
         CHECK(ind==ind2);
         *i = ind+1;
     }
+#if __cplusplus <= 199711L                                                      
+    for (auto element = a.begin(); element != a.end(); ++element)               
+        *element *= a.index(*element,&ind)[0];                                  
+    for (auto element = a.begin(); element != a.end(); ++element)               
+        *element *= a.index(*element,0);                                        
+#else  
     for (auto& element: a)
         element *= a.index(element,&ind)[0];
     for (auto& element: a)
         element *= a.index(element,0);
+#endif
     CHECK(a[0]==0);
     CHECK(a[1]==2);
     CHECK(a[2]==12)
