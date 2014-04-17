@@ -1,10 +1,10 @@
 #
-# intel compiler settings
+# ibm compiler settings
 #
 CXX=xlc++
-CXXFLAGS=-g -qlanglvl=extended0x
+CXXFLAGS=-qsuppress=1501-510 -g -qlanglvl=extended0x
 CPPFLAGS=-D__PRETTY_FUNCTION__=__FUNCTION__
 CPPFLAGSOPT=-DNDEBUG
-CXXFLAGSOPT=-O3 -qarch=pwr6 -qtune=pwr6 -qinline=level=10
+CXXFLAGSOPT=-qsuppress=1501-510 -O5 -qinline=level=10 -qsuppress=1500-036 -qnoipa
 FC=xlf
-FFLAGS=-O3 -qarch=pwr6 -qtune=pwr6
+FFLAGS=-O5 -qsuppress=1500-036 -qsuppress=1501-036 -qnoipa -qsuppress=1501-510

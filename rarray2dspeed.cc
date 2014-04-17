@@ -40,8 +40,7 @@
 #endif
 
 const int repeat = 3;
-const int n = 13376; // requires ~2GB of storage
-//const int n = 9458; // requires ~1GB of storage
+const int n = 13376;
 
 double case_exact(int repeat)
 {
@@ -222,6 +221,8 @@ double case_eigen(int repeat)
         pass(&(c(0,0)),(float*)&d,repeat);
     }
     return d;
+#else
+    return 0.0;
 #endif
 }
 

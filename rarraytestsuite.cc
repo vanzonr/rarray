@@ -2368,12 +2368,12 @@ int testindex()
         CHECK(ind==ind2);
         *i = ind+1;
     }
-#if __cplusplus <= 199711L                                                      
-    for (auto element = a.begin(); element != a.end(); ++element)               
-        *element *= a.index(*element,&ind)[0];                                  
-    for (auto element = a.begin(); element != a.end(); ++element)               
-        *element *= a.index(*element,0);                                        
-#else  
+#if __cplusplus <= 199711L
+    for (auto element = a.begin(); element != a.end(); ++element)
+        *element *= a.index(*element,&ind)[0];
+    for (auto element = a.begin(); element != a.end(); ++element)
+        *element *= a.index(*element,0);
+#else
     for (auto& element: a)
         element *= a.index(element,&ind)[0];
     for (auto& element: a)

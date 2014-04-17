@@ -44,9 +44,7 @@
 #endif
 
 const int repeat = 3;
-//const int n = 13376; // requires ~2GB of storage
-const int n = 140; // requires ~1GB of storage
-//const int n = 96; // requires little
+const int n = 120; 
 
 double case_exact(int repeat)
 {
@@ -356,7 +354,7 @@ double case_blitz_2(int repeat)
 
 int main(int argc,char**argv) 
 {
-    double answer;
+    double answer = 0.0;
     int thiscase = (argc==1)?1:atoi(argv[1]);
     double check = case_exact(repeat);
 

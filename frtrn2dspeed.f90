@@ -21,13 +21,13 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ! THE SOFTWARE.
 !
-program frtrn4dspeed
+program frtrn2dspeed
   !
   ! Speed test for 2d fortran arrays for comparison with rarray2dspeed.cc. 
   !
   implicit none
   
-  integer, parameter   :: n = 13376 ! requires ~2GB of storage
+  integer, parameter   :: n = 13376
   integer, parameter   :: repeat = 3
   real(8), parameter   :: eps = 1.0e-6
   integer              :: i,j,k,l,r,countstart,countfinish,countrate,countmax
@@ -44,7 +44,7 @@ program frtrn4dspeed
   endif
   exact = (1.0*n)*(1.0*n)*check;
   
-  write (*,'(A)',advance='no'), "fortran:   "
+  write (*,'(A)',advance='no') "fortran:   "
 
   call system_clock(countstart,countrate,countmax)
 
@@ -88,7 +88,7 @@ program frtrn4dspeed
      print *, answer/n/n, "does not match exact result of ", exact/n/n
   endif
 
-  print '(F5.3A9)',(1.0*countfinish-1.0*countstart)/(1.0*countrate), "s elapsed"
+  print '(F6.3,A9)',(1.0*countfinish-1.0*countstart)/(1.0*countrate), "s elapsed"
 
-end program frtrn4dspeed
+end program frtrn2dspeed
 
