@@ -2341,6 +2341,269 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
     }
 }
 
+namespace ra 
+{
+// extent
+template<typename T, int R>
+int extentof(const rarray<T,R>& A, int dim) 
+{
+    RA_PROFILESAY("int extentof(const rarray<T,R>&,int)");
+    return A.extent(dim);
+}
+template<typename T, int R>
+int extentof(const radetail::subarray<T,R>& A, int dim) 
+{
+    RA_PROFILESAY("int extentof(const subarray<T,R>&,int)");
+    return A.extent(dim);
+}
+// data and cdata
+template<typename T, int R>
+T* dataof(rarray<T,R>& A) 
+{
+    RA_PROFILESAY("T* data(rarray<T,R>&)");
+    return A.data();
+}
+template<typename T, int R>
+T* dataof(radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("T* data(subarray<T,R>&)");
+    return A.data();
+}
+template<typename T, int R>
+T* cdataof(const rarray<T,R>& A) 
+{
+    RA_PROFILESAY("T* cdata(const rarray<T,R>&)");
+    return A.data();
+}
+template<typename T, int R>
+T* cdataof(const radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("T* cdata(const subarray<T,R>&)");
+    return A.data();
+}
+// begin, end, cbegin and cend
+template<typename T, int R>
+typename rarray<T,R>::iterator begin(rarray<T,R>& A) 
+{
+    RA_PROFILESAY("iterator begin(rarray<T,R>&)");
+    return A.begin();
+}
+template<typename T, int R>
+typename rarray<T,R>::iterator begin(radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("iterator begin(subarray<T,R>&)");
+    return A.begin();
+}
+template<typename T, int R>
+typename rarray<T,R>::iterator end(rarray<T,R>& A) 
+{
+    RA_PROFILESAY("iterator end(rarray<T,R>&)");
+    return A.end();
+}
+template<typename T, int R>
+typename rarray<T,R>::iterator end(radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("iterator end(subarray<T,R>&)");
+    return A.end();
+}
+template<typename T, int R>
+typename rarray<T,R>::const_iterator cbegin(const rarray<T,R>& A) 
+{
+    RA_PROFILESAY("const_iterator cbegin(const rarray<T,R>&)");
+    return A.cbegin();
+}
+template<typename T, int R>
+typename rarray<T,R>::const_iterator cbegin(const radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("const_iterator cbegin(const subarray<T,R>&)");
+    return A.cbegin();
+}
+template<typename T, int R>
+typename rarray<T,R>::const_iterator cend(const rarray<T,R>& A) 
+{
+    RA_PROFILESAY("const_iterator cend(const rarray<T,R>&)");
+    return A.cend();
+}
+template<typename T, int R>
+typename rarray<T,R>::const_iterator cend(const radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("const_iterator cend(const subarray<T,R>&)");
+    return A.cend();
+}
+// shapeof
+template<typename T, int R>
+const int* shapeof(const rarray<T,R>& A)       
+{
+    RA_PROFILESAY("const int* shapeof(const rarray<T,R>&)");
+    return A.shape();
+}
+template<typename T, int R>
+const int* shapeof(const radetail::subarray<T,R>& A)       
+{
+    RA_PROFILESAY("const int* shapeof(const subarray<T,R>&)");
+    return A.shape();
+}
+// countof
+template<typename T, int R>
+int countof(const rarray<T,R>& A)       
+{
+    RA_PROFILESAY("int countof(const rarray<T,R>&)");
+    return A.size();
+}
+template<typename T, int R>
+int countof(const radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("int countof(const subarray<T,R>&)");
+    return A.size();
+}
+// as_ptr_array
+template<typename T, int R>
+typename radetail::PointerArray<T,R>::type as_ptr_array(const rarray<T,R>& A)
+{
+    RA_PROFILESAY("PointerArray<T,R>::type as_ptr_array(const rarray<T,R>&)");
+    return A.ptr_array();
+}
+template<typename T, int R>
+typename radetail::PointerArray<T,R>::type as_ptr_array(const radetail::subarray<T,R>& A)
+{
+    RA_PROFILESAY("PointerArray<T,R>::type as_ptr_array(const subarray<T,R>&)");
+    return A.ptr_array();
+}
+// as_no_const_ptr_array
+template<typename T, int R>
+typename radetail::PointerArray<T,R>::noconst_type as_noconst_ptr_array(const rarray<T,R>& A) 
+{
+    RA_PROFILESAY("PointerArray<T,R>::noconst_type as_noconst_ptr_array(const rarray<T,R>&)");
+    return A.noconst_ptr_array();
+}
+template<typename T, int R>
+typename radetail::PointerArray<T,R>::noconst_type as_noconst_ptr_array(const radetail::subarray<T,R>& A) 
+{
+    RA_PROFILESAY("PointerArray<T,R>::noconst_type as_noconst_ptr_array(const subarray<T,R>&)");
+    return A.noconst_ptr_array();
+}
+// as_const_ref
+template<typename T, int R>
+rarray<const T,R>& as_const_ref(const rarray<T,R>& A) 
+{
+    RA_PROFILESAY("rarray<const T,R>& as_const_ref(const rarray<T,R>&)");
+    return A.const_ref();
+}
+template<typename T, int R>
+radetail::subarray<const T,R>& as_const_ref(const radetail::subarray<T,R>& A)
+{
+    RA_PROFILESAY("subarray<const T,R>& as_const_ref(const subarray<T,R>&)");
+    return A.const_ref();
+}
+// clear
+template<typename T, int R>
+void clear(rarray<T,R>& A) 
+{
+    RA_PROFILESAY("void clear(rarray<T,R>&)");
+    A.clear();
+}
+// is_clear
+template<typename T, int R>
+bool is_clear(const rarray<T,R>& A)
+{
+    RA_PROFILESAY("bool is_clear(const rarray<T,R>&)");
+    return A.is_clear();
+}
+// fill
+template<typename T, int R>
+void fill(rarray<T,R>& A, const T& value)
+{
+    RA_PROFILESAY("void fill(rarray<T,R>&,const T&)");
+    A.fill(value);
+}
+template<typename T, int R>
+void fill(radetail::subarray<T,R>& A, const T& value) 
+{
+    RA_PROFILESAY("void fill(subarray<T,R>&,const T&)");
+    A.fill(value);
+}
+// copy
+template<typename T, int R>
+rarray<T,R> copy(const rarray<T,R>& A) 
+{
+    RA_PROFILESAY("rarray<T,R> copy(const rarray<T,R>&)");
+    return A.copy();
+}
+// reshape
+template<typename T>
+void reshape(rarray<T,1>& A, int n0) 
+{
+    RA_PROFILESAY("void reshape(rarray<T,1>&,int)");
+    A.reshape(n0);
+}
+template<typename T>
+void reshape(rarray<T,2>& A, int n0, int n1)
+{
+    RA_PROFILESAY("void reshape(rarray<T,2>&,int,int)");
+    A.reshape(n0,n1);
+}
+template<typename T>
+void reshape(rarray<T,3>& A, int n0, int n1, int n2)
+{
+    RA_PROFILESAY("void reshape(rarray<T,3>&,int,int,int)");
+    A.reshape(n0,n1,n2);
+}
+template<typename T>
+void reshape(rarray<T,4>& A, int n0, int n1, int n2, int n3) 
+{
+    RA_PROFILESAY("void reshape(rarray<T,4>&,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3);
+}
+template<typename T>
+void reshape(rarray<T,5>& A, int n0, int n1, int n2, int n3, int n4)
+{
+    RA_PROFILESAY("void reshape(rarray<T,5>&,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4);
+}
+template<typename T>
+void reshape(rarray<T,6>& A, int n0, int n1, int n2, int n3, int n4, int n5)
+{
+    RA_PROFILESAY("void reshape(rarray<T,6>&,int,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4,n5);
+}
+template<typename T>
+void reshape(rarray<T,7>& A, int n0, int n1, int n2, int n3, int n4, int n5, int n6)
+{
+    RA_PROFILESAY("void reshape(rarray<T,7>&,int,int,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4,n5,n6);
+}
+template<typename T>
+void reshape(rarray<T,8>& A, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
+{
+    RA_PROFILESAY("void reshape(rarray<T,8>&,int,int,int,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4,n5,n6,n7);
+}
+template<typename T>
+void reshape(rarray<T,9>& A, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8)
+{
+    RA_PROFILESAY("void reshape(rarray<T,9>&,int,int,int,int,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4,n5,n6,n7,n8);
+}
+template<typename T>
+void reshape(rarray<T,10>& A, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9) 
+{
+    RA_PROFILESAY("void reshape(rarray<T,10>&,int,int,int,int,int,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4,n5,n6,n7,n8,n9);
+}
+template<typename T>
+void reshape(rarray<T,11>& A, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10) 
+{
+    RA_PROFILESAY("void reshape(rarray<T,11>&,int,int,int,int,int,int,int,int,int,int,int)");
+    A.reshape(n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10);
+}
+template<typename T,int R>
+void reshape(rarray<T,R>& A, int* n) 
+{
+    RA_PROFILESAY("void reshape(rarray<T,R>&,int*)");
+    A.reshape(n);
+}
+}
+
 // Get rid of the macros
 #undef RA_PROFILESAY
 #undef RA_CHECKORSAY
@@ -2355,9 +2618,13 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
 // Global namespace stuff
 // (also in global namespace: operator<< and operator>> for rarray and subarray)
 
-#define EXTENT(A,I) radetail::extent_given_byte_size(A,I,sizeof(A))
-#define RARRAY(A)   radetail::make_rarray_given_byte_size(A,sizeof(A))
+#define EXTENT(A,I)  radetail::extent_given_byte_size(A,I,sizeof(A))
+#define RARRAY(A)    radetail::make_rarray_given_byte_size(A,sizeof(A))
 #define INDEX(A,X,I) RARRAY(A).index(X,I)
-using ra::rarray; // for now.
+#define as_rarray(A) radetail::make_rarray_given_byte_size(A,sizeof(A)) 
+
+// for now:
+using ra::rarray; 
+using ra::extentof;
 
 #endif
