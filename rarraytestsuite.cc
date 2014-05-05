@@ -148,6 +148,12 @@ int testconstructors_with_functions()
     CHECK(extentof(c,1) == dim[1]);
     CHECK(extentof(c,2) == dim[2]);
     CHECK(dataof(c)==dataof(c));
+#ifndef RA_SKIPINTERMEDIATE
+    CHECK(ra::countof(b[2])==21*13);
+    CHECK(ra::countof(b[2][10])==13);
+    CHECK(extentof(c[2],0) == dim[1]);
+    CHECK(extentof(c[2],1) == dim[2]);
+#endif
     return ALLCLEAR;
 }
 
@@ -1465,10 +1471,37 @@ int test3dconversions_with_functions()
     CHECK(s4.str()==s1.str());
     print3d_5(dataof(a), extentof(c,0), extentof(c,1), extentof(c,2), s5);
     CHECK(s5.str()==s1.str());
-    print3d_6(dataof(a), extentof(c,0), extentof(c,1), extentof(c,2), s6);
+    print3d_6(cdataof(a), extentof(c,0), extentof(c,1), extentof(c,2), s6);
     CHECK(s6.str()==s1.str());
     print3d_7(c, s7);
     CHECK(s7.str()==s1.str());
+#ifndef RA_SKIPINTERMEDIATE
+    std::stringstream t2,t3,t4,t5,t6,s8,s9;
+    print2d_7(a[1],s8);
+    CHECK(s8.str()== 
+          "211 212 \n"
+          "221 222 \n"
+          "231 232 \n" 
+          "241 242 \n"
+          "251 252 \n\n");
+    print2d_8(c[1],s9);
+    CHECK(s9.str()== 
+          "211 212 \n"
+          "221 222 \n"
+          "231 232 \n" 
+          "241 242 \n"
+          "251 252 \n\n");
+    print2d_2(ra::as_noconst_ptr_array(ra::as_const_ref(c[1])), extentof(c[1],0), extentof(c[1],1), t2);
+    CHECK(t2.str()==s9.str());
+    print2d_3(ra::as_ptr_array(a[1]), extentof(a[1],0), extentof(a[1],1), t3);
+    CHECK(t3.str()==s9.str());
+    print2d_4(ra::as_ptr_array(c[1]), extentof(c[1],0), extentof(c[1],1), t4);
+    CHECK(t4.str()==s9.str());
+    print2d_5(ra::dataof(a[1]), extentof(a[1],0), extentof(a[1],1), t5);
+    CHECK(t5.str()==s9.str());
+    print2d_6(ra::cdataof(a[1]), extentof(a[1],0), extentof(a[1],1), t6);
+    CHECK(t6.str()==s9.str());
+#endif
     return ALLCLEAR;
 }
 
@@ -2381,7 +2414,6 @@ int testiterators() {
     {
         *i += 2;
     }
-
     for (rarray<double,2>::const_iterator i=r.cbegin(); i!=r.cend(); i++)
     {
         qout << *i << ',';
@@ -2511,13 +2543,17 @@ int testiterators_with_functions() {
 #ifndef RA_SKIPINTERMEDIATE
     for (rarray<double,2>::const_iterator i=ra::cbegin(r[1]); i!=ra::cend(r[1]); i++)
     {
+         qout << *i << ',';
+    }
+    for (rarray<double,2>::iterator i=ra::begin(r[1]); i!=ra::end(r[1]); i++)
+    {
         qout << *i << ',';
     }
 #else
-    qout << "7,8,9,10,";
+    qout << "7,8,9,10,7,8,9,10,";
 #endif
 
-    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,");
+    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,7,8,9,10,");
 
     const rarray<double,2> rview = r;
 
@@ -2526,7 +2562,7 @@ int testiterators_with_functions() {
         qout << *i << ',';
     }
 
-    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
+    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
 
     std::stringstream rout;
 
@@ -2548,7 +2584,7 @@ int testiterators_with_functions() {
         qout << *i << ',';
     }
 
-    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
+    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
 
     const rarray<double,1> qconst = q;
 
@@ -2647,6 +2683,14 @@ int testfill_with_functions()
     for (int i=0;i<extentof(b,0);i++) {
         CHECK(b[i]==1.24f);
     }
+    
+#ifndef RA_SKIPINTERMEDIATE
+    rarray<float,2> c(5,4);
+    ra::fill(c[1], 1.25f);
+    for (int i=0;i<extentof(c,1);i++) {
+        CHECK(c[1][i]==1.25f);
+    }
+#endif
     
     return ALLCLEAR;
 }
@@ -3060,6 +3104,7 @@ int main()
     PASSORRETURN(test6autoconversion());
     PASSORRETURN(testoutput());
     PASSORRETURN(testiterators());
+    PASSORRETURN(testiterators_with_functions());
 
     PASSORRETURN(test711autoconversion());
 

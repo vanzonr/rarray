@@ -2360,25 +2360,25 @@ int extentof(const radetail::subarray<T,R>& A, int dim)
 template<typename T, int R>
 T* dataof(rarray<T,R>& A) 
 {
-    RA_PROFILESAY("T* data(rarray<T,R>&)");
+    RA_PROFILESAY("T* dataof(rarray<T,R>&)");
     return A.data();
 }
 template<typename T, int R>
-T* dataof(radetail::subarray<T,R>& A) 
+T* dataof(const radetail::subarray<T,R>& A) 
 {
-    RA_PROFILESAY("T* data(subarray<T,R>&)");
+    RA_PROFILESAY("T* dataof(subarray<T,R>&)");
     return A.data();
 }
 template<typename T, int R>
-T* cdataof(const rarray<T,R>& A) 
+const T* cdataof(const rarray<T,R>& A) 
 {
-    RA_PROFILESAY("T* cdata(const rarray<T,R>&)");
+    RA_PROFILESAY("T* cdataof(const rarray<T,R>&)");
     return A.data();
 }
 template<typename T, int R>
-T* cdataof(const radetail::subarray<T,R>& A) 
+const T* cdataof(const radetail::subarray<T,R>& A) 
 {
-    RA_PROFILESAY("T* cdata(const subarray<T,R>&)");
+    RA_PROFILESAY("T* cdataof(const subarray<T,R>&)");
     return A.data();
 }
 // begin, end, cbegin and cend
@@ -2389,7 +2389,7 @@ typename rarray<T,R>::iterator begin(rarray<T,R>& A)
     return A.begin();
 }
 template<typename T, int R>
-typename rarray<T,R>::iterator begin(radetail::subarray<T,R>& A) 
+typename rarray<T,R>::iterator begin(const radetail::subarray<T,R>& A) 
 {
     RA_PROFILESAY("iterator begin(subarray<T,R>&)");
     return A.begin();
@@ -2401,7 +2401,7 @@ typename rarray<T,R>::iterator end(rarray<T,R>& A)
     return A.end();
 }
 template<typename T, int R>
-typename rarray<T,R>::iterator end(radetail::subarray<T,R>& A) 
+typename rarray<T,R>::iterator end(const radetail::subarray<T,R>& A) 
 {
     RA_PROFILESAY("iterator end(subarray<T,R>&)");
     return A.end();
@@ -2517,7 +2517,7 @@ void fill(rarray<T,R>& A, const T& value)
     A.fill(value);
 }
 template<typename T, int R>
-void fill(radetail::subarray<T,R>& A, const T& value) 
+void fill(radetail::subarray<T,R> A, const T& value) 
 {
     RA_PROFILESAY("void fill(subarray<T,R>&,const T&)");
     A.fill(value);
