@@ -134,8 +134,8 @@ int testconstructors_with_functions()
     CHECK(shapeof(a)[1] == dim[1]);
     CHECK(shapeof(a)[2] == dim[2]);
 #ifndef RA_SKIPINTERMEDIATE
-    CHECK(ra::shapeof(a[0])[0] == dim[1]);
-    CHECK(ra::shapeof(a[0][1])[0] == dim[2]);
+    CHECK(shapeof(a[0])[0] == dim[1]);
+    CHECK(shapeof(a[0][1])[0] == dim[2]);
 #endif
     CHECK(dataof(b));
     CHECK(countof(b)==7*21*13);
@@ -149,8 +149,8 @@ int testconstructors_with_functions()
     CHECK(extentof(c,2) == dim[2]);
     CHECK(dataof(c)==dataof(c));
 #ifndef RA_SKIPINTERMEDIATE
-    CHECK(ra::countof(b[2])==21*13);
-    CHECK(ra::countof(b[2][10])==13);
+    CHECK(countof(b[2])==21*13);
+    CHECK(countof(b[2][10])==13);
     CHECK(extentof(c[2],0) == dim[1]);
     CHECK(extentof(c[2],1) == dim[2]);
 #endif
@@ -1491,15 +1491,15 @@ int test3dconversions_with_functions()
           "231 232 \n" 
           "241 242 \n"
           "251 252 \n\n");
-    print2d_2(ra::as_noconst_ptr_array(ra::as_const_ref(c[1])), extentof(c[1],0), extentof(c[1],1), t2);
+    print2d_2(as_noconst_ptr_array(as_const_ref(c[1])), extentof(c[1],0), extentof(c[1],1), t2);
     CHECK(t2.str()==s9.str());
-    print2d_3(ra::as_ptr_array(a[1]), extentof(a[1],0), extentof(a[1],1), t3);
+    print2d_3(as_ptr_array(a[1]), extentof(a[1],0), extentof(a[1],1), t3);
     CHECK(t3.str()==s9.str());
-    print2d_4(ra::as_ptr_array(c[1]), extentof(c[1],0), extentof(c[1],1), t4);
+    print2d_4(as_ptr_array(c[1]), extentof(c[1],0), extentof(c[1],1), t4);
     CHECK(t4.str()==s9.str());
-    print2d_5(ra::dataof(a[1]), extentof(a[1],0), extentof(a[1],1), t5);
+    print2d_5(dataof(a[1]), extentof(a[1],0), extentof(a[1],1), t5);
     CHECK(t5.str()==s9.str());
-    print2d_6(ra::cdataof(a[1]), extentof(a[1],0), extentof(a[1],1), t6);
+    print2d_6(cdataof(a[1]), extentof(a[1],0), extentof(a[1],1), t6);
     CHECK(t6.str()==s9.str());
 #endif
     return ALLCLEAR;
@@ -2541,11 +2541,11 @@ int testiterators_with_functions() {
     }
 
 #ifndef RA_SKIPINTERMEDIATE
-    for (rarray<double,2>::const_iterator i=ra::cbegin(r[1]); i!=ra::cend(r[1]); i++)
+    for (rarray<double,2>::const_iterator i=cbegin(r[1]); i!=cend(r[1]); i++)
     {
          qout << *i << ',';
     }
-    for (rarray<double,2>::iterator i=ra::begin(r[1]); i!=ra::end(r[1]); i++)
+    for (rarray<double,2>::iterator i=begin(r[1]); i!=end(r[1]); i++)
     {
         qout << *i << ',';
     }
@@ -2686,7 +2686,7 @@ int testfill_with_functions()
     
 #ifndef RA_SKIPINTERMEDIATE
     rarray<float,2> c(5,4);
-    ra::fill(c[1], 1.25f);
+    fill(c[1], 1.25f);
     for (int i=0;i<extentof(c,1);i++) {
         CHECK(c[1][i]==1.25f);
     }
