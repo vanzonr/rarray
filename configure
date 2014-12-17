@@ -101,20 +101,22 @@ EOF
         modulename="ARMADILLO"
         headerfile="armadillo"
         echo -n "Detecting $headerfile... " 
-        incdir=$(env | grep ${modulename}_I | awk -F= '{print $1}')
-        libdir=$(env | grep ${modulename}_L | awk -F= '{print $1}')
+        incdir=$(env | grep ${modulename}_I | awk -F= '{print $2}')
+        incvar=$(env | grep ${modulename}_I | awk -F= '{print $1}')
+        libdir=$(env | grep ${modulename}_L | awk -F= '{print $2}')
+        libvar=$(env | grep ${modulename}_L | awk -F= '{print $1}')
         if ! [ "$libdir" ]; then libdir=. ; fi
         cat > $tmpfile <<-EOF
 	#include "$headerfile"
 	int main(){return 0;}
 EOF
         if [ "$incdir" ]; then
-            if ! $CXX -I"$envdir" -L"$libdir" $tmpfile &> /dev/null; then 
+            if ! $CXX -I"$incdir" -L"$libdir" $tmpfile &> /dev/null; then 
                 echo "not found"
                 echo -n " -DNOARMADILLO" >> config.mk
             else
-                accincdir="$accincdir -I$$$incdir"
-                acclibdir="$acclibdir -I$$$libdir"
+                accincdir="$accincdir -IZ$incvar"
+                acclibdir="$acclibdir -LZ$libvar"
                 echo "found"
             fi
         else
@@ -126,6 +128,8 @@ EOF
             fi
         fi
         #########################################################
+        echo CXXFLAGS+="$accincdir"  | sed 's/-IZ/-I$/g' >> config.mk
+        echo LDFLAGS+="$acclibdir"  | sed 's/-LZ/-L$/g' >> config.mk
         echo >> config.mk
         
         # add prefix to the makefile include file
