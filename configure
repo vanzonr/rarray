@@ -131,9 +131,12 @@ EOF
         fi
         #########################################################
         echo >> config.mk
-        echo CXXFLAGS+="$accincdir"  | sed 's/-IZ/-I$/g' >> config.mk
-        echo LDFLAGS+="$acclibdir"  | sed 's/-LZ/-L$/g' >> config.mk
-        
+        if [ "$accincdir" ]; then
+            echo CXXFLAGS+="${accincdir:1}"  | sed 's/-IZ/-I$/g' >> config.mk
+        fi
+        if [ "$acclibdir" ]; then 
+            echo LDFLAGS+="${acclibdir:1}"  | sed 's/-LZ/-L$/g' >> config.mk
+        fi       
         # add prefix to the makefile include file
         echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
         # print what to do next
