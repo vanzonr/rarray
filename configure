@@ -116,7 +116,9 @@ EOF
                 echo -n " -DNOARMADILLO" >> config.mk
             else
                 accincdir="$accincdir -IZ$incvar"
-                acclibdir="$acclibdir -LZ$libvar"
+                if [ "$libvar" ]; then
+                    acclibdir="$acclibdir -LZ$libvar"
+                fi
                 echo "found"
             fi
         else
@@ -128,9 +130,9 @@ EOF
             fi
         fi
         #########################################################
+        echo >> config.mk
         echo CXXFLAGS+="$accincdir"  | sed 's/-IZ/-I$/g' >> config.mk
         echo LDFLAGS+="$acclibdir"  | sed 's/-LZ/-L$/g' >> config.mk
-        echo >> config.mk
         
         # add prefix to the makefile include file
         echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
