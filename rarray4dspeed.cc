@@ -44,7 +44,7 @@
 #endif
 
 const int repeat = 3;
-const int n = 120; 
+const int n = 100; 
 
 double case_exact(int repeat)
 {

@@ -40,7 +40,7 @@ LDLIBS?=
 LDFLAGSOPT?=
 LDLIBSOPT?=
 CXXFLAGSOPT?=-O2
-MORECPPFLAGS=-DRA_BOUNDSCHECK
+CHECKCPPFLAGS=-DRA_BOUNDSCHECK
 #MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG -DNOARMADILLO
 #-DNOBLITZ -DNOEIGEN3 -DNOARMADILLO -DNOBOOST
 MORECPPFLAGSOPT?=-DNOBLITZ -DNOBOOST -DNOEIGEN3 -DNOARMADILLO
@@ -105,7 +105,7 @@ $(TESTNAME): $(TESTNAME).o config.mk
 	$(CCL) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 $(TESTNAME).o: $(TESTNAME).cc rarray.h config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 benchmark: benchmark2 benchmark4
 
@@ -149,13 +149,13 @@ $(PASS)f.o: $(PASS)f.f90 config.mk
 	$(FC) -c -O0 -g -o $@ $<
 
 $(BENCHMARK2NAME).o: $(BENCHMARK2NAME).cc rarray.h elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(BENCHMARK4NAME).o: $(BENCHMARK4NAME).cc rarray.h elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: $(PASS).cc config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 covertest: \
  output_from_test.txt  \
@@ -189,7 +189,7 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 
 profiletests: $(TESTNAME).cc rarray.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MORECPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests
 
 profilenitests: $(TESTNAME).cc rarray.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"

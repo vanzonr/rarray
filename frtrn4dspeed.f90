@@ -27,7 +27,7 @@ program frtrn4dspeed
   !
   implicit none
   
-  integer, parameter   :: n = 120
+  integer, parameter   :: n = 100
   integer, parameter   :: repeat = 3
   real(8), parameter   :: eps = 1.0e-6
   integer              :: i,j,k,l,r,countstart,countfinish,countrate,countmax

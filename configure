@@ -5,6 +5,54 @@
 # stop immediately when there is an error
 set -e
 
+#############################################################################
+function detect_library()
+{
+    # Detect a library '$1' by looking for the headerfile '$2' if not
+    # found, the compile line will get '$3' added to it.  if founf,
+    # the compile line will get '$4' added to it, and the linkline
+    # will get '$5' added. If the directories of the include files and
+    # library files are encoded in an environment variables that
+    # contain MODULE_I and MODULE_L, respectively, then these will get
+    # added to the accincdir and acclibdir.
+    # Example: 
+    #   detect_library ARMADILLO armadillo -DNOARMADILLO -DEIGEN_NO_DEBUG ""
+    modulename="$1"
+    headerfile="$2"
+    compilewithout="$3"
+    compilewith="$4"
+    addlibrary="$5"
+    echo -n "Detecting $modulename's $headerfile... " 
+    incdir=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $2}')
+    incvar=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $1}')
+    libdir=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $2}')
+    libvar=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $1}')
+    if [ "$incdir" ]; then
+        incdir="-I$incdir"
+    fi
+    if [ "$libdir" ]; then
+        libdir="-L$libdir"
+    fi
+    cat > $tmpfile <<-EOF
+	#include "$headerfile"
+	int main(){return 0;}
+EOF
+    if ! $CXX $incdir $libdir $tmpfile $addlib &> /dev/null; then 
+        echo "not found"
+        echo -n " $compilewithout" >> config.mk
+    else
+        #$CXX -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
+        echo "found"
+        echo -n " $compilewith" >> config.mk
+        if [ -n "$incvar" ]; then 
+            accincdir="$accincdir -IZ{$incvar}"
+        fi
+        if [ -n "$libvar" ]; then 
+            acclibdir="$acclibdir -LZ{$libvar}"
+        fi
+    fi
+}
+
 if [[ "$1" == "--help" ]]; then
     # print help message
     echo "This configure script detects compiler for rarray.h 's Makefile"
@@ -53,149 +101,17 @@ else
             grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
         fi
         # detect installation of BLITZ (only needed for benchmarks)
-        echo -e "#\n# Comparison test settings\n#" >> config.mk
+        echo -e "#\n# Variables for compiling comparison benchmarks\n#" >> config.mk
         echo -n "MORECPPFLAGSOPT=-DNDEBUG" >> config.mk
         tmpfile=$(mktemp --suffix .cc)
         #########################################################
-        modulename="BLITZ"
-        headerfile="blitz/array.h"
-        addlibrary=""
-        compilewith=""
-        compilewithout="-DNOBLITZ"
-        echo -n "Detecting $modulename's $headerfile... " 
-        incdir=$(env | grep ${modulename}_I | awk -F= '{print $2}')
-        incvar=$(env | grep ${modulename}_I | awk -F= '{print $1}')
-        libdir=$(env | grep ${modulename}_L | awk -F= '{print $2}')
-        libvar=$(env | grep ${modulename}_L | awk -F= '{print $1}')
-        if [ "$incdir" ]; then
-            incdir="-I$incdir"
-        fi
-        if [ "$libdir" ]; then
-            libdir="-L$libdir"
-        fi
-        cat > $tmpfile <<-EOF
-	#include "$headerfile"
-	int main(){return 0;}
-EOF
-        if ! $CXX $incdir $libdir $tmpfile $addlib &> /dev/null
-        then 
-            echo "not found"
-            echo -n " $compilewithout" >> config.mk
-        else
-            $CXX -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
-            echo -n " $compilewith" >> config.mk
-            if [ -n "$incvar"]; then 
-                accincdir="$accincdir -IZ$incvar"
-            fi
-            if [ -n "$libvar"]; then 
-                acclibdir="$acclibdir -LZ$libvar"
-            fi
-        fi
+        detect_library BLITZ blitz/array.h -DNOBLITZ "" ""
         #########################################################
-        modulename="BOOST"
-        headerfile="boost/multi_array.hpp"
-        addlibrary=""
-        compilewith="-DBOOST_DISABLE_ASSERTS"
-        compilewithout="-DNOBOOST"
-        echo -n "Detecting $modulename's $headerfile... " 
-        incdir=$(env | grep ${modulename}_I | awk -F= '{print $2}')
-        incvar=$(env | grep ${modulename}_I | awk -F= '{print $1}')
-        libdir=$(env | grep ${modulename}_L | awk -F= '{print $2}')
-        libvar=$(env | grep ${modulename}_L | awk -F= '{print $1}')
-        if [ "$incdir" ]; then
-            incdir="-I$incdir"
-        fi
-        if [ "$libdir" ]; then
-            libdir="-L$libdir"
-        fi
-        cat > $tmpfile <<-EOF
-	#include "$headerfile"
-	int main(){return 0;}
-EOF
-        if ! $CXX $incdir $libdir $tmpfile $addlib &> /dev/null
-        then 
-            echo "not found"
-            echo -n " $compilewithout" >> config.mk
-        else
-            $CXX -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
-            echo -n " $compilewith" >> config.mk
-            if [ -n "$incvar"]; then 
-                accincdir="$accincdir -IZ$incvar"
-            fi
-            if [ -n "$libvar"]; then 
-                acclibdir="$acclibdir -LZ$libvar"
-            fi
-        fi
+        detect_library BOOST boost/multi_array.hpp -DNOBOOST -DBOOST_DISABLE_ASSERTS ""
         #########################################################
-        modulename="EIGEN3"
-        headerfile="eigen3/Eigen/Dense"
-        addlibrary=""
-        compilewith="-DEIGEN_NO_DEBUG"
-        compilewithout="-DNOEIGEN3"
-        echo -n "Detecting $modulename's $headerfile... " 
-        incdir=$(env | grep ${modulename}_I | awk -F= '{print $2}')
-        incvar=$(env | grep ${modulename}_I | awk -F= '{print $1}')
-        libdir=$(env | grep ${modulename}_L | awk -F= '{print $2}')
-        libvar=$(env | grep ${modulename}_L | awk -F= '{print $1}')
-        if [ "$incdir" ]; then
-            incdir="-I$incdir"
-        fi
-        if [ "$libdir" ]; then
-            libdir="-L$libdir"
-        fi
-        cat > $tmpfile <<-EOF
-	#include "$headerfile"
-	int main(){return 0;}
-EOF
-        if ! $CXX $incdir $libdir $tmpfile $addlib &> /dev/null
-        then 
-            echo "not found"
-            echo -n " $compilewithout" >> config.mk
-        else
-            $CXX -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
-            echo -n " $compilewith" >> config.mk
-            if [ -n "$incvar"]; then 
-                accincdir="$accincdir -IZ$incvar"
-            fi
-            if [ -n "$libvar"]; then 
-                acclibdir="$acclibdir -LZ$libvar"
-            fi
-        fi
+        detect_library EIGEN3 eigen3/Eigen/Dense -DNOEIGEN3 "-DNDEBUG -DEIGEN_NO_DEBUG" ""
         #########################################################
-        modulename="ARMADILLO"
-        headerfile="armadillo"
-        addlibrary=""
-        compilewith="-DEIGEN_NO_DEBUG"
-        compilewithout="-DNOARMADILLO"
-        echo -n "Detecting $modulename's $headerfile... " 
-        incdir=$(env | grep ${modulename}_I | awk -F= '{print $2}')
-        incvar=$(env | grep ${modulename}_I | awk -F= '{print $1}')
-        libdir=$(env | grep ${modulename}_L | awk -F= '{print $2}')
-        libvar=$(env | grep ${modulename}_L | awk -F= '{print $1}')
-        if [ "$incdir" ]; then
-            incdir="-I$incdir"
-        fi
-        if [ "$libdir" ]; then
-            libdir="-L$libdir"
-        fi
-        cat > $tmpfile <<-EOF
-	#include "$headerfile"
-	int main(){return 0;}
-EOF
-        if ! $CXX $incdir $libdir $tmpfile $addlib &> /dev/null
-        then 
-            echo "not found"
-            echo -n " $compilewithout" >> config.mk
-        else
-            $CXX -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
-            echo -n " $compilewith" >> config.mk
-            if [ -n "$incvar"]; then 
-                accincdir="$accincdir -IZ$incvar"
-            fi
-            if [ -n "$libvar"]; then 
-                acclibdir="$acclibdir -LZ$libvar"
-            fi
-        fi
+        detect_library ARMADILLO armadillo -DNOARMADILLO -DEIGEN_NO_DEBUG ""
         #######################################################
         echo >> config.mk
         # Extra include dirs added to MORECPPFLAGS

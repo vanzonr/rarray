@@ -40,7 +40,8 @@
 #endif
 
 const int repeat = 3;
-const int n = 13376;
+//const int n = 13376;
+const int n = 10000;
 
 double case_exact(int repeat)
 {
