@@ -35,12 +35,15 @@
 #include "blitz/array.h"
 #endif
 
+#ifndef NOARMADILLO
+#include <armadillo>
+#endif
+
 #ifndef NOEIGEN3
 #include <eigen3/Eigen/Dense>
 #endif
 
 const int repeat = 3;
-//const int n = 13376;
 const int n = 10000;
 
 double case_exact(int repeat)
@@ -208,17 +211,17 @@ double case_eigen(int repeat)
     while (repeat--) {
         for (int i=0;i<n;i++) 
             for (int j=0;j<n;j++) {
-                a(i,j) = i+repeat;
-                b(i,j) = j+repeat/2;
+                a(j,i) = i+repeat;
+                b(j,i) = j+repeat/2;
             }
         pass(&(a(0,0)),&(b(0,0)),repeat);
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
-                c(i,j) = a(i,j) + b(i,j);
+                c(j,i) = a(j,i) + b(j,i);
         pass(&(c(0,0)),&(c(0,0)),repeat);
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
-                d += c(i,j);
+                d += c(j,i);
         pass(&(c(0,0)),(float*)&d,repeat);
     }
     return d;
@@ -284,6 +287,35 @@ double case_blitz_2(int repeat)
 #endif
 }
 
+double case_armadillo(int repeat) 
+{
+#ifndef NOARMADILLO
+    using namespace arma;
+    double d = 0.0;
+    Mat<float> a(n,n);
+    Mat<float> b(n,n);
+    Mat<float> c(n,n);
+    while (repeat--) {
+        for (int i=0;i<n;i++) 
+            for (int j=0;j<n;j++) {
+                a(j,i) = i+repeat;
+                b(j,i) = j+repeat/2;
+            }
+        pass(&(a(0,0)),&(b(0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                c(j,i) = a(j,i) + b(j,i);
+        pass(&(c(0,0)),&(c(0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                d += c(j,i);
+        pass(&(c(0,0)),(float*)&d,repeat);
+    }
+    return d;
+#else
+    return 0.0;
+#endif
+}
 
 int main(int argc,char**argv) 
 {
@@ -317,7 +349,10 @@ int main(int argc,char**argv)
         fflush(stdout);
         answer = case_boost(repeat);
         break;
-    case 5: 
+    case 5:
+        printf("armadillo: ");
+        fflush(stdout);
+        answer = case_armadillo(repeat);
         break;
     case 6: 
         printf("vector:    ");

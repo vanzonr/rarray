@@ -115,6 +115,7 @@ benchmark2: $(BENCHMARK2NAME) $(BENCHMARK2NAMEF)
 	@(ulimit -s 4000000; ./$(BENCHMARK2NAME) 2) 
 	@./$(BENCHMARK2NAME) 3
 	@./$(BENCHMARK2NAME) 4
+	@./$(BENCHMARK2NAME) 5
 	@./$(BENCHMARK2NAME) 6
 	@./$(BENCHMARK2NAME) 7
 	@./$(BENCHMARK2NAME) 8
@@ -127,6 +128,7 @@ benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAMEF)
 	@(ulimit -s 4000000; ./$(BENCHMARK4NAME) 2) 
 	@./$(BENCHMARK4NAME) 3
 	@./$(BENCHMARK4NAME) 4
+	@./$(BENCHMARK4NAME) 5
 	@./$(BENCHMARK4NAME) 6
 	@./$(BENCHMARK4NAME) 7
 	@./$(BENCHMARK4NAME) 8
@@ -174,11 +176,11 @@ coverage_in_test.txt: output_from_test.txt output_from_nitest.txt
 
 output_from_test.txt: profiletests
 	@echo "Run tests with profile messages on"
-	profiletests 2> output_from_test.txt
+	./profiletests 2> output_from_test.txt
 
 output_from_nitest.txt: profilenitests
 	@echo "Run tests with profile messages on"
-	profilenitests 2> output_from_nitest.txt
+	./profilenitests 2> output_from_nitest.txt
 
 missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 	@echo "Determine profiling lines in array.h that did not get executed"

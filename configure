@@ -111,7 +111,7 @@ else
         #########################################################
         detect_library EIGEN3 eigen3/Eigen/Dense -DNOEIGEN3 "-DNDEBUG -DEIGEN_NO_DEBUG" ""
         #########################################################
-        detect_library ARMADILLO armadillo -DNOARMADILLO -DEIGEN_NO_DEBUG ""
+        detect_library ARMADILLO armadillo -DNOARMADILLO -DARMA_NO_DEBUG ""
         #######################################################
         echo >> config.mk
         # Extra include dirs added to MORECPPFLAGS

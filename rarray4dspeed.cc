@@ -256,30 +256,30 @@ double case_eigen(int repeat)
     
     for (int i=0;i<n;i++) 
         for (int j=0;j<n;j++) {
-            a(i,j).resize(n,n);
-            b(i,j).resize(n,n);
-            c(i,j).resize(n,n);
+            a(j,i).resize(n,n);
+            b(j,i).resize(n,n);
+            c(j,i).resize(n,n);
         }
     while (repeat--) {
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a(i,j)(k,l) = l+i+repeat;
-                        b(i,j)(k,l) = k+j+repeat/2;
+                        a(j,i)(l,k) = l+i+repeat;
+                        b(j,i)(l,k) = k+j+repeat/2;
                     }
         pass(&(a(0,0)(0,0)),&(b(0,0)(0,0)),repeat);
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) 
-                        c(i,j)(k,l) = a(i,j)(k,l)+b(i,j)(k,l);
+                        c(j,i)(l,k) = a(j,i)(l,k)+b(j,i)(l,k);
         pass(&(c(0,0)(0,0)),&(c(0,0)(0,0)),repeat);
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) 
-                        d += c(i,j)(k,l);
+                        d += c(j,i)(l,k);
         pass(&(c(0,0)(0,0)),(float*)&d,repeat);
     }
 #endif
@@ -352,6 +352,44 @@ double case_blitz_2(int repeat)
 #endif
 }
 
+double case_armadillo(int repeat)
+{
+#ifndef NOARMADILLO
+    double d = 0.0;
+    arma::Cube<float> a[n],b[n],c[n];
+    for (int i=0;i<n;i++) {
+        a[i] = arma::Cube<float>(n,n,n);
+        b[i] = arma::Cube<float>(n,n,n);
+        c[i] = arma::Cube<float>(n,n,n);
+    }
+    while (repeat--) {
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) {
+                        a[i](l,k,j) = l+i+repeat;
+                        b[i](l,k,j) = k+j+repeat/2;
+                    }
+        pass(&(a[0](0,0,0)),&(b[0](0,0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        c[i](l,k,j) = a[i](l,k,j)+b[i](l,k,j);
+        pass(&(c[0](0,0,0)),&(c[0](0,0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        d += c[i](l,k,j);
+        pass(&(c[0](0,0,0)),(float*)&d,repeat);
+    }
+    return d;
+#else
+    return 0;
+#endif
+}
+
 int main(int argc,char**argv) 
 {
     double answer = 0.0;
@@ -387,6 +425,9 @@ int main(int argc,char**argv)
         answer = case_boost(repeat);
         break;
     case 5: 
+        printf("armadillo: ");
+        fflush(stdout);
+        answer = case_armadillo(repeat);
         break;
     case 6: 
         printf("vector:    ");
