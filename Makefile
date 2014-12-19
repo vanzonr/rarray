@@ -49,10 +49,10 @@ FC?=gfortran
 FFLAGS?=-O2
 
 TESTNAME=rarraytestsuite
-BENCHMARK2NAME=rarray2dspeed
-BENCHMARK4NAME=rarray4dspeed
-BENCHMARK2NAMEF=frtrn2dspeed
-BENCHMARK4NAMEF=frtrn4dspeed
+BENCHMARK2DNAME=benchmark2Daccess
+BENCHMARK4DNAME=benchmark4Daccess
+BENCHMARK2DNAMEF=benchmark2Dfrtrn
+BENCHMARK4DNAMEF=benchmark4Dfrtrn
 PASS=optbarrier
 
 all: test valgrindtest covertest benchmark doctest
@@ -107,53 +107,53 @@ $(TESTNAME): $(TESTNAME).o config.mk
 $(TESTNAME).o: $(TESTNAME).cc rarray.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
-benchmark: benchmark2 benchmark4
+benchmark: benchmark2d benchmark4d
 
-benchmark2: $(BENCHMARK2NAME) $(BENCHMARK2NAMEF)
+benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo benchmark on a 2d array example
-	@./$(BENCHMARK2NAME) 1
-	@(ulimit -s 4000000; ./$(BENCHMARK2NAME) 2) 
-	@./$(BENCHMARK2NAME) 3
-	@./$(BENCHMARK2NAME) 4
-	@./$(BENCHMARK2NAME) 5
-	@./$(BENCHMARK2NAME) 6
-	@./$(BENCHMARK2NAME) 7
-	@./$(BENCHMARK2NAME) 8
-	@./$(BENCHMARK2NAME) 9
-	@./$(BENCHMARK2NAMEF)
+	@./$(BENCHMARK2DNAME) 1
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 2) 
+	@./$(BENCHMARK2DNAME) 3
+	@./$(BENCHMARK2DNAME) 4
+	@./$(BENCHMARK2DNAME) 5
+	@./$(BENCHMARK2DNAME) 6
+	@./$(BENCHMARK2DNAME) 7
+	@./$(BENCHMARK2DNAME) 8
+	@./$(BENCHMARK2DNAME) 9
+	@./$(BENCHMARK2DNAMEF)
 
-benchmark4: $(BENCHMARK4NAME) $(BENCHMARK4NAMEF)
+benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@echo benchmark on a 4d array example
-	@./$(BENCHMARK4NAME) 1
-	@(ulimit -s 4000000; ./$(BENCHMARK4NAME) 2) 
-	@./$(BENCHMARK4NAME) 3
-	@./$(BENCHMARK4NAME) 4
-	@./$(BENCHMARK4NAME) 5
-	@./$(BENCHMARK4NAME) 6
-	@./$(BENCHMARK4NAME) 7
-	@./$(BENCHMARK4NAME) 8
-	@./$(BENCHMARK4NAME) 9
-	@./$(BENCHMARK4NAMEF)
+	@./$(BENCHMARK4DNAME) 1
+	@(ulimit -s 4000000; ./$(BENCHMARK4DNAME) 2) 
+	@./$(BENCHMARK4DNAME) 3
+	@./$(BENCHMARK4DNAME) 4
+	@./$(BENCHMARK4DNAME) 5
+	@./$(BENCHMARK4DNAME) 6
+	@./$(BENCHMARK4DNAME) 7
+	@./$(BENCHMARK4DNAME) 8
+	@./$(BENCHMARK4DNAME) 9
+	@./$(BENCHMARK4DNAMEF)
 
-$(BENCHMARK2NAME): $(BENCHMARK2NAME).o $(PASS).o config.mk
-	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK2NAME).o $(PASS).o $(LDLIBS)
+$(BENCHMARK2DNAME): $(BENCHMARK2DNAME).o $(PASS).o config.mk
+	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)
 
-$(BENCHMARK4NAME): $(BENCHMARK4NAME).o $(PASS).o config.mk
-	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK4NAME).o $(PASS).o $(LDLIBS)
+$(BENCHMARK4DNAME): $(BENCHMARK4DNAME).o $(PASS).o config.mk
+	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK4DNAME).o $(PASS).o $(LDLIBS)
 
-$(BENCHMARK2NAMEF): $(BENCHMARK2NAMEF).f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ $(BENCHMARK2NAMEF).f90 $(PASS)f.o 
+$(BENCHMARK2DNAMEF): $(BENCHMARK2DNAMEF).f90 $(PASS)f.o config.mk
+	$(FC) $(FFLAGS) -o $@ $(BENCHMARK2DNAMEF).f90 $(PASS)f.o 
 
-$(BENCHMARK4NAMEF): $(BENCHMARK4NAMEF).f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ $(BENCHMARK4NAMEF).f90 $(PASS)f.o 
+$(BENCHMARK4DNAMEF): $(BENCHMARK4DNAMEF).f90 $(PASS)f.o config.mk
+	$(FC) $(FFLAGS) -o $@ $(BENCHMARK4DNAMEF).f90 $(PASS)f.o 
 
 $(PASS)f.o: $(PASS)f.f90 config.mk
 	$(FC) -c -O0 -g -o $@ $<
 
-$(BENCHMARK2NAME).o: $(BENCHMARK2NAME).cc rarray.h elapsed.h config.mk
+$(BENCHMARK2DNAME).o: $(BENCHMARK2DNAME).cc rarray.h elapsed.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4NAME).o: $(BENCHMARK4NAME).cc rarray.h elapsed.h config.mk
+$(BENCHMARK4DNAME).o: $(BENCHMARK4DNAME).cc rarray.h elapsed.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: $(PASS).cc config.mk
@@ -204,13 +204,13 @@ summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@wc -l missing_from_test.txt
 
 clean:
-	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARK4NAME).o $(BENCHMARK2NAME).o $(PASS).o $(PASS)f.o \
+	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
 	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh \
 	rarray.aux rarray.log rarray.out rarray.dvi
 
 distclean: clean
-	rm -f config.mk $(TESTNAME) $(BENCHMARK2NAME) $(BENCHMARK4NAME) $(BENCHMARK2NAMEF) $(BENCHMARK4NAMEF) rarray.pdf
+	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) rarray.pdf
 
 
