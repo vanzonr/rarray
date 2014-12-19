@@ -110,7 +110,7 @@ int main()
     rarray<double,2> r(RARRAY(z));
     
     int   headersize;
-    char* header = newNpyHeader<double,2>(r.extents(), headersize);
+    char* header = newNpyHeader<double,2>(r.shape(), headersize);
     
     std::cout.write(header, headersize);
 

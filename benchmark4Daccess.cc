@@ -21,11 +21,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+
 #include "elapsed.h"
 #include "rarray.h"
 #include <vector>
 #include <cstdlib>
 #include <cmath>
+
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef NOBOOST
 #include "boost/multi_array.hpp"
@@ -43,8 +46,12 @@
 #include <eigen3/Eigen/Dense>
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+
 const int repeat = 3;
 const int n = 100; 
+
+//////////////////////////////////////////////////////////////////////////////
 
 double case_exact(int repeat)
 {
@@ -56,6 +63,8 @@ double case_exact(int repeat)
     return double(n)*double(n)*double(n)*double(n)*check+double(n)*double(n)*double(n)*double(n)*double(n-1)*repeat;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 extern void pass(float*,float*,int&); // calling this function between
                                       // loops prevents loop fusion
                                       // and unfair speed gains with
@@ -63,6 +72,8 @@ extern void pass(float*,float*,int&); // calling this function between
                                       // the intel compiler
                                       // optimatizes much of the
                                       // computations away!
+
+//////////////////////////////////////////////////////////////////////////////
 
 double case_rarray(int repeat)
 {
@@ -93,6 +104,8 @@ double case_rarray(int repeat)
     return d;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 double case_auto(int repeat) 
 {
     double d = 0.0;
@@ -121,6 +134,8 @@ double case_auto(int repeat)
     }
     return d;
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
 double case_dyn(int repeat)
 {
@@ -160,6 +175,8 @@ double case_dyn(int repeat)
     return d;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 double case_boost(int repeat)
 {
 #ifndef NOBOOST
@@ -195,6 +212,8 @@ double case_boost(int repeat)
     return 0;
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
 double case_vector(int repeat) 
 {
@@ -245,6 +264,8 @@ double case_vector(int repeat)
     return d;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 double case_eigen(int repeat) 
 {
     double d = 0.0;
@@ -286,6 +307,8 @@ double case_eigen(int repeat)
     return d;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 double case_blitz_1(int repeat) 
 {
 #ifndef NOBLITZ
@@ -321,6 +344,8 @@ double case_blitz_1(int repeat)
 #endif
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 double case_blitz_2(int repeat) 
 {
 #ifndef NOBLITZ
@@ -351,6 +376,8 @@ double case_blitz_2(int repeat)
     return 0;
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
 double case_armadillo(int repeat)
 {
@@ -390,14 +417,15 @@ double case_armadillo(int repeat)
 #endif
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 int main(int argc,char**argv) 
 {
     double answer = 0.0;
     int thiscase = (argc==1)?1:atoi(argv[1]);
     double check = case_exact(repeat);
-
     Stopwatch s = START;
-
     switch (thiscase) {
     case 0: 
         printf("exact:     ");
@@ -450,15 +478,12 @@ int main(int argc,char**argv)
         answer = case_eigen(repeat);
         break;
     }
-
     double eps = 1e-6;
-
     if (fabs(1-answer/check)>eps)
         printf("%lf does not match exact result of %lf\n", 
                answer/n/n, check/n/n);
-    // else
-    //     printf("%lf matches exact result!\n", answer/n/n);
-
     stopwatchStop(&s);
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
