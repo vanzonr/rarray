@@ -60,7 +60,7 @@ char* newNpyHeader(const int* n, int& headersize)
     if (sizeof(T) != 1) {
         const long one = 1; 
         const bool is_little_endian = *reinterpret_cast<const char*>(&one);
-        const char endian = is_little_endian?my_traits_def::little_endian:my_traits_def::big_endian;
+        orderchar = is_little_endian?my_traits_def::little_endian:my_traits_def::big_endian;
     }
     // Detect type
     const char typechar = char(my_traits<T>::numtype);

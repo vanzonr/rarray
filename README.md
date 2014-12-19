@@ -3,7 +3,7 @@ rarray - multidimensional array class template
 
 rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
-compilers to generate fast code.  The current version is 1.0
+compilers to generate fast code.  The current version is 1.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -15,7 +15,7 @@ Installation
 To use this header-only library, one merely needs to copy the header
 file rarray to the directory of the source files that include it,
 or to a default directory where the compiler will look for header
-files (e.g. /usr/local/include). 
+files (e.g. /usr/include or /usr/local/include). 
 
 Rather than do so by hand, you can use the included Makefile, which
 can also compile the unit tests and benchmarks.  The configure command
@@ -29,31 +29,33 @@ or
 for a non-default installation file.  To pick your compiler, have the
 CXX environment variable point to the right compiler command.
 
-If you have a recent gnu, intel, ibm or clang compiler, the Makefile
-should be able to compile the unit tests and benchmarks:
+If you have a recent gnu, intel, ibm or clang compiler, and the 'make'
+command, then the Makefile should be enough to compile the unit tests
+and benchmarks:
 
-   make -j1 test
-   make -j1 benchmark
+   make test
+   make benchmark
 
 To create the (pdf) documentation, you need to have pdflatex
 installed, and type
 
    make doc
 
-To install the header and documentation to PATH/include and PATH/share/doc, respectively, type
+To install the header and documentation to PATH/include and
+PATH/share/doc, respectively, type
 
    make install
 
 Be aware that the Makefile has not been extensively tested.
 
 The rarray library has been tested with the GNU g++ compiler version
-4.8, the Intel C++ compiler version 13, IBM's XL C++ compiler version
-12 and up, and clang 3.5.
+4.8.0 and up, the Intel C++ compiler version 13, IBM's XL C++ compiler
+version 12 and up, and clang 3.5.
 
 Documentation
 =============
 
-Documentation can be found in the pdf file 'rarraydoc.pdf', which is
+Documentation can be found in the pdf file 'rarray.pdf', which is
 generated from the LaTeX file rarraydoc.tex.
 
 Reporting Bugs
@@ -67,32 +69,62 @@ reported to the same address.
 Files
 =====
 
-rarray.h:           The header-library
+rarray.h               The (header-only) library
 
-rarraydoc.tex:      LaTeX source of the documentation
+rarray.tex             LaTeX source of the documentation
 
-rarraytestsuite.cc: regression test suite (not using Boost.Test yet)
+rarray.pdf             Pdf format of the documentation
 
-rarray2dspeed.cc:   benchmark code for 2d arrays comparing rarray,
-                    blitz, eigen, boost, dynamic and automatic arrays
+rarraytestsuite.cc     regression test suite (not using Boost.Test yet)
 
-rarray2dspeedf.f90: fortran benchmark code for 2d arrays for comparison.
+benchmark2Daccess.cc   benchmark code for 2d arrays comparing rarray,
+                       blitz, eigen, boost, armadillo, dynamic and
+                       automatic arrays
 
-rarray4dspeed.cc:   benchmark code for 4d arrays comparing rarray,
-                    blitz, eigen, biist. dynamic and automatic arrays
+benchmark2Dfrtrn.f90   fortran benchmark code for 2d arrays for
+                       comparison
+ 
+benchmark4Daccess.cc   benchmark code for 4d arrays comparing rarray,
+                       blitz, eigen, biist. dynamic and automatic
+                       arrays
 
-rarray4dspeedf.f90: fortran benchmark code for 4d arrays for comparison.
+benchmark4Dfrtrn.f90   fortran benchmark code for 4d arrays for
+                       comparison
 
-configure:          A non-autotools configure script.
+elasped.h              Header file used by the benchmarks to measure
+                       elapsed time
 
-Makefile:           Makefile to build example, regression test and pdf
+optbarrier.cc          Contains dummy function whose call acts as a 
+                       barrier against code reordering; used in the
+                       c++ benchmarks to avoid skewed comparisons
 
-WARRANTEE:          File that expresses that there is no warrantee
+optbarrierf.f90        Fortran version of optbarrier.cc
 
-LICENSE:            Text of the MIT license
+configure              A non-autotools configure script for compiling 
+                       benchmarks; Creates config.mk
 
-AUTHOR:             Name and email address of the author
+compiler.clang++.mk    Compiler dependence flags for the Makefile. Used
+compiler.g++.mk        as input to create config.mk by configure
+compiler.icpc.mk
+compiler.xlC.mk
+compiler.xlc++.mk
 
-README:             This file
+Makefile               Makefile to build example, regression tests, 
+                       benchmarks, and documentation pdf; Reads in config.mk
 
-- 21 January 2014
+WARRANTY               File that expresses that there is no warranty
+
+LICENSE                Text of the MIT license
+
+AUTHOR                 Name and email address of the author
+
+READMEBENCHMARK.txt    Explanation of what the 2d and 4d benchmarks
+                       actually do
+
+npyexample.cc          Rough example on how to write a rarray to a
+                       numpy file.
+
+README.md              This file.
+
+
+- 19 December 2014

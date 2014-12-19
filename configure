@@ -114,6 +114,7 @@ else
         detect_library ARMADILLO armadillo -DNOARMADILLO -DARMA_NO_DEBUG ""
         #######################################################
         echo >> config.mk
+        rm -f ./a.out
         # Extra include dirs added to MORECPPFLAGS
         if [ "$accincdir" ]; then
             echo "MORECPPFLAGS=${accincdir:1}"  | sed 's/-IZ/-I$/g' >> config.mk
