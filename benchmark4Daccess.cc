@@ -1,5 +1,5 @@
 //
-// rarray4dspeed - speed test for rarray.h
+// benchmark4Daccess.cc - speed test for rarray.h
 //
 // Copyright (c) 2013-2014  Ramses van Zon
 //
