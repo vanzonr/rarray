@@ -63,16 +63,16 @@ config.mk:
 	@echo "Error: Run 'configure' to create config.mk"
 	@false
 
-install: rarray.h rarray.pdf
+install: rarray.h rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
 	cp rarray.h ${PREFIX}/include/rarray.h
 	mkdir -p ${PREFIX}/share/rarray
-	cp rarray.pdf ${PREFIX}/share/rarray
+	cp rarraydoc.pdf ${PREFIX}/share/rarray
 
-doc: rarray.pdf
+doc: rarraydoc.pdf
 
-rarray.pdf: rarray.tex
-	pdflatex rarray.tex
+rarraydoc.pdf: rarraydoc.tex
+	pdflatex rarraydoc.tex
 
 doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x config.mk
 	./doc1.x
@@ -92,8 +92,8 @@ doc%.x: doc%.cc
 doc%.cc: doctestgenerator.sh
 	sh doctestgenerator.sh
 
-doctestgenerator.sh: rarray.tex config.mk
-	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' rarray.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include "rarray.h"/' | grep -v verbatim> doctestgenerator.sh
+doctestgenerator.sh: rarraydoc.tex config.mk
+	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' rarraydoc.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include "rarray.h"/' | grep -v verbatim> doctestgenerator.sh
 
 test: $(TESTNAME)
 	./$(TESTNAME)
@@ -208,9 +208,9 @@ clean:
 	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh \
-	rarray.aux rarray.log rarray.out rarray.dvi
+	rarraydoc.aux rarraydoc.log rarraydoc.out rarraydoc.dvi
 
 distclean: clean
-	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) rarray.pdf
+	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) rarraydoc.pdf
 
 

@@ -173,13 +173,10 @@ library is to be a minimal interface for runtime multidimensional arrays with
 
 \begin{enumerate}\itemsep1pt\parskip3pt
  
-\item To have dynamically allocated multidimensional array that
+\item To have dynamically allocated multidimensional arrays that
 combine the convenience of automatic c++ arrays with that of the
 typical textbook dynamically allocated pointer-to-pointer
 structure. 
-
-It turned out a bit more verbose then I'd like, but no more than needed within
-the constraints of the C++ language.
 
 The compatibility requirement with pointer-to-pointer structures
 is achieved by allocating a pointer-to-pointer structure. This

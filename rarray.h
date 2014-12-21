@@ -1,7 +1,7 @@
 //
 // rarray.h - Runtime arrays: template classes for pointer-based,
 //            runtime dimensionalized, multi-dimensional
-//            arrays.  Documentation in docrarray.pdf
+//            arrays.  Documentation in rarraydoc.pdf
 //
 // Copyright (c) 2013-2014  Ramses van Zon
 //

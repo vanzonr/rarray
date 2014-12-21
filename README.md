@@ -55,7 +55,7 @@ version 12 and up, and clang 3.5.
 Documentation
 =============
 
-Documentation can be found in the pdf file 'rarray.pdf', which is
+Documentation can be found in the pdf file 'rarraydoc.pdf', which is
 generated from the LaTeX file rarraydoc.tex.
 
 Reporting Bugs
@@ -71,9 +71,9 @@ Files
 
 rarray.h               The (header-only) library
 
-rarray.tex             LaTeX source of the documentation
+rarraydoc.tex          LaTeX source of the documentation
 
-rarray.pdf             Pdf format of the documentation
+rarraydoc.pdf          Pdf format of the documentation
 
 rarraytestsuite.cc     regression test suite (not using Boost.Test yet)
 
