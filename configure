@@ -92,12 +92,20 @@ else
    
     # ${CXX} and ${CXXMKINC} should be defined now
     if [ -n "${CXX}" ]; then        
+        echo "Sanity check"
+        if ! which $CXX >& /dev/null; then
+            echo "Cannot find $CXX" 1>&2
+            exit 1
+        else
+            #CXX=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
+            :
+        fi
         echo "Generating config.mk from ${CXXMKINC}"
         FC=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
         if which $FC >& /dev/null; then
             cp -f ${CXXMKINC} config.mk
         else
-            echo "WARNING: Omitting non-exising fortran compiler ${FC}."
+            echo "WARNING: Omitting non-existing fortran compiler ${FC}."
             grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
         fi
         # detect installation of BLITZ (only needed for benchmarks)
