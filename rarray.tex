@@ -215,7 +215,7 @@ The guarrantee of contiguity means strided arrays are not supported.
 \item Can be reshaped.
 \item Automatic C-style arrays can be converted to rarrays using {\tt RARRAY}.
 \item Checks index bounds if the preprocessor
-  constant {\tt AR\_BOUNDSCHECK} is defined. 
+  constant {\tt RA\_BOUNDSCHECK} is defined. 
 \item A method {\tt is\_clear} to check if the rarray is uninitialized.
 \item A method to get the number of elements in each
   dimension (\texttt{extent}), or in all dimensions (\texttt{shape}).
@@ -325,7 +325,7 @@ To use the data in an rarray but access it in a different `shape', one can
 \begin{enumerate}
   \item create a new rarray which uses the data from the first rarray. E.g.
 \vspace{-9pt}
-\begin{framed}\vspace{-18pt}%
+\begin{framed}\vspace{-3pt}%
 \begin{verbatim}
 void dump(const rarray<double,3>& r) {
    rarray<double,1> rflat(r.data(), r.size());
@@ -338,7 +338,7 @@ void dump(const rarray<double,3>& r) {
 \end{framed}\vspace{-8pt}
 \item or one can reshape the existing rarray with the desired dimensions. E.g.
 \vspace{-9pt}
-\begin{framed}\vspace{-18pt}%
+\begin{framed}\vspace{-3pt}%
 \begin{verbatim}
 void dump(rarray<double,3>& r) {
    r.reshape(r.data(), 1, 1, r.size());
@@ -356,7 +356,7 @@ The last example intentionally also has side effects, as the original rarray tha
 In both cases, the total size of the new shape should be less or equal to that of the old shape, because no additional data is allocated by the reshape method. 
 \subsection{Optional bounds checking}
 
-If the preprocessor constant \texttt{{\tt AR\_BOUNDSCHECK}} is defined, an
+If the preprocessor constant \texttt{{\tt RA\_BOUNDSCHECK}} is defined, an
 \texttt{out\_of\_bounds} exception is thrown~if
 \begin{itemize}\itemsep0pt\parskip3pt
 \item an index is too small or too large;
@@ -364,12 +364,12 @@ If the preprocessor constant \texttt{{\tt AR\_BOUNDSCHECK}} is defined, an
 \item a constructor is called with a zero pointer for the buffer or for the dimensions array;
 \item a constructor is called with too few or too many arguments (for \texttt{R}$<=11$).
 \end{itemize}
-\texttt{{\tt AR\_BOUNDSCHECK}} can be defined by
-adding the {\tt -DAR\_BOUNDSCHECK} argument to the compilation command, or
-by \texttt{{\tt\#define AR\_BOUNDSCHECK}} before
+\texttt{{\tt RA\_BOUNDSCHECK}} can be defined by
+adding the {\tt -DRA\_BOUNDSCHECK} argument to the compilation command, or
+by \texttt{{\tt\#define RA\_BOUNDSCHECK}} before
 the \texttt{{\tt\#include "rarray.h"}} in the source.
 %\\
-%Regardless of \texttt{{\tt AR\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
+%Regardless of \texttt{{\tt RA\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
 
 \section{Comparison with standard alternatives}
 
@@ -597,7 +597,7 @@ functions using the syntax \texttt{s.data()}, which yields a
 \texttt{T*}.
 
 \noindent{\bf Example 1:}
-\begin{framed}\vspace{-9pt}%
+\begin{framed}\vspace{-15pt}%
 %TEST THIS
 \begin{verbatim}
   void fill1(float* a, int n1, int n2, float z) {
@@ -612,7 +612,7 @@ functions using the syntax \texttt{s.data()}, which yields a
 %END TEST THIS
 \end{framed}
 
-\pagebreak[4]
+\pagebreak[3]
 
 \noindent{\bf Example 2:}
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
@@ -744,14 +744,14 @@ The memory overhead here comes from having to store the dimensions and a pointer
 \subsection{Performance overhead using the rarray class}
 
 When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on x86, and with xlC 12.1 on power 6).
-So in that sense, no there is no performance overhead.  However, with \texttt{{\tt AR\_BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
+So in that sense, no there is no performance overhead.  However, with \texttt{{\tt RA\_BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
 
 Let us give a bit more details as to why there should not be any performance overhead. Temporary intermediate expression in a multi-bracketed expression (such as a[5] in a[5][6][7]) are represented by an intermediate class called rarray\_intermediate. This prevents assignment to such expressions and allows the optional bound checking to work.  Most compilers (gcc, intel) can optimize these intermediate classes away when bounds checking is off. However
 some compilers (e.g. pgi) cannot do this and suffer from speed degredation because of these intermediate objects.
 
-To get full speedup for these less-optimizing compilers, you can define the preprocessor constant \texttt{AR\_SKIPINTERMEDIATE} (usually with a \texttt{-DAR\_SKIPINTERMEDIATE} compiler option).  Intermediate expression in a multi-bracketed expression are then replaced by bare pointers-to-pointers.
+To get full speedup for these less-optimizing compilers, you can define the preprocessor constant \texttt{RA\_SKIPINTERMEDIATE} (usually with a \texttt{-DRA\_SKIPINTERMEDIATE} compiler option).  Intermediate expression in a multi-bracketed expression are then replaced by bare pointers-to-pointers.
 
-Note that when \texttt{AR\_BOUNDSCHECK} is set, it will switch off \texttt{AR\_SKIPINTERMEDIATE}.
+Note that when \texttt{RA\_BOUNDSCHECK} is set, it will switch off \texttt{RA\_SKIPINTERMEDIATE}.
 
 \subsection{Compilation overhead using the rarray class}
 
