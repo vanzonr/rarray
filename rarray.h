@@ -37,9 +37,9 @@
 // following macro produced output to be used to determine which
 // functions are exercised.
 #ifdef RA_TRACETEST
-#define RA_PROFILESAY(a) std::cerr << "PROFILE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
+#define RA_IFTRACESAY(a) std::cerr << "IFTRACE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #else
-#define RA_PROFILESAY(a) 
+#define RA_IFTRACESAY(a) 
 #endif
 
 // Compiling with -DRA_BOUNDSCHECK switches on the checkOrSay macro to
@@ -246,16 +246,23 @@ class rarray {
     RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
    #endif
 
+    RA_INLINEF rarray<T,R>& move();                    // convert this rarray to a temp value
+
   private:
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
     bool         entire_;                                              // true if not a subrarray
     int*         rcount_;                                              // reference count for the array if not a subrarray
-    mutable bool cleans_;                                              // alternative to ref counting: I am the one that cleans?
+    mutable bool cleans_;                                              // alternative to ref counting: am I the one that cleans?
+    mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
+                                                                       // Temporary values pass their 'cleans_' value on when
+                                                                       // copied, once. None-temporary values (the default) do not.
+                                                                       // When returning a rarray a from a function, use
+                                                                       // 'return a.move()'
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer
-    RA_INLINE_ void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount, bool& cleans); // setup new rarray object
+    RA_INLINE_ void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount, bool& cleans, bool tmpval); // setup new rarray object
     RA_INLINE_ void init_shallow(parray_t parray, const int* extent);             // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
@@ -331,6 +338,8 @@ class rarray<T,1> {
     RA_INLINEF operator typename PointerArray<const T,1>::type () const;
    #endif
 
+    RA_INLINEF rarray<T,1>& move();                    // convert this rarray to a temp value
+
   private:
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
@@ -338,9 +347,14 @@ class rarray<T,1> {
     bool         entire_;                                              // true if not a subrarray
     int*         rcount_;                                              // reference count for the array if not a subrarray
     mutable bool cleans_;                                              // alternative to ref counting: I am the one that cleans?
+    mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
+                                                                       // Temporary values pass their 'cleans_' value on when
+                                                                       // copied, once. None-temporary values (the default) do not.
+                                                                       // When returning a rarray a from a function, use
+                                                                       // 'return a.move()'
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer  
-    RA_INLINE_ void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount, bool& cleans); // setup new rarray object
+    RA_INLINE_ void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount, bool& cleans, bool tmpval); // setup new rarray object
     RA_INLINE_ void init_shallow(parray_t parray, const int* extent);             // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
@@ -582,7 +596,7 @@ template<typename A,int R>                                                      
     header7 body                                                        \
     header8 body
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // default constructor, puts rarray in 'undefined' state
 
@@ -594,13 +608,14 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>::rarray(
     ismine_(false)      RA_COMMA
     entire_(false)      RA_COMMA
     rcount_(RA_NULLPTR) RA_COMMA
-    cleans_(false)
+    cleans_(false)      RA_COMMA
+    tmpval_(false) 
 {
     // constructor for an undefined array
-    RA_PROFILESAY("rarray<T,R>::rarray()");
+    RA_IFTRACESAY("rarray<T,R>::rarray()");
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray constructors that allocate the array data of dimensions given as arguments
 
@@ -608,7 +623,7 @@ template<typename T> RA_INLINE_
 ra::rarray<T,1>::rarray(int n0)
 {
     // constructor for rank==1
-    RA_PROFILESAY("rarray<T,1>::rarray(int)");
+    RA_IFTRACESAY("rarray<T,1>::rarray(int)");
     init_data(&n0, n0);
 }
 
@@ -616,7 +631,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1)
 {
     // constructor for R=2
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int)");
     RA_CHECKORSAY(R==2, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1};
@@ -627,7 +642,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2)
 {
     // constructor for R=3
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int)");
     RA_CHECKORSAY(R==3, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2};
@@ -638,7 +653,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3)
 {
     // constructor for R=4
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int)");
     RA_CHECKORSAY(R==4, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3};
@@ -649,7 +664,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4)
 {
     // constructor for R=5
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int)");
     RA_CHECKORSAY(R==5, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4};
@@ -660,7 +675,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5)
 {
     // constructor for R=6
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int, int)");
     RA_CHECKORSAY(R==6, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
@@ -671,7 +686,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6)
 {
     // constructor for R=7
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==7, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
@@ -682,7 +697,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
 {
     // constructor for R=8
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==8, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
@@ -693,7 +708,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8)
 {
     // constructor for R=9
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==9, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
@@ -704,7 +719,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9)
 {
     // constructor for R=10
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==10, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
@@ -715,14 +730,14 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10)
 {
     // constructor for R=11
-    RA_PROFILESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int, int. int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(int, int, int, int, int, int, int, int, int, int. int)");
     RA_CHECKORSAY(R==11, "wrong rank in constructor");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray constructors that allocate the array data of dimensions given as a c-array
 
@@ -730,7 +745,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(const int* extent) 
 {
     // constructor for any R (the only way for R>11)
-    RA_PROFILESAY("rarray<T,R>::rarray(const int*)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(const int*)");
     int volume = 1;
     for (int i=0; i<R; i++)
         volume *= extent[i];
@@ -742,12 +757,12 @@ template<typename T> RA_INLINE_
 ra::rarray<T,1>::rarray(const int* extent) 
 {
     // constructor from an array of 1 extent: here just for uniformity
-    RA_PROFILESAY("rarray<T,1>::rarray(const int*)");
+    RA_IFTRACESAY("rarray<T,1>::rarray(const int*)");
     RA_CHECKORSAY(*extent!=0,"zero shape in constructor not allowed");
     init_data(extent, extent[0]);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray constructors from existing buffer with dimensions as arguments
 
@@ -755,7 +770,7 @@ template<typename T> RA_INLINE_
 ra::rarray<T,1>::rarray(T* buffer, int n0)
 {
     // constructor for rank==1
-    RA_PROFILESAY("rarray<T,1>::rarray(T*, int)");
+    RA_IFTRACESAY("rarray<T,1>::rarray(T*, int)");
     const int extent[1] = {n0};
     init_parray(buffer, extent);
     ismine_ = false;
@@ -765,7 +780,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1) 
 {
     // constructor for R=2
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int)");
     RA_CHECKORSAY(R==2, "wrong rank in constructor");
     const int extent[R] = {n0,n1};
     init_parray(buffer, extent);
@@ -776,7 +791,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2) 
 {
     // constructor for R=3
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int)");
     RA_CHECKORSAY(R==3, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2};
     init_parray(buffer, extent);
@@ -787,7 +802,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3) 
 {
     // constructor for R=4
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int)");
     RA_CHECKORSAY(R==4, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3};
     init_parray(buffer, extent);
@@ -798,7 +813,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4) 
 {
     // constructor for R=5
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int)");
     RA_CHECKORSAY(R==5, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4};
     init_parray(buffer, extent);
@@ -809,7 +824,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5) 
 {
     // constructor for R=6
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==6, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
     init_parray(buffer, extent);
@@ -820,7 +835,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6) 
 {
     // constructor for R=7
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==7, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
     init_parray(buffer, extent);
@@ -831,7 +846,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
 {
     // constructor for R=8
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==8, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
     init_parray(buffer, extent);
@@ -842,7 +857,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8)
 {
     // constructor for R=9
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==9, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
     init_parray(buffer, extent);
@@ -853,7 +868,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9)
 {
     // constructor for R=10
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==10, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
     init_parray(buffer, extent);
@@ -864,14 +879,14 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10)
 {
     // constructor for R=11
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==11, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     init_parray(buffer, extent);
     ismine_ = false;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray constructors from existing buffer with dimensions in a single-argument c-array
 
@@ -880,12 +895,12 @@ template<typename T RA_COMMA int R> RA_INLINE_ ra::rarray<T RA_COMMA R>::rarray(
 template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>::rarray(T* buffer, const int* extent), 
 {
     // constructor for any I (the only way for R>11)
-    RA_PROFILESAY("rarray<T,R>::rarray(T*, const int*)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, const int*)");
     init_parray(buffer, extent);
     ismine_ = false;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // subrarray constructors
 
@@ -896,10 +911,10 @@ template<typename T>                RA_INLINEF ra::subrarray<T RA_COMMA 1>::subr
     extent_(extent) 
 {
     // constructor of subrarray; private, to be called from operator[] of rarrays
-    RA_PROFILESAY("subrarray<T,R>::subrarray(parray_t, const int*)");
+    RA_IFTRACESAY("subrarray<T,R>::subrarray(parray_t, const int*)");
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray destructors
 
@@ -908,11 +923,11 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::~rarray
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::~rarray(),
 {
     // rarray<T,R> destructor (note: subrarray has none)
-    RA_PROFILESAY("rarray<T,R>::~rarray()");
+    RA_IFTRACESAY("rarray<T,R>::~rarray()");
     clear();
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray and subrarray comma-separated assignment
 
@@ -923,7 +938,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ ra::CommaOp<T> ra::subrarray<T RA
 template<typename T>                RA_INLINE_ ra::CommaOp<T> ra::subrarray<T RA_COMMA 1>::operator=(const T& e),
 {
     // Comma separated element assignment: puts the first one in and prepares for more
-    RA_PROFILESAY("CommaOp<T> rarray<T,R>::operator=(const T&)");
+    RA_IFTRACESAY("CommaOp<T> rarray<T,R>::operator=(const T&)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "assignment to unsized array");
     RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
     T* first = get_buffer();
@@ -932,7 +947,7 @@ template<typename T>                RA_INLINE_ ra::CommaOp<T> ra::subrarray<T RA
     return co;
  })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // comma operator constructor
 
@@ -940,25 +955,25 @@ template<typename T> RA_INLINE_ ra::CommaOp<T>::CommaOp(T* ptr, T* last)
 : ptr_(ptr), last_(last)
 { 
     // fill remainder of array with zeros
-    RA_PROFILESAY("CommaOp<T>::CommaOp(T*,T*)");
+    RA_IFTRACESAY("CommaOp<T>::CommaOp(T*,T*)");
     RA_CHECKORSAY(ptr_!=RA_NULLPTR and last_!=RA_NULLPTR, "invalid comma operator");
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // comma operator; set next element
 
 template<typename T> RA_INLINE_ ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
 { 
     // puts the next number into the array.
-    RA_PROFILESAY("CommaOp<T>& CommaOp<T>::operator,(const T&e)");
+    RA_IFTRACESAY("CommaOp<T>& CommaOp<T>::operator,(const T&e)");
     RA_CHECKORSAY(ptr_!=RA_NULLPTR and last_!=RA_NULLPTR, "invalid comma operator");
     RA_CHECKORSAY(ptr_<=last_, "assignment with more elements than in array");
     *ptr_++ = e;
     return *this; 
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // is_clear
 
@@ -967,11 +982,11 @@ template<typename T RA_COMMA int R> RA_INLINE_ bool ra::rarray<T RA_COMMA R>::is
 template<typename T>                RA_INLINE_ bool ra::rarray<T RA_COMMA 1>::is_clear() const,
 {
     // check if undefined
-    RA_PROFILESAY("bool rarray<T,R>::is_clear()");
+    RA_IFTRACESAY("bool rarray<T,R>::is_clear()");
     return parray_ == RA_NULLPTR;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray copy constructor
 
@@ -980,9 +995,9 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(const rarray<T RA_COMMA 1> &a),
 {
     // copy constructor
-    RA_PROFILESAY("rarray<T,R>::rarray(const rarray<T,R>&)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(const rarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.parray_, a.extent_, a.entire_, a.rcount_, a.cleans_);
+    init_shallow(a.parray_, a.extent_, a.entire_, a.rcount_, a.cleans_, a.tmpval_);
     ismine_ = a.ismine_;
 })
 
@@ -993,12 +1008,12 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(const ra::subrarray<T RA_COMMA 1> &a), 
 {
     // copy constructor
-    RA_PROFILESAY("rarray<T,R>::rarray(const subrarray<T,R>&)");
+    RA_IFTRACESAY("rarray<T,R>::rarray(const subrarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
     init_shallow(a.parray_, a.extent_);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // rarray deep copy
 
@@ -1007,7 +1022,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ ra::rarray<T RA_COMMA R> ra::rarr
 template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1> ra::rarray<T RA_COMMA 1>::copy() const, 
 {
     // create an independent, deep copy (regular copy is shallow)
-    RA_PROFILESAY("rarray<T,R> rarray<T,R>::copy() const");
+    RA_IFTRACESAY("rarray<T,R> rarray<T,R>::copy() const");
     if (parray_ != RA_NULLPTR) { 
         // if initialized
         self_t result(extent_);
@@ -1015,14 +1030,14 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1> ra::rarr
         T* bufend = bufbegin+size();
         T* newbuf = result.get_buffer();
         std::copy(bufbegin, bufend, newbuf);
-        return result;
+        return result.move();
     } else {
         // else return undefined copy
-        return rarray();
+        return rarray().move();
     }
  })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // extent of (sub)rarray
 
@@ -1033,13 +1048,13 @@ template<typename T RA_COMMA int R> RA_INLINE_ int ra::subrarray<T RA_COMMA R>::
 template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::extent(int i) const, 
 {
     // retrieve array size in dimension i   
-    RA_PROFILESAY("int sub/rarray<T,R>::extent(int) const");
+    RA_IFTRACESAY("int sub/rarray<T,R>::extent(int) const");
     RA_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return extent_[i];
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // shape of (sub)rarray
 
@@ -1050,12 +1065,12 @@ template<typename T RA_COMMA int R> RA_INLINE_ const int* ra::subrarray<T RA_COM
 template<typename T>                RA_INLINE_ const int* ra::subrarray<T RA_COMMA 1>::shape() const,
 {
     // retrieve pointer to array of extents
-    RA_PROFILESAY("const int* sub/rarray<T,R>::shape() const");
+    RA_IFTRACESAY("const int* sub/rarray<T,R>::shape() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return extent_;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // size of (sub)rarray
 
@@ -1067,15 +1082,15 @@ template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::
 { 
     // Retrieve array sizes in all dimensions. 
     // Needs to be computed, as this information is not stored.
-    RA_PROFILESAY("int sub/rarray<T,R>::size() const");
+    RA_IFTRACESAY("int sub/rarray<T,R>::size() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
-    int result = 1;        
-    for (int i=0; i<rank; i++)
+    int result = 1;
+    for (int i=0; i<rank; i++) 
         result *= extent_[i];
     return result;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // data of (sub)rarray
 
@@ -1088,12 +1103,12 @@ template<typename T RA_COMMA int R> RA_INLINE_       T* ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_       T* ra::subrarray<T RA_COMMA 1>::data() const,
 {
     // return pointer of type T* to the internal data
-    RA_PROFILESAY("(const) T* rarray<T,R>::data() (const)");
+    RA_IFTRACESAY("(const) T* rarray<T,R>::data() (const)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return get_buffer();
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // (sub)rarray begin methods
 
@@ -1104,7 +1119,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_ typename ra::subrarray<T RA_COMMA 1>::iterator ra::subrarray<T RA_COMMA 1>::begin() const,
 {
     // get iterator to first element. iterators remember their size
-    RA_PROFILESAY("iterator rarray<T,R>::begin()");
+    RA_IFTRACESAY("iterator rarray<T,R>::begin()");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return iterator(get_buffer(), size());
 })
@@ -1118,12 +1133,12 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_ typename ra::subrarray<T RA_COMMA 1>::const_iterator ra::subrarray<T RA_COMMA 1>::cbegin() const,
 {
     // get const iterator to first element. iterators remember their size.
-    RA_PROFILESAY("const_iterator rarray<T,R>::begin() const");
+    RA_IFTRACESAY("const_iterator rarray<T,R>::begin() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return const_iterator(get_buffer(), size());
  })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // (sub)rarray end methods
 
@@ -1134,7 +1149,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_ typename ra::subrarray<T RA_COMMA 1>::iterator ra::subrarray<T RA_COMMA 1>::end() const,
 {
     // get iterator to just past last element. as there is nothing there, this iterators has no size
-    RA_PROFILESAY("iterator rarray<T,R>::end()");
+    RA_IFTRACESAY("iterator rarray<T,R>::end()");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return iterator(get_buffer()+size(), 0);
 })
@@ -1148,12 +1163,12 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_ typename ra::subrarray<T RA_COMMA 1>::const_iterator ra::subrarray<T RA_COMMA 1>::cend() const,
 {
     // get const iterator to just past last element. as there is nothing there, this iterators has no size
-    RA_PROFILESAY("const_iterator rarray<T,R>::(c)end() const");
+    RA_IFTRACESAY("const_iterator rarray<T,R>::(c)end() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return const_iterator(get_buffer()+size(), 0);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // retrieve indices of an element of a (sub)rarray determined from an iterator pointing at the element
 
@@ -1168,11 +1183,11 @@ template<typename T>                RA_INLINE_ int* ra::subrarray<T RA_COMMA 1>:
 template<typename T>                RA_INLINE_ int* ra::subrarray<T RA_COMMA 1>::index(const const_iterator&i, int* ind) const,
 {
     // retrieve indexes within *this of the element pointed to by i. puts them in preexisting array and returns pointer
-    RA_PROFILESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
+    RA_IFTRACESAY("int* rarray<T,R>::index((const_)iterator&,int*) (const)");
     return index(*i, ind);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // retrieve indices of an element of a (sub)rarray determine from a reference to the element
 
@@ -1183,7 +1198,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ int* ra::subrarray<T RA_COMMA R>:
 template<typename T>                RA_INLINE_ int* ra::subrarray<T RA_COMMA 1>::index(const T& a, int* ind) const,
 {
     // retrieve indexes within *this of the element a. puts them in preexisting array and returns pointer
-    RA_PROFILESAY("int* rarray<T,R>::index((const) T&,int*) (const)");
+    RA_IFTRACESAY("int* rarray<T,R>::index((const) T&,int*) (const)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     RA_CHECKORSAY(ind!=RA_NULLPTR, "invalid index buffer");
     int linearindex = &a - get_buffer();
@@ -1196,7 +1211,7 @@ template<typename T>                RA_INLINE_ int* ra::subrarray<T RA_COMMA 1>:
     return ind;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // retrieve indices of an element
 
@@ -1211,11 +1226,11 @@ template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::
 template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::index(const const_iterator&iter, int i) const,
 {
     // retrieve index in dimension i within *this of the element pointed to by i
-    RA_PROFILESAY("in* rarray<T,R>::index((const_)iterator&,int) (const)");
+    RA_IFTRACESAY("in* rarray<T,R>::index((const_)iterator&,int) (const)");
     return index(*iter, i);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // retrieve indices of an element
 
@@ -1226,7 +1241,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ int ra::subrarray<T RA_COMMA R>::
 template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::index(const T& a, int i) const,
 {
     // retrieve index in dimension i within *this of the element a
-    RA_PROFILESAY("int rarray<T,R>::index((const) T&,int) (const)");
+    RA_IFTRACESAY("int rarray<T,R>::index((const) T&,int) (const)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     RA_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
     int linearindex = &a - get_buffer();
@@ -1237,7 +1252,7 @@ template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::
 
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // pointer-to-pointer structure
 
@@ -1248,12 +1263,12 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_ typename ra::subrarray<T RA_COMMA 1>::parray_t ra::subrarray<T RA_COMMA 1>::ptr_array() const,
 {
     // return T*const*.. acting similarly to this rarray when using []
-    RA_PROFILESAY("sub/rarray<T,R>::parray_t sub/rarray<T,R>::ptr_array() const");
+    RA_IFTRACESAY("sub/rarray<T,R>::parray_t sub/rarray<T,R>::ptr_array() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined array");
     return parray_;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // pointer-to-pointer structure, without const
 
@@ -1264,12 +1279,12 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::subrarray<T RA_COMMA
 template<typename T>                RA_INLINE_ typename ra::subrarray<T RA_COMMA 1>::noconst_parray_t ra::subrarray<T RA_COMMA 1>::noconst_ptr_array() const, 
 {
     // return T**.. acting similarly to this rarray when using []
-    RA_PROFILESAY("rarray<T,R>::noconst_parray_t sub/rarray<T,R>::noconst_ptr_array() const");
+    RA_IFTRACESAY("rarray<T,R>::noconst_parray_t sub/rarray<T,R>::noconst_ptr_array() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return const_cast<noconst_parray_t>(parray_);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // refererence as a const T
 
@@ -1278,7 +1293,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ ra::rarray<const T RA_COMMA R>& r
 template<typename T>                RA_INLINE_ ra::rarray<const T RA_COMMA 1>& ra::rarray<T RA_COMMA 1>::const_ref() const,
 {
     // create a reference to this that treats elements as constant
-    RA_PROFILESAY("rarray<const T,R>& rarray<T,R>::const_ref() const");
+    RA_IFTRACESAY("rarray<const T,R>& rarray<T,R>::const_ref() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return (rarray<const T RA_COMMA rank>&)(*this);
  })
@@ -1288,11 +1303,11 @@ template<typename T RA_COMMA int R> RA_INLINE_ ra::subrarray<const T RA_COMMA R>
 template<typename T>                RA_INLINE_ ra::subrarray<const T RA_COMMA 1>& ra::subrarray<T RA_COMMA 1>::const_ref() const,
 {
     // create a reference to this that treats elements as constant
-    RA_PROFILESAY("subrarray<const T,R>& subrarray<T,R>::const_ref() const");
+    RA_IFTRACESAY("subrarray<const T,R>& subrarray<T,R>::const_ref() const");
     return (subrarray<const T,rank>&)(*this);
  })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_QUADRUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINE_ void         ra::rarray<T RA_COMMA R>::fill(const T& value),
@@ -1301,25 +1316,25 @@ template<typename T RA_COMMA int R> RA_INLINE_ void ra::subrarray<T RA_COMMA R>:
 template<typename T>                RA_INLINE_ void ra::subrarray<T RA_COMMA 1>::fill(const T& value),
 {
     // fill with constant value using iterators
-    RA_PROFILESAY("void sub/rarray<T,R>::fill(const T&)");
+    RA_IFTRACESAY("void sub/rarray<T,R>::fill(const T&)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     for (iterator i=begin(); i!=end(); i++)
         *i = value;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef RA_SKIPINTERMEDIATE
 template<typename T,int R> RA_INLINEF ra::subrarray<const T,R-1> ra::rarray<T,R>::operator[](int i) const
 {
-    RA_PROFILESAY("subrarray<const T,R-1> rarray<T,R>::operator[](int) const");
+    RA_IFTRACESAY("subrarray<const T,R-1> rarray<T,R>::operator[](int) const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     RA_CHECKORSAY(i >=0 and i < extent_[0], "wrong index");
     return ra::subrarray<const T,R-1>(parray_[i], extent_+1);
 }
 template<typename T,int R> RA_INLINEF ra::subrarray<T,R-1> ra::rarray<T,R>::operator[](int i)
 {
-    RA_PROFILESAY("subrarray<T,R-1> rarray<T,R>::operator[](int)");
+    RA_IFTRACESAY("subrarray<T,R-1> rarray<T,R>::operator[](int)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     RA_CHECKORSAY(i >=0 and i < extent_[0], "wrong index");
     return ra::subrarray<T,R-1>(parray_[i], extent_+1);
@@ -1328,7 +1343,7 @@ RA_DUPLICATE_BODY(
 template<typename T> RA_INLINEF const T& ra::rarray<T RA_COMMA 1>::operator[](int i) const,
 template<typename T> RA_INLINEF       T& ra::rarray<T RA_COMMA 1>::operator[](int i),
 {
-    RA_PROFILESAY("(const) T& rarray<T,1>::operator[](int) (const)");
+    RA_IFTRACESAY("(const) T& rarray<T,1>::operator[](int) (const)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     RA_CHECKORSAY(i >=0 and i < extent_[0], "wrong index");
     return parray_[i];
@@ -1338,28 +1353,28 @@ RA_DUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::operator typename ra::PointerArray<const T RA_COMMA R>::type () const,
 template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::operator typename ra::PointerArray<T RA_COMMA R>::type (),
 {
-    RA_PROFILESAY("rarray<T,R>::operator typename PointerArray<const T,R>::parray_t () const");
+    RA_IFTRACESAY("rarray<T,R>::operator typename PointerArray<const T,R>::parray_t () const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return parray_;
 })
 RA_DUPLICATE_BODY(
-template<typename T> RA_INLINEF ra::rarray<T RA_COMMA 1>::operator typename ra::PointerArray<const T RA_COMMA 1>::type () const 
+template<typename T> RA_INLINEF ra::rarray<T RA_COMMA 1>::operator typename ra::PointerArray<const T RA_COMMA 1>::type () const, 
 template<typename T> RA_INLINEF ra::rarray<T RA_COMMA 1>::operator typename ra::PointerArray<T RA_COMMA 1>::type (),
 {
-    RA_PROFILESAY("rarray<T,1>::operator PointerArray<(const) T,1>::type () (const)");
+    RA_IFTRACESAY("rarray<T,1>::operator PointerArray<(const) T,1>::type () (const)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return parray_;
 })
 #endif
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // subrarray brackets
 
 template<typename T,int R> RA_INLINEF ra::subrarray<T,R-1> ra::subrarray<T,R>::operator[](int i) const
 {
     // subrarray methods for element access
-    RA_PROFILESAY("subrarray<T,R-1> subrarray<T,R>::operator[](int)");
+    RA_IFTRACESAY("subrarray<T,R-1> subrarray<T,R>::operator[](int)");
     RA_CHECKORSAY(i >=0 and i < extent_[0], "wrong index");        
     return subrarray<T,R-1>(parray_[i], extent_+1);
 }
@@ -1367,23 +1382,23 @@ template<typename T,int R> RA_INLINEF ra::subrarray<T,R-1> ra::subrarray<T,R>::o
 template<typename T> RA_INLINEF T& ra::subrarray<T,1>::operator[](int i) const
 {
     // subrarray methods for element access, rank==1 version
-    RA_PROFILESAY("T& subrarray<T,1>::operator[](int)");
+    RA_IFTRACESAY("T& subrarray<T,1>::operator[](int)");
     RA_CHECKORSAY(i >=0 and i < extent_[0], "wrong index");
     return parray_[i];
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_DUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>& ra::rarray<T RA_COMMA R>::operator=(const ra::rarray<T RA_COMMA R> &a),
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rarray<T RA_COMMA 1>::operator=(const ra::rarray<T RA_COMMA 1> &a),
 {
     // rarray assignment operator from other rarray
-    RA_PROFILESAY("rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R>&)");
+    RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R>&)");
     if (&a != this) {
         clear();
         extent_ = const_cast<int*>(a.extent_);
-        init_shallow(a.parray_, a.extent_, a.entire_, a.rcount_, a.cleans_);
+        init_shallow(a.parray_, a.extent_, a.entire_, a.rcount_, a.cleans_, a.tmpval_);
         ismine_ = a.ismine_;
     }
     return *this;
@@ -1394,14 +1409,14 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>& ra::rar
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rarray<T RA_COMMA 1>::operator=(const ra::subrarray<T RA_COMMA 1> &a),
 {
     // rarray assignment operator from subrarray
-    RA_PROFILESAY("rarray<T,R>& rarray<T,R>::operator=(const subrarray<T,R>&)");
+    RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(const subrarray<T,R>&)");
     clear();
     extent_ = const_cast<int*>(a.extent_);
     init_shallow(a.parray_, a.extent_);
     return *this;
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_QUADRUPLICATE_BODY(
 template<typename T RA_COMMA int R> T* ra::rarray<T RA_COMMA R>::get_buffer() const,
@@ -1409,72 +1424,78 @@ template<typename T>                T* ra::rarray<T RA_COMMA 1>::get_buffer() co
 template<typename T RA_COMMA int R> T* ra::subrarray<T RA_COMMA R>::get_buffer() const,
 template<typename T>                T* ra::subrarray<T RA_COMMA 1>::get_buffer() const,
 {
-    RA_PROFILESAY("T* subrarray<T,R>::data()");
+    RA_IFTRACESAY("T* (sub)rarray<T,R>::get_buffer()");
     return ra::rarray<T RA_COMMA rank>::base(parray_);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::init_shallow(parray_t parray, const int*  extent, bool entire, int* rcount, bool& cleans)
+void ra::rarray<T,R>::init_shallow(parray_t parray, const int*  extent, bool entire, int* rcount, bool& cleans, bool tmpval)
 {
     // shallow init function : reuses buffer and parray
-    RA_PROFILESAY("void rarray<T,R>::init_shallow(parray_t, const int*, bool, int*)");
+    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, const int*, bool, int*)");
     RA_CHECKORSAY(      extent != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     rcount_ = rcount;
     parray_ = parray;
     entire_ = entire;
+    tmpval_ = false;
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
     if (entire_) {
-        (*rcount_)++;
-        cleans_ = cleans;
-        cleans = false;
+        if (rcount != RA_NULLPTR) 
+            (*rcount_)++;
+        if (tmpval) {
+            cleans_ = cleans;
+            cleans = false;
+        } else
+            cleans_ = false;
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 void ra::rarray<T,R>::init_shallow(parray_t parray, const int* extent)
 {
     // shallow init function for subrarray: reuses buffer and parray
-    RA_PROFILESAY("void rarray<T,R>::init_shallow(parray_t, const int*)");
+    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, const int*)");
     RA_CHECKORSAY(      extent != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     parray_ = parray;
     rcount_ = RA_NULLPTR;
+    tmpval_ = false;
     cleans_ = false;
     entire_ = false;
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 void ra::rarray<T,R>::init_parray(T* buffer, const int* extent)
 {
     // init functions that reuses a buffer but not a parray
-    RA_PROFILESAY("void rarray<T,R>::init_parray(T*, const int*)");
+    RA_IFTRACESAY("void rarray<T,R>::init_parray(T*, const int*)");
     RA_CHECKORSAY(buffer != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(extent != RA_NULLPTR, "null pointer");
     parray_t parray = new_except_base(buffer, extent);
     extent_ = new int[R];
-    bool oldcleans=cleans_;
-    init_shallow(parray, extent, true, new int(0), oldcleans);
+    bool oldcleans = true;
+    init_shallow(parray, extent, true, new int(0), oldcleans, true);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 void ra::rarray<T,R>::init_data(const int* extent, int extenttot)
 {
     // init functions that need new buffer and parray
-    RA_PROFILESAY("void rarray<T,R>::init_data(const int*, int)");
+    RA_IFTRACESAY("void rarray<T,R>::init_data(const int*, int)");
     RA_CHECKORSAY( extent != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY( extenttot >= 0, "negative number of elements");
     T* buffer = new T[extenttot];
@@ -1482,20 +1503,22 @@ void ra::rarray<T,R>::init_data(const int* extent, int extenttot)
     ismine_ = true;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 void ra::rarray<T,1>::init_shallow(parray_t    parray,
                                    const int*  extent,
                                    bool        entire,
                                    int*        rcount,
-                                   bool&       cleans)
+                                   bool&       cleans,
+                                   bool        tmpval)
 {
     // shallow init function : reuses buffer and parray
-    RA_PROFILESAY("void rarray<T,1>::init_shallow(parray_t, const int*, bool, int*)");
+    RA_IFTRACESAY("void rarray<T,1>::init_shallow(parray_t, const int*, bool, int*)");
     RA_CHECKORSAY(      extent != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
+    tmpval_ = false;
     rcount_ = rcount;
     parray_ = parray;
     entire_ = entire;
@@ -1504,8 +1527,11 @@ void ra::rarray<T,1>::init_shallow(parray_t    parray,
     if (entire_) {
         if (rcount != RA_NULLPTR) 
             (*rcount_)++;
-        cleans_ = cleans;
-        cleans = false;
+        if (tmpval) {
+            cleans_ = cleans;
+            cleans = false;
+        } else
+            cleans_ = false;
     }
 }
 
@@ -1513,40 +1539,56 @@ template<typename T> RA_INLINE_
 void ra::rarray<T,1>::init_shallow(parray_t parray, const int* extent)
 {
     // shallow init function : reuses parray
-    RA_PROFILESAY("void rarray<T,1>::init_shallow(parray_t, const int*)");
+    RA_IFTRACESAY("void rarray<T,1>::init_shallow(parray_t, const int*)");
     RA_CHECKORSAY(      extent != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     parray_ = parray;
     rcount_ = RA_NULLPTR;
+    tmpval_ = false;
     cleans_ = false;
     entire_ = false;
     for (int i=0;i<1;i++)
         extent_[i] = extent[i];
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 void ra::rarray<T,1>::init_parray(T* buffer, const int* extent)
 {
     // shallow init function for subrarray: reuses buffer and parray
-    RA_PROFILESAY("void rarray<T,1>::init_parray(T*, const int*)");
+    RA_IFTRACESAY("void rarray<T,1>::init_parray(T*, const int*)");
     RA_CHECKORSAY(buffer != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(extent != RA_NULLPTR, "null pointer");
     extent_ = new int[1];
     parray_t parray = new_except_base(buffer, extent);
-    bool oldcleans=cleans_;
-    init_shallow(parray, extent, true, new int(0),oldcleans);
+    bool oldcleans = true;
+    init_shallow(parray, extent, true, new int(0), oldcleans, true);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// convert rarray to a movable array
+
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINE_ ra::rarray<T RA_COMMA R>& ra::rarray<T RA_COMMA R>::move(),
+template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>& ra::rarray<T RA_COMMA 1>::move(),
+{
+    // create a reference to this that treats elements as constant
+    RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::move()");
+    RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
+    tmpval_ = true;
+    return *this;
+ })
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(const int* extent)
 {
     // common method to reshape an array (takes an c-array argument)
-    RA_PROFILESAY("void rarray<T,R>::reshape(const int* extent)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(const int* extent)");
     RA_CHECKORSAY(parray_ != RA_NULLPTR and entire_, "reshape not allowed on subrarray");
     int tot1 = 1, tot2 = 1;
     for (int i=0;i<R;i++) {
@@ -1574,7 +1616,7 @@ void ra::rarray<T,R>::reshape(const int* extent)
 template<typename T> RA_INLINE_
 void ra::rarray<T,1>::reshape(const int* extent)
 {
-    RA_PROFILESAY("void rarray<T,1>::reshape(const int* extent)");
+    RA_IFTRACESAY("void rarray<T,1>::reshape(const int* extent)");
     RA_CHECKORSAY(parray_ != RA_NULLPTR and entire_, "reshape not allowed on subrarray");
     RA_CHECKORSAY(*extent <= *extent_, "reshaping beyond underlying memory buffer");
     if (parray_ != RA_NULLPTR and entire_) {
@@ -1594,7 +1636,7 @@ template<typename T> RA_INLINE_
 void ra::rarray<T,1>::reshape(int n0)
 {
     // constructor for R=1
-    RA_PROFILESAY("void rarray<T,1>::reshape(int)");
+    RA_IFTRACESAY("void rarray<T,1>::reshape(int)");
     RA_CHECKORSAY(rank==1, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0, "zero shape not allowed");
     const int extent[1] = {n0};
@@ -1605,7 +1647,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1) 
 {
     // reshape method only for R=2
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int)");
     RA_CHECKORSAY(R==2, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0, "zero shape not allowed");
     // reuse common method
@@ -1617,7 +1659,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2)
 {
     // reshape method only for R=3
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int)");
     RA_CHECKORSAY(R==3, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2};
@@ -1628,7 +1670,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3) 
 {
     // reshape method only for R=4
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int)");
     RA_CHECKORSAY(R==4, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3};
@@ -1639,7 +1681,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4)
 {
     // reshape method only for R=5
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int)");
     RA_CHECKORSAY(R==5, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4};
@@ -1650,7 +1692,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5)
 {
     // reshape method only for R=6
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int)");
     RA_CHECKORSAY(R==6, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
@@ -1661,7 +1703,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6)
 {
     // reshape method only for R=7
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==7, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
@@ -1672,7 +1714,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
 {
     // reshape method only for R=8
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==8, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
@@ -1683,7 +1725,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8)
 {
     // reshape method only for R=9
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==9, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
@@ -1694,7 +1736,7 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9)
 {
     // reshape method only for R=10
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==10, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
@@ -1705,19 +1747,19 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10)
 {
     // reshape method only for R=11
-    RA_PROFILESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int, int)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==11, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     reshape(extent);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 void ra::rarray<T,1>::init_data(const int* extent, int extenttot)
 {
-    RA_PROFILESAY("void rarray<T,1>::init_data(const int*, int)");
+    RA_IFTRACESAY("void rarray<T,1>::init_data(const int*, int)");
     RA_CHECKORSAY(extent != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(extenttot >= 0, "negative number of elements");
     T* buffer = new T[extenttot];
@@ -1725,56 +1767,61 @@ void ra::rarray<T,1>::init_data(const int* extent, int extenttot)
     ismine_ = true;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define DELETE(x) std::cerr << "Deleting array " #x " at " << x << '\n'; delete[] x;
 template<typename T,int R> RA_INLINEF 
 void ra::rarray<T,R>::clear() 
 {
     //  rarray private cleanup routine
-    RA_PROFILESAY("void rarray<T,R>::clear()");
+    RA_IFTRACESAY("void rarray<T,R>::clear()");
     if (parray_ != RA_NULLPTR and entire_) {
         (*rcount_)--;
-        bool thiscleans = (*rcount_==0); // will become cleans_.
+        bool thiscleans = cleans_;//(*rcount_==0); // will become cleans_.
         if (thiscleans) {
             if (ismine_) 
                 delete[] get_buffer(); 
             delete[] parray_;
             delete[] extent_;
-            delete rcount_;
+            //delete rcount_;
         }
+        if (thiscleans && !cleans_)
+            std::cout << "Anomaly\n";
     }
     rcount_ = RA_NULLPTR;
     parray_ = RA_NULLPTR;
     cleans_ = false;
+    tmpval_ = false;
 }
 
 template<typename T> RA_INLINEF 
 void ra::rarray<T,1>::clear() 
 {
-    RA_PROFILESAY("void rarray<T,1>::clear()");
+    // rarray private cleanup routine
+    RA_IFTRACESAY("void rarray<T,1>::clear()");
     if (parray_ != RA_NULLPTR and entire_) {
         (*rcount_)--;
-        bool thiscleans = (*rcount_==0); // will be cleans_
+        bool thiscleans = cleans_;//(*rcount_==0); // will be cleans_
         if (thiscleans) {
             if (ismine_)
                 delete[] get_buffer();
             delete[] extent_;
-            delete rcount_;
+            //delete rcount_;
         }
     }
     rcount_ = RA_NULLPTR;
     parray_ = RA_NULLPTR;
     cleans_ = false;
+    tmpval_ = false;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_
 typename ra::rarray<T,R>::parray_t 
 ra::rarray<T,R>::new_except_base(T* buffer, const int* extent) 
 {
     // rarray private method to allocate the chain of pointers, except the base
-    RA_PROFILESAY("parray_t rarray<T,R>::new_except_base(T*, const int*)");
+    RA_IFTRACESAY("parray_t rarray<T,R>::new_except_base(T*, const int*)");
     if (R>1) {
         typedef typename ra::Unconst<T>::type* bufstart_t;       
         bufstart_t bufstart = const_cast<bufstart_t>(buffer);
@@ -1808,17 +1855,17 @@ template<typename T> RA_INLINE_
 typename ra::rarray<T,1>::parray_t 
 ra::rarray<T,1>::new_except_base(T* buffer, const int* extent) 
 {
-    RA_PROFILESAY("parray_t rarray<T,1>::new_except_base(T*, const int*)");
+    RA_IFTRACESAY("parray_t rarray<T,1>::new_except_base(T*, const int*)");
     return reinterpret_cast<parray_t>(buffer);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_
 T* ra::rarray<T,R>::base(parray_t parray) 
 {
     // rarray private method to find base of a chain of pointers
-    RA_PROFILESAY("T* rarray<T,R>::base(parray_t)");
+    RA_IFTRACESAY("T* rarray<T,R>::base(parray_t)");
     if (parray != RA_NULLPTR) {
         const char* result1 = reinterpret_cast<const char*>(parray);
         char* result2 = const_cast<char*>(result1);
@@ -1834,45 +1881,45 @@ template<typename T> RA_INLINE_
 T* ra::rarray<T,1>::base(parray_t parray)
 {
     // rarray private method to find base of a chain of pointers: different for rank==1?
-    RA_PROFILESAY("T* rarray<T,1>::base(parray_t)");
+    RA_IFTRACESAY("T* rarray<T,1>::base(parray_t)");
     const char*  result1 = reinterpret_cast<const char*>(parray);
           char*  result2 = const_cast<char*>(result1);
           char** result  = reinterpret_cast<char**>(result2);
     return reinterpret_cast<T*>(result);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINEF 
 T& ra::Iterator<T>::operator*() const
 {
     // Iterator dereference
-    RA_PROFILESAY("T& Iterator<T>::operator*()");
+    RA_IFTRACESAY("T& Iterator<T>::operator*()");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
     return *pointer_;
 }           
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINEF 
 ra::Iterator<T>& ra::Iterator<T>::operator++()
 {
     // Iterator pre-incrememt
-    RA_PROFILESAY("Iterator<T> Iterator<T>::operator++()");
+    RA_IFTRACESAY("Iterator<T> Iterator<T>::operator++()");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
     ++pointer_;
     return *this;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_
 ra::Iterator<T> ra::Iterator<T>::operator++(int)
 {
     // Iterator post-increment
-    RA_PROFILESAY("Iterator<T> Iterator<T>::operator++(int)");
+    RA_IFTRACESAY("Iterator<T> Iterator<T>::operator++(int)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
     ra::Iterator<T> saved = *this;
@@ -1880,79 +1927,79 @@ ra::Iterator<T> ra::Iterator<T>::operator++(int)
     return saved;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_
 bool ra::Iterator<T>::operator==(const Iterator<T>& other) const
 {
     // Iterator comparison: equal to
-    RA_PROFILESAY("bool Iterator<T>::operator==(const Iterator<T>&)");
+    RA_IFTRACESAY("bool Iterator<T>::operator==(const Iterator<T>&)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
     RA_CHECKORSAY(other.pointer_ != RA_NULLPTR and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ >= other.pointer_min_, "invalid iterator 2");
     return pointer_ == other.pointer_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINEF 
 bool ra::Iterator<T>::operator!=(const Iterator<T>& other) const
 {
     // Iterator comparison: not equal to
-    RA_PROFILESAY("bool Iterator<T>::operator!=(const Iterator<T>&)");
+    RA_IFTRACESAY("bool Iterator<T>::operator!=(const Iterator<T>&)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
     RA_CHECKORSAY(other.pointer_ != RA_NULLPTR and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ >= other.pointer_min_, "invalid iterator 2");
     return pointer_ != other.pointer_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 bool ra::Iterator<T>::operator<(const Iterator<T>& other) const
 {
     // Iterator comparison: less than
-    RA_PROFILESAY("bool Iterator<T>::operator<(const Iterator<T>&)");
+    RA_IFTRACESAY("bool Iterator<T>::operator<(const Iterator<T>&)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
     RA_CHECKORSAY(other.pointer_ != RA_NULLPTR and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ >= other.pointer_min_, "invalid iterator 2");
     return pointer_ < other.pointer_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 bool ra::Iterator<T>::operator>(const Iterator<T>& other) const
 {
     // Iterator comparison: greater than
-    RA_PROFILESAY("bool Iterator<T>::operator>(const Iterator<T>&)");
+    RA_IFTRACESAY("bool Iterator<T>::operator>(const Iterator<T>&)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
     RA_CHECKORSAY(other.pointer_ != RA_NULLPTR and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ >= other.pointer_min_, "invalid iterator 2");
     return pointer_ > other.pointer_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 bool ra::Iterator<T>::operator<=(const Iterator<T>& other) const
 {
     // Iterator comparison: less than or equal to
-    RA_PROFILESAY("bool Iterator<T>::operator<=(const Iterator<T>&)");
+    RA_IFTRACESAY("bool Iterator<T>::operator<=(const Iterator<T>&)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
     RA_CHECKORSAY(other.pointer_ != RA_NULLPTR and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ >= other.pointer_min_, "invalid iterator 2");
     return pointer_ <= other.pointer_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 bool ra::Iterator<T>::operator>=(const Iterator<T>& other) const
 {
     // Iterator comparison: greater than or equal to
-    RA_PROFILESAY("bool Iterator<T>::operator>=(const Iterator<T>&)");
+    RA_IFTRACESAY("bool Iterator<T>::operator>=(const Iterator<T>&)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
     RA_CHECKORSAY(other.pointer_ != RA_NULLPTR and other.pointer_ >= other.pointer_min_ and other.pointer_max_plus_one_ >= other.pointer_min_, "invalid iterator 2");
     return pointer_ >= other.pointer_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_ 
 ra::Iterator<T>::Iterator(T* ptr, int size)
@@ -1960,18 +2007,18 @@ ra::Iterator<T>::Iterator(T* ptr, int size)
     pointer_min_(ptr),
     pointer_max_plus_one_(ptr+size)
 {
-    RA_PROFILESAY("Iterator<T>::Iterator(T*,int)");
+    RA_IFTRACESAY("Iterator<T>::Iterator(T*,int)");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and size >=0, "invalid construction of iterator");
     RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator 1");
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename A> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[], int i, int byte_size) 
 {
     // find shape of automatic arrays, given the size of the array
-    RA_PROFILESAY("int extent_given_byte_size(A[],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[],int,int)");
     RA_CHECKORSAY(i>=0 and i<1, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(A);
@@ -1982,7 +2029,7 @@ int ra::extent_given_byte_size(A a[], int i, int byte_size)
 template<typename A,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<2, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(A)/Z;
@@ -1994,7 +2041,7 @@ int ra::extent_given_byte_size(A a[][Z], int i, int byte_size)
 template<typename A,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<3, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(A)/Z/Y;
@@ -2007,7 +2054,7 @@ int ra::extent_given_byte_size(A a[][Y][Z], int i, int byte_size)
 template<typename A,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<4, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(A)/X/Z/Y;
@@ -2021,7 +2068,7 @@ int ra::extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size)
 template<typename A,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<5, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(A)/W/X/Z/Y;
@@ -2036,7 +2083,7 @@ int ra::extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size)
 template<typename A,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][V][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][V][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<6, "wrong dimension");
     switch (i) {
        case 0:  return byte_size/sizeof(A)/V/W/X/Z/Y;
@@ -2052,7 +2099,7 @@ int ra::extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size)
 template<typename A,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][U][V][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][U][V][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<7, "wrong dimension");
     switch (i) {
        case 0:  return byte_size/sizeof(A)/U/V/W/X/Z/Y;
@@ -2069,7 +2116,7 @@ int ra::extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size)
 template<typename A,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][T][U][V][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][T][U][V][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<8, "wrong dimension");
     switch (i) {
        case 0:  return byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
@@ -2087,7 +2134,7 @@ int ra::extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size)
 template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][S][T][U][V][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][S][T][U][V][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<9, "wrong dimension");
     switch (i) {
        case 0:  return byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
@@ -2106,7 +2153,7 @@ int ra::extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_si
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<10, "wrong dimension");
     switch (i) {
        case 0:  return byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
@@ -2126,7 +2173,7 @@ int ra::extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int,int)");
     RA_CHECKORSAY(i>=0 and i<11, "wrong dimension");
     switch (i) {
        case 0:   return byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
@@ -2144,132 +2191,132 @@ int ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int b
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename A,int R> RA_INLINE_ 
 int ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size) 
 {
-    RA_PROFILESAY("int extent_given_byte_size(const rarray<A,R>&,int,int)");
+    RA_IFTRACESAY("int extent_given_byte_size(const rarray<A,R>&,int,int)");
     return a.extent(i);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // convert to rarray
 
 template<typename A> RA_INLINE_ 
 ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,1> make_rarray_given_byte_size(A[],int)");
+    RA_IFTRACESAY("rarray<A,1> make_rarray_given_byte_size(A[],int)");
     const int z = byte_size/sizeof(A);
-    return ra::rarray<A,1>(a,z);
+    return ra::rarray<A,1>(a,z).move();
 }
 
 template<typename A,int Z> RA_INLINE_ 
 ra::rarray<A,2> ra::make_rarray_given_byte_size(A a[][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,2> make_rarray_given_byte_size(A[][Z],int)");
+    RA_IFTRACESAY("rarray<A,2> make_rarray_given_byte_size(A[][Z],int)");
     const int y = byte_size/sizeof(A)/Z;
-    return ra::rarray<A,2>(*a,y,Z);
+    return ra::rarray<A,2>(*a,y,Z).move();
 }
 
 template<typename A,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,3> ra::make_rarray_given_byte_size(A a[][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,3> make_rarray_given_byte_size(A[][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,3> make_rarray_given_byte_size(A[][Y][Z],int)");
     const int x = byte_size/sizeof(A)/Z/Y;
-    return ra::rarray<A,3>(**a,x,Y,Z);
+    return ra::rarray<A,3>(**a,x,Y,Z).move();
 }
 
 template<typename A,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,4> ra::make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,4> make_rarray_given_byte_size(A[][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,4> make_rarray_given_byte_size(A[][X][Y][Z],int)");
     const int w = byte_size/sizeof(A)/X/Z/Y;
-    return ra::rarray<A,4>(***a,w,X,Y,Z);
+    return ra::rarray<A,4>(***a,w,X,Y,Z).move();
 }
 
 template<typename A,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,5> ra::make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,5> make_rarray_given_byte_size(A[][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,5> make_rarray_given_byte_size(A[][W][X][Y][Z],int)");
     const int v = byte_size/sizeof(A)/W/X/Z/Y;
-    return ra::rarray<A,5>(****a,v,W,X,Y,Z);
+    return ra::rarray<A,5>(****a,v,W,X,Y,Z).move();
 }
 
 template<typename A,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,6> ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,6> make_rarray_given_byte_size(A[][V][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,6> make_rarray_given_byte_size(A[][V][W][X][Y][Z],int)");
     const int u = byte_size/sizeof(A)/V/W/X/Z/Y;
-    return ra::rarray<A,6>(*****a,u,V,W,X,Y,Z);
+    return ra::rarray<A,6>(*****a,u,V,W,X,Y,Z).move();
 }
 
 template<typename A,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,7> ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,7> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,7> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
     const int t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
-    return ra::rarray<A,7>(******a,t,U,V,W,X,Y,Z);
+    return ra::rarray<A,7>(******a,t,U,V,W,X,Y,Z).move();
 }
 
 template<typename A,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,8> ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,8> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,8> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
     const int s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z);
+    return ra::rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z).move();
 }
 
 template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,9> ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,9> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,9> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
     const int r = byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,9>(********a,r,S,T,U,V,W,X,Y,Z);
+    return ra::rarray<A,9>(********a,r,S,T,U,V,W,X,Y,Z).move();
 }
 
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,10> ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,10> make_rarray_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,10> make_rarray_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int)");
     const int q = byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,10>(*********a,q,R,S,T,U,V,W,X,Y,Z);
+    return ra::rarray<A,10>(*********a,q,R,S,T,U,V,W,X,Y,Z).move();
 }
 
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
 ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size) 
 {
-    RA_PROFILESAY("rarray<A,11> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
+    RA_IFTRACESAY("rarray<A,11> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
     const int p = byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z);
+    return ra::rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z).move();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size) 
 {
-    RA_PROFILESAY("rarray<T,R> make_rarray_given_byte_size(rarray<T,R>,int)");
-    return a;
+    RA_IFTRACESAY("rarray<T,R> make_rarray_given_byte_size(rarray<T,R>,int)");
+    return a.move(); // move shouldn't be necessary as a is a copy already ?
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_DUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T RA_COMMA R>& r),
 template<typename T RA_COMMA int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::subrarray<T RA_COMMA R>& r),
 {
-    RA_PROFILESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
     return ra::text_output(o,r);
 })
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
-    RA_PROFILESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
     if (not r.is_clear()) {
         o << '{';
         for (int i=0; i<r.extent(0); i++)  {
@@ -2303,7 +2350,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 template<typename T> RA_INLINE_ 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
-    RA_PROFILESAY("std::ostream& operator<<(std::ostream&,const rarray<T,1>&)");
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,1>&)");
     if (not r.is_clear()) {
         o << '{';
         for (int i=0; i<r.extent(0); i++) {
@@ -2325,7 +2372,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 template<typename T,int R> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
 {
-    RA_PROFILESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,R>&)");
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,R>&)");
     o << '{' << r[0];
     for (int i=1; i<r.extent(0); i++) 
         o << ',' << r[i];
@@ -2336,7 +2383,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
 template<typename T> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,1>& r)
 {
-    RA_PROFILESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,1>&)");
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,1>&)");
     o << '{';
     for (int i=0; i<r.extent(0); i++) {
         if (i) o << ',';
@@ -2352,48 +2399,48 @@ std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,1>& r)
     return o;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // helper routines to convert a string to any data type
 
 template<typename T> RA_INLINE_
 void ra::StringToValue<T>::get(const std::string& input, T& output) 
 {
-    RA_PROFILESAY("void StringToValue::get(const std::string&,T&)");
+    RA_IFTRACESAY("void StringToValue::get(const std::string&,T&)");
     std::stringstream str(input); // use streaming operators by default
     str >> output; // won't work with strings as they get truncated at first whitespace
 }
 
 RA_INLINE_ void ra::StringToValue<std::string>::get(const std::string& input, std::string& output)
 {
-    RA_PROFILESAY("void StringToValue::get(const std::string&,std::string&)");
+    RA_IFTRACESAY("void StringToValue::get(const std::string&,std::string&)");
     output = input;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINEF 
 T& ra::Deref<T,R>::access(typename PointerArray<T,R>::type p, const int* indices) 
 {
-    RA_PROFILESAY("Deref<T,R>::access(PointerArray<T,R>::type,const int*)");
+    RA_IFTRACESAY("Deref<T,R>::access(PointerArray<T,R>::type,const int*)");
     return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
 }
 
 template<typename T> RA_INLINEF 
 T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices) 
 {
-    RA_PROFILESAY("Deref<T,1>::access(PointerArray<T,1>::type,const int*)");
+    RA_IFTRACESAY("Deref<T,1>::access(PointerArray<T,1>::type,const int*)");
     return p[indices[0]-1];
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_
 void ra::read_and_parse_shape(std::istream &                             in, 
                                     int*                                       shape, 
                                     typename ra::PointerArray<T,R>::type p)
 {
-    RA_PROFILESAY("void read_and_parse_shape(std::istream&,int*,PointerArray<T,R>::type)");
+    RA_IFTRACESAY("void read_and_parse_shape(std::istream&,int*,PointerArray<T,R>::type)");
     size_t init_file_ptr = in.tellg();
     try {
         int current_shape[R];
@@ -2468,12 +2515,12 @@ void ra::read_and_parse_shape(std::istream &                             in,
         in.seekg(init_file_ptr, in.beg);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_
 std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
 {
-    RA_PROFILESAY("std::istream& operator>>(std::istream&,rarray<T,R>&)");
+    RA_IFTRACESAY("std::istream& operator>>(std::istream&,rarray<T,R>&)");
     int extent[R] = {0};
     size_t init_file_ptr = in.tellg();
     try {
@@ -2488,7 +2535,7 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
         // read the shape
         ra::read_and_parse_shape<T,R>(in, extent, 0);
         // allocate array
-        r = ra::rarray<T,R>(extent);
+        r = ra::rarray<T,R>(extent).move();
         // fill array
         ra::read_and_parse_shape<T,R>(in, 0, r.ptr_array());
         return in;
@@ -2499,10 +2546,10 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Get rid of the macros
-#undef RA_PROFILESAY
+#undef RA_IFTRACESAY
 #undef RA_CHECKORSAY
 #undef RA_DUPLICATE_BODY
 #undef RA_QUADRUPLICATE_BODY

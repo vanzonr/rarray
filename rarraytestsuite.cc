@@ -51,7 +51,7 @@ string strip(const char* s)
 }
 #define ALLCLEAR 0
 #define CHECK(x) {if(!(x)){cerr<<__LINE__<<'\n';return 1;}}
-#define PASSORRETURN(x) {int e=x;cerr<<strip(#x)<<": "<<FP[e==0]<<'\n';if(e)return e;}
+#define PASSORRETURN(x) {cerr<<strip(#x)<<": "; int e=x;cerr <<FP[e==0]<<'\n';if(e)return e;}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -156,6 +156,58 @@ int testconstructors_with_functions()
 #endif
     return ALLCLEAR;
 }
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+//test --->
+template<typename T> 
+int testconstructors7dimtest() 
+{
+    int dim[5] = {7,10,13,2,4};
+    rarray<T,5> a5(7,10,13,2,4);
+    rarray<T,5> b5(dim);
+    rarray<T,5> c5(b5);
+    return ALLCLEAR;
+}
+
+template<typename T> 
+int testconstructors7dimtest2() 
+{
+    // minimize
+    int dim[7] = {7,10,13,2,4,5,21};
+    rarray<T,1> z1(7);
+    rarray<T,1> a1;
+    //    a1 = z1;
+    rarray<T,1> b1(dim);
+    rarray<T,1> c1(b1);
+    rarray<T,2> z2(7,10);
+    rarray<T,2> a2;
+    //a2 = z2;
+    rarray<T,2> b2(dim);
+    rarray<T,2> c2(b2);
+    rarray<T,3> a3(7,10,13);
+    rarray<T,3> b3(dim);
+    rarray<T,3> c3(b3);
+    rarray<T,4> a4(7,10,13,2);
+    rarray<T,4> b4(dim);
+    rarray<T,4> c4(b4);
+    rarray<T,5> a5(7,10,13,2,4);
+    rarray<T,5> b5(dim);
+    rarray<T,5> c5(b5);
+    rarray<T,6> a6(7,10,13,2,4,5);
+    rarray<T,6> b6(dim);
+    rarray<T,6> c6(b6);
+    rarray<T,7> b7(dim);
+    rarray<T,7> c7(b7);
+
+    a1.clear(); //optional here, as a1 will go out of scope
+    b7.clear();
+
+    return ALLCLEAR;
+}
+
+//<--- test
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1540,7 +1592,7 @@ int testreshape()
     int dimr[7] = {21,5,4,2,13,10,7};
     int dim12[12] = {2,3,4,3,2,3,4,3,2,3,4,3};
     int dimr12[12] = {4,3,2,3,4,3,2,3,2,3,4,3};//first 7 in reversed order
-    rarray<float,1> a(dim), a2(a);
+    rarray<float,1> a(dim), a2(a.data(),a.shape());
     rarray<float,2> b(dim), b2(b);
     rarray<float,3> c(dim), c2(c);
     rarray<float,4> d(dim);
@@ -1565,6 +1617,8 @@ int testreshape()
     b.reshape(10,7);
     CHECK(b.extent(0)==10);
     CHECK(b.extent(1)==7);
+    CHECK(b2.extent(0)==10);
+    CHECK(b2.extent(1)==7);
     CHECK(b[8][0] == 5);
     c[4][8][3] = 6;
     c.reshape(10,7,13);
@@ -2673,8 +2727,10 @@ int main()
     PASSORRETURN(testconstructors<compound>());
     PASSORRETURN((testconstructors<array<compound,3> >()));
 
-    PASSORRETURN(testconstructors7dim<double>());
-    PASSORRETURN(testconstructors7dim<compound>());
+    PASSORRETURN(testconstructors7dimtest<double>());
+    PASSORRETURN(testconstructors7dimtest<compound>());
+    PASSORRETURN(testconstructors7dimtest2<double>());
+    PASSORRETURN(testconstructors7dimtest2<compound>());
     PASSORRETURN((testconstructors7dim<array<compound,3> >()));
 
     PASSORRETURN(testconstructors7dimbuf<double>());

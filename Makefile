@@ -168,11 +168,11 @@ covertest: \
 
 coverage_in_code.txt: rarray.h
 	@echo "Extracting lines from array.h that generate profile messages"
-	\grep -n RA_PROFILESAY rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_PROFILESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
+	\grep -n RA_IFTRACESAY rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_IFTRACESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
 
 coverage_in_test.txt: output_from_test.txt output_from_nitest.txt 
 	@echo "Filtering profile messages from test output"
-	grep -h PROFILE output_from_test.txt output_from_nitest.txt | sort -u | sed 's/PROFILE rarray.h@//' | tr '\t' ' ' | sort -n | sed 's/^[0-9]*: //' > coverage_in_test.txt
+	grep -h IFTRACE output_from_test.txt output_from_nitest.txt | sort -u | sed 's/IFTRACE rarray.h@//' | tr '\t' ' ' | sort -n | sed 's/^[0-9]*: //' > coverage_in_test.txt
 
 output_from_test.txt: profiletests
 	@echo "Run tests with profile messages on"
