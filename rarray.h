@@ -57,8 +57,16 @@
 
 #if __cplusplus <= 199711L
 #define RA_NULLPTR 0 
+// In C++03, there is no move semantics. Rarrays need move semantics to be return-able from functions. The RA_MOVE macros helps here
+#define RA_MOVE(x) x.move()
+// usage example: rarray<float,2> matrix(int n, int m) { rarray<int,2> a(n,m); return RA_MOVE(a); }
 #else
 #define RA_NULLPTR nullptr
+// I will implement a move semantics for c++11 soon, so that
+// move=semantics automatically apply to rarrays returned from
+// functions, but haven't gotten to that yet so 'return RA_MOVE(x)'
+// will still be translated as 'return x.move()' for now.
+#define RA_MOVE(x) x.move()
 #endif
 
 // For g++ and icpc, RA_INLINE forces inlining, even without optimization.
@@ -258,8 +266,8 @@ class rarray {
     mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
                                                                        // Temporary values pass their 'cleans_' value on when
                                                                        // copied, once. None-temporary values (the default) do not.
-                                                                       // When returning a rarray a from a function, use
-                                                                       // 'return a.move()'
+                                                                       // When returning a rarray 'a' from a function, use
+                                                                       // 'return RA_MOVE(a);'
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer
     RA_INLINE_ void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount, bool& cleans, bool tmpval); // setup new rarray object
@@ -350,8 +358,8 @@ class rarray<T,1> {
     mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
                                                                        // Temporary values pass their 'cleans_' value on when
                                                                        // copied, once. None-temporary values (the default) do not.
-                                                                       // When returning a rarray a from a function, use
-                                                                       // 'return a.move()'
+                                                                       // When returning a rarray 'a' from a function, use
+                                                                       // 'return RA_MOVE(a);'
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer  
     RA_INLINE_ void init_shallow(parray_t parray, const int* extent, bool entire, int* rcount, bool& cleans, bool tmpval); // setup new rarray object
@@ -1030,10 +1038,10 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1> ra::rarr
         T* bufend = bufbegin+size();
         T* newbuf = result.get_buffer();
         std::copy(bufbegin, bufend, newbuf);
-        return result.move();
+        return RA_MOVE(result);
     } else {
         // else return undefined copy
-        return rarray().move();
+        return RA_MOVE(rarray());
     }
  })
 
@@ -2209,7 +2217,7 @@ ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[], int byte_size)
 {
     RA_IFTRACESAY("rarray<A,1> make_rarray_given_byte_size(A[],int)");
     const int z = byte_size/sizeof(A);
-    return ra::rarray<A,1>(a,z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 1>(a,z));
 }
 
 template<typename A,int Z> RA_INLINE_ 
@@ -2217,7 +2225,7 @@ ra::rarray<A,2> ra::make_rarray_given_byte_size(A a[][Z], int byte_size)
 {
     RA_IFTRACESAY("rarray<A,2> make_rarray_given_byte_size(A[][Z],int)");
     const int y = byte_size/sizeof(A)/Z;
-    return ra::rarray<A,2>(*a,y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 2>(*a,y,Z));
 }
 
 template<typename A,int Y,int Z> RA_INLINE_ 
@@ -2225,7 +2233,7 @@ ra::rarray<A,3> ra::make_rarray_given_byte_size(A a[][Y][Z], int byte_size)
 {
     RA_IFTRACESAY("rarray<A,3> make_rarray_given_byte_size(A[][Y][Z],int)");
     const int x = byte_size/sizeof(A)/Z/Y;
-    return ra::rarray<A,3>(**a,x,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 3>(**a,x,Y,Z));
 }
 
 template<typename A,int X,int Y,int Z> RA_INLINE_ 
@@ -2233,7 +2241,7 @@ ra::rarray<A,4> ra::make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size)
 {
     RA_IFTRACESAY("rarray<A,4> make_rarray_given_byte_size(A[][X][Y][Z],int)");
     const int w = byte_size/sizeof(A)/X/Z/Y;
-    return ra::rarray<A,4>(***a,w,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 4>(***a,w,X,Y,Z));
 }
 
 template<typename A,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2241,7 +2249,7 @@ ra::rarray<A,5> ra::make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size
 {
     RA_IFTRACESAY("rarray<A,5> make_rarray_given_byte_size(A[][W][X][Y][Z],int)");
     const int v = byte_size/sizeof(A)/W/X/Z/Y;
-    return ra::rarray<A,5>(****a,v,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 5>(****a,v,W,X,Y,Z));
 }
 
 template<typename A,int V,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2249,7 +2257,7 @@ ra::rarray<A,6> ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_s
 {
     RA_IFTRACESAY("rarray<A,6> make_rarray_given_byte_size(A[][V][W][X][Y][Z],int)");
     const int u = byte_size/sizeof(A)/V/W/X/Z/Y;
-    return ra::rarray<A,6>(*****a,u,V,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 6>(*****a,u,V,W,X,Y,Z));
 }
 
 template<typename A,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2257,7 +2265,7 @@ ra::rarray<A,7> ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byt
 {
     RA_IFTRACESAY("rarray<A,7> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
     const int t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
-    return ra::rarray<A,7>(******a,t,U,V,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 7>(******a,t,U,V,W,X,Y,Z));
 }
 
 template<typename A,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2265,7 +2273,7 @@ ra::rarray<A,8> ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int 
 {
     RA_IFTRACESAY("rarray<A,8> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
     const int s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 8>(*******a,s,T,U,V,W,X,Y,Z));
 }
 
 template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2273,7 +2281,7 @@ ra::rarray<A,9> ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], i
 {
     RA_IFTRACESAY("rarray<A,9> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
     const int r = byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,9>(********a,r,S,T,U,V,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 9>(********a,r,S,T,U,V,W,X,Y,Z));
 }
 
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2281,7 +2289,7 @@ ra::rarray<A,10> ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z
 {
     RA_IFTRACESAY("rarray<A,10> make_rarray_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int)");
     const int q = byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,10>(*********a,q,R,S,T,U,V,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 10>(*********a,q,R,S,T,U,V,W,X,Y,Z));
 }
 
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
@@ -2289,7 +2297,7 @@ ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y
 {
     RA_IFTRACESAY("rarray<A,11> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
     const int p = byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z).move();
+    return RA_MOVE(ra::rarray<A RA_COMMA 11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2298,7 +2306,7 @@ template<typename T,int R> RA_INLINE_
 ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size) 
 {
     RA_IFTRACESAY("rarray<T,R> make_rarray_given_byte_size(rarray<T,R>,int)");
-    return a.move(); // move shouldn't be necessary as a is a copy already ?
+    return RA_MOVE(a); // move shouldn't be necessary as a is a copy already ?
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2535,7 +2543,7 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
         // read the shape
         ra::read_and_parse_shape<T,R>(in, extent, 0);
         // allocate array
-        r = ra::rarray<T,R>(extent).move();
+        r = RA_MOVE(ra::rarray<T RA_COMMA R>(extent));
         // fill array
         ra::read_and_parse_shape<T,R>(in, 0, r.ptr_array());
         return in;

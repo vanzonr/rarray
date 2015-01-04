@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{January 20, 2014\vspace{-7mm}}
+\date{January 4, 2015\vspace{-7mm}}
 
 \maketitle
 
@@ -204,8 +204,7 @@ The guarrantee of contiguity means strided arrays are not supported.
 \begin{itemize}\itemsep0pt\parskip2pt
 \item Can use any data type {\tt T} and any rank {\tt R}.
 \item Views on existing contiguous arrays.
-\item Does shallow, reference counted copies by default, but also has a
-  deep {\tt copy} method.
+\item Does shallow copies by default, but also has a deep {\tt copy} method.
 \item Elements are accessible using repeated square brackets, like C/C++ arrays.
 \item Can be emptied with the {\tt clear} method.
 \item Can be filled with a uniform value with the {\tt fill} method.
@@ -337,7 +336,7 @@ void dump(const rarray<double,3>& r) {
 \vspace{-9pt}
 \begin{framed}\vspace{-3pt}%
 \begin{verbatim}
-void dump(rarray<double,3>& r) {
+void dump(rarray<double,3> r) {
    r.reshape(r.data(), 1, 1, r.size());
    for (int i=0;i<r.size();i++)
        std::cout << rflat[0][0][i] << ' ';
@@ -348,9 +347,10 @@ void dump(rarray<double,3>& r) {
 \end{framed}\vspace{-8pt}
 This only works if the new and old shape have the same ranks.
 \end{enumerate}
-The last example intentionally also has side effects, as the original rarray that was passed to the dump function now has a different shape.  To fix this, one could pass the \texttt{rarray r} by value. This creates a shallow, reference counted copy, so passing it in is not that expensive. Upon reshaping, \texttt{r} gets unlinked from the reference counting, and the effect is the same as if we has created a new \texttt{rarray} with \texttt{r.data()} as the buffer.
+The last example intentionally also has side effects, as the original rarray that was passed to the dump function now has a different shape.  The first method is therefore usually preferred when dealing with command line arguments.
 
-In both cases, the total size of the new shape should be less or equal to that of the old shape, because no additional data is allocated by the reshape method. 
+Note that in both methods, the total size of the new shape should be less or equal to that of the old shape, because no additional data is allocated by the reshape method. 
+
 \subsection{Optional bounds checking}
 
 If the preprocessor constant \texttt{{\tt RA\_BOUNDSCHECK}} is defined, an
@@ -490,7 +490,7 @@ This method creates reference to this with const elements.
 
 \noindent\textbf{Definition:} \texttt{void reshape(int extent0, ...);}
 
-This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size. If the rarray was a reference to another rarray, the reference will get destroyed even though the data is still shared. This works only for arrays with rank up to and including 11.
+This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11.  Warning: if the rarray was a shallow copy of another rarray, that original array will be resized as well! 
 
 \noindent\textbf{Definition:} \texttt{void reshape(const int* extents);}
 
@@ -512,6 +512,53 @@ Checks if the rarray is in an uninitialized state.
 
 This method creates deep copy of the rarray, i.e., an independent rarray with the same dimensions are the original rarray and with its content a copy of the original rarray's content.
 
+\section{Returning a rarray from a function}
+
+Unless you're using rarray in a C++11 context, the shallow copying of
+rarrays causes problems when returning a rarray from a function.
+
+Consider the function \texttt{zeros} used in \texttt{main()}:
+\vspace{-9pt}
+\begin{framed}\vspace{-12pt}%
+\begin{verbatim}
+rarray<double,2> zeros(int n, int m) {
+   rarray<double,2> r(n,m);
+   r.fill(0.0);
+   return r;
+}
+int main() {
+   rarray<float,2> s = zeros(100,100);
+   return s[99][99];
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+In line 2, a rarray 'r' is created, and filled, on line 3, with zeros.
+On line 4, this array is shallowly copied out of the function and into
+'s' on line 7. Once copied into 's', 'r' is destroyed and releases its
+memory, but this leaves 's' in an invalid state (as it points to
+memory that is no longer allocated.
+
+Instead, we would like the rarray 's' to become responsible for the
+memory deallocation, i.e., we'd like r to become a shallow copy and s
+the original.  To do so, rarray.h provides the \texttt{RA\_MOVE}
+macro, which affectively transfers the ownership. In the above
+example, it should be used as follows:
+\vspace{-9pt}
+\begin{framed}\vspace{-12pt}%
+\begin{verbatim}
+rarray<double,2> zeros(int n, int m) {
+   rarray<double,2> r(n,m);
+   r.fill(0.0);
+   return RA_MOVE(r);
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+
+In C++11, this kind of behavior can (and will) be implemented using
+\emph{move semantics}, which make the first form of the \texttt{zeros}
+function work as correctly.
 
 \section{Conversions}
 
