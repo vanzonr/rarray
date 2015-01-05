@@ -284,7 +284,6 @@ class rarray {
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
-    bool         entire_;                                              // true if not a subrarray
     mutable bool cleans_;                                              // alternative to ref counting: am I the one that cleans?
     mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
                                                                        // Temporary values pass their 'cleans_' value on when
@@ -293,7 +292,7 @@ class rarray {
                                                                        // 'return RA_MOVE(a);'
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer
-    RA_INLINE_ void init_shallow(parray_t parray, bool entire, bool& cleans, bool tmpval); // setup new rarray object
+    RA_INLINE_ void init_shallow(parray_t parray, bool& cleans, bool tmpval); // setup new rarray object
     RA_INLINE_ void init_shallow(parray_t parray);             // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
@@ -375,7 +374,6 @@ class rarray<T,1> {
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
-    bool         entire_;                                              // true if not a subrarray
     mutable bool cleans_;                                              // alternative to ref counting: I am the one that cleans?
     mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
                                                                        // Temporary values pass their 'cleans_' value on when
@@ -384,7 +382,7 @@ class rarray<T,1> {
                                                                        // 'return RA_MOVE(a);'
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer  
-    RA_INLINE_ void init_shallow(parray_t parray, bool entire, bool& cleans, bool tmpval); // setup new rarray object
+    RA_INLINE_ void init_shallow(parray_t parray, bool& cleans, bool tmpval); // setup new rarray object
     RA_INLINE_ void init_shallow(parray_t parray);             // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
@@ -636,7 +634,6 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>::rarray(
   : parray_(RA_NULLPTR) RA_COMMA
     extent_(RA_NULLPTR) RA_COMMA
     ismine_(false)      RA_COMMA
-    entire_(false)      RA_COMMA
     cleans_(false)      RA_COMMA
     tmpval_(false) 
 {
@@ -1026,7 +1023,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     // copy constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.parray_, a.entire_, a.cleans_, a.tmpval_);
+    init_shallow(a.parray_, a.cleans_, a.tmpval_);
     ismine_ = a.ismine_;
 })
 
@@ -1427,7 +1424,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
     if (&a != this) {
         clear();
         extent_ = const_cast<int*>(a.extent_);
-        init_shallow(a.parray_, a.entire_, a.cleans_, a.tmpval_);
+        init_shallow(a.parray_, a.cleans_, a.tmpval_);
         ismine_ = a.ismine_;
     }
     return *this;
@@ -1460,21 +1457,19 @@ template<typename T>                T* ra::subrarray<T RA_COMMA 1>::get_buffer()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::init_shallow(parray_t parray, bool entire, bool& cleans, bool tmpval)
+void ra::rarray<T,R>::init_shallow(parray_t parray, bool& cleans, bool tmpval)
 {
     // shallow init function : reuses buffer and parray
-    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, const int*, bool, bool&, bool)");
+    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, bool&, bool)");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     parray_ = parray;
-    entire_ = entire;
     tmpval_ = false;
-    if (entire_) {
-        if (tmpval) {
-            cleans_ = cleans;
-            cleans = false;
-        } else
-            cleans_ = false;
+    if (tmpval) {
+        cleans_ = cleans;
+        cleans = false;
+    } else {
+        cleans_ = false;
     }
 }
 
@@ -1484,13 +1479,12 @@ template<typename T,int R> RA_INLINE_
 void ra::rarray<T,R>::init_shallow(parray_t parray)
 {
     // shallow init function for subrarray: reuses buffer and parray
-    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, const int*)");
+    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t)");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     parray_ = parray;
     tmpval_ = false;
     cleans_ = false;
-    entire_ = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1507,7 +1501,7 @@ void ra::rarray<T,R>::init_parray(T* buffer, const int* extent)
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
     bool oldcleans = true;
-    init_shallow(parray, true, oldcleans, true);
+    init_shallow(parray, oldcleans, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1528,7 +1522,6 @@ void ra::rarray<T,R>::init_data(const int* extent, int extenttot)
 
 template<typename T> RA_INLINE_ 
 void ra::rarray<T,1>::init_shallow(parray_t    parray,
-                                   bool        entire,
                                    bool&       cleans,
                                    bool        tmpval)
 {
@@ -1538,13 +1531,11 @@ void ra::rarray<T,1>::init_shallow(parray_t    parray,
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     tmpval_ = false;
     parray_ = parray;
-    entire_ = entire;
-    if (entire_) {
-        if (tmpval) {
-            cleans_ = cleans;
-            cleans = false;
-        } else
-            cleans_ = false;
+    if (tmpval) {
+        cleans_ = cleans;
+        cleans = false;
+    } else {
+        cleans_ = false;
     }
 }
 
@@ -1558,7 +1549,6 @@ void ra::rarray<T,1>::init_shallow(parray_t parray)
     parray_ = parray;
     tmpval_ = false;
     cleans_ = false;
-    entire_ = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1575,7 +1565,7 @@ void ra::rarray<T,1>::init_parray(T* buffer, const int* extent)
         extent_[i] = extent[i];
     parray_t parray = new_except_base(buffer, extent);
     bool oldcleans = true;
-    init_shallow(parray, true, oldcleans, true);
+    init_shallow(parray, oldcleans, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1600,7 +1590,7 @@ void ra::rarray<T,R>::reshape(const int* extent, RAbool force)
 {
     // common method to reshape an array (takes an c-array argument)
     RA_IFTRACESAY("void rarray<T,R>::reshape(const int* extent, RAbool force)");
-    RA_CHECKORSAY(parray_ != RA_NULLPTR and entire_, "reshape not allowed on subrarray");
+    RA_CHECKORSAY(parray_ != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(not cleans_ or force.as_bool(), "reshape only allowed on shallow copy of rarray");
     int tot1 = 1, tot2 = 1;
     for (int i=0;i<R;i++) {
@@ -1608,8 +1598,7 @@ void ra::rarray<T,R>::reshape(const int* extent, RAbool force)
         tot2 *= extent[i];
     }
     RA_CHECKORSAY(tot2 <= tot1, "reshaping beyond underlying memory buffer");
-    if (parray_ != RA_NULLPTR and entire_      // cannot reshape subrarrays 
-        and (not cleans_ or force.as_bool()))  // cannot reshape originals unless forced
+    if (parray_ != RA_NULLPTR and (not cleans_ or force.as_bool()))  // cannot reshape originals unless forced
     {
         if (not cleans_) {
             T* buffer = get_buffer();    // get buffer address
@@ -1630,11 +1619,10 @@ template<typename T> RA_INLINE_
 void ra::rarray<T,1>::reshape(const int* extent, RAbool force)
 {
     RA_IFTRACESAY("void rarray<T,1>::reshape(const int* extent, RAbool force)");
-    RA_CHECKORSAY(parray_ != RA_NULLPTR and entire_, "reshape not allowed on subrarray");
+    RA_CHECKORSAY(parray_ != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(*extent <= *extent_, "reshaping beyond underlying memory buffer");
     RA_CHECKORSAY(not cleans_ or force.as_bool(), "reshape only allowed on shallow copy of rarray");
-    if (parray_ != RA_NULLPTR and entire_      // cannot reshape subrarrays 
-        and (not cleans_ or force.as_bool()))  // cannot reshape originals unless forced
+    if (parray_ != RA_NULLPTR and (not cleans_ or force.as_bool()))  // cannot reshape originals unless forced
     {
         if (not cleans_) {
             T* buffer = get_buffer();    // get buffer address        
@@ -1789,13 +1777,11 @@ void ra::rarray<T,R>::clear()
 {
     //  rarray private cleanup routine
     RA_IFTRACESAY("void rarray<T,R>::clear()");
-    if (parray_ != RA_NULLPTR and entire_) {
-        if (cleans_) {
-            if (ismine_) 
-                delete[] get_buffer(); 
-            delete[] parray_;
-            delete[] extent_;
-        }
+    if (parray_ != RA_NULLPTR and cleans_) {
+        if (ismine_) 
+            delete[] get_buffer(); 
+        delete[] parray_;
+        delete[] extent_;
     }
     parray_ = RA_NULLPTR;
     cleans_ = false;
@@ -1807,12 +1793,10 @@ void ra::rarray<T,1>::clear()
 {
     // rarray private cleanup routine
     RA_IFTRACESAY("void rarray<T,1>::clear()");
-    if (parray_ != RA_NULLPTR and entire_) {
-        if (cleans_) {
-            if (ismine_)
-                delete[] get_buffer();
-            delete[] extent_;
-        }
+    if (parray_ != RA_NULLPTR and cleans_) {
+        if (ismine_)
+            delete[] get_buffer();
+        delete[] extent_;
     }
     parray_ = RA_NULLPTR;
     cleans_ = false;
