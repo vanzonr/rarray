@@ -1605,37 +1605,52 @@ int testreshape()
     rarray<float,11> k(dim12);
     rarray<float,12> l(dim12);
 
-    a[3] = 4;
-    a.reshape(4);
-    CHECK(a.extent(0)==4);
-    CHECK(a[3]==4);
-    CHECK(a2.extent(0)==7);
-    a2.reshape(4);
-    CHECK(a2.extent(0)==4);
-    CHECK(a2[3]==4);
+    rarray<float,1> novela(a);
+    rarray<float,1> novela2(a2);
+    novela[3] = 4;
+    novela.reshape(4);
+    CHECK(novela.extent(0)==4);
+    CHECK(novela[3]==4);
+    CHECK(novela2.extent(0)==7);
+    novela2.reshape(4);
+    CHECK(novela2.extent(0)==4);
+    CHECK(novela2[3]==4);
     b[5][6] = 5;
-    b.reshape(10,7);
-    CHECK(b.extent(0)==10);
-    CHECK(b.extent(1)==7);
-    CHECK(b2.extent(0)==10);
-    CHECK(b2.extent(1)==7);
-    CHECK(b[8][0] == 5);
+    rarray<float,2> novelb(b);
+    rarray<float,2> novelb2(novelb);
+    novelb.reshape(10,7);
+    CHECK(novelb.extent(0)==10);
+    CHECK(novelb.extent(1)==7);
+    CHECK(novelb2.extent(0)==7);
+    CHECK(novelb2.extent(1)==10);
+    CHECK(novelb[8][0] == 5);
     c[4][8][3] = 6;
-    c.reshape(10,7,13);
-    CHECK(c.extent(0)==10);
-    CHECK(c.extent(1)==7);
-    CHECK(c.extent(2)==13);
-    CHECK(c[6][6][3] == 6);
-    d.reshape(2,2,2,2);                // TODO: check
-    e.reshape(13,7,10,2,4);            // TODO: check
-    f.reshape(5,6,1,13,10,7);          // TODO: check
-    g.reshape(dimr);                   // TODO: check
-    g.reshape(2,5,6,1,13,10,7);        // TODO: check
-    h.reshape(4,3,2,3,4,3,2,3);        // TODO: check
-    i.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
-    j.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
-    k.reshape(4,3,2,3,4,3,2,3,2,3,4);  // TODO: check
-    l.reshape(dimr12);                 // TODO: check
+    rarray<float,3> novelc(c);
+    novelc.reshape(10,7,13);
+    CHECK(novelc.extent(0)==10);
+    CHECK(novelc.extent(1)==7);
+    CHECK(novelc.extent(2)==13);
+    CHECK(novelc[6][6][3] == 6);
+    rarray<float,4> noveld(d);
+    rarray<float,5> novele(e);
+    rarray<float,6> novelf(f);
+    rarray<float,7> novelg(g);
+    rarray<float,7> novelg2(g);
+    rarray<float,8> novelh(h);
+    rarray<float,9> noveli(i);
+    rarray<float,10> novelj(j);
+    rarray<float,11> novelk(k);
+    rarray<float,12> novell(l);
+    noveld.reshape(2,2,2,2);                // TODO: check
+    novele.reshape(13,7,10,2,4);            // TODO: check
+    novelf.reshape(5,6,1,13,10,7);          // TODO: check
+    novelg.reshape(dimr);                   // TODO: check
+    novelg2.reshape(2,5,6,1,13,10,7);       // TODO: check
+    novelh.reshape(4,3,2,3,4,3,2,3);        // TODO: check
+    noveli.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
+    novelj.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
+    novelk.reshape(4,3,2,3,4,3,2,3,2,3,4);  // TODO: check
+    novell.reshape(dimr12);                 // TODO: check
     return ALLCLEAR;
 }
 

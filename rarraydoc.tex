@@ -347,9 +347,20 @@ void dump(rarray<double,3> r) {
 \end{framed}\vspace{-8pt}
 This only works if the new and old shape have the same ranks.
 \end{enumerate}
-The last example intentionally also has side effects, as the original rarray that was passed to the dump function now has a different shape.  The first method is therefore usually preferred when dealing with command line arguments.
+The last example has no side effects, i.e., the original rarray that was passed to the dump function retains its shape. 
 
-Note that in both methods, the total size of the new shape should be less or equal to that of the old shape, because no additional data is allocated by the reshape method. 
+There is an important restriction to using reshape, namely, that only
+shallow copies of rarrays can be reshaped with the \texttt{reshape}
+method.  Original rarrays cannot. Because in the above example,
+\texttt{r} is an argument, it is a shallow copy of the array, and can
+be reshaped. If the argument were of reference type
+(e.g. \texttt{rarray<double,3>\& r}), then the reshape would not be
+allowed.  The reason for this is that reshaping an original array
+would make any exisiting shallow copies invalid. 
+
+Note that in both methods, the total size of the new shape should be
+less or equal to that of the old shape, because no additional data is
+allocated by the reshape method.
 
 \subsection{Optional bounds checking}
 
