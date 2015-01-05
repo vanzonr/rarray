@@ -1,6 +1,6 @@
 #!/bin/bash
 # NOT an autotools configure, just detects compiler for rarray.h 's Makefile
-# Ramses van Zon, January 2014
+# Ramses van Zon, January 2015
 
 # stop immediately when there is an error
 set -e

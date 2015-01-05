@@ -1,7 +1,7 @@
 //
 // benchmark4Daccess.cc - speed test for rarray.h
 //
-// Copyright (c) 2013-2014  Ramses van Zon
+// Copyright (c) 2013-2015  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal

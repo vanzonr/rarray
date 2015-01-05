@@ -1,7 +1,7 @@
 # 
 # Makefile - make file for rarray.h
 #
-# Copyright (c) 2013-2014  Ramses van Zon
+# Copyright (c) 2013-2015  Ramses van Zon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -211,6 +211,6 @@ clean:
 	rarraydoc.aux rarraydoc.log rarraydoc.out rarraydoc.dvi
 
 distclean: clean
-	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) rarraydoc.pdf
+	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) 
 
 
