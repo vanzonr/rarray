@@ -161,6 +161,30 @@ class Iterator {
 //                                                //
 //------------------------------------------------//
 
+// A boolean that cannot be mistaken for an int.
+class RAbool {
+  private:  
+    bool value;
+  public:
+    explicit RAbool(bool b): value(b) {}
+    RAbool(const RAbool& other): value(other.value) {}
+    RAbool& operator=(const RAbool& other) {
+        value = other.value;
+        return *this;
+    }
+    bool operator==(const RAbool& other) const {
+      return other.value == value;
+    }
+    bool operator!=(const RAbool& other) const {
+      return other.value != value;
+    }
+    bool as_bool() const {
+      return value;
+    }
+};
+#define RA_TRUE  ra::RAbool(true)
+#define RA_FALSE ra::RAbool(false)
+#define RA_FORCE ra::RAbool(true)
 
 template<typename T,int R> 
 class rarray {
@@ -206,17 +230,17 @@ class rarray {
     RA_INLINE_ CommaOp<T> operator=(const T& e);                                  // Comma separated element assignment
     RA_INLINEF ~rarray();                                                         // destructor
     RA_INLINEF void clear();                                                      // clean up routine, make undefined
-    RA_INLINE_ void reshape(int n0, int n1);                                      // reshape keeping the underlying data for R=2
-    RA_INLINE_ void reshape(int n0, int n1, int n2);                                                                      // R=3
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3);                                                              // R=4
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4);                                                      // R=5
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5);                                              // R=6
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6);                                      // R=7
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7);                              // R=8
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8);                      // R=9
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);              // R=10
-    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);     // R=11
-    RA_INLINE_ void reshape(const int* extent);                                                                           // R>11
+    RA_INLINE_ void reshape(int n0, int n1, RAbool force=RA_FALSE);               // reshape keeping the underlying data for R=2
+    RA_INLINE_ void reshape(int n0, int n1, int n2, RAbool force=RA_FALSE);                                               // R=3
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, RAbool force=RA_FALSE);                                       // R=4
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, RAbool force=RA_FALSE);                               // R=5
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, RAbool force=RA_FALSE);                       // R=6
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, RAbool force=RA_FALSE);               // R=7
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, RAbool force=RA_FALSE);       // R=8
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, RAbool force=RA_FALSE);//R=9
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, RAbool force=RA_FALSE);//R=10
+    RA_INLINE_ void reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10, RAbool force=RA_FALSE);// R=11
+    RA_INLINE_ void reshape(const int* extent, RAbool force=RA_FALSE);                                                    // R>11
 
     RA_INLINE_ bool                is_clear()           const;                    // check if undefined
     RA_INLINE_ rarray<T,R>         copy()               const;                    // return a copy
@@ -308,8 +332,8 @@ class rarray<T,1> {
     RA_INLINE_ CommaOp<T> operator=( const T& e );                                // Comma separated element assignment
     RA_INLINEF ~rarray();                                                         // destructor
     RA_INLINEF void clear();                                                      // clean up routine, make undefined again
-    RA_INLINE_ void reshape(int n0);                                              // to change shape (only shrinking is defined)
-    RA_INLINE_ void reshape(const int* extent);                                   // for conformity
+    RA_INLINE_ void reshape(int n0, RAbool force=RA_FALSE);                       // to change shape (only shrinking is defined)
+    RA_INLINE_ void reshape(const int* extent, RAbool force=RA_FALSE);            // for conformity
     RA_INLINE_ bool                is_clear()           const;                    // check if undefined
     RA_INLINE_ rarray<T,1>         copy()               const;                    // return a copy
     RA_INLINE_ int                 extent(int i)        const;                    // retrieve array size in dimension i
@@ -1581,57 +1605,70 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>& ra::rar
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(const int* extent)
+void ra::rarray<T,R>::reshape(const int* extent, RAbool force)
 {
     // common method to reshape an array (takes an c-array argument)
-    RA_IFTRACESAY("void rarray<T,R>::reshape(const int* extent)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(const int* extent, RAbool force)");
     RA_CHECKORSAY(parray_ != RA_NULLPTR and entire_, "reshape not allowed on subrarray");
-    RA_CHECKORSAY(not cleans_, "reshape only allowed on shallow copy of rarray");
+    RA_CHECKORSAY(not cleans_ or force.as_bool(), "reshape only allowed on shallow copy of rarray");
     int tot1 = 1, tot2 = 1;
     for (int i=0;i<R;i++) {
         tot1 *= extent_[i];
         tot2 *= extent[i];
     }
     RA_CHECKORSAY(tot2 <= tot1, "reshaping beyond underlying memory buffer");
-    if (parray_ != RA_NULLPTR and entire_  // cannot reshape subrarrays 
-        and not cleans_)                   // cannot reshape originals
+    if (parray_ != RA_NULLPTR and entire_      // cannot reshape subrarrays 
+        and (not cleans_ or force.as_bool()))  // cannot reshape originals unless forced
     {
-        T* buffer = get_buffer();    // get buffer address
-        ismine_ = false;             // protect buffer from being deleted
-        clear();                     // deallocate everything else
-        init_parray(buffer, extent); // reallocate pointer arrays
+        if (not cleans_) {
+            T* buffer = get_buffer();    // get buffer address
+            ismine_ = false;             // protect buffer from being deleted
+            clear();                     // deallocate everything else
+            init_parray(buffer, extent); // reallocate pointer arrays
+        } else {
+            T* buffer = get_buffer();
+            delete[] parray_;
+            for (int i=0;i<R;i++)
+                extent_[i] = extent[i];
+            parray_ = new_except_base(buffer, extent_);
+        }
     }
 }
 
 template<typename T> RA_INLINE_
-void ra::rarray<T,1>::reshape(const int* extent)
+void ra::rarray<T,1>::reshape(const int* extent, RAbool force)
 {
-    RA_IFTRACESAY("void rarray<T,1>::reshape(const int* extent)");
+    RA_IFTRACESAY("void rarray<T,1>::reshape(const int* extent, RAbool force)");
     RA_CHECKORSAY(parray_ != RA_NULLPTR and entire_, "reshape not allowed on subrarray");
     RA_CHECKORSAY(*extent <= *extent_, "reshaping beyond underlying memory buffer");
-    RA_CHECKORSAY(not cleans_, "reshape only allowed on shallow copy of rarray");
-    if (parray_ != RA_NULLPTR and entire_ and not cleans_) {
-        // less clear with cleans Perhaps it should just reshape regardless. 
-        T* buffer = get_buffer();    // get buffer address        
-        ismine_ = false;             // protect buffer from being deleted
-        clear();                      // deallocate everything else
-        init_parray(buffer, extent); // reallocate pointer arrays
+    RA_CHECKORSAY(not cleans_ or force.as_bool(), "reshape only allowed on shallow copy of rarray");
+    if (parray_ != RA_NULLPTR and entire_      // cannot reshape subrarrays 
+        and (not cleans_ or force.as_bool()))  // cannot reshape originals unless forced
+    {
+        if (not cleans_) {
+            T* buffer = get_buffer();    // get buffer address        
+            ismine_ = false;             // protect buffer from being deleted
+            clear();                      // deallocate everything else
+            init_parray(buffer, extent); // reallocate pointer arrays
+        } else {
+            *extent_ = *extent;
+        }
     }
 }
 
 template<typename T> RA_INLINE_ 
-void ra::rarray<T,1>::reshape(int n0)
+void ra::rarray<T,1>::reshape(int n0, RAbool force)
 {
     // constructor for R=1
     RA_IFTRACESAY("void rarray<T,1>::reshape(int)");
     RA_CHECKORSAY(rank==1, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0, "zero shape not allowed");
     const int extent[1] = {n0};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_
-void ra::rarray<T,R>::reshape(int n0, int n1) 
+void ra::rarray<T,R>::reshape(int n0, int n1, RAbool force) 
 {
     // reshape method only for R=2
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int)");
@@ -1639,106 +1676,106 @@ void ra::rarray<T,R>::reshape(int n0, int n1)
     RA_CHECKORSAY(n0!=0 and n1!=0, "zero shape not allowed");
     // reuse common method
     const int extent[R] = {n0,n1};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, RAbool force)
 {
     // reshape method only for R=3
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int)");
     RA_CHECKORSAY(R==3, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3) 
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, RAbool force) 
 {
     // reshape method only for R=4
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int)");
     RA_CHECKORSAY(R==4, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, RAbool force)
 {
     // reshape method only for R=5
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int)");
     RA_CHECKORSAY(R==5, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, RAbool force)
 {
     // reshape method only for R=6
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int)");
     RA_CHECKORSAY(R==6, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, RAbool force)
 {
     // reshape method only for R=7
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==7, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, RAbool force)
 {
     // reshape method only for R=8
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==8, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, RAbool force)
 {
     // reshape method only for R=9
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==9, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, RAbool force)
 {
     // reshape method only for R=10
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==10, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10)
+void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10, RAbool force)
 {
     // reshape method only for R=11
     RA_IFTRACESAY("void rarray<T,R>::reshape(int, int, int, int, int, int, int, int, int, int, int)");
     RA_CHECKORSAY(R==11, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
-    reshape(extent);
+    reshape(extent, force);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1762,15 +1799,12 @@ void ra::rarray<T,R>::clear()
     //  rarray private cleanup routine
     RA_IFTRACESAY("void rarray<T,R>::clear()");
     if (parray_ != RA_NULLPTR and entire_) {
-        bool thiscleans = cleans_;
-        if (thiscleans) {
+        if (cleans_) {
             if (ismine_) 
                 delete[] get_buffer(); 
             delete[] parray_;
             delete[] extent_;
         }
-        if (thiscleans && !cleans_)
-            std::cout << "Anomaly\n";
     }
     parray_ = RA_NULLPTR;
     cleans_ = false;
@@ -1783,8 +1817,7 @@ void ra::rarray<T,1>::clear()
     // rarray private cleanup routine
     RA_IFTRACESAY("void rarray<T,1>::clear()");
     if (parray_ != RA_NULLPTR and entire_) {
-        bool thiscleans = cleans_;
-        if (thiscleans) {
+        if (cleans_) {
             if (ismine_)
                 delete[] get_buffer();
             delete[] extent_;

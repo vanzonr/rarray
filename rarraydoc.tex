@@ -349,18 +349,25 @@ This only works if the new and old shape have the same ranks.
 \end{enumerate}
 The last example has no side effects, i.e., the original rarray that was passed to the dump function retains its shape. 
 
-There is an important restriction to using reshape, namely, that only
-shallow copies of rarrays can be reshaped with the \texttt{reshape}
-method.  Original rarrays cannot. Because in the above example,
-\texttt{r} is an argument, it is a shallow copy of the array, and can
-be reshaped. If the argument were of reference type
-(e.g. \texttt{rarray<double,3>\& r}), then the reshape would not be
-allowed.  The reason for this is that reshaping an original array
-would make any exisiting shallow copies invalid. 
-
 Note that in both methods, the total size of the new shape should be
 less or equal to that of the old shape, because no additional data is
 allocated by the reshape method.
+
+There is an important restriction to using \texttt{reshape}, namely,
+that only shallow copies of rarrays can be reshaped with the
+\texttt{reshape} method.  Original rarrays cannot. Because in the
+above example, \texttt{r} is an argument, it is a shallow copy of the
+array, and can be reshaped. If the argument were of reference type
+(e.g. \texttt{rarray<double,3>\& r}), then the reshape would not be
+allowed.  The reason for this is that reshaping an original array
+would make any exisiting shallow copies invalid. Once reshaped, the
+rarray is now an original rarray, and cannot be reshaped again.
+
+This can be frustratingly annoying in context where you want to
+reshape an original array when no shallow copies exist.  You can force
+reshape to do its work by given an additional argument
+`\texttt{RA\_FORCE}' as the last argument to '\texttt{reshape}'. This
+should only be used when no shallow copies exist.
 
 \subsection{Optional bounds checking}
 
@@ -436,8 +443,8 @@ public:
  rarray(T* data, const int* extents);    // alternative: extents in array
  rarray(const rarray<T,R> &a);           // shallow copy constructor   
  ~rarray();                              // destructor 
- void         reshape(int extent0, ...); // change shape (not data)
- void         reshape(const int*extent); // change shape (not data)
+ void reshape(int extent0, ..., RAbool); // change shape (not data)
+ void reshape(const int* extent, RAbool);// change shape (not data)
  void         clear();                   // release memory
  void         fill(const T& value);      // fill with uniform value
  bool         is_clear();         const; // check if uninitialized;
@@ -499,13 +506,13 @@ This method returns a pointer to a \texttt{T**...}. This conversion breaks const
 
 This method creates reference to this with const elements.
 
-\noindent\textbf{Definition:} \texttt{void reshape(int extent0, ...);}
+\noindent\textbf{Definition:} \texttt{void reshape(int extent0, ..., RAbool force=RAbool(false));}
 
-This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11.  Warning: if the rarray was a shallow copy of another rarray, that original array will be resized as well! 
+This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11.  Warning: if the rarray is not a shallow copy of another rarray, the resizing will not be performed, to protect any existing shallo copies. If no such copies exist, one can give '\texttt{RA\_FORCE}' as the last (optional) argument to reshape an `original' array. 
 
-\noindent\textbf{Definition:} \texttt{void reshape(const int* extents);}
+\noindent\textbf{Definition:} \texttt{void reshape(const int* extents, RAbool force=RAbool(false));}
 
-Same as the previous reshape method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank seven or higher.
+Same as the previous reshape method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank twelve or higher.
 
 \noindent\textbf{Definition:} \texttt{void clear();}
 
