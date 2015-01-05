@@ -315,6 +315,54 @@ What does this essentially mean? Well:
 \item If you wish to do a deep copy, i.e., create a new array independent of the old array, you need to use the \texttt{copy} method.
 \end{enumerate}
 
+\subsection{Returning a rarray from a function\label{returnvalues}}
+
+Unless you're using rarray in a C++11 context, the shallow copying of
+rarrays causes problems when returning a rarray from a function.
+
+Consider the function \texttt{zeros} used in \texttt{main()}:
+\vspace{-9pt}
+\begin{framed}\vspace{-12pt}%
+\begin{verbatim}
+rarray<double,2> zeros(int n, int m) {
+   rarray<double,2> r(n,m);
+   r.fill(0.0);
+   return r;
+}
+int main() {
+   rarray<float,2> s = zeros(100,100);
+   return s[99][99];
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+In line 2, a rarray \texttt{r} is created, and filled, on line 3, with zeros.
+On line 4, this array is shallowly copied out of the function and into
+\texttt{s} on line 7. Once copied into \texttt{s}, \texttt{r} is destroyed and releases its
+memory, but this leaves \texttt{s} in an invalid state (as it points to
+memory that is no longer allocated).
+
+Instead, we would like the rarray \texttt{s} to become responsible for the
+memory deallocation, i.e., we'd like \texttt{r} to become a shallow copy and \texttt{s}
+the original.  To do so, rarrayprovides the \texttt{RA\_MOVE}
+macro, which affectively transfers the ownership. In the above
+example, it should be used as follows:
+\vspace{-9pt}
+\begin{framed}\vspace{-12pt}%
+\begin{verbatim}
+rarray<double,2> zeros(int n, int m) {
+   rarray<double,2> r(n,m);
+   r.fill(0.0);
+   return RA_MOVE(r);
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+
+In C++11, this kind of behavior can (and will, it just hasn't yet) be implemented using
+\emph{move semantics}, which make the first form of the \texttt{zeros}
+function work as correctly.
+
 \subsection{Reshaping the rarray}
 
 To use the data in an rarray but access it in a different `shape', one can
@@ -334,12 +382,12 @@ void dump(const rarray<double,3>& r) {
 \end{framed}\vspace{-8pt}
 \item or one can reshape the existing rarray with the desired dimensions. E.g.
 \vspace{-9pt}
-\begin{framed}\vspace{-3pt}%
+\begin{framed}\vspace{-18pt}%
 \begin{verbatim}
 void dump(rarray<double,3> r) {
    r.reshape(r.data(), 1, 1, r.size());
    for (int i=0;i<r.size();i++)
-       std::cout << rflat[0][0][i] << ' ';
+       std::cout << r[0][0][i] << ' ';
   std::cout << std::endl;
 }
 \end{verbatim}%
@@ -347,27 +395,39 @@ void dump(rarray<double,3> r) {
 \end{framed}\vspace{-8pt}
 This only works if the new and old shape have the same ranks.
 \end{enumerate}
-The last example has no side effects, i.e., the original rarray that was passed to the dump function retains its shape. 
+The last example has no side effects for the shape of the original rarray that was passed to the \texttt{dump} function retains its shape. 
 
 Note that in both methods, the total size of the new shape should be
 less or equal to that of the old shape, because no additional data is
 allocated by the reshape method.
 
-There is an important restriction to using \texttt{reshape}, namely,
-that only shallow copies of rarrays can be reshaped with the
-\texttt{reshape} method.  Original rarrays cannot. Because in the
-above example, \texttt{r} is an argument, it is a shallow copy of the
-array, and can be reshaped. If the argument were of reference type
-(e.g. \texttt{rarray<double,3>\& r}), then the reshape would not be
-allowed.  The reason for this is that reshaping an original array
-would make any exisiting shallow copies invalid. Once reshaped, the
-rarray is now an original rarray, and cannot be reshaped again.
+By default, \texttt{reshape} will only succeed for shallow copies of
+rarrays, but fail for original arrays.\footnote{The motivation for
+  this behavior is that reshaping an original array would make any
+  exisiting shallow copies invalid.}  In the above example, \texttt{r}
+is an argument, and it is therefore a shallow copy of some other
+array, and thus can be reshaped. If the argument had been of reference
+type (e.g. \texttt{rarray<double,3>\& r}), then the reshape would have
+failed.
 
-This can be frustratingly annoying in context where you want to
-reshape an original array when no shallow copies exist.  You can force
-reshape to do its work by given an additional argument
-`\texttt{RA\_FORCE}' as the last argument to '\texttt{reshape}'. This
-should only be used when no shallow copies exist.
+This restriction can be annoying in contexts where you want to
+reshape an original array and you know no shallow copies exist.  You can force
+reshape to do its work by giving an additional (optional) argument
+`\texttt{RA\_FORCE}' as the last argument to '\texttt{reshape}'. So the following would work
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+void dump(rarray<double,3> & r) {
+   r.reshape(r.data(), 1, 1, r.size(), RA_FORCE);
+   for (int i=0;i<r.size();i++)
+       std::cout << rflat[i] << ' ';
+  std::cout << std::endl;
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+\textbf{This is not a recommend technique: existing shallow copies of the rarray \texttt{r} would, as a side effect, become invalid after calling the function, without a way to detect it.}
+
 
 \subsection{Optional bounds checking}
 
@@ -447,6 +507,7 @@ public:
  void reshape(const int* extent, RAbool);// change shape (not data)
  void         clear();                   // release memory
  void         fill(const T& value);      // fill with uniform value
+ rarray<T,R>& move();                    // mimic 'move semantics'
  bool         is_clear();         const; // check if uninitialized;
  rarray<T,R>  copy()              const; // deep copy
  const int*   shape()             const; // all extents as C-style array
@@ -526,58 +587,16 @@ This method fills the array with a uniform value \texttt{value}.
 
 Checks if the rarray is in an uninitialized state.
 
-\noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>}\& copy() const;}
+\noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>} copy() const;}
 
 This method creates deep copy of the rarray, i.e., an independent rarray with the same dimensions are the original rarray and with its content a copy of the original rarray's content.
 
-\section{Returning a rarray from a function}
 
-Unless you're using rarray in a C++11 context, the shallow copying of
-rarrays causes problems when returning a rarray from a function.
+\noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>}\& move();}
 
-Consider the function \texttt{zeros} used in \texttt{main()}:
-\vspace{-9pt}
-\begin{framed}\vspace{-12pt}%
-\begin{verbatim}
-rarray<double,2> zeros(int n, int m) {
-   rarray<double,2> r(n,m);
-   r.fill(0.0);
-   return r;
-}
-int main() {
-   rarray<float,2> s = zeros(100,100);
-   return s[99][99];
-}
-\end{verbatim}%
-\vspace{-12pt}
-\end{framed}\vspace{-8pt}
-In line 2, a rarray 'r' is created, and filled, on line 3, with zeros.
-On line 4, this array is shallowly copied out of the function and into
-'s' on line 7. Once copied into 's', 'r' is destroyed and releases its
-memory, but this leaves 's' in an invalid state (as it points to
-memory that is no longer allocated.
+Turns the rarray into a movable rarray, and return a reference to that same rarray. This means that when the array is copied to another rarray (by the assignment operator or by a copy constructor), that other rarray becomes the owner of the rarray, instead of a shallow, non-owner copy.  This is used to mimic move semantic for rarrays in a C++03 standard. Its main purpose is to be able to return values from a function.  The method will not be needed in C++11, once rarray is adapted to take advantage of move semantics in C++11. For forward compatibility and code reusability between C++03 and C++11, use the macro \texttt{RA\_MOVE}, as illustrated above in section \ref{returnvalues}.
 
-Instead, we would like the rarray 's' to become responsible for the
-memory deallocation, i.e., we'd like r to become a shallow copy and s
-the original.  To do so, rarray.h provides the \texttt{RA\_MOVE}
-macro, which affectively transfers the ownership. In the above
-example, it should be used as follows:
-\vspace{-9pt}
-\begin{framed}\vspace{-12pt}%
-\begin{verbatim}
-rarray<double,2> zeros(int n, int m) {
-   rarray<double,2> r(n,m);
-   r.fill(0.0);
-   return RA_MOVE(r);
-}
-\end{verbatim}%
-\vspace{-12pt}
-\end{framed}\vspace{-8pt}
-
-In C++11, this kind of behavior can (and will) be implemented using
-\emph{move semantics}, which make the first form of the \texttt{zeros}
-function work as correctly.
-
+\pagebreak
 \section{Conversions}
 
 \subsection{Converting automatic C-style arrays to rarrays}
@@ -796,6 +815,7 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
 %END TEST THIS
 \vspace{-14pt}
 \end{framed}
+
 
 \section{Overheads}
 

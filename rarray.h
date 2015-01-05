@@ -196,7 +196,6 @@ class rarray {
     typedef Iterator<const T>                         const_iterator;   // iterator type for constant access
     typedef typename PointerArray<T,R>::type          parray_t;         // shorthand for T*const*const*...
     typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t; // shorthand for T***...
-    typedef rarray<T,R>                               self_t;           // useful in some generic programmong
 
     RA_INLINE_ rarray();                                                          // constructor leaving rarray undefined 
     RA_INLINE_ rarray(int n0, int n1);                                            // constructor creating its own buffer for R=2
@@ -265,6 +264,8 @@ class rarray {
     RA_INLINE_ int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
     RA_INLINE_ int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
 
+    RA_INLINEF rarray<T,R>&        move();                                        // convert this rarray to a temp value
+
     // access elements 
    #ifndef RA_SKIPINTERMEDIATE
     // through intermediate object:
@@ -276,14 +277,13 @@ class rarray {
     RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
    #endif
 
-    RA_INLINEF rarray<T,R>& move();                    // convert this rarray to a temp value
 
   private:
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
     mutable bool cleans_;                                              // alternative to ref counting: am I the one that cleans?
-    mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
+    bool         tmpval_;                                              // to mimic move semantics: am I a temporary value?
                                                                        // Temporary values pass their 'cleans_' value on when
                                                                        // copied, once. None-temporary values (the default) do not.
                                                                        // When returning a rarray 'a' from a function, use
@@ -315,7 +315,6 @@ class rarray<T,1> {
     typedef Iterator<const T>                         const_iterator;   // iterator type for constant access
     typedef typename PointerArray<T,1>::type          parray_t;         // conforming shorthand for T*
     typedef typename PointerArray<T,1>::noconst_type  noconst_parray_t; // conforming shorthand for T*
-    typedef rarray<T,1>                               self_t;           // useful in some generic programmong
 
     RA_INLINEF rarray();                                                          // constructor leaving object undefined
     RA_INLINE_ rarray(int n0);                                                    // constructor creating own buffer
@@ -373,7 +372,7 @@ class rarray<T,1> {
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
     mutable bool cleans_;                                              // alternative to ref counting: I am the one that cleans?
-    mutable bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
+    bool tmpval_;                                              // to mimic move semantics: am I a temporary value?
                                                                        // Temporary values pass their 'cleans_' value on when
                                                                        // copied, once. None-temporary values (the default) do not.
                                                                        // When returning a rarray 'a' from a function, use
@@ -1047,7 +1046,7 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1> ra::rarr
     RA_IFTRACESAY("rarray<T,R> rarray<T,R>::copy() const");
     if (parray_ != RA_NULLPTR) { 
         // if initialized
-        self_t result(extent_);
+        ra::rarray<T RA_COMMA R> result(extent_);
         T* bufbegin = get_buffer();
         T* bufend = bufbegin+size();
         T* newbuf = result.get_buffer();
