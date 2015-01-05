@@ -190,8 +190,6 @@ template<typename T,int R>
 class rarray {
 
   public: 
-    enum { rank = R };
-    
     typedef int                                       difference_type;  // difference type for indices
     typedef int                                       size_type;        // type of indices
     typedef Iterator<T>                               iterator;         // iterator type
@@ -309,7 +307,7 @@ template<typename T>
 class rarray<T,1> {
 
   public:
-    enum { rank = 1, R = 1 };
+    enum { R = 1 };
 
     typedef int                                       difference_type;  // difference type for indices
     typedef int                                       size_type;        // type of indices
@@ -412,8 +410,6 @@ template<typename T,int R>
 class subrarray {
 
   public:
-    enum { rank = R };
-
     typedef int                                       difference_type;  // difference type for indices
     typedef int                                       size_type;        // type of indices
     typedef Iterator<T>                               iterator;         // iterator type
@@ -461,7 +457,7 @@ class subrarray {
 template<typename T> class subrarray<T,1> {
 
   public:
-    enum { rank = 1 };
+    enum { R = 1 };
 
     typedef int                                      difference_type;  // difference type for indices
     typedef int                                      size_type;        // type of indices
@@ -1075,7 +1071,7 @@ template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::
 {
     // retrieve array size in dimension i   
     RA_IFTRACESAY("int sub/rarray<T,R>::extent(int) const");
-    RA_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
+    RA_CHECKORSAY(i >=0 and i < R, "wrong dimension");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     return extent_[i];
 })
@@ -1111,7 +1107,7 @@ template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::
     RA_IFTRACESAY("int sub/rarray<T,R>::size() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
     int result = 1;
-    for (int i=0; i<rank; i++) 
+    for (int i=0; i<R; i++) 
         result *= extent_[i];
     return result;
 })
@@ -1229,7 +1225,7 @@ template<typename T>                RA_INLINE_ int* ra::subrarray<T RA_COMMA 1>:
     RA_CHECKORSAY(ind!=RA_NULLPTR, "invalid index buffer");
     int linearindex = &a - get_buffer();
     RA_CHECKORSAY(linearindex >=0 and linearindex < size(), "element not in array");
-    int j = rank;
+    int j = R;
     while (j-->0) {
         ind[j] = linearindex % extent_[j];
         linearindex /= extent_[j];
@@ -1269,10 +1265,10 @@ template<typename T>                RA_INLINE_ int ra::subrarray<T RA_COMMA 1>::
     // retrieve index in dimension i within *this of the element a
     RA_IFTRACESAY("int rarray<T,R>::index((const) T&,int) (const)");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
-    RA_CHECKORSAY(i >=0 and i < rank, "wrong dimension");
+    RA_CHECKORSAY(i >=0 and i < R, "wrong dimension");
     int linearindex = &a - get_buffer();
     RA_CHECKORSAY(linearindex >=0 and linearindex < size(), "element not in array");
-    for (int j = rank-1; j > i; j--) 
+    for (int j = R-1; j > i; j--) 
         linearindex /= extent_[j];
     return linearindex % extent_[i];
 
@@ -1321,7 +1317,7 @@ template<typename T>                RA_INLINE_ ra::rarray<const T RA_COMMA 1>& r
     // create a reference to this that treats elements as constant
     RA_IFTRACESAY("rarray<const T,R>& rarray<T,R>::const_ref() const");
     RA_CHECKORSAY(parray_!=RA_NULLPTR, "attempt at using undefined rarray");
-    return (rarray<const T RA_COMMA rank>&)(*this);
+    return (rarray<const T RA_COMMA R>&)(*this);
  })
 
 RA_DUPLICATE_BODY(
@@ -1330,14 +1326,14 @@ template<typename T>                RA_INLINE_ ra::subrarray<const T RA_COMMA 1>
 {
     // create a reference to this that treats elements as constant
     RA_IFTRACESAY("subrarray<const T,R>& subrarray<T,R>::const_ref() const");
-    return (subrarray<const T,rank>&)(*this);
+    return (subrarray<const T,R>&)(*this);
  })
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_QUADRUPLICATE_BODY(
-template<typename T RA_COMMA int R> RA_INLINE_ void         ra::rarray<T RA_COMMA R>::fill(const T& value),
-template<typename T>                RA_INLINE_ void         ra::rarray<T RA_COMMA 1>::fill(const T& value),
+template<typename T RA_COMMA int R> RA_INLINE_ void    ra::rarray<T RA_COMMA R>::fill(const T& value),
+template<typename T>                RA_INLINE_ void    ra::rarray<T RA_COMMA 1>::fill(const T& value),
 template<typename T RA_COMMA int R> RA_INLINE_ void ra::subrarray<T RA_COMMA R>::fill(const T& value),
 template<typename T>                RA_INLINE_ void ra::subrarray<T RA_COMMA 1>::fill(const T& value),
 {
@@ -1407,7 +1403,7 @@ template<typename T,int R> RA_INLINEF ra::subrarray<T,R-1> ra::subrarray<T,R>::o
 
 template<typename T> RA_INLINEF T& ra::subrarray<T,1>::operator[](int i) const
 {
-    // subrarray methods for element access, rank==1 version
+    // subrarray methods for element access, R==1 version
     RA_IFTRACESAY("T& subrarray<T,1>::operator[](int)");
     RA_CHECKORSAY(i >=0 and i < extent_[0], "wrong index");
     return parray_[i];
@@ -1451,13 +1447,14 @@ template<typename T RA_COMMA int R> T* ra::subrarray<T RA_COMMA R>::get_buffer()
 template<typename T>                T* ra::subrarray<T RA_COMMA 1>::get_buffer() const,
 {
     RA_IFTRACESAY("T* (sub)rarray<T,R>::get_buffer()");
-    return ra::rarray<T RA_COMMA rank>::base(parray_);
+    return ra::rarray<T RA_COMMA R>::base(parray_);
 })
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::init_shallow(parray_t parray, bool& cleans, bool tmpval)
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(parray_t parray, bool& cleans, bool tmpval),
+template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(parray_t parray, bool& cleans, bool tmpval),
 {
     // shallow init function : reuses buffer and parray
     RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, bool&, bool)");
@@ -1471,12 +1468,13 @@ void ra::rarray<T,R>::init_shallow(parray_t parray, bool& cleans, bool tmpval)
     } else {
         cleans_ = false;
     }
-}
+})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::init_shallow(parray_t parray)
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(parray_t parray),
+template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(parray_t parray),
 {
     // shallow init function for subrarray: reuses buffer and parray
     RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t)");
@@ -1485,12 +1483,13 @@ void ra::rarray<T,R>::init_shallow(parray_t parray)
     parray_ = parray;
     tmpval_ = false;
     cleans_ = false;
-}
+})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::init_parray(T* buffer, const int* extent)
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_parray(T* buffer, const int* extent),
+template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_parray(T* buffer, const int* extent),
 {
     // init functions that reuses a buffer but not a parray
     RA_IFTRACESAY("void rarray<T,R>::init_parray(T*, const int*)");
@@ -1502,12 +1501,13 @@ void ra::rarray<T,R>::init_parray(T* buffer, const int* extent)
         extent_[i] = extent[i];
     bool oldcleans = true;
     init_shallow(parray, oldcleans, true);
-}
+})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::init_data(const int* extent, int extenttot)
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_data(const int* extent, int extenttot),
+template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_data(const int* extent, int extenttot),
 {
     // init functions that need new buffer and parray
     RA_IFTRACESAY("void rarray<T,R>::init_data(const int*, int)");
@@ -1516,57 +1516,7 @@ void ra::rarray<T,R>::init_data(const int* extent, int extenttot)
     T* buffer = new T[extenttot];
     init_parray(buffer, extent);
     ismine_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T> RA_INLINE_ 
-void ra::rarray<T,1>::init_shallow(parray_t    parray,
-                                   bool&       cleans,
-                                   bool        tmpval)
-{
-    // shallow init function : reuses buffer and parray
-    RA_IFTRACESAY("void rarray<T,1>::init_shallow(parray_t, const int*, bool, bool&, bool)");
-    RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
-    RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
-    tmpval_ = false;
-    parray_ = parray;
-    if (tmpval) {
-        cleans_ = cleans;
-        cleans = false;
-    } else {
-        cleans_ = false;
-    }
-}
-
-template<typename T> RA_INLINE_ 
-void ra::rarray<T,1>::init_shallow(parray_t parray)
-{
-    // shallow init function : reuses parray
-    RA_IFTRACESAY("void rarray<T,1>::init_shallow(parray_t)");
-    RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
-    RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
-    parray_ = parray;
-    tmpval_ = false;
-    cleans_ = false;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T> RA_INLINE_ 
-void ra::rarray<T,1>::init_parray(T* buffer, const int* extent)
-{
-    // shallow init function for subrarray: reuses buffer and parray
-    RA_IFTRACESAY("void rarray<T,1>::init_parray(T*, const int*)");
-    RA_CHECKORSAY(buffer != RA_NULLPTR, "null pointer");
-    RA_CHECKORSAY(extent != RA_NULLPTR, "null pointer");
-    extent_ = new int[1];
-    for (int i=0;i<R;i++)
-        extent_[i] = extent[i];
-    parray_t parray = new_except_base(buffer, extent);
-    bool oldcleans = true;
-    init_shallow(parray, oldcleans, true);
-}
+})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1640,7 +1590,7 @@ void ra::rarray<T,1>::reshape(int n0, RAbool force)
 {
     // constructor for R=1
     RA_IFTRACESAY("void rarray<T,1>::reshape(int)");
-    RA_CHECKORSAY(rank==1, "wrong rank in reshape");
+    RA_CHECKORSAY(R==1, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0, "zero shape not allowed");
     const int extent[1] = {n0};
     reshape(extent, force);
@@ -1758,50 +1708,24 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T> RA_INLINE_ 
-void ra::rarray<T,1>::init_data(const int* extent, int extenttot)
-{
-    RA_IFTRACESAY("void rarray<T,1>::init_data(const int*, int)");
-    RA_CHECKORSAY(extent != RA_NULLPTR, "null pointer");
-    RA_CHECKORSAY(extenttot >= 0, "negative number of elements");
-    T* buffer = new T[extenttot];
-    init_parray(buffer, extent);
-    ismine_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define DELETE(x) std::cerr << "Deleting array " #x " at " << x << '\n'; delete[] x;
-template<typename T,int R> RA_INLINEF 
-void ra::rarray<T,R>::clear() 
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINEF void ra::rarray<T RA_COMMA R>::clear(),
+template<typename T>                RA_INLINEF void ra::rarray<T RA_COMMA 1>::clear(),
 {
     //  rarray private cleanup routine
     RA_IFTRACESAY("void rarray<T,R>::clear()");
     if (parray_ != RA_NULLPTR and cleans_) {
         if (ismine_) 
             delete[] get_buffer(); 
-        delete[] parray_;
+        if (R > 1)
+            delete[] parray_;
         delete[] extent_;
     }
     parray_ = RA_NULLPTR;
     cleans_ = false;
     tmpval_ = false;
-}
-
-template<typename T> RA_INLINEF 
-void ra::rarray<T,1>::clear() 
-{
-    // rarray private cleanup routine
-    RA_IFTRACESAY("void rarray<T,1>::clear()");
-    if (parray_ != RA_NULLPTR and cleans_) {
-        if (ismine_)
-            delete[] get_buffer();
-        delete[] extent_;
-    }
-    parray_ = RA_NULLPTR;
-    cleans_ = false;
-    tmpval_ = false;
-}
+})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1870,7 +1794,7 @@ T* ra::rarray<T,R>::base(parray_t parray)
 template<typename T> RA_INLINE_
 T* ra::rarray<T,1>::base(parray_t parray)
 {
-    // rarray private method to find base of a chain of pointers: different for rank==1?
+    // rarray private method to find base of a chain of pointers: different for R==1
     RA_IFTRACESAY("T* rarray<T,1>::base(parray_t)");
     const char*  result1 = reinterpret_cast<const char*>(parray);
           char*  result2 = const_cast<char*>(result1);
