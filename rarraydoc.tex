@@ -412,13 +412,12 @@ failed.
 
 This restriction can be annoying in contexts where you want to
 reshape an original array and you know no shallow copies exist.  You can force
-reshape to do its work by giving an additional (optional) argument
-`\texttt{RA\_FORCE}' as the last argument to '\texttt{reshape}'. So the following would work
+reshape to do its work by using \texttt{reshape\_force} instead of \texttt{reshape}. So the following would work
 \vspace{-9pt}
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
 void dump(rarray<double,3> & r) {
-   r.reshape(r.data(), 1, 1, r.size(), RA_FORCE);
+   r.reshape_force(r.data(), 1, 1, r.size());
    for (int i=0;i<r.size();i++)
        std::cout << rflat[i] << ' ';
   std::cout << std::endl;
@@ -503,8 +502,10 @@ public:
  rarray(T* data, const int* extents);    // alternative: extents in array
  rarray(const rarray<T,R> &a);           // shallow copy constructor   
  ~rarray();                              // destructor 
- void reshape(int extent0, ..., RAbool); // change shape (not data)
- void reshape(const int* extent, RAbool);// change shape (not data)
+ void reshape(int extent0, ...);         // change copy's shape (not data)
+ void reshape(const int* extent);        // change copy's  shape (not data)
+ void reshape_force(int extent0, ...);   // change owner shape (not data)
+ void reshape_force(const int* extent);  // change owner shape (not data)
  void         clear();                   // release memory
  void         fill(const T& value);      // fill with uniform value
  rarray<T,R>& move();                    // mimic 'move semantics'
@@ -567,13 +568,21 @@ This method returns a pointer to a \texttt{T**...}. This conversion breaks const
 
 This method creates reference to this with const elements.
 
-\noindent\textbf{Definition:} \texttt{void reshape(int extent0, ..., RAbool force=RAbool(false));}
+\noindent\textbf{Definition:} \texttt{void reshape(int extent0, ...);}
 
-This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11.  Warning: if the rarray is not a shallow copy of another rarray, the resizing will not be performed, to protect any existing shallo copies. If no such copies exist, one can give '\texttt{RA\_FORCE}' as the last (optional) argument to reshape an `original' array. 
+This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11.  Warning: if the rarray is not a shallow copy of another rarray, the resizing will \textbf{not} be performed, to protect any existing shallow copies (but see \texttt{reshape\_force} below).
 
-\noindent\textbf{Definition:} \texttt{void reshape(const int* extents, RAbool force=RAbool(false));}
+\noindent\textbf{Definition:} \texttt{void reshape(const int* extents);}
 
-Same as the previous reshape method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank twelve or higher.
+Same as the previous \texttt{reshape} method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank twelve or higher.
+
+\noindent\textbf{Definition:} \texttt{void reshape\_force(int extent0, ...);}
+
+The \texttt{reshape} method fails if the rarray is an original rarray, to protect existing shallo copies. If no such copies exist, one can use the \texttt{reshape\_force} method to reshape an original array.
+
+\noindent\textbf{Definition:} \texttt{void reshape\_force(const int* extents);}
+
+Same as the previous \texttt{reshape\_force} method, but takes an array of new dimensions as an argument.  This is the only way to reshape an array of rank twelve or higher.
 
 \noindent\textbf{Definition:} \texttt{void clear();}
 
