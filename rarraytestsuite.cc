@@ -51,7 +51,7 @@ string strip(const char* s)
 }
 #define ALLCLEAR 0
 #define CHECK(x) {if(!(x)){cerr<<__LINE__<<'\n';return 1;}}
-#define PASSORRETURN(x) {cerr<<strip(#x)<<": "; int e=x;cerr <<FP[e==0]<<'\n';if(e)return e;}
+#define PASSORRETURN(x) {int e=x;cerr<<strip(#x)<<": "; cerr <<FP[e==0]<<'\n';if(e)return e;}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1609,6 +1609,8 @@ int testreshape()
     rarray<float,1> novela2(a2);
     novela[3] = 4;
     novela.reshape(4);
+    a.reshape_force(dim);
+    a.reshape_force(*dim);
     CHECK(novela.extent(0)==4);
     CHECK(novela[3]==4);
     CHECK(novela2.extent(0)==7);
@@ -1619,6 +1621,7 @@ int testreshape()
     rarray<float,2> novelb(b);
     rarray<float,2> novelb2(novelb);
     novelb.reshape(10,7);
+    b.reshape_force(dim);
     CHECK(novelb.extent(0)==10);
     CHECK(novelb.extent(1)==7);
     CHECK(novelb2.extent(0)==7);
@@ -1646,6 +1649,7 @@ int testreshape()
     novelf.reshape(5,6,1,13,10,7);          // TODO: check
     novelg.reshape(dimr);                   // TODO: check
     novelg.reshape_force(2,5,6,1,13,10,7);  // TODO: check
+    novelg.reshape(2,5,6,1,13,10,7);        // TODO: check
     novelh.reshape(4,3,2,3,4,3,2,3);        // TODO: check
     noveli.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
     novelj.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
