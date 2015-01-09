@@ -1649,7 +1649,6 @@ int testreshape()
     novelf.reshape(5,6,1,13,10,7);          // TODO: check
     novelg.reshape(dimr);                   // TODO: check
     novelg.reshape_force(2,5,6,1,13,10,7);  // TODO: check
-    novelg.reshape(2,5,6,1,13,10,7);        // TODO: check
     novelh.reshape(4,3,2,3,4,3,2,3);        // TODO: check
     noveli.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
     novelj.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
