@@ -48,7 +48,8 @@ MORELDFLAGSOPT?=
 FC?=gfortran
 FFLAGS?=-O2
 
-TESTNAME=rarraytestsuite
+TESTNAME?=rarraytestsuite
+#if Boost.Test installed: TESTNAME=rarraytests
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
 BENCHMARK2DNAMEF=benchmark2Dfrtrn
@@ -99,7 +100,7 @@ doctestgenerator.sh: rarraydoc.tex config.mk
 	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' rarraydoc.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include "rarray.h"/' | grep -v verbatim> doctestgenerator.sh
 
 test: $(TESTNAME)
-	./$(TESTNAME)
+	./$(TESTNAME) --report_level=detailed
 
 valgrindtest: $(TESTNAME)
 	valgrind --tool=memcheck $(TESTNAME)

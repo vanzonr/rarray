@@ -122,6 +122,11 @@ else
         detect_library ARMADILLO armadillo -DNOARMADILLO -DARMA_NO_DEBUG ""
         #######################################################
         echo >> config.mk
+        if grep DNOBOOST config.mk &>/dev/null; then
+            echo "TESTNAME=rarraytestsuite" >> config.mk
+        else
+            echo "TESTNAME=rarraytests" >> config.mk
+        fi
         rm -f ./a.out
         # Extra include dirs added to MORECPPFLAGS
         if [ "$accincdir" ]; then
