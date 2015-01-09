@@ -72,7 +72,10 @@ install: rarray.h rarraydoc.pdf
 doc: rarraydoc.pdf
 
 rarraydoc.pdf: rarraydoc.tex
-	pdflatex rarraydoc.tex
+	pdflatex rarraydoc.tex 
+	mv rarraydoc.pdf rarraydoc0.pdf
+	pdftk rarraydoc0.pdf output rarraydoc.pdf uncompress
+	rm -f rarraydoc0.pdf
 
 doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x config.mk
 	./doc1.x
