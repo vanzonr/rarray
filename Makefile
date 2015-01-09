@@ -106,7 +106,7 @@ valgrindtest: $(TESTNAME)
 	valgrind --tool=memcheck $(TESTNAME)
 
 $(TESTNAME): $(TESTNAME).o config.mk
-	$(CCL) $(LDFLAGS) -o $@ $< $(LDLIBS)
+	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 $(TESTNAME).o: $(TESTNAME).cc rarray.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
@@ -195,11 +195,11 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 
 profiletests: $(TESTNAME).cc rarray.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests
+	$(CXX) $(CXXFLAGS) ${TESTCPPFLAGS} $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests ${TESTLDFLAGS} 
 
 profilenitests: $(TESTNAME).cc rarray.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
-	$(CXX) -DRA_SKIPINTERMEDIATE $(CXXFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profilenitests
+	$(CXX) -DRA_SKIPINTERMEDIATE $(CXXFLAGS) $(TESTCPPFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profilenitests  $(TESTLDFLAGS)
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@echo "Summary:"

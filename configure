@@ -17,33 +17,38 @@ function detect_library()
     # added to the accincdir and acclibdir.
     # Example: 
     #   detect_library ARMADILLO armadillo -DNOARMADILLO -DEIGEN_NO_DEBUG ""
-    modulename="$1"
-    headerfile="$2"
-    compilewithout="$3"
-    compilewith="$4"
-    addlibrary="$5"
-    echo -n "Detecting $modulename's $headerfile... " 
-    incdir=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $2}')
-    incvar=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $1}')
-    libdir=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $2}')
-    libvar=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $1}')
+    local modulename="$1"
+    local headerfile="$2"
+    local compilewithout="$3"
+    local compilewith="$4"
+    local addlibrary="$5"
+    echo -n "Detecting $modulename's $headerfile... "
+    local incdir=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $2}')
+    local incvar=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $1}')
+    local libdir=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $2}')
+    local libvar=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $1}')
     if [ "$incdir" ]; then
         incdir="-I$incdir"
     fi
     if [ "$libdir" ]; then
         libdir="-L$libdir"
     fi
+    local tmpfile=$(mktemp --suffix .cc)
     cat > $tmpfile <<-EOF
 	#include "$headerfile"
 	int main(){return 0;}
 EOF
-    if ! $CXX $incdir $libdir $tmpfile $addlib &> /dev/null; then 
+    if ! $CXX -DBOOST_TEST_NO_MAIN $incdir $libdir $tmpfile $addlib &> /dev/null; then 
         echo "not found"
-        echo -n " $compilewithout" >> config.mk
+        if [ -n "$compilewithout" ]; then
+            echo -n " $compilewithout" >> config.mk
+        fi
     else
-        #$CXX -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
+        #$CXX -DBOOST_TEST_NO_MAIN -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
         echo "found"
-        echo -n " $compilewith" >> config.mk
+        if [ -n "$compilewithout" ]; then
+            echo -n " $compilewith" >> config.mk
+        fi
         if [ -n "$incvar" ]; then 
             accincdir="$accincdir -IZ{$incvar}"
         fi
@@ -109,13 +114,25 @@ else
             grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
         fi
         # detect installation of BLITZ (only needed for benchmarks)
-        echo -e "#\n# Variables for compiling comparison benchmarks\n#" >> config.mk
-        echo -n "MORECPPFLAGSOPT=-DNDEBUG" >> config.mk
-        tmpfile=$(mktemp --suffix .cc)
+        echo -e "#\n# Variables for compiling\n#">> config.mk
+        accincdir=""
+        acclibdir=""
         #########################################################
-        detect_library BLITZ blitz/array.h -DNOBLITZ "" ""
+        detect_library BOOST boost/test/included/unit_test.hpp "" "" ""
+        if [ "$accincdir" ]; then
+            echo "TESTCPPFLAGS=${accincdir:1}" | sed 's/-IZ/-I$/g' >> config.mk
+        fi
+        if [ "$acclibdir" ]; then 
+            echo "TESTLDFLAGS=${acclibdir:1}"  | sed 's/-LZ/-L$/g' >> config.mk
+        fi               
+        echo -n "MORECPPFLAGSOPT=-DNDEBUG" >> config.mk
+        #########################################################
+        accincdir=""
+        acclibdir=""
         #########################################################
         detect_library BOOST boost/multi_array.hpp -DNOBOOST -DBOOST_DISABLE_ASSERTS ""
+        #########################################################
+        detect_library BLITZ blitz/array.h -DNOBLITZ "" ""
         #########################################################
         detect_library EIGEN3 eigen3/Eigen/Dense -DNOEIGEN3 "-DNDEBUG -DEIGEN_NO_DEBUG" ""
         #########################################################
@@ -124,6 +141,7 @@ else
         echo >> config.mk
         if grep DNOBOOST config.mk &>/dev/null; then
             echo "TESTNAME=rarraytestsuite" >> config.mk
+
         else
             echo "TESTNAME=rarraytests" >> config.mk
         fi
