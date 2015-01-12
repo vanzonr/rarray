@@ -27,6 +27,7 @@
 #include <boost/mpl/list.hpp>
 
 #include "rarray.h"
+#include "rarrayio.h"
 #include <iostream>
 #include <cassert>
 #include <iomanip>

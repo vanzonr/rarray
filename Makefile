@@ -64,9 +64,10 @@ config.mk:
 	@echo "Error: Run 'configure' to create config.mk"
 	@false
 
-install: rarray.h rarraydoc.pdf
+install: rarray.h rarrayio.h rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
 	cp rarray.h ${PREFIX}/include/rarray.h
+	cp rarrayio.h ${PREFIX}/include/rarrayio.h
 	mkdir -p ${PREFIX}/share/rarray
 	cp rarraydoc.pdf ${PREFIX}/share/rarray
 
@@ -78,7 +79,7 @@ rarraydoc.pdf: rarraydoc.tex
 	pdftk rarraydoc0.pdf output rarraydoc.pdf uncompress
 	rm -f rarraydoc0.pdf
 
-doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x config.mk
+doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x config.mk
 	./doc1.x
 	./doc2.x
 	./doc3.x
@@ -89,6 +90,8 @@ doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x 
 	./doc8.x
 	./doc9.x
 	./doc10.x
+	./doc11.x
+	./doc12.x
 
 doc%.x: doc%.cc
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
@@ -108,7 +111,7 @@ valgrindtest: $(TESTNAME)
 $(TESTNAME): $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(TESTNAME).o: $(TESTNAME).cc rarray.h config.mk
+$(TESTNAME).o: $(TESTNAME).cc rarray.h rarrayio.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 benchmark: benchmark2d benchmark4d
@@ -170,7 +173,7 @@ covertest: \
  missing_from_test.txt \
  summary
 
-coverage_in_code.txt: rarray.h
+coverage_in_code.txt: rarray.h rarrayio.h
 	@echo "Extracting lines from array.h that generate profile messages"
 	\grep -n RA_IFTRACESAY rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_IFTRACESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
 
@@ -193,11 +196,11 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 	comm -2 -3 _coverage_in_code.txt _coverage_in_test.txt | sort -n > missing_from_test.txt
 	rm -f _coverage_in_code.txt _coverage_in_test.txt
 
-profiletests: $(TESTNAME).cc rarray.h config.mk
+profiletests: $(TESTNAME).cc rarray.h rarrayio.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
 	$(CXX) $(CXXFLAGS) ${TESTCPPFLAGS} $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests ${TESTLDFLAGS} 
 
-profilenitests: $(TESTNAME).cc rarray.h config.mk
+profilenitests: $(TESTNAME).cc rarray.h rarrayio.h config.mk
 	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
 	$(CXX) -DRA_SKIPINTERMEDIATE $(CXXFLAGS) $(TESTCPPFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profilenitests  $(TESTLDFLAGS)
 
@@ -210,8 +213,8 @@ summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 clean:
 	rm -f $(TESTNAME).o $(TESTNAME)-cov.o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
 	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
-	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x \
-	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doctestgenerator.sh \
+	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x \
+	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doc11.cc doc12.cc doctestgenerator.sh \
 	rarraydoc.aux rarraydoc.log rarraydoc.out rarraydoc.dvi
 
 distclean: clean

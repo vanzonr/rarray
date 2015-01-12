@@ -1,0 +1,397 @@
+//
+// rarrayio.h - I/O routines for tuntime arrays. Documentation in rarraydoc.pdf
+//
+// Copyright (c) 2013-2015  Ramses van Zon
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+
+#ifndef RARRAYIO_H
+#define RARRAYIO_H
+
+#include "rarray.h"
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <stdexcept>
+#include <cstdlib>
+
+// When running rarraytests.cc compiled with -DRA_TRACETEST, the
+// following macro produced output to be used to determine which
+// functions are exercised.
+#ifdef RA_TRACETEST
+#define RA_IFTRACESAY(a) std::cerr << "IFTRACE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
+#else
+#define RA_IFTRACESAY(a) 
+#endif
+
+// Compiling with -DRA_BOUNDSCHECK switches on the checkOrSay macro to
+// check its first argument and throw an exception if it is not true.
+// checkOrSay is intended to be used for bound checks.
+#ifdef RA_BOUNDSCHECK
+// BOUNDCHECK is incompatible with SKIPINTERMEDIATE
+#ifdef RA_SKIPINTERMEDIATE
+#undef RA_SKIPINTERMEDIATE
+#endif
+#endif
+
+#if __cplusplus <= 199711L
+#define RA_NULLPTR 0 
+#else
+#define RA_NULLPTR nullptr
+#endif
+
+// For g++ and icpc, RA_INLINE forces inlining, even without optimization.
+// In all other cases, RA_INLINE=inline, and inlining may not occur.
+// Note for xlC: 
+//    In version 10, you need "-O4" to get full inlining.
+//    In version 11, "-O2 -qinline=level=6" suffices.
+//
+#if not defined(RA_INLINE)
+# if defined(__INTEL_COMPILER)
+#   define RA_INLINE  __forceinline
+# elif defined(__GNUC__)
+#   define RA_INLINE inline __attribute__((always_inline)) 
+# else
+#   define RA_INLINE inline
+# endif
+#endif
+
+// routines using INLINEF will be forced to inline
+// routines using INLINE_ will not: these were deemed to expensive to inline from a compilation point of view
+#define RA_INLINEF RA_INLINE
+#define RA_INLINE_ inline
+
+// Input/output streaming operators in global namespace
+template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
+template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
+template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::subrarray<T,R>& r);
+
+// add everything else to 'ra' namespace
+namespace ra {
+
+template<typename T,int R> RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
+template<typename T>       RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,1>& r);
+template<typename T,int R> RA_INLINE_ std::ostream& text_output(std::ostream &o, const subrarray<T,R>& r);
+template<typename T>       RA_INLINE_ std::ostream& text_output(std::ostream &o, const subrarray<T,1>& r);
+
+// We need to be able to get a reference in a pointer-to-pointer structure given indices.
+//
+// Deref<T,1>(T*   p, int* i) where i->{n1}        =  p[n1]
+// Deref<T,2>(T**  p, int* i) where i->{n1,n2}     =  p[n1][n2]
+// Deref<T,3>(T*** p, int* i) where i->{n1,n2,n3}  =  p[n1][n2][n3]
+//...
+template<typename T, int R>
+struct Deref {
+    static RA_INLINEF T& access(typename PointerArray<T,R>::type p, const int* indices);
+};
+template<typename T>
+struct Deref<T,1>  // R=1 is special
+{
+    static RA_INLINEF T& access(typename PointerArray<T,1>::type p, const int* indices);
+};
+
+// Convert a string to a value, needed for operator>> .
+template<typename T>
+struct StringToValue {
+    static RA_INLINE_ void get(const std::string& input, T& output);
+};
+template<>
+struct StringToValue<std::string> {
+    static RA_INLINE_ void get(const std::string& input, std::string& output);
+};
+
+// Function prototype of helper routine used by operator>>:
+template<typename T, int R> RA_INLINE_ 
+void read_and_parse_shape(std::istream & in, int* shape, typename PointerArray<T,R>::type p = 0);
+
+
+} // end namespace ra
+
+
+//------------------------------------------------//
+//                                                //
+//          I M P L E M E N T A T I O N           //
+//                                                //
+//------------------------------------------------//
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T, int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T, R>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    return ra::text_output(o,r);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T, int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::subrarray<T, R>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    return ra::text_output(o,r);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T,int R> RA_INLINE_ 
+std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    if (not r.is_clear()) {
+        o << '{';
+        for (int i=0; i<r.extent(0); i++)  {
+            if (i>0)
+                o << ',';
+            #ifndef RA_SKIPINTERMEDIATE
+            o << r[i];
+            #else
+            T* subdata = RA_NULLPTR;
+            if (r[i] != RA_NULLPTR) {
+                const char* result1 = reinterpret_cast<const char*>(r[i]);
+                char* result2 = const_cast<char*>(result1);
+                char** result = reinterpret_cast<char**>(result2);
+                for (int i=0; i < R-2; i++)
+                    result = reinterpret_cast<char**>(*result);
+                subdata = reinterpret_cast<T*>(result);
+            }
+            o << ra::rarray<T,R-1>(subdata, r.shape()+1);
+            #endif
+        }
+        o << '}';
+    } else {
+        for (int i=0; i<R; i++) 
+            o << '{';
+        for (int i=0; i<R; i++) 
+            o << '}';
+    }
+    return o;
+}
+
+template<typename T> RA_INLINE_ 
+std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,1>&)");
+    if (not r.is_clear()) {
+        o << '{';
+        for (int i=0; i<r.extent(0); i++) {
+            if (i) o << ',';
+            std::stringstream strstr;
+            std::string result;
+            strstr << r[i];
+            result = strstr.str();
+            if (result.find_first_of("{,}#") != std::string::npos)
+                o << '#' << result.size() << ':';
+            o << result;
+        }
+        o << '}';
+    } else 
+        o << "{}";
+    return o;
+}
+
+template<typename T,int R> RA_INLINE_
+std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,R>&)");
+    o << '{' << r[0];
+    for (int i=1; i<r.extent(0); i++) 
+        o << ',' << r[i];
+    o << '}';
+    return o;
+}
+
+template<typename T> RA_INLINE_
+std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,1>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,1>&)");
+    o << '{';
+    for (int i=0; i<r.extent(0); i++) {
+        if (i) o << ',';
+        std::stringstream strstr;
+        std::string result;
+        strstr << r[i];
+        result = strstr.str();
+        if (result.find_first_of("{,}#") != std::string::npos)
+            o << '#' << result.size() << ':';
+        o << result;
+    }
+    o << '}';
+    return o;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// helper routines to convert a string to any data type
+
+template<typename T> RA_INLINE_
+void ra::StringToValue<T>::get(const std::string& input, T& output) 
+{
+    RA_IFTRACESAY("void StringToValue::get(const std::string&,T&)");
+    std::stringstream str(input); // use streaming operators by default
+    str >> output; // won't work with strings as they get truncated at first whitespace
+}
+
+RA_INLINE_ void ra::StringToValue<std::string>::get(const std::string& input, std::string& output)
+{
+    RA_IFTRACESAY("void StringToValue::get(const std::string&,std::string&)");
+    output = input;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T, int R> RA_INLINEF 
+T& ra::Deref<T,R>::access(typename PointerArray<T,R>::type p, const int* indices) 
+{
+    RA_IFTRACESAY("Deref<T,R>::access(PointerArray<T,R>::type,const int*)");
+    return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
+}
+
+template<typename T> RA_INLINEF 
+T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices) 
+{
+    RA_IFTRACESAY("Deref<T,1>::access(PointerArray<T,1>::type,const int*)");
+    return p[indices[0]-1];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T, int R> RA_INLINE_
+void ra::read_and_parse_shape(std::istream &                             in, 
+                                    int*                                       shape, 
+                                    typename ra::PointerArray<T,R>::type p)
+{
+    RA_IFTRACESAY("void read_and_parse_shape(std::istream&,int*,PointerArray<T,R>::type)");
+    size_t init_file_ptr = in.tellg();
+    try {
+        int current_shape[R];
+        for (int i=0; i<R; i++) {
+            current_shape[i] = 1;
+            if (shape)
+                shape[i] = 0;
+            if (in.get() != '{') 
+                throw std::istream::failure("Format error");
+        }
+        int current_depth = R-1; // start scanning the deepest level
+        while (current_depth>=0) {
+            if (current_depth==R-1) {
+                char         lastchar;
+                std::string  word = "";
+                do {
+                    lastchar = in.get();
+                    if (lastchar != ',' and lastchar != '}')
+                        word += lastchar;
+                    if (word == "#") {
+                        word="";
+                        std::string skipstr;
+                        do {
+                            skipstr += (lastchar = in.get());
+                        } while (lastchar!=':');
+                        int skip = atoi(skipstr.c_str());
+                        for (int i=0; i<skip; i++) 
+                            word += in.get();
+                        lastchar = in.get();
+                    }
+                    if (lastchar == ',') {
+                        if (p) 
+                            StringToValue<T>::get(word,
+                                                  Deref<T,R>::access(p, current_shape));
+                        word="";
+                        current_shape[current_depth]++;
+                    }
+                } while (lastchar != '}');
+                if (p) 
+                    StringToValue<T>::get(word,
+                                          Deref<T,R>::access(p, current_shape));
+                if (shape)
+                    if (shape[current_depth] < current_shape[current_depth])
+                        shape[current_depth] = current_shape[current_depth];
+                current_depth--;
+            } else {
+                switch (in.get()) {
+                  case ',':
+                    current_shape[current_depth]++;
+                    break;
+                  case '{':
+                    current_depth++;
+                    current_shape[current_depth] = 1;
+                    break;
+                  case '}':
+                      if (shape)
+                          if (shape[current_depth] < current_shape[current_depth])
+                              shape[current_depth] = current_shape[current_depth];
+                    current_depth--;
+                    break;
+                  default:
+                    throw std::istream::failure("Format error");
+                }
+            }
+        }    
+    }
+    catch (std::istream::failure& e) {
+        in.seekg(init_file_ptr, in.beg);// upon failure, undo characters read in
+        throw e;                        // and pass on the error
+    }
+    if (p==0)
+        in.seekg(init_file_ptr, in.beg);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T,int R> RA_INLINE_
+std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
+{
+    RA_IFTRACESAY("std::istream& operator>>(std::istream&,rarray<T,R>&)");
+    int extent[R] = {0};
+    size_t init_file_ptr = in.tellg();
+    try {
+        // skip initial white space
+	if (in.flags() && std::ios::skipws) {
+            char lastchar;
+            do {
+                lastchar = in.get();
+            } while (lastchar==' ' or lastchar== '\t' or lastchar=='\n');
+            in.putback(lastchar);
+        }
+        // read the shape
+        ra::read_and_parse_shape<T,R>(in, extent, 0);
+        // allocate array
+        r = RA_MOVE((ra::rarray<T,R>(extent)));
+        // fill array
+        ra::read_and_parse_shape<T,R>(in, 0, r.ptr_array());
+        return in;
+    }
+    catch (std::istream::failure& e) {
+        in.seekg(init_file_ptr, in.beg);// upon failure, undo characters read in
+        throw e;                        // and pass on the error
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Get rid of the macros
+#undef RA_IFTRACESAY
+#undef RA_INLINE
+#undef RA_INLINEF
+#undef RA_INLINE_
+#undef RA_NULLPTR
+// Global namespace stuff
+// (also in global namespace: operator<< and operator>> for rarray and subrarray)
+
+
+#endif

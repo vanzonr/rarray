@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 //
 #include "rarray.h"
+#include "rarrayio.h"
 #include <iostream>
 #include <cassert>
 #include <iomanip>
