@@ -1201,7 +1201,7 @@ bool any(const Vec<bool,R>& a)
 template<typename T,int R>
 INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const Vec<bool,R>& a, const Vec<T,R>& b, const Vec<T,R>& c)
 {
-    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0>(equate(a), equate(b));
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0>(equate(a), equate(b), equate(c));
 }
 
 // template<int R, typename A, ExOp B, typename C, typename CC>
@@ -1222,11 +1222,11 @@ INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const Vec<bool,R>& a, co
 //     return Expr<bool,R,EXPR1BOOL,AndOp,EXPR2BOOL>(a, b);
 // }
 
-template<int R, typename A, typename B, typename C> 
-class Expr<bool,R,A,IfElseOp,B,C> 
+template<typename T, int R, typename A, typename B, typename C> 
+class Expr<T,R,A,IfElseOp,B,C> 
 { 
   public:
-    INLINEF bool eval(int i) const { 
+    INLINEF T eval(int i) const { 
         if (a_.eval(i))
             return b_.eval(i);
         else
@@ -1263,7 +1263,8 @@ int main()
     ve = vb%2;
     std::cout << ve.a_[0] << ' '<< ve.a_[1] << ' '<< ve.a_[2] << '\n';
     Vec<bool,3> z (vb<1);
-    //    bool b = ifelse(z,vd,va);
+    Vec<bool,3> y;
+    y = ifelse(z,vd,va);
     bool b = true;
     std::cout << b << '\n';
     b=all((-vb)<-1);
