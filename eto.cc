@@ -1,5 +1,7 @@
 #include <iostream>
 
+// Redefine force inline stuff
+
 #if not defined(INLINEF)
 # if defined(__INTEL_COMPILER)
 #   define INLINEF  __forceinline
@@ -10,13 +12,24 @@
 # endif
 #endif
 
-enum ExOp { EquateOp,  ConvertOp,  PretendOp, 
-            PlusOp,    MinusOp,    MultOp,     DivOp,   ModOp,      NegOp,
-            EqOp,      NotEqOp,    LeOp,       GrOp,    LeOrEqOp,   GrOrEqOp,
-            AndOp,     OrOp,       NotOp,      IfElseOp };
+/////////////////////////////////////////////
+// FORWARD-DEFINE ALL POSSIBLE EXPRESSIONS //
+/////////////////////////////////////////////
 
+enum ExOp { 
+    ExpressOp,                                      // create expression out of an array
+    ConvertOp,                                      // convert expression or array with elements of one type, to another type 
+    RepeatLike,                                     // repeat a scalar value into an array expression of given shape
+    PlusOp, MinusOp, MultOp, DivOp, ModOp, NegOp,   // arithmetic: + - * / % -(unary)
+    EqOp, NotEqOp, LeOp, GrOp, LeOrEqOp,  GrOrEqOp, // comparison: == != < > <= >=
+    AndOp, OrOp, NotOp,                             // logical: && || !
+    IfElseOp                                        // take an array of bools, for true element give back one expression, for false, the other
+}; 
+
+// Each operator creates a subexpression of the Expr<...>, which we forward-define first
 template<typename T, int R, typename A, ExOp B, typename C, typename CC> class Expr;
 
+// Here's the basic type to be used in expressions. To be replaced with rarrays in due course
 template<typename T, int R>
 class Vec 
 {
@@ -29,17 +42,16 @@ class Vec
         a_[1] = b;
         a_[2] = c;
     }
+    // Need constructor and assignment for expressions
     template<typename A, ExOp B, typename C, typename CC> INLINEF explicit Vec(const Expr<T,R,A,B,C,CC>& e);
     template<typename A, ExOp B, typename C, typename CC> INLINEF Vec& operator=(const Expr<T,R,A,B,C,CC>&e);
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+// START ELEMENT-WISE EXPRESSIONS (to become rarrayex.h?) //
+////////////////////////////////////////////////////////////
 
-// start element-wise expressions rarrayex
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-// assignment from expression
+// assignment from expressions
 
 template<typename T, int R>
 template<typename A, ExOp B, typename C, typename CC>
@@ -56,6 +68,7 @@ template<typename T, int R>
 template<typename A, ExOp B, typename C, typename CC>
 INLINEF Vec<T,R>& Vec<T,R>::operator=(const Expr<T,R,A,B,C,CC> &e) 
 {
+    // TO DO IN RARRAY APPLICATION:
     // Check shape compatibility
     // Last R-1 dimensions must match.
     // First dimension of e may be less than that of *this.
@@ -69,23 +82,29 @@ INLINEF Vec<T,R>& Vec<T,R>::operator=(const Expr<T,R,A,B,C,CC> &e)
     return *this;
 }
 
-// useful abbreviating macros
+////////////////////////////////
+// USEFUL ABBREVIATING MACROS //
+////////////////////////////////
 
-#define EXPR0 Expr<T,R,void,EquateOp,void,void>
+#define EXPR0 Expr<T,R,void,ExpressOp,void,void>
 #define EXPR1 Expr<T,R,A,B,C,CC>
 #define EXPR2 Expr<T,R,D,E,F,FF>
 #define EXPR3 Expr<T,R,G,H,I,II>
-#define ECNST Expr<T,R,void,PretendOp,TLIKE,void>
-#define ECNSTSTRICT Expr<T,R,void,PretendOp,T,void>
-#define EXPR0BOOL Expr<bool,R,void,EquateOp,void,void>
+#define ECNST Expr<T,R,void,RepeatLike,TLIKE,void>
+#define ECNSTSTRICT Expr<T,R,void,RepeatLike,T,void>
+#define EXPR0BOOL Expr<bool,R,void,ExpressOp,void,void>
 #define EXPR1BOOL Expr<bool,R,A,B,C,CC>
 #define EXPR2BOOL Expr<bool,R,D,E,F,FF>
 #define EXPR3BOOL Expr<bool,R,G,H,I,II>
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// LOGISTIC HELPER FUNCTIONS (TO TURN ARRAYS INTO EXPRESSIONS, OR DO TYPE CONVERSIONS) //
+/////////////////////////////////////////////////////////////////////////////////////////
+
 // Basic expression, a wrapper around the array
 
 template<typename T, int R> 
-INLINEF EXPR0 equate(const Vec<T,R>& a)
+INLINEF EXPR0 express(const Vec<T,R>& a)
 { 
     // create a basic expression out of an array
     return EXPR0(a);
@@ -107,7 +126,7 @@ class EXPR0
     INLINEF Expr(const Vec<T,R>& a)
     : a_(a), shape_(a.shape_) 
     {}
-    friend Expr equate<T,R>(const Vec<T,R>& a);
+    friend Expr express<T,R>(const Vec<T,R>& a);
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -119,7 +138,7 @@ Expr<TO,R,EXPR1,ConvertOp,void,void> convert(const EXPR1& a)
 {
     // create an intermediate expression object that will convert upon
     // evaluation.
-    return a;//Expr<TO,R,EXPR1,ConvertOp,void>(a);
+    return Expr<TO,R,EXPR1,ConvertOp,void,void>(a);
 }
 
 template<typename TO, typename T, int R>
@@ -127,7 +146,7 @@ Expr<TO,R,EXPR0,ConvertOp,void,void> convert(const Vec<T,R>& a)
 {
     // create an intermediate expression object that will convert upon
     // evaluation.
-    return equate(a);//Expr<TO,R,EXPR0,ConvertOp,void>(equate(a));
+    return Expr<TO,R,EXPR0,ConvertOp,void,void>(express(a));
 }
 
 template<typename T, int R, typename A> 
@@ -154,14 +173,14 @@ class Expr<T,R,A,ConvertOp,void,void>
 // element equal to x (without creating such an object).
 
 template<typename T, int R, typename TLIKE> 
-INLINEF ECNST pretend(const Vec<T,R>& a, const TLIKE& x)
+INLINEF ECNST repeatlike(const Vec<T,R>& a, const TLIKE& x)
 { 
     // create a basic expression out of an array
     return ECNST(a, (const T&)(x));
 }
 
 template<typename T, int R, typename TLIKE, typename A, ExOp B, typename C, typename CC> 
-INLINEF ECNST pretend(const EXPR1& a, const TLIKE& x)
+INLINEF ECNST repeatlike(const EXPR1& a, const TLIKE& x)
 { 
     // create a basic expression out of an array
     return ECNST(a, (const T&)(x));
@@ -184,35 +203,36 @@ class ECNST
     : x_(x), shape_(a.shape_) 
     {}
     template<typename A, ExOp B, typename C, typename CC>
-    INLINEF Expr(const Expr<T,R,A,B,C,CC>& a, const T& x)
+    INLINEF Expr(const EXPR1& a, const T& x)
     : x_(x), shape_(a.shape()) 
     {}
-    friend Expr pretend<T,R,TLIKE>(const Vec<T,R>& a, const TLIKE& x);
+    friend Expr repeatlike<T,R,TLIKE>(const Vec<T,R>& a, const TLIKE& x);
     template<typename TT, int RR, typename TTT, typename A, ExOp B, typename C, typename CC> 
-    friend Expr<TT,RR,void,PretendOp,TTT,void> pretend(const Expr<TT,RR,A,B,C,CC>& a, const TTT& x);
+    friend Expr<TT,RR,void,RepeatLike,TTT,void> repeatlike(const Expr<TT,RR,A,B,C,CC>& a, const TTT& x);
 };
 
-////////////////////////////////////////////////////////////////////////////
+////////////////////////////
+// ARITHMETIC EXPRESSIONS //
+////////////////////////////
 
 // Addition of array elements
 
-// create a PlusOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<T,R,EXPR0,PlusOp,EXPR0,void> operator+(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR0,PlusOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<T,R,EXPR0,PlusOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR1,PlusOp,EXPR0,void> operator+(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR1,PlusOp,EXPR0,void>(a, equate(b));
+    return Expr<T,R,EXPR1,PlusOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR0,PlusOp,EXPR1,void> operator+(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<T,R,EXPR0,PlusOp,EXPR1,void>(equate(a), b);
+    return Expr<T,R,EXPR0,PlusOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -244,23 +264,22 @@ class Expr<T,R,A,PlusOp,B,void>
 
 // Subtraction of array elements
 
-// create a MinusOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<T,R,EXPR0,MinusOp,EXPR0,void> operator-(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR0,MinusOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<T,R,EXPR0,MinusOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR1,MinusOp,EXPR0,void> operator-(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR1,MinusOp,EXPR0,void>(a, equate(b));
+    return Expr<T,R,EXPR1,MinusOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR0,MinusOp,EXPR1,void> operator-(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<T,R,EXPR0,MinusOp,EXPR1,void>(equate(a), b);
+    return Expr<T,R,EXPR0,MinusOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -295,17 +314,13 @@ class Expr<T,R,A,MinusOp,B,void>
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 Expr<T,R,EXPR1,NegOp,void,void> operator-(const EXPR1& a)
 {
-    // create an intermediate expression object that will convert upon
-    // evaluation.
-    return a;//Expr<T,R,EXPR1,NegOp,void>(a);
+    return Expr<T,R,EXPR1,NegOp,void,void>(a);
 }
 
 template<typename T, int R>
 Expr<T,R,EXPR0,NegOp,void,void> operator-(const Vec<T,R>& a)
 {
-    // create an intermediate expression object that will convert upon
-    // evaluation.
-    return equate(a);//Expr<T,R,EXPR0,NegOp,void>(equate(a));
+    return Expr<T,R,EXPR0,NegOp,void,void>(express(a));
 }
 
 template<typename T, int R, typename A> 
@@ -330,23 +345,22 @@ class Expr<T,R,A,NegOp,void,void>
 
 // Multiplication of array elements
 
-// create a MultOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<T,R,EXPR0,MultOp,EXPR0,void> operator*(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR0,MultOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<T,R,EXPR0,MultOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR1,MultOp,EXPR0,void> operator*(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR1,MultOp,EXPR0,void>(a, equate(b));
+    return Expr<T,R,EXPR1,MultOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
     INLINEF Expr<T,R,EXPR0,MultOp,EXPR1,void> operator*(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<T,R,EXPR0,MultOp,EXPR1,void>(equate(a), b);
+    return Expr<T,R,EXPR0,MultOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -358,25 +372,25 @@ INLINEF Expr<T,R,EXPR1,MultOp,EXPR2,void> operator*(const EXPR1 &a, const EXPR2 
 template<typename T, int R, typename TLIKE>
 INLINEF Expr<T,R,EXPR0,MultOp,ECNST,void> operator*(const Vec<T,R> &a, const TLIKE& x)
 {
-    return Expr<T,R,EXPR0,MultOp,ECNST,void>(equate(a), pretend(a,x));
+    return Expr<T,R,EXPR0,MultOp,ECNST,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R, typename TLIKE>
 INLINEF Expr<T,R,ECNST,MultOp,EXPR0,void> operator*(const TLIKE& x, const Vec<T,R> &b)
 {
-    return Expr<T,R,ECNST,MultOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<T,R,ECNST,MultOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename TLIKE>
 INLINEF Expr<T,R,EXPR1,MultOp,ECNST,void> operator*(const EXPR1 &a, const TLIKE& x)
 {
-    return Expr<T,R,EXPR1,MultOp,ECNST,void>(a, pretend(a,x));
+    return Expr<T,R,EXPR1,MultOp,ECNST,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename TLIKE>
     INLINEF Expr<T,R,ECNST,MultOp,EXPR1,void> operator*(const TLIKE &x, const EXPR1 &b)
 {
-    return Expr<T,R,ECNST,MultOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<T,R,ECNST,MultOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<typename T, int R, typename A, typename B> 
@@ -402,23 +416,22 @@ class Expr<T,R,A,MultOp,B,void>
 
 // Division of array elements
 
-// create a DivOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<T,R,EXPR0,DivOp,EXPR0,void> operator/(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR0,DivOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<T,R,EXPR0,DivOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR1,DivOp,EXPR0,void> operator/(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR1,DivOp,EXPR0,void>(a, equate(b));
+    return Expr<T,R,EXPR1,DivOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR0,DivOp,EXPR1,void> operator/(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<T,R,EXPR0,DivOp,EXPR1,void>(equate(a), b);
+    return Expr<T,R,EXPR0,DivOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -430,25 +443,25 @@ INLINEF Expr<T,R,EXPR1,DivOp,EXPR2,void> operator/(const EXPR1 &a, const EXPR2 &
 template<typename T, int R, typename TLIKE>
 INLINEF Expr<T,R,EXPR0,DivOp,ECNST,void> operator/(const Vec<T,R> &a, const TLIKE& x)
 {
-    return Expr<T,R,EXPR0,DivOp,ECNST,void>(equate(a), pretend(a,x));
+    return Expr<T,R,EXPR0,DivOp,ECNST,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R, typename TLIKE>
 INLINEF Expr<T,R,ECNST,DivOp,EXPR0,void> operator/(const TLIKE& x, const Vec<T,R> &b)
 {
-    return Expr<T,R,ECNST,DivOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<T,R,ECNST,DivOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename TLIKE>
 INLINEF Expr<T,R,EXPR1,DivOp,ECNST,void> operator/(const EXPR1 &a, const TLIKE& x)
 {
-    return Expr<T,R,EXPR1,DivOp,ECNST,void>(a, pretend(a,x));
+    return Expr<T,R,EXPR1,DivOp,ECNST,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename TLIKE>
 INLINEF Expr<T,R,ECNST,DivOp,EXPR1,void> operator/(const TLIKE &x, const EXPR1 &b)
 {
-    return Expr<T,R,ECNST,DivOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<T,R,ECNST,DivOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<typename T, int R, typename A, typename B> 
@@ -474,23 +487,22 @@ class Expr<T,R,A,DivOp,B,void>
 
 // Modulus of array elements
 
-// create a ModOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<T,R,EXPR0,ModOp,EXPR0, void> operator%(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR0,ModOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<T,R,EXPR0,ModOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR1,ModOp,EXPR0, void> operator%(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<T,R,EXPR1,ModOp,EXPR0,void>(a, equate(b));
+    return Expr<T,R,EXPR1,ModOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR0,ModOp,EXPR1, void> operator%(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<T,R,EXPR0,ModOp,EXPR1,void>(equate(a), b);
+    return Expr<T,R,EXPR0,ModOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -502,25 +514,25 @@ INLINEF Expr<T,R,EXPR1,ModOp,EXPR2, void> operator%(const EXPR1 &a, const EXPR2 
 template<typename T, int R, typename TLIKE>
 INLINEF Expr<T,R,EXPR0,ModOp,ECNST, void> operator%(const Vec<T,R> &a, const TLIKE& x)
 {
-    return Expr<T,R,EXPR0,ModOp,ECNST,void>(equate(a), pretend(a,x));
+    return Expr<T,R,EXPR0,ModOp,ECNST,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R, typename TLIKE>
 INLINEF Expr<T,R,ECNST,ModOp,EXPR0, void> operator%(const TLIKE& x, const Vec<T,R> &b)
 {
-    return Expr<T,R,ECNST,ModOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<T,R,ECNST,ModOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename TLIKE>
 INLINEF Expr<T,R,EXPR1,ModOp,ECNST, void> operator%(const EXPR1 &a, const TLIKE& x)
 {
-    return Expr<T,R,EXPR1,ModOp,ECNST,void>(a, pretend(a,x));
+    return Expr<T,R,EXPR1,ModOp,ECNST,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename TLIKE>
 INLINEF Expr<T,R,ECNST,ModOp,EXPR1, void> operator%(const TLIKE &x, const EXPR1 &b)
 {
-    return Expr<T,R,ECNST,ModOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<T,R,ECNST,ModOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<typename T, int R, typename A, typename B> 
@@ -542,27 +554,28 @@ template<typename T, int R, typename A, typename B>
     const int* shape_;
 };
 
-////////////////////////////////////////////////////////////////////////////
+////////////////////////////
+// COMPARISON EXPRESSIONS //
+////////////////////////////
 
 // Check equality of array elements
 
-// create a EqOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<bool,R,EXPR0,EqOp,EXPR0, void> operator==(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR0,EqOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0,EqOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,EqOp,EXPR0, void> operator==(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR1,EqOp,EXPR0,void>(a, equate(b));
+    return Expr<bool,R,EXPR1,EqOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR0,EqOp,EXPR1, void> operator==(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<bool,R,EXPR0,EqOp,EXPR1,void>(equate(a), b);
+    return Expr<bool,R,EXPR0,EqOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -574,25 +587,25 @@ INLINEF Expr<bool,R,EXPR1,EqOp,EXPR2, void> operator==(const EXPR1 &a, const EXP
 template<typename T, int R>
 INLINEF Expr<bool,R,EXPR0,EqOp,ECNSTSTRICT, void> operator==(const Vec<T,R> &a, const T& x)
 {
-    return Expr<bool,R,EXPR0,EqOp,ECNSTSTRICT,void>(equate(a), pretend(a,x));
+    return Expr<bool,R,EXPR0,EqOp,ECNSTSTRICT,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R>
 INLINEF Expr<bool,R,ECNSTSTRICT,EqOp,EXPR0, void> operator==(const T& x, const Vec<T,R> &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,EqOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<bool,R,ECNSTSTRICT,EqOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,EqOp,ECNSTSTRICT,void> operator==(const EXPR1 &a, const T& x)
 {
-    return Expr<bool,R,EXPR1,EqOp,ECNSTSTRICT,void>(a, pretend(a,x));
+    return Expr<bool,R,EXPR1,EqOp,ECNSTSTRICT,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,ECNSTSTRICT,EqOp,EXPR1,void> operator==(const T& x, const EXPR1 &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,EqOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<bool,R,ECNSTSTRICT,EqOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<int R, typename A, typename B> 
@@ -618,23 +631,22 @@ class Expr<bool,R,A,EqOp,B,void>
 
 // Check inequality of array elements
 
-// create a NotEqOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<bool,R,EXPR0,NotEqOp,EXPR0, void> operator!=(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR0,NotEqOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0,NotEqOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,NotEqOp,EXPR0, void> operator!=(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR1,NotEqOp,EXPR0,void>(a, equate(b));
+    return Expr<bool,R,EXPR1,NotEqOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR0,NotEqOp,EXPR1, void> operator!=(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<bool,R,EXPR0,NotEqOp,EXPR1,void>(equate(a), b);
+    return Expr<bool,R,EXPR0,NotEqOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -646,25 +658,25 @@ INLINEF Expr<bool,R,EXPR1,NotEqOp,EXPR2, void> operator!=(const EXPR1 &a, const 
 template<typename T, int R>
 INLINEF Expr<bool,R,EXPR0,NotEqOp,ECNSTSTRICT, void> operator!=(const Vec<T,R> &a, const T& x)
 {
-    return Expr<bool,R,EXPR0,NotEqOp,ECNSTSTRICT,void>(equate(a), pretend(a,x));
+    return Expr<bool,R,EXPR0,NotEqOp,ECNSTSTRICT,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R>
 INLINEF Expr<bool,R,ECNSTSTRICT,NotEqOp,EXPR0, void> operator!=(const T& x, const Vec<T,R> &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,NotEqOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<bool,R,ECNSTSTRICT,NotEqOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,NotEqOp,ECNSTSTRICT, void> operator!=(const EXPR1 &a, const T& x)
 {
-    return Expr<bool,R,EXPR1,NotEqOp,ECNSTSTRICT,void>(a, pretend(a,x));
+    return Expr<bool,R,EXPR1,NotEqOp,ECNSTSTRICT,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,ECNSTSTRICT,NotEqOp,EXPR1, void> operator!=(const T& x, const EXPR1 &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,NotEqOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<bool,R,ECNSTSTRICT,NotEqOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<int R, typename A, typename B> 
@@ -690,23 +702,22 @@ class Expr<bool,R,A,NotEqOp,B,void>
 
 // Check lesser-than of array elements
 
-// create a LeOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<bool,R,EXPR0,LeOp,EXPR0, void> operator<(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR0,LeOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0,LeOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,LeOp,EXPR0, void> operator<(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR1,LeOp,EXPR0,void>(a, equate(b));
+    return Expr<bool,R,EXPR1,LeOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR0,LeOp,EXPR1, void> operator<(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<bool,R,EXPR0,LeOp,EXPR1,void>(equate(a), b);
+    return Expr<bool,R,EXPR0,LeOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -718,25 +729,25 @@ INLINEF Expr<bool,R,EXPR1,LeOp,EXPR2, void> operator<(const EXPR1 &a, const EXPR
 template<typename T, int R>
 INLINEF Expr<bool,R,EXPR0,LeOp,ECNSTSTRICT, void> operator<(const Vec<T,R> &a, const T& x)
 {
-    return Expr<bool,R,EXPR0,LeOp,ECNSTSTRICT,void>(equate(a), pretend(a,x));
+    return Expr<bool,R,EXPR0,LeOp,ECNSTSTRICT,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R>
 INLINEF Expr<bool,R,ECNSTSTRICT,LeOp,EXPR0, void> operator<(const T& x, const Vec<T,R> &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,LeOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<bool,R,ECNSTSTRICT,LeOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,LeOp,ECNSTSTRICT, void> operator<(const EXPR1 &a, const T& x)
 {
-    return Expr<bool,R,EXPR1,LeOp,ECNSTSTRICT,void>(a, pretend(a,x));
+    return Expr<bool,R,EXPR1,LeOp,ECNSTSTRICT,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,ECNSTSTRICT,LeOp,EXPR1, void> operator<(const T& x, const EXPR1 &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,LeOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<bool,R,ECNSTSTRICT,LeOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<int R, typename A, typename B> 
@@ -762,23 +773,22 @@ class Expr<bool,R,A,LeOp,B,void>
 
 // Check greaterness of array elements
 
-// create a GrOp expression from parts
 template<typename T, int R> 
 INLINEF Expr<bool,R,EXPR0,GrOp,EXPR0, void> operator>(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR0,GrOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0,GrOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,GrOp,EXPR0, void> operator>(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR1,GrOp,EXPR0,void>(a, equate(b));
+    return Expr<bool,R,EXPR1,GrOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR0,GrOp,EXPR1, void> operator>(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<bool,R,EXPR0,GrOp,EXPR1,void>(equate(a), b);
+    return Expr<bool,R,EXPR0,GrOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
@@ -790,25 +800,25 @@ INLINEF Expr<bool,R,EXPR1,GrOp,EXPR2, void> operator>(const EXPR1 &a, const EXPR
 template<typename T, int R>
 INLINEF Expr<bool,R,EXPR0,GrOp,ECNSTSTRICT, void> operator>(const Vec<T,R> &a, const T& x)
 {
-    return Expr<bool,R,EXPR0,GrOp,ECNSTSTRICT,void>(equate(a), pretend(a,x));
+    return Expr<bool,R,EXPR0,GrOp,ECNSTSTRICT,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R>
 INLINEF Expr<bool,R,ECNSTSTRICT,GrOp,EXPR0, void> operator>(const T& x, const Vec<T,R> &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,GrOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<bool,R,ECNSTSTRICT,GrOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1,GrOp,ECNSTSTRICT, void> operator>(const EXPR1 &a, const T& x)
 {
-    return Expr<bool,R,EXPR1,GrOp,ECNSTSTRICT,void>(a, pretend(a,x));
+    return Expr<bool,R,EXPR1,GrOp,ECNSTSTRICT,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,ECNSTSTRICT,GrOp,EXPR1, void> operator>(const T& x, const EXPR1 &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,GrOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<bool,R,ECNSTSTRICT,GrOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<int R, typename A, typename B> 
@@ -834,53 +844,52 @@ class Expr<bool,R,A,GrOp,B,void>
 
 // Check lesser-than or equality of array elements
 
-// create a LeOrEqOp expression from parts
 template<typename T, int R> 
-INLINEF Expr<bool,R,EXPR0,LeOrEqOp,EXPR0, void> operator<=(const Vec<T,R> &a, const Vec<T,R> &b)
+INLINEF Expr<bool,R,EXPR0,LeOrEqOp,EXPR0,void> operator<=(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR0,LeOrEqOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0,LeOrEqOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR1,LeOrEqOp,EXPR0, void> operator<=(const EXPR1 &a, const Vec<T,R> &b)
+INLINEF Expr<bool,R,EXPR1,LeOrEqOp,EXPR0,void> operator<=(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR1,LeOrEqOp,EXPR0,void>(a, equate(b));
+    return Expr<bool,R,EXPR1,LeOrEqOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR0,LeOrEqOp,EXPR1, void> operator<=(const Vec<T,R> &a, const EXPR1 &b)
+INLINEF Expr<bool,R,EXPR0,LeOrEqOp,EXPR1,void> operator<=(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<bool,R,EXPR0,LeOrEqOp,EXPR1,void>(equate(a), b);
+    return Expr<bool,R,EXPR0,LeOrEqOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
-INLINEF Expr<bool,R,EXPR1,LeOrEqOp,EXPR2, void> operator<=(const EXPR1 &a, const EXPR2 &b)
+INLINEF Expr<bool,R,EXPR1,LeOrEqOp,EXPR2,void> operator<=(const EXPR1 &a, const EXPR2 &b)
 {
     return Expr<bool,R,EXPR1,LeOrEqOp,EXPR2,void>(a, b);
 }
 
 template<typename T, int R>
-INLINEF Expr<bool,R,EXPR0,LeOrEqOp,ECNSTSTRICT, void> operator<=(const Vec<T,R> &a, const T& x)
+INLINEF Expr<bool,R,EXPR0,LeOrEqOp,ECNSTSTRICT,void> operator<=(const Vec<T,R> &a, const T& x)
 {
-    return Expr<bool,R,EXPR0,LeOrEqOp,ECNSTSTRICT,void>(equate(a), pretend(a,x));
+    return Expr<bool,R,EXPR0,LeOrEqOp,ECNSTSTRICT,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R>
-INLINEF Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR0, void> operator<=(const T& x, const Vec<T,R> &b)
+INLINEF Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR0,void> operator<=(const T& x, const Vec<T,R> &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR1,LeOrEqOp,ECNSTSTRICT, void> operator<=(const EXPR1 &a, const T& x)
+INLINEF Expr<bool,R,EXPR1,LeOrEqOp,ECNSTSTRICT,void> operator<=(const EXPR1 &a, const T& x)
 {
-    return Expr<bool,R,EXPR1,LeOrEqOp,ECNSTSTRICT,void>(a, pretend(a,x));
+    return Expr<bool,R,EXPR1,LeOrEqOp,ECNSTSTRICT,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR1, void> operator<=(const T& x, const EXPR1 &b)
+INLINEF Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR1,void> operator<=(const T& x, const EXPR1 &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<bool,R,ECNSTSTRICT,LeOrEqOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<int R, typename A, typename B> 
@@ -906,53 +915,52 @@ class Expr<bool,R,A,LeOrEqOp,B,void>
 
 // Check greater or equality of array elements
 
-// create a GrOrEqOp expression from parts
 template<typename T, int R> 
-INLINEF Expr<bool,R,EXPR0,GrOrEqOp,EXPR0, void> operator>=(const Vec<T,R> &a, const Vec<T,R> &b)
+INLINEF Expr<bool,R,EXPR0,GrOrEqOp,EXPR0,void> operator>=(const Vec<T,R> &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR0,GrOrEqOp,EXPR0,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0,GrOrEqOp,EXPR0,void>(express(a), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR1,GrOrEqOp,EXPR0, void> operator>=(const EXPR1 &a, const Vec<T,R> &b)
+INLINEF Expr<bool,R,EXPR1,GrOrEqOp,EXPR0,void> operator>=(const EXPR1 &a, const Vec<T,R> &b)
 {
-    return Expr<bool,R,EXPR1,GrOrEqOp,EXPR0,void>(a, equate(b));
+    return Expr<bool,R,EXPR1,GrOrEqOp,EXPR0,void>(a, express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR0,GrOrEqOp,EXPR1, void> operator>=(const Vec<T,R> &a, const EXPR1 &b)
+INLINEF Expr<bool,R,EXPR0,GrOrEqOp,EXPR1,void> operator>=(const Vec<T,R> &a, const EXPR1 &b)
 {
-    return Expr<bool,R,EXPR0,GrOrEqOp,EXPR1,void>(equate(a), b);
+    return Expr<bool,R,EXPR0,GrOrEqOp,EXPR1,void>(express(a), b);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
-INLINEF Expr<bool,R,EXPR1,GrOrEqOp,EXPR2, void> operator>=(const EXPR1 &a, const EXPR2 &b)
+INLINEF Expr<bool,R,EXPR1,GrOrEqOp,EXPR2,void> operator>=(const EXPR1 &a, const EXPR2 &b)
 {
     return Expr<bool,R,EXPR1,GrOrEqOp,EXPR2,void>(a, b);
 }
 
 template<typename T, int R>
-INLINEF Expr<bool,R,EXPR0,GrOrEqOp,ECNSTSTRICT, void> operator>=(const Vec<T,R> &a, const T& x)
+INLINEF Expr<bool,R,EXPR0,GrOrEqOp,ECNSTSTRICT,void> operator>=(const Vec<T,R> &a, const T& x)
 {
-    return Expr<bool,R,EXPR0,GrOrEqOp,ECNSTSTRICT,void>(equate(a), pretend(a,x));
+    return Expr<bool,R,EXPR0,GrOrEqOp,ECNSTSTRICT,void>(express(a), repeatlike(a,x));
 }
 
 template<typename T, int R>
-INLINEF Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR0, void> operator>=(const T& x, const Vec<T,R> &b)
+INLINEF Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR0,void> operator>=(const T& x, const Vec<T,R> &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR0,void>(pretend(b,x), equate(b));
+    return Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR0,void>(repeatlike(b,x), express(b));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR1,GrOrEqOp,ECNSTSTRICT, void> operator>=(const EXPR1 &a, const T& x)
+INLINEF Expr<bool,R,EXPR1,GrOrEqOp,ECNSTSTRICT,void> operator>=(const EXPR1 &a, const T& x)
 {
-    return Expr<bool,R,EXPR1,GrOrEqOp,ECNSTSTRICT,void>(a, pretend(a,x));
+    return Expr<bool,R,EXPR1,GrOrEqOp,ECNSTSTRICT,void>(a, repeatlike(a,x));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR1, void> operator>=(const T& x, const EXPR1 &b)
+INLINEF Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR1,void> operator>=(const T& x, const EXPR1 &b)
 {
-    return Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR1,void>(pretend(b,x), b);
+    return Expr<bool,R,ECNSTSTRICT,GrOrEqOp,EXPR1,void>(repeatlike(b,x), b);
 }
 
 template<int R, typename A, typename B> 
@@ -974,34 +982,32 @@ class Expr<bool,R,A,GrOrEqOp,B,void>
     const int* shape_;
 };
 
-////////////////////////////////////////////////////////////////////////////
-
-// Logical Operators 
-
-////////////////////////////////////////////////////////////////////////////
+///////////////////////
+// LOGICAL OPERATORS //
+///////////////////////
 
 // Logical AND
 
 template<int R>
-INLINEF Expr<bool,R,EXPR0BOOL,AndOp,EXPR0BOOL, void> operator&&(const Vec<bool,R>& a, const Vec<bool,R>& b)
+INLINEF Expr<bool,R,EXPR0BOOL,AndOp,EXPR0BOOL,void> operator&&(const Vec<bool,R>& a, const Vec<bool,R>& b)
 {
-    return Expr<bool,R,EXPR0BOOL,AndOp,EXPR0BOOL,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0BOOL,AndOp,EXPR0BOOL,void>(express(a), express(b));
 }
 
 template<int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR1BOOL,AndOp,EXPR0BOOL, void> operator&&(const EXPR1BOOL &a, const Vec<bool,R> &b)
+INLINEF Expr<bool,R,EXPR1BOOL,AndOp,EXPR0BOOL,void> operator&&(const EXPR1BOOL &a, const Vec<bool,R> &b)
 {
-    return Expr<bool,R,EXPR1BOOL,AndOp,EXPR0BOOL,void>(a, equate(b));
+    return Expr<bool,R,EXPR1BOOL,AndOp,EXPR0BOOL,void>(a, express(b));
 }
 
 template<int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR0BOOL,AndOp,EXPR1BOOL, void> operator&&(const Vec<bool,R> &a, const EXPR1BOOL &b)
+INLINEF Expr<bool,R,EXPR0BOOL,AndOp,EXPR1BOOL,void> operator&&(const Vec<bool,R> &a, const EXPR1BOOL &b)
 {
-    return Expr<bool,R,EXPR0BOOL,AndOp,EXPR1BOOL,void>(equate(a), b);
+    return Expr<bool,R,EXPR0BOOL,AndOp,EXPR1BOOL,void>(express(a), b);
 }
 
 template<int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
-INLINEF Expr<bool,R,EXPR1BOOL,AndOp,EXPR2BOOL, void> operator&&(const EXPR1BOOL &a, const EXPR2BOOL &b)
+INLINEF Expr<bool,R,EXPR1BOOL,AndOp,EXPR2BOOL,void> operator&&(const EXPR1BOOL &a, const EXPR2BOOL &b)
 {
     return Expr<bool,R,EXPR1BOOL,AndOp,EXPR2BOOL,void>(a, b);
 }
@@ -1030,25 +1036,25 @@ class Expr<bool,R,A,AndOp,B,void>
 // Logical OR
 
 template<int R>
-INLINEF Expr<bool,R,EXPR0BOOL,OrOp,EXPR0BOOL, void> operator||(const Vec<bool,R>& a, const Vec<bool,R>& b)
+INLINEF Expr<bool,R,EXPR0BOOL,OrOp,EXPR0BOOL,void> operator||(const Vec<bool,R>& a, const Vec<bool,R>& b)
 {
-    return Expr<bool,R,EXPR0BOOL,OrOp,EXPR0BOOL,void>(equate(a), equate(b));
+    return Expr<bool,R,EXPR0BOOL,OrOp,EXPR0BOOL,void>(express(a), express(b));
 }
 
 template<int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR1BOOL,OrOp,EXPR0BOOL, void> operator||(const EXPR1BOOL &a, const Vec<bool,R> &b)
+INLINEF Expr<bool,R,EXPR1BOOL,OrOp,EXPR0BOOL,void> operator||(const EXPR1BOOL &a, const Vec<bool,R> &b)
 {
-    return Expr<bool,R,EXPR1BOOL,OrOp,EXPR0BOOL,void>(a, equate(b));
+    return Expr<bool,R,EXPR1BOOL,OrOp,EXPR0BOOL,void>(a, express(b));
 }
 
 template<int R, typename A, ExOp B, typename C, typename CC>
-INLINEF Expr<bool,R,EXPR0BOOL,OrOp,EXPR1BOOL, void> operator||(const Vec<bool,R> &a, const EXPR1BOOL &b)
+INLINEF Expr<bool,R,EXPR0BOOL,OrOp,EXPR1BOOL,void> operator||(const Vec<bool,R> &a, const EXPR1BOOL &b)
 {
-    return Expr<bool,R,EXPR0BOOL,OrOp,EXPR1BOOL,void>(equate(a), b);
+    return Expr<bool,R,EXPR0BOOL,OrOp,EXPR1BOOL,void>(express(a), b);
 }
 
 template<int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
-INLINEF Expr<bool,R,EXPR1BOOL,OrOp,EXPR2BOOL, void> operator||(const EXPR1BOOL &a, const EXPR2BOOL &b)
+INLINEF Expr<bool,R,EXPR1BOOL,OrOp,EXPR2BOOL,void> operator||(const EXPR1BOOL &a, const EXPR2BOOL &b)
 {
     return Expr<bool,R,EXPR1BOOL,OrOp,EXPR2BOOL,void>(a, b);
 }
@@ -1074,22 +1080,22 @@ class Expr<bool,R,A,OrOp,B,void>
 
 ////////////////////////////////////////////////////////////////////////////
 
-// Not the elements of a boolean array
+// NOT the elements of a boolean array
 
 template<int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<bool,R,EXPR1BOOL,NotOp,void,void> operator!(const EXPR1BOOL& a)
 {
     // create an intermediate expression object that will convert upon
     // evaluation.
-    return a;//Expr<T,R,EXPR1BOOL,NotOp,void,void>(a);
+    return Expr<bool,R,EXPR1BOOL,NotOp,void,void>(a);
 }
 
 template<int R>
-INLINEF Expr<bool,R,EXPR0BOOL,NotOp,void, void> operator!(const Vec<bool,R>& a)
+INLINEF Expr<bool,R,EXPR0BOOL,NotOp,void,void> operator!(const Vec<bool,R>& a)
 {
     // create an intermediate expression object that will convert upon
     // evaluation.
-    return equate(a);//Expr<T,R,EXPR0BOOL,NotOp,void,void>(equate(a));
+    return Expr<bool,R,EXPR0BOOL,NotOp,void,void>(express(a));
 }
 
 template<int R, typename A> 
@@ -1110,9 +1116,9 @@ class Expr<bool,R,A,NotOp,void,void>
     const int* shape_;
 };
 
-////////////////////////////////////////////////////////////////////////////
-
-// reductions
+////////////////
+// REDUCTIONS //
+////////////////
 
 // summing
 
@@ -1126,7 +1132,7 @@ INLINEF T sum(const Vec<T,R>& a)
 }
 
 template<typename T, int R, typename A, enum ExOp B, typename C, typename CC>
-INLINEF T sum(const Expr<T,R,A,B,C,CC>& a)
+INLINEF T sum(const EXPR1& a)
 {
     T y = a.eval(0);
     for (int i=1; i<R; i++)
@@ -1137,7 +1143,7 @@ INLINEF T sum(const Expr<T,R,A,B,C,CC>& a)
 // multiplying
 
 template<typename T, int R, typename A, enum ExOp B, typename C, typename CC>
-INLINEF T product(const Expr<T,R,A,B,C,CC>& a)
+INLINEF T product(const EXPR1& a)
 {
     T y = a.eval(0);
     for (int i=1; i<R; i++)
@@ -1157,7 +1163,7 @@ INLINEF T product(const Vec<T,R>& a)
 // are all boolean elements true? (&& reduction)
 
 template<int R, typename A, enum ExOp B, typename C, typename CC>
-INLINEF bool all(const Expr<bool,R,A,B,C,CC>&a)
+INLINEF bool all(const EXPR1BOOL& a)
 {
     for (int i=0;i<R;i++)
         if (not a.eval(i))
@@ -1177,7 +1183,7 @@ INLINEF bool all(const Vec<bool,R>& a)
 // are any boolean elements true? (|| reduction)
 
 template<int R, typename A, enum ExOp B, typename C, typename CC>
-INLINEF bool any(const Expr<bool,R,A,B,C,CC>&a)
+INLINEF bool any(const EXPR1BOOL& a)
 {
     for (int i=0;i<R;i++)
         if (a.eval(i))
@@ -1201,43 +1207,43 @@ INLINEF bool any(const Vec<bool,R>& a)
 template<typename T,int R>
 INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const Vec<bool,R>& a, const Vec<T,R>& b, const Vec<T,R>& c)
 {
-    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0>(equate(a), equate(b), equate(c));
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0>(express(a), express(b), express(c));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const EXPR1BOOL& a, const Vec<T,R>& b, const Vec<T,R>& c)
 {
-    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR0>(a, equate(b), equate(c));
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR0>(a, express(b), express(c));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
 INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR0> ifelse(const Vec<bool,R>& a, const EXPR1& b, const Vec<T,R>& c)
 {
-    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR0>(equate(a), b, equate(c));
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR0>(express(a), b, express(c));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC>
     INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR1> ifelse(const Vec<bool,R>& a, const Vec<T,R>& b, const EXPR1& c)
 {
-    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR1>(equate(a), equate(b), c);
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR1>(express(a), express(b), c);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF>
 INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR0> ifelse(const EXPR1BOOL& a, const EXPR2& b, const Vec<T,R>& c)
 {
-    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR0>(a, b, equate(c));
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR0>(a, b, express(c));
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF>
 INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR2> ifelse(const EXPR1BOOL& a, const Vec<T,R>& b, const EXPR2& c)
 {
-    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR2>(a, equate(b), c);
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR2>(a, express(b), c);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF>
 INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR2> ifelse(const Vec<bool,R>& a, const EXPR1& b, const EXPR2& c)
 {
-    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR2>(equate(a), b, c);
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR2>(express(a), b, c);
 }
 
 template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF, typename G, ExOp H, typename I, typename II>
@@ -1268,8 +1274,8 @@ class Expr<T,R,A,IfElseOp,B,C>
     const C c_;
     const int* shape_;
 };
-////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
 // Test
