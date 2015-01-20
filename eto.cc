@@ -1077,7 +1077,7 @@ class Expr<bool,R,A,OrOp,B,void>
 // Not the elements of a boolean array
 
 template<int R, typename A, ExOp B, typename C, typename CC>
-Expr<bool,R,EXPR1BOOL,NotOp,void,void> operator!(const EXPR1BOOL& a)
+INLINEF Expr<bool,R,EXPR1BOOL,NotOp,void,void> operator!(const EXPR1BOOL& a)
 {
     // create an intermediate expression object that will convert upon
     // evaluation.
@@ -1085,7 +1085,7 @@ Expr<bool,R,EXPR1BOOL,NotOp,void,void> operator!(const EXPR1BOOL& a)
 }
 
 template<int R>
-Expr<bool,R,EXPR0BOOL,NotOp,void, void> operator!(const Vec<bool,R>& a)
+INLINEF Expr<bool,R,EXPR0BOOL,NotOp,void, void> operator!(const Vec<bool,R>& a)
 {
     // create an intermediate expression object that will convert upon
     // evaluation.
@@ -1093,7 +1093,7 @@ Expr<bool,R,EXPR0BOOL,NotOp,void, void> operator!(const Vec<bool,R>& a)
 }
 
 template<int R, typename A> 
-    class Expr<bool,R,A,NotOp,void,void> 
+class Expr<bool,R,A,NotOp,void,void> 
 { 
   public:
     INLINEF bool eval(int i) const { 
@@ -1117,7 +1117,7 @@ template<int R, typename A>
 // summing
 
 template<typename T, int R>
-T sum(const Vec<T,R>& a)
+INLINEF T sum(const Vec<T,R>& a)
 {
     T y = a.a_[0];
     for (int i=1;i<R;i++)
@@ -1126,7 +1126,7 @@ T sum(const Vec<T,R>& a)
 }
 
 template<typename T, int R, typename A, enum ExOp B, typename C, typename CC>
-    T sum(const Expr<T,R,A,B,C,CC>& a)
+INLINEF T sum(const Expr<T,R,A,B,C,CC>& a)
 {
     T y = a.eval(0);
     for (int i=1; i<R; i++)
@@ -1137,7 +1137,7 @@ template<typename T, int R, typename A, enum ExOp B, typename C, typename CC>
 // multiplying
 
 template<typename T, int R, typename A, enum ExOp B, typename C, typename CC>
-    T product(const Expr<T,R,A,B,C,CC>& a)
+INLINEF T product(const Expr<T,R,A,B,C,CC>& a)
 {
     T y = a.eval(0);
     for (int i=1; i<R; i++)
@@ -1146,7 +1146,7 @@ template<typename T, int R, typename A, enum ExOp B, typename C, typename CC>
 }
 
 template<typename T, int R>
-T product(const Vec<T,R>& a)
+INLINEF T product(const Vec<T,R>& a)
 {
     T y = a.a_[0];
     for (int i=1; i<R; i++)
@@ -1157,7 +1157,7 @@ T product(const Vec<T,R>& a)
 // are all boolean elements true? (&& reduction)
 
 template<int R, typename A, enum ExOp B, typename C, typename CC>
-    bool all(const Expr<bool,R,A,B,C,CC>&a)
+INLINEF bool all(const Expr<bool,R,A,B,C,CC>&a)
 {
     for (int i=0;i<R;i++)
         if (not a.eval(i))
@@ -1166,7 +1166,7 @@ template<int R, typename A, enum ExOp B, typename C, typename CC>
 }
 
 template<int R>
-bool all(const Vec<bool,R>& a)
+INLINEF bool all(const Vec<bool,R>& a)
 {
     for (int i=0;i<R;i++)
         if (not a.a_[i])
@@ -1177,7 +1177,7 @@ bool all(const Vec<bool,R>& a)
 // are any boolean elements true? (|| reduction)
 
 template<int R, typename A, enum ExOp B, typename C, typename CC>
-    bool any(const Expr<bool,R,A,B,C,CC>&a)
+INLINEF bool any(const Expr<bool,R,A,B,C,CC>&a)
 {
     for (int i=0;i<R;i++)
         if (a.eval(i))
@@ -1186,7 +1186,7 @@ template<int R, typename A, enum ExOp B, typename C, typename CC>
 }
 
 template<int R>
-bool any(const Vec<bool,R>& a)
+INLINEF bool any(const Vec<bool,R>& a)
 {
     for (int i=0;i<R;i++)
         if (a.a_[i])
@@ -1196,7 +1196,7 @@ bool any(const Vec<bool,R>& a)
 
 ////////////////////////////////////////////////////////////////////////////
 
-// If then else construct
+// If-then-else construct
 
 template<typename T,int R>
 INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const Vec<bool,R>& a, const Vec<T,R>& b, const Vec<T,R>& c)
@@ -1204,23 +1204,47 @@ INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const Vec<bool,R>& a, co
     return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR0>(equate(a), equate(b), equate(c));
 }
 
-// template<int R, typename A, ExOp B, typename C, typename CC>
-// INLINEF Expr<bool,R,EXPR1BOOL,AndOp,EXPR0BOOL, void> operator&&(const EXPR1BOOL &a, const Vec<bool,R> &b)
-// {
-//     return Expr<bool,R,EXPR1BOOL,AndOp,EXPR0BOOL>(a, equate(b));
-// }
+template<typename T, int R, typename A, ExOp B, typename C, typename CC>
+INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR0> ifelse(const EXPR1BOOL& a, const Vec<T,R>& b, const Vec<T,R>& c)
+{
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR0>(a, equate(b), equate(c));
+}
 
-// template<int R, typename A, ExOp B, typename C, typename CC>
-// INLINEF Expr<bool,R,EXPR0BOOL,AndOp,EXPR1BOOL, void> operator&&(const Vec<bool,R> &a, const EXPR1BOOL &b)
-// {
-//     return Expr<bool,R,EXPR0BOOL,AndOp,EXPR1BOOL>(equate(a), b);
-// }
+template<typename T, int R, typename A, ExOp B, typename C, typename CC>
+INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR0> ifelse(const Vec<bool,R>& a, const EXPR1& b, const Vec<T,R>& c)
+{
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR0>(equate(a), b, equate(c));
+}
 
-// template<int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF> 
-// INLINEF Expr<bool,R,EXPR1BOOL,AndOp,EXPR2BOOL, void> operator&&(const EXPR1BOOL &a, const EXPR2BOOL &b)
-// {
-//     return Expr<bool,R,EXPR1BOOL,AndOp,EXPR2BOOL>(a, b);
-// }
+template<typename T, int R, typename A, ExOp B, typename C, typename CC>
+    INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR1> ifelse(const Vec<bool,R>& a, const Vec<T,R>& b, const EXPR1& c)
+{
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR0,EXPR1>(equate(a), equate(b), c);
+}
+
+template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF>
+INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR0> ifelse(const EXPR1BOOL& a, const EXPR2& b, const Vec<T,R>& c)
+{
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR0>(a, b, equate(c));
+}
+
+template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF>
+INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR2> ifelse(const EXPR1BOOL& a, const Vec<T,R>& b, const EXPR2& c)
+{
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR0,EXPR2>(a, equate(b), c);
+}
+
+template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF>
+INLINEF Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR2> ifelse(const Vec<bool,R>& a, const EXPR1& b, const EXPR2& c)
+{
+    return Expr<T,R,EXPR0BOOL,IfElseOp,EXPR1,EXPR2>(equate(a), b, c);
+}
+
+template<typename T, int R, typename A, ExOp B, typename C, typename CC, typename D, ExOp E, typename F, typename FF, typename G, ExOp H, typename I, typename II>
+INLINEF Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR3> ifelse(const EXPR1BOOL& a, const EXPR2& b, const EXPR3& c)
+{
+    return Expr<T,R,EXPR1BOOL,IfElseOp,EXPR2,EXPR3>(a, b, c);
+}
 
 template<typename T, int R, typename A, typename B, typename C> 
 class Expr<T,R,A,IfElseOp,B,C> 
@@ -1253,7 +1277,7 @@ class Expr<T,R,A,IfElseOp,B,C>
 int main() 
 {
     Vec<double,3> va(1,1,1);
-    Vec<int,3>    vb(1,1,2);
+    Vec<int,3>    vb(4,4,2);
     Vec<double,3> vc(2*(va + va - va) + 2/convert<double>(4.6*vb));
     Vec<double,3> vd;
     vd = 1/convert<double>(vb);
@@ -1262,9 +1286,14 @@ int main()
     Vec<int,3> ve;
     ve = vb%2;
     std::cout << ve.a_[0] << ' '<< ve.a_[1] << ' '<< ve.a_[2] << '\n';
-    Vec<bool,3> z (vb<1);
-    Vec<bool,3> y;
-    y = ifelse(z,vd,va);
+    Vec<bool,3> z (vb<3);
+    Vec<double,3> y;
+    std::cout << "va = " << va.a_[0] << ' '<< va.a_[1] << ' '<< va.a_[2] << '\n';
+    std::cout << "vd = " << vd.a_[0] << ' '<< vd.a_[1] << ' '<< vd.a_[2] << '\n';
+    std::cout << "vb = " << vb.a_[0] << ' '<< vb.a_[1] << ' '<< vb.a_[2] << '\n';
+    std::cout << "z  = " <<  z.a_[0] << ' '<<  z.a_[1] << ' '<<  z.a_[2] << '\n';
+    y = ifelse(!z,vd,va/2);
+    std::cout << y.a_[0] << ' '<< y.a_[1] << ' '<< y.a_[2] << '\n';
     bool b = true;
     std::cout << b << '\n';
     b=all((-vb)<-1);
