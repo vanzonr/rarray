@@ -102,6 +102,49 @@ INLINEF Vec<T,R>& Vec<T,R>::operator=(const Expr<T,R,AOP,A1,A2,A3> &e)
 // LOGISTIC HELPER FUNCTIONS (TO TURN ARRAYS INTO EXPRESSIONS, OR DO TYPE CONVERSIONS) //
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// Parent class
+
+class EShape
+{
+  public:
+    INLINEF const int* shape() const {
+        return shape_;
+    }
+  protected:
+    INLINEF EShape(const int* shape) : shape_(shape) {}
+    const int* shape_;
+};
+
+template<typename A>
+class Eptr : EShape
+{
+  public:
+    Eptr(const A& a) : EShape(a.shape()), a_(&a) {}
+  protected:
+    const A* a_;
+};
+
+template<typename A, typename B>
+class Eptrpair : EShape
+{
+  public:
+    Eptrpair(const A& a, const B& b) : EShape(a.shape()), a_(&a), b_(&b) {}
+  protected:
+    const A* a_;
+    const B* b_;
+};
+
+template<typename A, typename B, typename C>
+class Eptrtriple : EShape
+{
+  public:
+    Eptrtriple(const A& a, const B& b, const C& c) : EShape(a.shape()), a_(&a), b_(&b), c_(&c) {}
+  protected:
+    const A* a_;
+    const B* b_;
+    const C* c_;
+};
+
 // Basic expression, a wrapper around the array
 
 template<typename T, int R> 
@@ -112,21 +155,15 @@ INLINEF EXPR0 express(const Vec<T,R>& a)
 }
 
 template<typename T, int R> 
-class EXPR0 
+class EXPR0: public EShape
 {
   public:
     INLINEF T eval(int i) const { 
-        return a_.a_[i]; 
-    }
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->a_[i]; 
     }
   private:
-    const Vec<T,R>& a_;
-    const int* shape_;
-    INLINEF Expr(const Vec<T,R>& a)
-    : a_(a), shape_(a.shape_) 
-    {}
+    const Vec<T,R>* a_;
+    INLINEF Expr(const Vec<T,R>& a) : EShape(a.shape_), a_(&a) {}
     friend Expr express<T,R>(const Vec<T,R>& a);
 };
 
@@ -151,21 +188,15 @@ Expr<TO,R,ConvertOp,EXPR0,void,void> convert(const Vec<T,R>& a)
 }
 
 template<typename T, int R, typename A> 
-class Expr<T,R,ConvertOp,A,void,void> 
+class Expr<T,R,ConvertOp,A,void,void> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        return (T)(a_.eval(i));
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return (T)(a_->eval(i));
     }
-    INLINEF Expr(const A &a)
-    : a_(a), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a) : EShape(a.shape()), a_(&a) {}
   private:
-    const A a_; 
-    const int* shape_;    
+    const A* a_; 
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -188,25 +219,17 @@ INLINEF ECNST repeatlike(const EXPR1& a, const TLIKE& x)
 }
 
 template<typename T, int R, typename TLIKE> 
-class ECNST
+class ECNST : public EShape
 {
   public:
     INLINEF T eval(int i) const { 
         return x_; 
     }
-    INLINEF const int* shape() const {
-        return shape_;
-    }
   private:
-    const T x_;
-    const int* shape_;
-    INLINEF Expr(const Vec<T,R>& a, const T& x)
-    : x_(x), shape_(a.shape_) 
-    {}
+    const T& x_;
+    INLINEF Expr(const Vec<T,R>& a, const T& x) : EShape(a.shape_), x_(x) {}
     template<ExOp AOP, typename A1, typename A2, typename A3>
-    INLINEF Expr(const EXPR1& a, const T& x)
-    : x_(x), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const EXPR1& a, const T& x) : EShape(a.shape()), x_(x) {}
     friend Expr repeatlike<T,R,TLIKE>(const Vec<T,R>& a, const TLIKE& x);
     template<typename TT, int RR, typename TTT, ExOp AOP, typename A1, typename A2, typename A3> 
     friend Expr<TT,RR,RepeatLike,void,TTT,void> repeatlike(const Expr<TT,RR,AOP,A1,A2,A3>& a, const TTT& x);
@@ -243,22 +266,16 @@ INLINEF Expr<T,R,PlusOp,EXPR1,EXPR2,void> operator+(const EXPR1 &a, const EXPR2 
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,PlusOp,A,B,void> 
-{ 
+class Expr<T,R,PlusOp,A,B,void> : public EShape
+{
   public:
     INLINEF T eval(int i) const { 
-        return a_.eval(i) + b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) + b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -290,22 +307,16 @@ INLINEF Expr<T,R,MinusOp,EXPR1,EXPR2,void> operator-(const EXPR1 &a, const EXPR2
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,MinusOp,A,B,void> 
+class Expr<T,R,MinusOp,A,B,void> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        return a_.eval(i) - b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) - b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -325,21 +336,15 @@ Expr<T,R,NegOp,EXPR0,void,void> operator-(const Vec<T,R>& a)
 }
 
 template<typename T, int R, typename A> 
-class Expr<T,R,NegOp,A,void,void> 
+class Expr<T,R,NegOp,A,void,void> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        return -a_.eval(i);
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return -a_->eval(i);
     }
-    INLINEF Expr(const A &a)
-    : a_(a), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a) : EShape(a.shape()), a_(&a) {}
   private:
-    const A a_; 
-    const int* shape_;    
+    const A* a_; 
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -395,22 +400,16 @@ INLINEF Expr<T,R,MultOp,ECNST,EXPR1,void> operator*(const TLIKE &x, const EXPR1 
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,MultOp,A,B,void> 
+class Expr<T,R,MultOp,A,B,void> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        return a_.eval(i) * b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) * b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -466,22 +465,16 @@ INLINEF Expr<T,R,DivOp,ECNST,EXPR1,void> operator/(const TLIKE &x, const EXPR1 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,DivOp,A,B,void> 
+class Expr<T,R,DivOp,A,B,void> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        return a_.eval(i) / b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) / b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -537,22 +530,16 @@ INLINEF Expr<T,R,ModOp,ECNST,EXPR1,void> operator%(const TLIKE &x, const EXPR1 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,ModOp,A,B,void> 
+class Expr<T,R,ModOp,A,B,void> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        return a_.eval(i) % b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) % b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////
@@ -610,22 +597,16 @@ INLINEF Expr<bool,R,EqOp,ECNSTSTRICT,EXPR1,void> operator==(const T& x, const EX
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,EqOp,A,B,void> 
+class Expr<bool,R,EqOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) == b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) == b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -681,22 +662,16 @@ INLINEF Expr<bool,R,NotEqOp,ECNSTSTRICT,EXPR1,void> operator!=(const T& x, const
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,NotEqOp,A,B,void> 
+class Expr<bool,R,NotEqOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) != b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) != b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -752,22 +727,16 @@ INLINEF Expr<bool,R,LeOp,ECNSTSTRICT,EXPR1,void> operator<(const T& x, const EXP
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,LeOp,A,B,void> 
+class Expr<bool,R,LeOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) < b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) < b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -823,22 +792,16 @@ INLINEF Expr<bool,R,GrOp,ECNSTSTRICT,EXPR1,void> operator>(const T& x, const EXP
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,GrOp,A,B,void> 
+class Expr<bool,R,GrOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) > b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) > b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -894,22 +857,16 @@ INLINEF Expr<bool,R,LeOrEqOp,ECNSTSTRICT,EXPR1,void> operator<=(const T& x, cons
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,LeOrEqOp,A,B,void> 
+class Expr<bool,R,LeOrEqOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) <= b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) <= b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -965,22 +922,16 @@ INLINEF Expr<bool,R,GrOrEqOp,ECNSTSTRICT,EXPR1,void> operator>=(const T& x, cons
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,GrOrEqOp,A,B,void> 
+class Expr<bool,R,GrOrEqOp,A,B,void>  : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) > b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) > b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ///////////////////////
@@ -1014,22 +965,16 @@ INLINEF Expr<bool,R,AndOp,EXPR1BOOL,EXPR2BOOL,void> operator&&(const EXPR1BOOL &
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,AndOp,A,B,void> 
+class Expr<bool,R,AndOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) && b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) && b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1061,22 +1006,16 @@ INLINEF Expr<bool,R,OrOp,EXPR1BOOL,EXPR2BOOL,void> operator||(const EXPR1BOOL &a
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,OrOp,A,B,void> 
+class Expr<bool,R,OrOp,A,B,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return a_.eval(i) || b_.eval(i); 
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return a_->eval(i) || b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b)
-    : a_(a), b_(b), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b) : EShape(a.shape()), a_(&a), b_(&b) {}
   private:
-    const A a_; 
-    const B b_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1100,21 +1039,15 @@ INLINEF Expr<bool,R,NotOp,EXPR0BOOL,void,void> operator!(const Vec<bool,R>& a)
 }
 
 template<int R, typename A> 
-class Expr<bool,R,NotOp,A,void,void> 
+class Expr<bool,R,NotOp,A,void,void> : public EShape
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return ! (a_.eval(i));
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+        return ! (a_->eval(i));
     }
-    INLINEF Expr(const A &a)
-    : a_(a), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a) : EShape(a.shape()), a_(&a) {}
   private:
-    const A a_; 
-    const int* shape_;
+    const A* a_; 
 };
 
 ////////////////
@@ -1255,26 +1188,20 @@ INLINEF Expr<T,R,IfElseOp,EXPR1BOOL,EXPR2,EXPR3> ifelse(const EXPR1BOOL& a, cons
 }
 
 template<typename T, int R, typename A, typename B, typename C> 
-class Expr<T,R,IfElseOp,A,B,C> 
+class Expr<T,R,IfElseOp,A,B,C> : public EShape
 { 
   public:
     INLINEF T eval(int i) const { 
-        if (a_.eval(i))
-            return b_.eval(i);
+        if (a_->eval(i))
+            return b_->eval(i);
         else
-            return c_.eval(i);
-    };
-    INLINEF const int* shape() const {
-        return shape_;
+            return c_->eval(i);
     }
-    INLINEF Expr(const A &a, const B &b, const C &c)
-    : a_(a), b_(b), c_(c), shape_(a.shape()) 
-    {}
+    INLINEF Expr(const A &a, const B &b, const C &c) : EShape(a.shape()), a_(&a), b_(&b), c_(&c) {}
   private:
-    const A a_; 
-    const B b_;
-    const C c_;
-    const int* shape_;
+    const A* a_; 
+    const B* b_;
+    const C* c_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
