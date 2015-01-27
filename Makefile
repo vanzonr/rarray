@@ -56,7 +56,11 @@ BENCHMARK2DNAMEF=benchmark2Dfrtrn
 BENCHMARK4DNAMEF=benchmark4Dfrtrn
 PASS=optbarrier
 
-all: test valgrindtest covertest benchmark doctest
+all: test valgrindtest covertest benchmark doctest rarrayextest
+
+rarrayextest: rarrayextest.cc rarray.h rarrayex.h
+	$(CXX) -o $@ $<
+	./rarrayextest
 
 .PHONY: clean test covertest benchmark install doctest doc valgrindtest
 

@@ -92,6 +92,14 @@ namespace ra { template<typename T,int R> class rarray;    }
 namespace ra { template<typename T,int R> class subrarray; }
 namespace ra { template<typename T>       class CommaOp;   }
 
+// Forward definitions to support array expressions //
+
+// What type enumerates possible operators?
+typedef int ExOp;
+
+// Each operator creates a subexpression of the Expr<...>, which we forward-define first
+template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
+
 // Define internal types needed by class rarray, in a separate namespace
 
 namespace ra
@@ -198,6 +206,15 @@ class rarray {
     RA_INLINE_ rarray<T,R>& operator=(const subrarray<T,R> &a);                   // array assignment operator
     RA_INLINE_ CommaOp<T> operator=(const T& e);                                  // Comma separated element assignment
     RA_INLINEF ~rarray();                                                         // destructor
+    // Need constructor and assignment for expressions
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator+=(const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator-=(const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator*=(const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator/=(const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator%=(const Expr<T,R,AOP,A1,A2,A3>& e);
+    //
     RA_INLINEF void clear();                                                      // clean up routine, make undefined
     RA_INLINE_ void reshape(int n0, int n1);                         // reshape shallow copy keeping the underlying data for R=2
     RA_INLINE_ void reshape(int n0, int n1, int n2);                                                                      // R=3
@@ -221,7 +238,7 @@ class rarray {
     RA_INLINE_ void reshape_force(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9);        // R=10
     RA_INLINE_ void reshape_force(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int n9, int n10);//R=11
     RA_INLINE_ void reshape_force(const int* extent);                                                                     // R>11
-
+    //
     RA_INLINE_ bool                is_clear()           const;                    // check if undefined
     RA_INLINE_ rarray<T,R>         copy()               const;                    // return a copy
     RA_INLINE_ int                 extent(int i)        const;                    // retrieve array size in dimension i
@@ -233,7 +250,7 @@ class rarray {
     RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                    // return a T**.. acting similarly to this rarray when using []:    
     RA_INLINE_ rarray<const T,R>&  const_ref()          const;                    // create a reference to this that treats elements as constant:
     RA_INLINE_ void                fill(const T& value);                          // fill with uniform value
-
+    //
     RA_INLINE_ iterator            begin();                                       // start of the content
     RA_INLINE_ const_iterator      begin()              const;                    // start of the content, when *this is constant
     RA_INLINE_ const_iterator      cbegin()             const;                    // start of the content, when *this can be constant and you need to be explicit
@@ -246,9 +263,8 @@ class rarray {
     RA_INLINE_ int*                index(const T& a, int* index) const;           // if a an element in the array, get the indices of that element
     RA_INLINE_ int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
     RA_INLINE_ int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
-
+    //
     RA_INLINEF rarray<T,R>&        move();                                        // convert this rarray to a temp value
-
     // access elements 
    #ifndef RA_SKIPINTERMEDIATE
     // through intermediate object:
@@ -259,8 +275,7 @@ class rarray {
     RA_INLINEF operator typename PointerArray<T,R>::type (); 
     RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
    #endif
-
-
+    //
   private:
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
@@ -271,8 +286,8 @@ class rarray {
                                                                        // copied, once. None-temporary values (the default) do not.
                                                                        // When returning a rarray 'a' from a function, use
                                                                        // 'return RA_MOVE(a);'
-
-    RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer
+    //
+    RA_INLINEF T* get_buffer() const;                                          // get start of current contiguous buffer
     RA_INLINE_ void init_shallow(parray_t parray, bool& cleans, bool tmpval); // setup new rarray object
     RA_INLINE_ void init_shallow(parray_t parray);             // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
@@ -352,6 +367,15 @@ class rarray<T,1> {
    #endif
 
     RA_INLINEF rarray<T,1>& move();                    // convert this rarray to a temp value
+    // Need constructor and assignment for expressions
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline explicit   rarray (const Expr<T,1,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator= (const Expr<T,1,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator+=(const Expr<T,1,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator-=(const Expr<T,1,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator*=(const Expr<T,1,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator/=(const Expr<T,1,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator%=(const Expr<T,1,AOP,A1,A2,A3>& e);
+    //
 
   private:
     parray_t     parray_;                                              // start of the array of pointers
