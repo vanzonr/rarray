@@ -170,7 +170,7 @@ template<typename A>
 class Eptr : public EShape
 {
   public:
-    Eptr(const A& a) : EShape(a.shape()), a_(&a) {}
+    Eptr(const A& a) : EShape(a.shape()), a_(&a) {std::cerr<<'z'<<&a<<"\n";}
   protected:
     const A* a_;
 };
@@ -206,13 +206,19 @@ INLINEF EXPR0 express(const ra::rarray<T,R>& a)
 }
 
 template<typename T, int R> 
-class EXPR0: public Eptr<ra::rarray<T,R> >
+class EXPR0
 {
   public:
-    INLINEF T eval(int i) const { 
-        return this->a_->data()[i];
+    typedef const ra::rarray<T,R> Operand;
+    typedef const int* Shape;
+    INLINEF T eval(int i) const {
+        return a_->data()[i];
     }
-    INLINEF Expr(const ra::rarray<T,R>& a) : Eptr<ra::rarray<T,R> >(a) {}
+    INLINEF Expr(Operand& a) : shape_(a.shape()), a_(&a) {}
+    Shape shape() const { return shape_; }
+  private:
+    Shape shape_;
+    Operand* a_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -232,6 +238,13 @@ Expr<TO,R,CnvOp,EXPR0,void,void> convert(const ra::rarray<T,R>& a)
     // create an intermediate expression object that will convert upon evaluation.
     return Expr<TO,R,CnvOp,EXPR0,void,void>(express(a));
 }
+
+// template<typename TO, typename T>
+// Expr<TO,1,CnvOp,Expr<T,1,XprOp,void,void,void>,void,void> convert(const ra::rarray<T,1>& a)
+// {
+//     // create an intermediate expression object that will convert upon evaluation.
+//     return Expr<TO,1,CnvOp,Expr<T,1,XprOp,void,void,void>,void,void>(express(a));
+// }
 
 template<typename T, int R, typename A> 
 class Expr<T,R,CnvOp,A,void,void> : public Eptr<A>
@@ -267,13 +280,13 @@ class ECNST : public EShape
 {
   public:
     INLINEF T eval(int i) const { 
-        return *x_; 
+        return x_; 
     }
-    INLINEF Expr(const ra::rarray<T,R>& a, const T& x) : EShape(a.shape()), x_(&x) {}
+    INLINEF Expr(const ra::rarray<T,R>& a, const T& x) : EShape(a.shape()), x_(x) {}
     template<ExOp AOP, typename A1, typename A2, typename A3>
-    INLINEF Expr(const EXPR1& a, const T& x) : EShape(a.shape()), x_(&x) {}
+    INLINEF Expr(const EXPR1& a, const T& x) : EShape(a.shape()), x_(x) {}
   private:
-    const T* x_;
+    const T x_; //*?
 };
 
 ////////////////////////////
@@ -367,17 +380,25 @@ Expr<T,R,NegOp,EXPR1,void,void> operator-(const EXPR1& a)
 template<typename T, int R>
 Expr<T,R,NegOp,EXPR0,void,void> operator-(const ra::rarray<T,R>& a)
 {
-    return Expr<T,R,NegOp,EXPR0,void,void>(express(a));
+    auto e = express(a);
+    auto me = Expr<T,R,NegOp,EXPR0,void,void>(e);
+    return me;
 }
 
 template<typename T, int R, typename A> 
-class Expr<T,R,NegOp,A,void,void> : public Eptr<A>
+class Expr<T,R,NegOp,A,void,void> : public EShape //public Eptr<A>
 { 
+    //  public:
+    // INLINEF Expr(const A &a) : Eptr<A>(a) {}
   public:
-    INLINEF T eval(int i) const { 
-        return -this->a_->eval(i);
+    INLINEF T eval(int i) const {
+        auto x = this;
+        auto y = this->a_;
+        return -(this->a_->eval(i));
     }
-    INLINEF Expr(const A &a) : Eptr<A>(a) {}
+    Expr(const A& a) : EShape(a.shape()), a_(&a) {std::cerr<<'z'<<&a<<"\n";}
+  protected:
+    const A* a_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1098,9 +1119,12 @@ INLINEF T product(const ra::rarray<T,R>& a)
 template<int R, ExOp AOP, typename A1, typename A2, typename A3>
 INLINEF bool all(const EXPR1BOOL& a)
 {
-    for (int i=0;i<R;i++)
-        if (not a.eval(i))
+    for (int i=0;i<R;i++) {
+        //std::cerr<< '!' << i << '\n';
+        //std::cerr<< '!' << a.shape()[0] << '\n';
+        if (a.eval(i) == false)
             return false;
+    }
     return true;
 }
 
