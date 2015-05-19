@@ -166,15 +166,6 @@ class EShape
     const int* shape_;
 };
 
-template<typename A>
-class Eptr : public EShape
-{
-  public:
-    Eptr(const A& a) : EShape(a.shape()), a_(&a) {std::cerr<<'z'<<&a<<"\n";}
-  protected:
-    const A* a_;
-};
-
 template<typename A, typename B>
 class Eptrpair : public EShape
 {
@@ -247,13 +238,19 @@ Expr<TO,R,CnvOp,EXPR0,void,void> convert(const ra::rarray<T,R>& a)
 // }
 
 template<typename T, int R, typename A> 
-class Expr<T,R,CnvOp,A,void,void> : public Eptr<A>
+class Expr<T,R,CnvOp,A,void,void>
 { 
   public:
+    typedef const A Operand;
+    typedef const int* Shape;
     INLINEF T eval(int i) const {
-        return (T)(this->a_->eval(i));
+        return (T)(a_->eval(i));
     }
-    INLINEF Expr(const A &a) : Eptr<A>(a) {}
+    INLINEF Expr(const A &a) : shape_(a.shape()), a_(&a) {}
+    Shape shape() const { return shape_; }
+  protected:
+    Shape shape_;
+    Operand* a_; 
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -386,19 +383,19 @@ Expr<T,R,NegOp,EXPR0,void,void> operator-(const ra::rarray<T,R>& a)
 }
 
 template<typename T, int R, typename A> 
-class Expr<T,R,NegOp,A,void,void> : public EShape //public Eptr<A>
+class Expr<T,R,NegOp,A,void,void> 
 { 
-    //  public:
-    // INLINEF Expr(const A &a) : Eptr<A>(a) {}
   public:
+    typedef const A Operand;
+    typedef const int* Shape;
     INLINEF T eval(int i) const {
-        auto x = this;
-        auto y = this->a_;
-        return -(this->a_->eval(i));
+        return -(a_->eval(i));
     }
-    Expr(const A& a) : EShape(a.shape()), a_(&a) {std::cerr<<'z'<<&a<<"\n";}
+    Expr(Operand& a) : shape_(a.shape()), a_(&a) {}
+    Shape shape() const { return shape_; }
   protected:
-    const A* a_;
+    Shape shape_;
+    Operand* a_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1058,13 +1055,19 @@ INLINEF Expr<bool,R,NotOp,EXPR0BOOL,void,void> operator!(const ra::rarray<bool,R
 }
 
 template<int R, typename A> 
-class Expr<bool,R,NotOp,A,void,void> : public Eptr<A>
+class Expr<bool,R,NotOp,A,void,void>
 { 
   public:
+    typedef const A Operand;
+    typedef const int* Shape;
     INLINEF bool eval(int i) const { 
-        return ! (this->a_->eval(i));
+        return ! (a_->eval(i));
     }
-    INLINEF Expr(const A &a) : Eptr<A>(a) {}
+    INLINEF Expr(const A &a) : shape_(a.shape()), a_(&a) {}
+    Shape shape() const { return shape_; }
+  protected:
+    Shape shape_;
+    Operand* a_;
 };
 
 ////////////////

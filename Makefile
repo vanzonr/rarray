@@ -59,7 +59,7 @@ PASS=optbarrier
 all: test valgrindtest covertest benchmark doctest rarrayextest
 
 rarrayextest: rarrayextest.cc rarray.h rarrayex.h
-	$(CXX) -o $@ $<
+	$(CXX) -std=c++11 -o $@ $<
 	./rarrayextest
 
 .PHONY: clean test covertest benchmark install doctest doc valgrindtest
