@@ -35,8 +35,12 @@ enum {
 
 // compute number of elements
 
+namespace ra {
+  typedef const int* Shape;
+}
+
 template<int R>
-INLINEF int element_count(const int* shape)
+INLINEF int element_count(ra::Shape shape)
 {
     int ec = 1;
     for (int i = 0; i < R; i++)
@@ -50,7 +54,7 @@ template<typename T, int R>
 template<ExOp AOP, typename A1, typename A2, typename A3>
 inline ra::rarray<T,R>::rarray(const Expr<T,R,AOP,A1,A2,A3>& e) 
 {
-    const int* shape = e.shape();
+    ra::Shape shape = e.shape();
     const int size = element_count<R>(shape);
     init_data(shape, size);
     T* const  element = get_buffer();
@@ -62,7 +66,7 @@ template<typename T>
 template<ExOp AOP, typename A1, typename A2, typename A3>
 inline ra::rarray<T,1>::rarray(const Expr<T,1,AOP,A1,A2,A3>& e) 
 {
-    const int* shape = e.shape();
+    ra::Shape shape = e.shape();
     const int size = element_count<1>(shape);
     init_data(shape, size);
     T* const  element = get_buffer();
@@ -147,45 +151,10 @@ inline ra::rarray<T,1>& ra::rarray<T,1>::operator+=(const Expr<T,1,AOP,A1,A2,A3>
 #define EXPR0BOOL Expr<bool,R,XprOp,void,void,void>
 #define EXPR1BOOL Expr<bool,R,AOP,A1,A2,A3>
 #define EXPR2BOOL Expr<bool,R,BOP,B1,B2,B3>
-#define EXPR3BOOL Expr<bool,R,COP,C1,C2,C3>
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // LOGISTIC HELPER FUNCTIONS (TO TURN ARRAYS INTO EXPRESSIONS, OR DO TYPE CONVERSIONS) //
 /////////////////////////////////////////////////////////////////////////////////////////
-
-// Parent class
-
-class EShape
-{
-  public:
-    INLINEF const int* shape() const {
-        return shape_;
-    }
-  protected:
-    INLINEF EShape(const int* shape) : shape_(shape) {}
-    const int* shape_;
-};
-
-template<typename A, typename B>
-class Eptrpair : public EShape
-{
-  public:
-    Eptrpair(const A& a, const B& b) : EShape(a.shape()), a_(&a), b_(&b) {}
-  protected:
-    const A* a_;
-    const B* b_;
-};
-
-template<typename A, typename B, typename C>
-class Eptrtriple : public EShape
-{
-  public:
-    Eptrtriple(const A& a, const B& b, const C& c) : EShape(a.shape()), a_(&a), b_(&b), c_(&c) {}
-  protected:
-    const A* a_;
-    const B* b_;
-    const C* c_;
-};
 
 // Basic expression, a wrapper around the array
 
@@ -200,16 +169,14 @@ template<typename T, int R>
 class EXPR0
 {
   public:
-    typedef const ra::rarray<T,R> Operand;
-    typedef const int* Shape;
     INLINEF T eval(int i) const {
         return a_->data()[i];
     }
-    INLINEF Expr(Operand& a) : shape_(a.shape()), a_(&a) {}
-    Shape shape() const { return shape_; }
+    INLINEF Expr(const ra::rarray<T,R>& a) : shape_(a.shape()), a_(&a) {}
+    INLINEF ra::Shape shape() const { return shape_; }
   private:
-    Shape shape_;
-    Operand* a_;
+    ra::Shape shape_;
+    const ra::rarray<T,R>* a_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -230,27 +197,18 @@ Expr<TO,R,CnvOp,EXPR0,void,void> convert(const ra::rarray<T,R>& a)
     return Expr<TO,R,CnvOp,EXPR0,void,void>(express(a));
 }
 
-// template<typename TO, typename T>
-// Expr<TO,1,CnvOp,Expr<T,1,XprOp,void,void,void>,void,void> convert(const ra::rarray<T,1>& a)
-// {
-//     // create an intermediate expression object that will convert upon evaluation.
-//     return Expr<TO,1,CnvOp,Expr<T,1,XprOp,void,void,void>,void,void>(express(a));
-// }
-
 template<typename T, int R, typename A> 
 class Expr<T,R,CnvOp,A,void,void>
 { 
   public:
-    typedef const A Operand;
-    typedef const int* Shape;
     INLINEF T eval(int i) const {
         return (T)(a_->eval(i));
     }
     INLINEF Expr(const A &a) : shape_(a.shape()), a_(&a) {}
-    Shape shape() const { return shape_; }
-  protected:
-    Shape shape_;
-    Operand* a_; 
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_; 
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -273,16 +231,21 @@ INLINEF ECNST repeatlike(const EXPR1& a, const TLIKE& x)
 }
 
 template<typename T, int R, typename TLIKE> 
-class ECNST : public EShape
+class ECNST 
 {
   public:
     INLINEF T eval(int i) const { 
         return x_; 
     }
-    INLINEF Expr(const ra::rarray<T,R>& a, const T& x) : EShape(a.shape()), x_(x) {}
+    INLINEF Expr(const ra::rarray<T,R>& a, const T& x)
+      : shape_(a.shape()), x_(x)
+    {}
     template<ExOp AOP, typename A1, typename A2, typename A3>
-    INLINEF Expr(const EXPR1& a, const T& x) : EShape(a.shape()), x_(x) {}
+    INLINEF Expr(const EXPR1& a, const T& x)
+      : shape_(a.shape()), x_(x) {}
+    INLINEF ra::Shape shape() const { return shape_; }
   private:
+    ra::Shape shape_;
     const T x_; //*?
 };
 
@@ -317,13 +280,20 @@ INLINEF Expr<T,R,AddOp,EXPR1,EXPR2,void> operator+(const EXPR1 &a, const EXPR2 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,AddOp,A,B,void> : public Eptrpair<A,B>
+class Expr<T,R,AddOp,A,B,void>
 {
   public:
     INLINEF T eval(int i) const { 
-        return this->a_->eval(i) + this->b_->eval(i); 
+        return a_->eval(i) + b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a, b) {}
+    INLINEF Expr(const A&a, const B&b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape     shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -355,13 +325,20 @@ INLINEF Expr<T,R,SubOp,EXPR1,EXPR2,void> operator-(const EXPR1 &a, const EXPR2 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,SubOp,A,B,void> : public Eptrpair<A,B>
+class Expr<T,R,SubOp,A,B,void> 
 { 
   public:
     INLINEF T eval(int i) const { 
-        return this->a_->eval(i) - this->b_->eval(i); 
+        return a_->eval(i) - b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -386,16 +363,14 @@ template<typename T, int R, typename A>
 class Expr<T,R,NegOp,A,void,void> 
 { 
   public:
-    typedef const A Operand;
-    typedef const int* Shape;
     INLINEF T eval(int i) const {
         return -(a_->eval(i));
     }
-    Expr(Operand& a) : shape_(a.shape()), a_(&a) {}
-    Shape shape() const { return shape_; }
-  protected:
-    Shape shape_;
-    Operand* a_;
+    Expr(const A& a) : shape_(a.shape()), a_(&a) {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -451,13 +426,20 @@ INLINEF Expr<T,R,MulOp,ECNST,EXPR1,void> operator*(const TLIKE &x, const EXPR1 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,MulOp,A,B,void> : public Eptrpair<A,B>
+class Expr<T,R,MulOp,A,B,void> 
 { 
   public:
     INLINEF T eval(int i) const { 
-        return this->a_->eval(i) * this->b_->eval(i); 
+        return a_->eval(i) * b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -513,13 +495,20 @@ INLINEF Expr<T,R,DivOp,ECNST,EXPR1,void> operator/(const TLIKE &x, const EXPR1 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,DivOp,A,B,void> : public Eptrpair<A,B>
+class Expr<T,R,DivOp,A,B,void> 
 { 
   public:
     INLINEF T eval(int i) const { 
-        return this->a_->eval(i) / this->b_->eval(i); 
+        return a_->eval(i) / b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -575,13 +564,20 @@ INLINEF Expr<T,R,ModOp,ECNST,EXPR1,void> operator%(const TLIKE &x, const EXPR1 &
 }
 
 template<typename T, int R, typename A, typename B> 
-class Expr<T,R,ModOp,A,B,void> : public Eptrpair<A,B>
+class Expr<T,R,ModOp,A,B,void> 
 { 
   public:
     INLINEF T eval(int i) const { 
-        return this->a_->eval(i) % this->b_->eval(i); 
+        return a_->eval(i) % b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////
@@ -639,13 +635,20 @@ INLINEF Expr<bool,R,EqOp,ECNSTSTRICT,EXPR1,void> operator==(const T& x, const EX
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,EqOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,EqOp,A,B,void> 
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) == this->b_->eval(i); 
+        return a_->eval(i) == b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b) 
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;    
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -701,13 +704,20 @@ INLINEF Expr<bool,R,NeqOp,ECNSTSTRICT,EXPR1,void> operator!=(const T& x, const E
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,NeqOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,NeqOp,A,B,void>
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) != this->b_->eval(i); 
+        return a_->eval(i) != b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -763,13 +773,20 @@ INLINEF Expr<bool,R,LeOp,ECNSTSTRICT,EXPR1,void> operator<(const T& x, const EXP
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,LeOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,LeOp,A,B,void>
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) < this->b_->eval(i); 
+        return a_->eval(i) < b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -825,13 +842,20 @@ INLINEF Expr<bool,R,GrOp,ECNSTSTRICT,EXPR1,void> operator>(const T& x, const EXP
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,GrOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,GrOp,A,B,void>
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) > this->b_->eval(i); 
+        return a_->eval(i) > b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -887,13 +911,20 @@ INLINEF Expr<bool,R,LeqOp,ECNSTSTRICT,EXPR1,void> operator<=(const T& x, const E
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,LeqOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,LeqOp,A,B,void> 
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) <= this->b_->eval(i); 
+        return a_->eval(i) <= b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -949,13 +980,20 @@ INLINEF Expr<bool,R,GeqOp,ECNSTSTRICT,EXPR1,void> operator>=(const T& x, const E
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,GeqOp,A,B,void>  : public Eptrpair<A,B>
+class Expr<bool,R,GeqOp,A,B,void> 
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) > this->b_->eval(i); 
+        return a_->eval(i) > b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ///////////////////////
@@ -989,13 +1027,20 @@ INLINEF Expr<bool,R,AndOp,EXPR1BOOL,EXPR2BOOL,void> operator&&(const EXPR1BOOL &
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,AndOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,AndOp,A,B,void> 
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) && this->b_->eval(i); 
+        return a_->eval(i) && b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    INLINEF ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1027,13 +1072,20 @@ INLINEF Expr<bool,R,OrOp,EXPR1BOOL,EXPR2BOOL,void> operator||(const EXPR1BOOL &a
 }
 
 template<int R, typename A, typename B> 
-class Expr<bool,R,OrOp,A,B,void> : public Eptrpair<A,B>
+class Expr<bool,R,OrOp,A,B,void> 
 { 
   public:
     INLINEF bool eval(int i) const { 
-        return this->a_->eval(i) || this->b_->eval(i); 
+        return a_->eval(i) || b_->eval(i); 
     }
-    INLINEF Expr(const A &a, const B &b) : Eptrpair<A,B>(a,b) {}
+    INLINEF Expr(const A &a, const B &b)
+      : shape_(a.shape()), a_(&a), b_(&b)
+    {}
+    ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1058,16 +1110,14 @@ template<int R, typename A>
 class Expr<bool,R,NotOp,A,void,void>
 { 
   public:
-    typedef const A Operand;
-    typedef const int* Shape;
     INLINEF bool eval(int i) const { 
         return ! (a_->eval(i));
     }
     INLINEF Expr(const A &a) : shape_(a.shape()), a_(&a) {}
-    Shape shape() const { return shape_; }
-  protected:
-    Shape shape_;
-    Operand* a_;
+    ra::Shape shape() const { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
 };
 
 ////////////////
@@ -1123,8 +1173,6 @@ template<int R, ExOp AOP, typename A1, typename A2, typename A3>
 INLINEF bool all(const EXPR1BOOL& a)
 {
     for (int i=0;i<R;i++) {
-        //std::cerr<< '!' << i << '\n';
-        //std::cerr<< '!' << a.shape()[0] << '\n';
         if (a.eval(i) == false)
             return false;
     }
@@ -1213,16 +1261,24 @@ INLINEF Expr<T,R,IfElseOp,EXPR1BOOL,EXPR2,EXPR3> ifelse(const EXPR1BOOL& a, cons
 }
 
 template<typename T, int R, typename A, typename B, typename C> 
-class Expr<T,R,IfElseOp,A,B,C> : public Eptrtriple<A,B,C>
+class Expr<T,R,IfElseOp,A,B,C>
 { 
   public:
     INLINEF T eval(int i) const { 
-        if (this->a_->eval(i))
-            return this->b_->eval(i);
+        if (a_->eval(i))
+            return b_->eval(i);
         else
-            return this->c_->eval(i);
+            return c_->eval(i);
     }
-    INLINEF Expr(const A &a, const B &b, const C &c) : Eptrtriple<A,B,C>(a,b,c) {}
+    INLINEF Expr(const A &a, const B &b, const C &c)
+        : shape_(a.shape()), a_(&a), b_(&b), c_(&c)
+    {}
+    INLINEF ra::Shape shape() { return shape_; }
+  private:
+    ra::Shape shape_;
+    const A* a_;
+    const B* b_;
+    const C* c_;
 };
 
 #undef INLINEF
@@ -1235,6 +1291,5 @@ class Expr<T,R,IfElseOp,A,B,C> : public Eptrtriple<A,B,C>
 #undef EXPR0BOOL
 #undef EXPR1BOOL
 #undef EXPR2BOOL
-#undef EXPR3BOOL
 
 #endif
