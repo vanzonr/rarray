@@ -1,7 +1,34 @@
+//
+// rarrayex.h - Array expressions for runtime arrays defined in
+//              rarray.h.
+//
+// Copyright (c) 2015  Ramses van Zon
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+
 #ifndef RARRAYEXH
 #define RARRAYEXH
 
+#ifndef RARRAY_H
 #include "rarray.h"
+#endif
 
 // Redefine force inline stuff
 
@@ -33,11 +60,11 @@ enum {
 // START ELEMENT-WISE EXPRESSIONS //
 ////////////////////////////////////
 
-// compute number of elements
-
 namespace ra {
-  typedef const int* Shape;
+    typedef const int* Shape;
 }
+
+// compute number of elements
 
 template<int R>
 INLINEF int element_count(ra::Shape shape)
@@ -170,12 +197,14 @@ class EXPR0
 {
   public:
     INLINEF T eval(int i) const {
-        return a_->data()[i];
+        return data_[i];
     }
-    INLINEF Expr(const ra::rarray<T,R>& a) : shape_(a.shape()), a_(&a) {}
+    INLINEF Expr(const ra::rarray<T,R>& a)
+        : shape_(a.shape()), data_(a.data()), a_(&a) {}
     INLINEF ra::Shape shape() const { return shape_; }
   private:
     ra::Shape shape_;
+    const T* data_;
     const ra::rarray<T,R>* a_;
 };
 
