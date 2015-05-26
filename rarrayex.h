@@ -492,9 +492,7 @@ Expr<T,R,NegOp,EXPR1,void,void> operator-(const EXPR1& a)
 template<typename T, int R>
 Expr<T,R,NegOp,EXPR0,void,void> operator-(const ra::rarray<T,R>& a)
 {
-    auto e = express(a);
-    auto me = Expr<T,R,NegOp,EXPR0,void,void>(e);
-    return me;
+    return Expr<T,R,NegOp,EXPR0,void,void>(express(a));
 }
 
 template<typename T, int R, typename A> 
