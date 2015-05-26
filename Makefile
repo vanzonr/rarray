@@ -48,9 +48,8 @@ MORELDFLAGSOPT?=
 FC?=gfortran
 FFLAGS?=-O2
 
-TESTNAME?=rarraytestsuite
+TESTNAME?=rarraytests
 TESTXNAME?=rarrayextest
-#if Boost.Test installed: TESTNAME=rarraytests
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
 BENCHMARK2DNAMEF=benchmark2Dfrtrn
@@ -117,7 +116,7 @@ test: $(TESTNAME) $(TESTXNAME)
 valgrindtest: $(TESTNAME)
 	valgrind --tool=memcheck $(TESTNAME)
 
-rarraytestsuite: $(TESTNAME).o config.mk
+rarraytests: $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 $(TESTNAME).o: $(TESTNAME).cc rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h config.mk
@@ -223,7 +222,7 @@ summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@wc -l missing_from_test.txt
 
 clean:
-	rm -f $(TESTNAME).o rarraytestsuite.o rarrayextest.o $(TESTNAME)-cov.o $(TEXTXNAME).o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
+	rm -f $(TESTNAME).o rarrayextest.o $(TESTNAME)-cov.o $(TEXTXNAME).o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
 	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doc11.cc doc12.cc doctestgenerator.sh \

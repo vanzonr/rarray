@@ -69,13 +69,20 @@ reported to the same address.
 Files
 =====
 
-rarray.h               The (header-only) library
+rarray.h               The (header-only) library defining runtime arrays.
+
+rarrayio.h             Additional I/O routines for the runtime arrays
+
+rarrayex.h             Definitions of element-wise expressions of runtime arrays
+
+rarraymacros.h         Internal header files
+rarraydelmacros.h
 
 rarraydoc.tex          LaTeX source of the documentation
-
 rarraydoc.pdf          Pdf format of the documentation
 
-rarraytestsuite.cc     regression test suite (not using Boost.Test yet)
+rarraytests.cc         regression test suite (using Boost.Test)
+rarrayextest.cc        example/test for rarrayex (not using Boost.Test yet)
 
 benchmark2Daccess.cc   benchmark code for 2d arrays comparing rarray,
                        blitz, eigen, boost, armadillo, dynamic and
