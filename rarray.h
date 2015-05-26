@@ -29,63 +29,19 @@
 
 #include <stdexcept>
 #include <cstdlib>
-
-// When running rarraytestsuite.cc compiled with -DRA_TRACETEST, the
-// following macro produced output to be used to determine which
-// functions are exercised.
-#ifdef RA_TRACETEST
-#define RA_IFTRACESAY(a) std::cerr << "IFTRACE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
-#else
-#define RA_IFTRACESAY(a) 
-#endif
-
-// Compiling with -DRA_BOUNDSCHECK switches on the checkOrSay macro to
-// check its first argument and throw an exception if it is not true.
-// checkOrSay is intended to be used for bound checks.
-#ifdef RA_BOUNDSCHECK
-#define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
-// BOUNDCHECK is incompatible with SKIPINTERMEDIATE (see below)
-#ifdef RA_SKIPINTERMEDIATE
-#undef RA_SKIPINTERMEDIATE
-#endif
-#else
-#define RA_CHECKORSAY(a, b) 
-#endif
+#include "rarraymacros.h"
 
 #if __cplusplus <= 199711L
-#define RA_NULLPTR 0 
 // In C++03, there is no move semantics. Rarrays need move semantics to be return-able from functions. The RA_MOVE macros helps here
 #define RA_MOVE(x) x.move()
 // usage example: rarray<float,2> matrix(int n, int m) { rarray<int,2> a(n,m); return RA_MOVE(a); }
 #else
-#define RA_NULLPTR nullptr
 // I will implement a move semantics for c++11 soon, so that
 // move=semantics automatically apply to rarrays returned from
 // functions, but haven't gotten to that yet so 'return RA_MOVE(x)'
 // will still be translated as 'return x.move()' for now.
 #define RA_MOVE(x) x.move()
 #endif
-
-// For g++ and icpc, RA_INLINE forces inlining, even without optimization.
-// In all other cases, RA_INLINE=inline, and inlining may not occur.
-// Note for xlC: 
-//    In version 10, you need "-O4" to get full inlining.
-//    In version 11, "-O2 -qinline=level=6" suffices.
-//
-#if not defined(RA_INLINE)
-# if defined(__INTEL_COMPILER)
-#   define RA_INLINE  __forceinline
-# elif defined(__GNUC__)
-#   define RA_INLINE inline __attribute__((always_inline)) 
-# else
-#   define RA_INLINE inline
-# endif
-#endif
-
-// routines using INLINEF will be forced to inline
-// routines using INLINE_ will not: these were deemed to expensive to inline from a compilation point of view
-#define RA_INLINEF RA_INLINE
-#define RA_INLINE_ inline
 
 // Forward definitions of ra::rarray<T,R> and ra::subrarray<T,R>
 namespace ra { template<typename T,int R> class rarray;    }
@@ -2331,17 +2287,7 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Get rid of the macros
-#undef RA_IFTRACESAY
-#undef RA_CHECKORSAY
-#undef RA_DUPLICATE_BODY
-#undef RA_QUADRUPLICATE_BODY
-#undef RA_SEXTUPLICATE_BODY
-#undef RA_OCTUPLICATE_BODY
-#undef RA_COMMA
-#undef RA_INLINE
-#undef RA_INLINEF
-#undef RA_INLINE_
-#undef RA_NULLPTR
+#include "rarraydelmacros.h"
 
 // Global namespace stuff
 // (also in global namespace: operator<< and operator>> for rarray and subrarray)
