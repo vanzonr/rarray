@@ -46,14 +46,8 @@
 
 #if __cplusplus <= 199711L
 #define RA_NULLPTR 0 
-// In C++03, there is no move semantics. Rarrays need move semantics to be return-able from functions. The RA_MOVE macros helps here
-// usage example: rarray<float,2> matrix(int n, int m) { rarray<int,2> a(n,m); return RA_MOVE(a); }
 #else
 #define RA_NULLPTR nullptr
-// I will implement a move semantics for c++11 soon, so that
-// move=semantics automatically apply to rarrays returned from
-// functions, but haven't gotten to that yet so 'return RA_MOVE(x)'
-// will still be translated as 'return x.move()' for now.
 #endif
 
 // For g++ and icpc, RA_INLINE forces inlining, even without optimization.

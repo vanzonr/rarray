@@ -2200,7 +2200,8 @@ BOOST_AUTO_TEST_CASE(testiterators)
     }
     BOOST_CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
     std::stringstream rout;
-    #if __cplusplus <= 199711L
+    #if __cplusplus > 199711L
+    #if __cplusplus != 201103L
     for (auto ap = q.begin(); ap != q.end(); ++ap)
     {
         *ap *= 2;
@@ -2216,8 +2217,10 @@ BOOST_AUTO_TEST_CASE(testiterators)
         qout << *i << ',';
     }
     BOOST_CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
+    #endif
     const rarray<double,1> qconst = q;
-    #if __cplusplus <= 199711L
+    #if __cplusplus > 199711L
+    #if __cplusplus != 201103L
     for (auto bp=qconst.begin(); bp != qconst.end(); ++bp)
     {
         rout << (*bp) << ',';
@@ -2229,9 +2232,11 @@ BOOST_AUTO_TEST_CASE(testiterators)
     }
     #endif
     BOOST_CHECK(rout.str() == "2,4,6,8,10,");
+    #endif
     #ifndef RA_SKIPINTERMEDIATE
     std::stringstream check;
-    #if __cplusplus <= 199711L
+    #if __cplusplus > 199711L
+    #if __cplusplus != 201103L
     for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
         *cp *= 2;
     for (auto dp = s[1][2].begin(); dp != s[1][2].end(); ++dp)
@@ -2252,6 +2257,8 @@ BOOST_AUTO_TEST_CASE(testiterators)
     }
     BOOST_CHECK(check.str() == "20,22,24,26,28,30,42,44,46,19,20,21,22,23,24,25,26,27,");
     #endif
+    #endif
+    #if __cplusplus > 199711L
     auto sb = s.begin();
     auto se = s.end();
     BOOST_CHECK(not (sb==se));
@@ -2259,6 +2266,7 @@ BOOST_AUTO_TEST_CASE(testiterators)
     BOOST_CHECK(sb <= se);
     BOOST_CHECK(se > sb);
     BOOST_CHECK(se >= sb);
+    #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -2303,16 +2311,16 @@ BOOST_AUTO_TEST_CASE(test_index)
     BOOST_CHECK(INDEX(a,a[3],0)==3);
     BOOST_CHECK(INDEX(a,a[4],0)==4);
     BOOST_CHECK(INDEX(a,a[5],0)==5);
-    for (auto i=a.begin(); i != a.end(); i++) {
+    for (rarray<float,1>::iterator i=a.begin(); i != a.end(); i++) {
         a.index(i,&ind);
         int ind2=a.index(i,0);
         BOOST_CHECK(ind==ind2);
         *i = ind+1;
     }
 #if __cplusplus <= 199711L
-    for (auto element = a.begin(); element != a.end(); ++element)
+    for (rarray<float,1>::iterator  element = a.begin(); element != a.end(); ++element)
         *element *= a.index(*element,&ind)[0];
-    for (auto element = a.begin(); element != a.end(); ++element)
+    for (rarray<float,1>::iterator  element = a.begin(); element != a.end(); ++element)
         *element *= a.index(*element,0);
 #else
     for (auto& element: a)
@@ -2365,12 +2373,12 @@ BOOST_AUTO_TEST_CASE(test_index)
                          {0,1,2} }; 
     rarray<float,2> r = RARRAY(rbuf);
     rarray<float,2> c = RARRAY(cbuf);
-    for (auto i=r.begin(); i != r.end(); i++) {
+    for (rarray<float,2>::iterator i=r.begin(); i != r.end(); i++) {
         int ind[2];
         r.index(*i,ind);
         BOOST_CHECK(ind[0]==*i);
     }    
-    for (auto i=c.begin(); i != c.end(); i++) {
+    for (rarray<float,2>::iterator i=c.begin(); i != c.end(); i++) {
         int ind[2];
         c.index(i,ind);
         BOOST_CHECK(ind[1]==*i);
@@ -2453,5 +2461,26 @@ BOOST_AUTO_TEST_CASE(test_comma_assignment)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+
+//rarray<double,2>::return_type
+
+rarray<double,2>::return_type f(double a){
+    rarray<double,2> z(2,3);
+    z.fill(a);
+    return z;
+}
+
+BOOST_AUTO_TEST_CASE(test_function_returning_rarray)
+{
+    rarray<double,2> b;
+    b = f(4.0);
+    BOOST_CHECK(b[0][0]==4.0);
+    BOOST_CHECK(b[1][1]==4.0);
+    BOOST_CHECK(b[0][2]==4.0);
+    BOOST_CHECK(b[1][0]==4.0);
+    BOOST_CHECK(b[0][1]==4.0);
+    BOOST_CHECK(b[1][2]==4.0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////

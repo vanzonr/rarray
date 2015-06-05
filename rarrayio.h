@@ -82,6 +82,9 @@
 template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
 template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
 template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::subrarray<T,R>& r);
+#if __cplusplus <= 199711L
+template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rtnrarray<T,R>& r);
+#endif
 
 // add everything else to 'ra' namespace
 namespace ra {
@@ -149,10 +152,21 @@ template<typename T, int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#if __cplusplus <= 199711L
+template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rtnrarray<T,R>& r)
+{
+    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rtntarray<T,R>&)");
+    rarray<T,R> a(r);
+    return ra::text_output(o,a);
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 template<typename T,int R> RA_INLINE_ 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
-    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,R>&)");
+    RA_IFTRACESAY("std::ostream& text_output(std::ostream&,const rarray<T,R>&)");
     if (not r.is_clear()) {
         o << '{';
         for (int i=0; i<r.extent(0); i++)  {
@@ -186,7 +200,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 template<typename T> RA_INLINE_ 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
-    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const rarray<T,1>&)");
+    RA_IFTRACESAY("std::ostream& text_output(std::ostream&,const rarray<T,1>&)");
     if (not r.is_clear()) {
         o << '{';
         for (int i=0; i<r.extent(0); i++) {
@@ -208,7 +222,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 template<typename T,int R> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
 {
-    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,R>&)");
+    RA_IFTRACESAY("std::ostream& text_output(std::ostream&,const subrarray<T,R>&)");
     o << '{' << r[0];
     for (int i=1; i<r.extent(0); i++) 
         o << ',' << r[i];
@@ -219,7 +233,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
 template<typename T> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,1>& r)
 {
-    RA_IFTRACESAY("std::ostream& operator<<(std::ostream&,const subrarray<T,1>&)");
+    RA_IFTRACESAY("std::ostream& text_output(std::ostream&,const subrarray<T,1>&)");
     o << '{';
     for (int i=0; i<r.extent(0); i++) {
         if (i) o << ',';
@@ -371,7 +385,12 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
         // read the shape
         ra::read_and_parse_shape<T,R>(in, extent, 0);
         // allocate array
-        r = RA_MOVE((ra::rarray<T,R>(extent)));
+        #if __cplusplus <= 199711L
+        // this std::move is defined in rarray.h, and is a pseudo mover.
+        r = std::move(ra::rarray<T,R>(extent));
+        #else
+        r = ra::rarray<T,R>(extent);;
+        #endif
         // fill array
         ra::read_and_parse_shape<T,R>(in, 0, r.ptr_array());
         return in;
