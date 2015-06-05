@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{January 4, 2015\vspace{-7mm}}
+\date{June 5, 2015\vspace{-7mm}}
 
 \maketitle
 
@@ -322,31 +322,39 @@ int main() {
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
 In line 2, a rarray \texttt{r} is created, and filled, on line 3, with zeros.
-On line 4, this array is shallowly copied out of the function and into
-\texttt{s} on line 7. Once copied into \texttt{s}, \texttt{r} is destroyed and releases its
+What happens on line 4, depends on whether the compiler supports the
+C++11 standard. If it does, things work as intended, in that on line 4, \texttt{r} gets moved out of
+the function and into \texttt{s}, using C++11's move
+semantics. Move semantics cause \texttt{r} to be left in an empty state
+that will not deallocate the memory associated with the array upon
+exiting the function, leaving that task to \texttt{s} in the caller. \emph{However}, if the compiler does not support move semantices,
+then on line 4, the array \texttt{r} is shallowly copied out of the
+function and into \texttt{s} on line 7. Once copied into \texttt{s}, \texttt{r} is destroyed and releases its
 memory, but this leaves \texttt{s} in an invalid state (as it points to
 memory that is no longer allocated).
 
-Instead, we would like the rarray \texttt{s} to become responsible for the
-memory deallocation, i.e., we'd like \texttt{r} to become a shallow copy and \texttt{s}
-the original.  To do so, rarrayprovides the \texttt{RA\_MOVE}
-macro, which affectively transfers the ownership. In the above
+To resolve this, when used in C++03, rarray can mimic this move
+behavior, but it requires a hand from the programmer.  One can tell
+the function \texttt{zeros} in the example above to move the array
+\texttt{r} into a wrapper class of type
+\texttt{rarray<T,R>::return\_type}, which when assigned to \texttt{s},
+achieves the desired affect of making \texttt{s} responsible for
+memory allocation, and leaving \texttt{r} in an empty state. In the above
 example, it should be used as follows:
 \vspace{-9pt}
 \begin{framed}\vspace{-12pt}%
 \begin{verbatim}
-rarray<double,2> zeros(int n, int m) {
+rarray<double,2>::return_type zeros(int n, int m) {
    rarray<double,2> r(n,m);
    r.fill(0.0);
-   return RA_MOVE(r);
+   return r;
 }
 \end{verbatim}%
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
 
-In C++11, this kind of behavior can (and will, it just hasn't yet) be implemented using
-\emph{move semantics}, which make the first form of the \texttt{zeros}
-function work as correctly.
+In C++11, this code will still work, as rarray.h contains a typedef
+of \texttt{return\_type} to \texttt{rarray}.
 
 \subsection{Reshaping the rarray}
 
@@ -366,8 +374,8 @@ void dump(const rarray<double,3>& r) {
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
 \item or one can reshape the existing rarray with the desired dimensions. E.g.
-\vspace{-9pt}
-\begin{framed}\vspace{-18pt}%
+\vspace{-2pt}
+\begin{framed}\vspace{-4pt}%
 \begin{verbatim}
 void dump(rarray<double,3> r) {
    r.reshape(r.data(), 1, 1, r.size());
@@ -430,9 +438,12 @@ the \texttt{{\tt\#include "rarray.h"}} in the source.
 %\\
 %Regardless of \texttt{{\tt RA\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
 
+\pagebreak
+
 \section{Comparison with standard alternatives}
 
 The more-or-less equivalent automatic array version 
+
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
   float arr[256][256][256]; 
@@ -493,7 +504,6 @@ public:
  void reshape_force(const int* extent);  // change owner shape (not data)
  void         clear();                   // release memory
  void         fill(const T& value);      // fill with uniform value
- rarray<T,R>& move();                    // mimic 'move semantics'
  bool         is_clear();         const; // check if uninitialized;
  rarray<T,R>  copy()              const; // deep copy
  const int*   shape()             const; // all extents as C-style array
@@ -586,11 +596,6 @@ Checks if the rarray is in an uninitialized state.
 This method creates deep copy of the rarray, i.e., an independent rarray with the same dimensions are the original rarray and with its content a copy of the original rarray's content.
 
 
-\noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>}\& move();}
-
-Turns the rarray into a movable rarray, and return a reference to that same rarray. This means that when the array is copied to another rarray (by the assignment operator or by a copy constructor), that other rarray becomes the owner of the rarray, instead of a shallow, non-owner copy.  This is used to mimic move semantic for rarrays in a C++03 standard. Its main purpose is to be able to return values from a function.  The method will not be needed in C++11, once rarray is adapted to take advantage of move semantics in C++11. For forward compatibility and code reusability between C++03 and C++11, use the macro \texttt{RA\_MOVE}, as illustrated above in section \ref{returnvalues}.
-
-\pagebreak
 \section{Conversions}
 
 \subsection{Converting automatic C-style arrays to rarrays}
