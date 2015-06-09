@@ -19,7 +19,7 @@ int main()
     std::cout << __LINE__ << ": " <<  vc[0] << ' '<< vc[1] << ' '<< vc[2] << '\n';
     rarray<double,1> vd(vb.shape());
 
-    vd = 1/convert<double>(express(vb)); // express should happen auto?
+    vd = 1/convert<double>(vb);
 
     std::cout << __LINE__ << ": " <<  vd[0] << ' '<< vd[1] << ' '<< vd[2] << '\n';
     rarray<int,1> ve(vb.shape());

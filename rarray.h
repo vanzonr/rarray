@@ -43,10 +43,13 @@ namespace ra { template<typename T,int R> class rtnrarray; }
 // Forward definitions to support array expressions //
 
 // What type enumerates possible operators?
-typedef int ExOp;
+//typedef int ExOp;
+#define ExOp class
 
 // Each operator creates a subexpression of the Expr<...>, which we forward-define first
+//namespace ra { 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
+//}
 
 // Define internal types needed by class rarray, in a separate namespace
 
@@ -233,16 +236,19 @@ class rarray {
     RA_INLINEF operator typename PointerArray<T,R>::type (); 
     RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
    #endif
+    // for expressions
+    RA_INLINEF const T& leval(int i) const;
     //
   private:
+    const T*     thedata_;                                             // for now, used only in expressions
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
     mutable bool cleans_;                                              // alternative to ref counting: am I the one that cleans?
     //
     RA_INLINEF T* get_buffer() const;                                             // get start of current contiguous buffer
-    RA_INLINE_ void init_shallow(parray_t parray, bool& cleans);                  // setup new rarray object
-    RA_INLINE_ void init_shallow(parray_t parray);                                // setup new rarray object
+    RA_INLINE_ void init_shallow(const T* thedata, parray_t parray, bool& cleans);                  // setup new rarray object
+    RA_INLINE_ void init_shallow(const T* thedata, parray_t parray);                                // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
     RA_INLINE_ void reshape_general(const int* extent, bool force);               // general reshape function
@@ -323,7 +329,7 @@ class rarray<T,1> {
     RA_INLINE_ int*                index(const iterator& i, int* index);          // if i points at an element in the array, get the indices of that element
     RA_INLINE_ int*                index(const const_iterator& i, int* ind) const;// if i points at an element in the array, get the indices of that element
 
-    // accesselements through intermediate object:
+    // access elements through intermediate object:
    #ifndef RA_SKIPINTERMEDIATE
     // through a T& pointer a the element:
     RA_INLINEF T& operator[](int i);
@@ -333,8 +339,8 @@ class rarray<T,1> {
     RA_INLINEF operator typename PointerArray<T,1>::type ();
     RA_INLINEF operator typename PointerArray<const T,1>::type () const;
    #endif
-
-    RA_INLINEF rarray<T,1>& move();                    // convert this rarray to a temp value
+    // for expressions
+    RA_INLINEF const T& leval(int i) const;
     // Need constructor and assignment for expressions
     template<ExOp AOP, typename A1, typename A2, typename A3> inline explicit   rarray (const Expr<T,1,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> inline rarray& operator= (const Expr<T,1,AOP,A1,A2,A3>& e);
@@ -346,14 +352,15 @@ class rarray<T,1> {
     //
 
   private:
+    const T*     thedata_;                                             // for now, used only in expressions
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
     bool         ismine_;                                              // does the container own the data buffer?
     mutable bool cleans_;                                              // alternative to ref counting: I am the one that cleans?
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer  
-    RA_INLINE_ void init_shallow(parray_t parray, bool& cleans);                  // setup new rarray object
-    RA_INLINE_ void init_shallow(parray_t parray);                                // setup new rarray object
+    RA_INLINE_ void init_shallow(const T* thedata, parray_t parray, bool& cleans);                  // setup new rarray object
+    RA_INLINE_ void init_shallow(const T* thedata, parray_t parray);                                // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
     RA_INLINE_ void reshape_general(const int* extent, bool force);               // general reshape function
@@ -1014,7 +1021,7 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
     // copy constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.parray_, a.cleans_);
+    init_shallow(a.thedata_, a.parray_, a.cleans_);
     ismine_ = a.ismine_;
 }
 
@@ -1023,7 +1030,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     // copy constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rarray<T,1>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.parray_, a.cleans_);
+    init_shallow(a.thedata_, a.parray_, a.cleans_);
     ismine_ = a.ismine_;
 }
 
@@ -1036,7 +1043,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     // copy constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const subrarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.parray_);
+    init_shallow(a.data(), a.parray_);
 })
 
 // rarray move or move-like constructors
@@ -1519,7 +1526,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
     if (&a != this) {
         clear();
         extent_ = const_cast<int*>(a.extent_);
-        init_shallow(a.parray_, a.cleans_);
+        init_shallow(a.thedata_, a.parray_, a.cleans_);
         ismine_ = a.ismine_;
     }
     return *this;
@@ -1533,7 +1540,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
     RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(const subrarray<T,R>&)");
     clear();
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.parray_);
+    init_shallow(a.data(), a.parray_);
     return *this;
 })
 
@@ -1552,13 +1559,15 @@ template<typename T>                T* ra::subrarray<T RA_COMMA 1>::get_buffer()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_DUPLICATE_BODY(
-template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(parray_t parray, bool& cleans),
-template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(parray_t parray, bool& cleans),
+template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(const T* thedata RA_COMMA parray_t parray, bool& cleans),
+template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(const T* thedata RA_COMMA parray_t parray, bool& cleans),
 {
     // shallow init function : reuses buffer and parray
     RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, bool&)");
+    RA_CHECKORSAY(    thedata != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
+    thedata_ = thedata;
     parray_ = parray;
     cleans_ = false;
 })
@@ -1566,13 +1575,15 @@ template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::in
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_DUPLICATE_BODY(
-template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(parray_t parray),
-template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(parray_t parray),
+template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(const T* thedata RA_COMMA parray_t parray),
+template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(const T* thedata RA_COMMA parray_t parray),
 {
     // shallow init function for subrarray: reuses buffer and parray
     RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t)");
+    RA_CHECKORSAY(    thedata != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
+    thedata_ = thedata;
     parray_ = parray;
     cleans_ = false;
 })
@@ -1592,7 +1603,7 @@ template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::in
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
     bool oldcleans = true;
-    init_shallow(parray, oldcleans);
+    init_shallow(buffer, parray, oldcleans);
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
