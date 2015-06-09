@@ -1334,15 +1334,17 @@ class Expr<bool,R,NotOp,A,void,void>
 ////////////////
 
 // summing
-
+#include <iostream>
 template<typename T, int R>
 RA_INLINEF T sum(const ra::rarray<T,R>& a)
 {
     const T* const element = a.data();
     const int size  = a.size();
-    T y = element[0];
-    for (int i=0; i<size; i++)        
-        y += a.element[i];
+    T y = a.leval(0);
+    for (int i=1; i<size; i++)  {
+        y += a.leval(i);
+        std::cerr << y << '!' ;
+    }
     return y;
 }
 
@@ -1370,9 +1372,9 @@ RA_INLINEF T product(const EXPR1& a)
 template<typename T, int R>
 RA_INLINEF T product(const ra::rarray<T,R>& a)
 {
-    T y = a.element_[0];
+    T y = a[0];
     for (int i=1; i<R; i++)
-        y *= a.element_[i];
+        y *= a[i];
     return y;
 }
 

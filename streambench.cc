@@ -17,11 +17,25 @@ int main()
     std::cerr << "c=" << c << std::endl;
     std::cerr << "s=" << s << std::endl;
 
-    d = a + b + c;
+    // copy
+    std::cerr << "a <- b" << std::endl;
+    a = b.copy();
+    std::cerr << "a=" << a << std::endl;
 
-    std::cerr << "d <- a+b+c" << std::endl;
+    // scale
+    std::cerr << "a <- s*c" << std::endl;
+    a = s*c;
+    std::cerr << "a=" << a << std::endl;
 
-    std::cerr << d << std::endl;
+    // sum
+    std::cerr << "s <- sum(a[i])" << std::endl;
+    s = sum(a);
+    std::cerr << "s=" << s << std::endl;
+
+    // triad
+    std::cerr << "a <- b + s*c" << std::endl;
+    a = b + s*c;
+    std::cerr << a << std::endl;
 
     return 0;
 }
