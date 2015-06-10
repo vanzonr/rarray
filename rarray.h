@@ -904,6 +904,7 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
     RA_CHECKORSAY(R==8, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
     init_parray(buffer, extent);
+    cleans_ = true;
     ismine_ = false;
 }
 
@@ -1713,6 +1714,7 @@ void ra::rarray<T,R>::reshape_general(const int* extent, bool force)
             parray_ = new_except_base(buffer, extent_);
         }
     }
+    cleans_ = true;    
 }
 
 template<typename T> RA_INLINE_
@@ -1733,6 +1735,7 @@ void ra::rarray<T,1>::reshape_general(const int* extent, bool force)
             *extent_ = *extent;
         }
     }
+    cleans_ = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
