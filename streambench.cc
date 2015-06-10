@@ -33,6 +33,11 @@ int main()
     std::cerr << "s=" << s << std::endl;
 
     // triad
+    std::cerr << "a <- b + c" << std::endl;
+    a = b + c;
+    std::cerr << a << std::endl;
+
+    // triad
     std::cerr << "a <- b + s*c" << std::endl;
     a = b + s*c;
     std::cerr << a << std::endl;

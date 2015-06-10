@@ -380,7 +380,8 @@ class rtnrarray {
   public:
     // construct the reference 
     rtnrarray(const rarray<T,R> &x)
-      : parray_(x.parray_),
+      : thedata_(x.thedata_),
+        parray_(x.parray_),
         extent_(x.extent_),
         ismine_(x.ismine_),
         cleans_(x.cleans_)
@@ -389,7 +390,8 @@ class rtnrarray {
     }
     // construct the reference 
     rtnrarray(const rtnrarray<T,R> &x)
-      : parray_(x.parray_),
+      : thedata_(x.thedata_),
+        parray_(x.parray_),
         extent_(x.extent_),
         ismine_(x.ismine_),
         cleans_(x.cleans_)
@@ -399,6 +401,7 @@ class rtnrarray {
     }
     // assign one reference to another.
     rtnrarray& operator=(const rtnrarray<T,R> &x) {
+        thedata_ = x.thedata_;
         parray_ = x.parray_;
         extent_ = x.extent_;
         ismine_ = x.ismine_;
@@ -407,6 +410,7 @@ class rtnrarray {
     }
     // assignment operator to create a reference to another. 
     rtnrarray& operator=(const rarray<T,R> &x) {
+        thedata_ = x.thedata_;
         parray_ = x.parray_;
         extent_ = x.extent_;
         ismine_ = x.ismine_;
@@ -416,6 +420,7 @@ class rtnrarray {
     }
   private:
     typedef typename rarray<T,R>::parray_t parray_t;      // shorthand for T*const*const*...
+    const T*  thedata_;                                   // point to the data
     parray_t  parray_;                                    // start of the array of pointers
     int*      extent_;                                    // array of number of elements in each dimension
     bool      ismine_;                                    // does the container own the data buffer?
@@ -1053,6 +1058,7 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
 {
     // move-like constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rtnrarray<T,R>&)");
+    thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
@@ -1062,6 +1068,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
 {
     // move-like constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rtnrarray<T,1>&)");
+    thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
@@ -1072,6 +1079,7 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
 {
     // move constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(rarray<T,R>&&)");
+    thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
@@ -1082,6 +1090,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
 {
     // move constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(rarray<T,R>&&)");
+    thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
@@ -1491,6 +1500,7 @@ RA_DUPLICATE_BODY(
 {
     // rarray assignment operator from other rarray
     RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(const rtnrarray<T,R>&)");
+    thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
@@ -1504,8 +1514,9 @@ RA_DUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>& ra::rarray<T RA_COMMA R>::operator=(ra::rarray<T RA_COMMA R> &&a),
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rarray<T RA_COMMA 1>::operator=(ra::rarray<T RA_COMMA 1> &&a),
 {
-    // rarray assignment operator from other rarray
+    // rarray move-assignment operator from other rarray
     RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(rarray<T,R>&&)");
+    thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
@@ -1619,6 +1630,7 @@ template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::in
     T* buffer = new T[extenttot];
     init_parray(buffer, extent);
     ismine_ = true;
+    cleans_ = true; // who else would do it?
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

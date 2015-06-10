@@ -1336,15 +1336,14 @@ class Expr<bool,R,NotOp,A,void,void>
 // summing
 #include <iostream>
 template<typename T, int R>
-RA_INLINEF T sum(const ra::rarray<T,R>& a)
+//RA_INLINEF
+T sum(const ra::rarray<T,R>& a)
 {
     const T* const element = a.data();
     const int size  = a.size();
     T y = a.leval(0);
-    for (int i=1; i<size; i++)  {
+    for (int i=1; i<size; i++)
         y += a.leval(i);
-        std::cerr << y << '!' ;
-    }
     return y;
 }
 
@@ -1424,24 +1423,26 @@ RA_INLINEF bool any(const ra::rarray<bool,R>& a)
 // If-then-else construct
 
 template<typename T,int R>
-RA_INLINEF Expr<T,R,IfElseOp,rarray<bool,R>,rarray<T,R>,rarray<T,R>> ifelse(const ra::rarray<bool,R>& a, const ra::rarray<T,R>& b, const ra::rarray<T,R>& c)
+RA_INLINEF Expr<T,R,IfElseOp,rarray<bool,R>,rarray<T,R>,rarray<T,R> > ifelse(const ra::rarray<bool,R>& a,
+                                                                            const ra::rarray<T,R>& b,
+                                                                            const ra::rarray<T,R>& c)
 {
     RA_CHECKORSAY(shapes_equal<R>(a.shape(),b.shape()) && shapes_equal<R>(b.shape(),c.shape()), "incompatible shapes in ifelse");
-    return Expr<T,R,IfElseOp,rarray<bool,R>,rarray<T,R>,rarray<T,R>>(a, b, c);
+    return Expr<T,R,IfElseOp,rarray<bool,R>,rarray<T,R>,rarray<T,R> >(a, b, c);
 }
 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3>
-RA_INLINEF Expr<T,R,IfElseOp,EXPR1BOOL,rarray<T,R>,rarray<T,R>> ifelse(const EXPR1BOOL& a, const ra::rarray<T,R>& b, const ra::rarray<T,R>& c)
+RA_INLINEF Expr<T,R,IfElseOp,EXPR1BOOL,rarray<T,R>,rarray<T,R> > ifelse(const EXPR1BOOL& a, const ra::rarray<T,R>& b, const ra::rarray<T,R>& c)
 {
     RA_CHECKORSAY(shapes_equal<R>(a.shape(),b.shape()) && shapes_equal<R>(b.shape(),c.shape()), "incompatible shapes in ifelse");
-    return Expr<T,R,IfElseOp,EXPR1BOOL,rarray<T,R>,rarray<T,R>>(a, b, c);
+    return Expr<T,R,IfElseOp,EXPR1BOOL,rarray<T,R>,rarray<T,R> >(a, b, c);
 }
 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3>
-RA_INLINEF Expr<T,R,IfElseOp,rarray<bool,R>,EXPR1,rarray<T,R>> ifelse(const ra::rarray<bool,R>& a, const EXPR1& b, const ra::rarray<T,R>& c)
+RA_INLINEF Expr<T,R,IfElseOp,rarray<bool,R>,EXPR1,rarray<T,R> > ifelse(const ra::rarray<bool,R>& a, const EXPR1& b, const ra::rarray<T,R>& c)
 {
     RA_CHECKORSAY(shapes_equal<R>(a.shape(),b.shape()) && shapes_equal<R>(b.shape(),c.shape()), "incompatible shapes in ifelse");
-    return Expr<T,R,IfElseOp,rarray<bool,R>,EXPR1,rarray<T,R>>(a, b, c);
+    return Expr<T,R,IfElseOp,rarray<bool,R>,EXPR1,rarray<T,R> >(a, b, c);
 }
 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3>
@@ -1452,10 +1453,10 @@ RA_INLINEF Expr<T,R,IfElseOp,rarray<bool,R>,rarray<T,R>,EXPR1> ifelse(const ra::
 }
 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3, ExOp BOP, typename B1, typename B2, typename B3>
-RA_INLINEF Expr<T,R,IfElseOp,EXPR1BOOL,EXPR2,rarray<T,R>> ifelse(const EXPR1BOOL& a, const EXPR2& b, const ra::rarray<T,R>& c)
+RA_INLINEF Expr<T,R,IfElseOp,EXPR1BOOL,EXPR2,rarray<T,R> > ifelse(const EXPR1BOOL& a, const EXPR2& b, const ra::rarray<T,R>& c)
 {
     RA_CHECKORSAY(shapes_equal<R>(a.shape(),b.shape()) && shapes_equal<R>(b.shape(),c.shape()), "incompatible shapes in ifelse");
-    return Expr<T,R,IfElseOp,EXPR1BOOL,EXPR2,rarray<T,R>>(a, b, c);
+    return Expr<T,R,IfElseOp,EXPR1BOOL,EXPR2,rarray<T,R> >(a, b, c);
 }
 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3, ExOp BOP, typename B1, typename B2, typename B3>
