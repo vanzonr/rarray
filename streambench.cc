@@ -39,8 +39,11 @@ int main()
 
     // triad
     std::cerr << "a <- b + s*c" << std::endl;
-    a = b + s*c;
-    std::cerr << a << std::endl;
+    // a = b + s*c;
+    // std::cerr << a << std::endl;
+    rarray<double,1> aa(b.extent(0));
+    aa = b + s*c;
+    std::cerr << aa << std::endl;
 
     return 0;
 }
