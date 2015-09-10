@@ -229,6 +229,6 @@ clean:
 	rarraydoc.aux rarraydoc.log rarraydoc.out rarraydoc.dvi
 
 distclean: clean
-	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) 
+	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) $(TESTXNAME)
 
 
