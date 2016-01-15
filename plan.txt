@@ -1,0 +1,13 @@
+ECNST should not depend on a TLIKE. This may or may not be causing the
+streambug.  But in any case, ECNST shold not depend on TLIKE, because
+TLIKE allows everything, not just stuff that can be converted into T.
+
+To get T-like behavior, one must define the T-like functions as
+inline friends that take a T. Such friends functions are free (i.e.,
+non-template), and are generate at class instantiation. Because they
+are free they will take T-like arguments as well, as long as one of
+the arguments is a complete match.
+This is better described here:
+http://stackoverflow.com/questions/9787593/c-implicit-type-conversion-with-template/9788255#9788255
+
+Will try that first (cp rarray -> rarray0)
