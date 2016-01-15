@@ -105,10 +105,9 @@ doctestgenerator.sh: rarraydoc.tex config.mk
 
 test: $(TESTNAME) $(TESTXNAME)
 	./$(TESTNAME) --report_level=detailed
-	./$(TESTXNAME) --report_level=detailed
 
 valgrindtest: $(TESTNAME)
-	valgrind --tool=memcheck $(TESTNAME)
+	valgrind --tool=memcheck ./$(TESTNAME)
 
 rarraytests: $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
