@@ -49,18 +49,13 @@ FC?=gfortran
 FFLAGS?=-O2
 
 TESTNAME?=rarraytests
-TESTXNAME?=rarrayextest
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
 BENCHMARK2DNAMEF=benchmark2Dfrtrn
 BENCHMARK4DNAMEF=benchmark4Dfrtrn
 PASS=optbarrier
 
-all: test valgrindtest covertest benchmark doctest rarrayextest
-
-rarrayextest: rarrayextest.cc rarray.h rarrayex.h rarraymacros.h rarraydelmacros.h
-	$(CXX) -std=c++11 -DRA_BOUNDSCHECK -o $@ $<
-	./rarrayextest
+all: test valgrindtest covertest benchmark doctest 
 
 .PHONY: clean test covertest benchmark install doctest doc valgrindtest
 
@@ -68,11 +63,10 @@ config.mk:
 	@echo "Error: Run 'configure' to create config.mk"
 	@false
 
-install: rarray.h rarrayio.h rarrayex.h rarraydoc.pdf rarraymacros.h rarraydelmacros.h
+install: rarray.h rarrayio.h rarraydoc.pdf rarraymacros.h rarraydelmacros.h
 	mkdir -p ${PREFIX}/include
 	cp rarray.h ${PREFIX}/include/rarray.h
 	cp rarrayio.h ${PREFIX}/include/rarrayio.h
-	cp rarrayex.h ${PREFIX}/include/rarrayex.h
 	cp rarraymacros.h ${PREFIX}/include/rarraymacros.h
 	cp rarraydelmacros.h ${PREFIX}/include/rarraydelmacros.h
 	mkdir -p ${PREFIX}/share/rarray
@@ -120,9 +114,6 @@ rarraytests: $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 $(TESTNAME).o: $(TESTNAME).cc rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
-
-$(TESTXNAME).o: $(TESTXNAME).cc rarrayex.h rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 benchmark: benchmark2d benchmark4d
