@@ -26,6 +26,7 @@
 #ifndef RARRAYEXH
 #define RARRAYEXH
 
+#include <iostream>
 #ifndef RARRAY_H
 #include "rarray.h"
 #endif
@@ -342,6 +343,7 @@ RA_INLINEF ECNST repeatlike(const ra::rarray<T,R>& a, const TLIKE& x)
 { 
     // create a basic expression out of a constant, with the shape of
     // array a
+    std::cerr <<"Sshhh!\n";
     return ECNST(a, (const T&)(x));
 }
 
@@ -358,11 +360,12 @@ class ECNST
 {
   public:
     RA_INLINEF T leval(int i) const { 
-        return x_; 
+        std::cerr <<"Wooooo! "<<x_<<"\n";
+        return 21;//x_; 
     }
     RA_INLINEF Expr(const ra::rarray<T,R>& a, const T& x)
       : shape_(a.shape()), x_(x)
-    {}
+    { std::cerr <<"Wooooo! "<<x_<<"\n";}
     template<ExOp AOP, typename A1, typename A2, typename A3>
     RA_INLINEF Expr(const EXPR1& a, const T& x)
       : shape_(a.shape()), x_(x)
@@ -554,6 +557,7 @@ RA_INLINEF Expr<T,R,MulOp,rarray<T,R>,ECNST,void> operator*(const ra::rarray<T,R
 template<typename T, int R, typename TLIKE>
 RA_INLINEF Expr<T,R,MulOp,ECNST,rarray<T,R>,void> operator*(const TLIKE& x, const ra::rarray<T,R> &b)
 {
+    std::cerr <<"Shout!\n";
     return Expr<T,R,MulOp,ECNST,rarray<T,R>,void>(repeatlike(b,x), b);
 }
 
