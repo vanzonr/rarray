@@ -1,5 +1,5 @@
 //
-// rarraytests.cc - testsuite for rarray.h, using Boost.Test
+// rarraytests.cc - testsuite for rarray, using Boost.Test
 //
 // Copyright (c) 2015  Ramses van Zon
 //
@@ -26,8 +26,9 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
 
-#include "rarray.h"
-#include "rarrayio.h"
+// Because it is a test, use the headers in the local directory preferentially
+#include "rarray"
+#include "rarrayio"
 #include <iostream>
 #include <cassert>
 #include <iomanip>

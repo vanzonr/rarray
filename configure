@@ -1,5 +1,5 @@
 #!/bin/bash
-# NOT an autotools configure, just detects compiler for rarray.h 's Makefile
+# NOT an autotools configure, just detects compiler for rarray's Makefile
 # Ramses van Zon, January 2015
 
 # stop immediately when there is an error
@@ -60,7 +60,7 @@ EOF
 
 if [[ "$1" == "--help" ]]; then
     # print help message
-    echo "This configure script detects compiler for rarray.h 's Makefile"
+    echo "This configure script detects compiler for rarray's Makefile"
     echo "Usage: [CXX=<COMPILER>] configure [--prefix=<PATH>]"
     false   
 else
@@ -162,7 +162,7 @@ else
         echo "To build and run benchmark test:        make benchmark"
         echo "To build the documentation:             make doc"
         echo "To test the code in the documentation:  make doctest"
-        echo "To install rarray.h:                    make [PREFIX=directory]"
+        echo "To install rarray:                      make install [PREFIX=directory]"
     else
         echo "ERROR: Compiler not found"
         false

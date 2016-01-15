@@ -1,5 +1,5 @@
 //
-// rarrayio.h - I/O routines for tuntime arrays. Documentation in rarraydoc.pdf
+// rarrayio - I/O routines for tuntime arrays. Documentation in rarraydoc.pdf
 //
 // Copyright (c) 2013-2015  Ramses van Zon
 //
@@ -25,7 +25,7 @@
 #ifndef RARRAYIO_H
 #define RARRAYIO_H
 
-#include "rarray.h"
+#include <rarray>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -386,7 +386,7 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
         ra::read_and_parse_shape<T,R>(in, extent, 0);
         // allocate array
         #if __cplusplus <= 199711L
-        // this std::move is defined in rarray.h, and is a pseudo mover.
+        // this std::move is defined in rarray, and is a pseudo mover.
         r = std::move(ra::rarray<T,R>(extent));
         #else
         r = ra::rarray<T,R>(extent);;

@@ -51,7 +51,7 @@ Data is guarranteed to be contiguous for easy interfacing with libraries.
 
 \noindent\textbf{How:}
 
-The header file \texttt{rarray.h} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. For io, use the additional header\texttt{rarrayio.h}.
+The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. For io, use the additional header file \texttt{rarrayio}.
 
 \
 
@@ -158,7 +158,7 @@ library is to be a minimal interface for runtime multidimensional arrays with
 \begin{framed}\vspace{-14pt}%
 %TEST THIS
 \begin{verbatim}
-  #include "rarray.h"
+  #include <rarray>
   int main() 
   {
      rarray<float,3> a(256, 256, 256);
@@ -225,17 +225,17 @@ The guarrantee of contiguity means strided arrays are not supported.
   conversions to \texttt{T*const*} or \texttt{const T*const*}, and
   using the method \texttt{noconst\_ptr\_array()} for the conversion to a
   \texttt{T**}.
-\item Streaming input and output throught the header file \texttt{rarrayio.h}.
+\item Streaming input and output throught the header file \texttt{rarrayio}.
 \end{itemize}
 
 \section{Using the {\tt rarray}s}
 
 \subsection{Defining a multidimensional rarray}
 
-To use \texttt{rarray}, first include the header file rarray.h:
+To use \texttt{rarray}, first include the header file \texttt{rarray}:
 \begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-  #include "rarray.h"
+  #include <rarray>
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
@@ -307,7 +307,7 @@ Consider the function \texttt{zeros} used in \texttt{main()}:
 \begin{framed}\vspace{-12pt}%
 %TEST THIS
 \begin{verbatim}
-#include "rarray.h"
+#include <rarray>
 rarray<double,2> zeros(int n, int m) {
    rarray<double,2> r(n,m);
    r.fill(0.0);
@@ -353,7 +353,7 @@ rarray<double,2>::return_type zeros(int n, int m) {
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
 
-In C++11, this code will still work, as rarray.h contains a typedef
+In C++11, this code will still work, as the \texttt{rarray} header file contains a typedef
 of \texttt{return\_type} to \texttt{rarray}.
 
 \subsection{Reshaping the rarray}
@@ -434,7 +434,7 @@ If the preprocessor constant \texttt{{\tt RA\_BOUNDSCHECK}} is defined, an
 \texttt{{\tt RA\_BOUNDSCHECK}} can be defined by
 adding the {\tt -DRA\_BOUNDSCHECK} argument to the compilation command, or
 by \texttt{{\tt\#define RA\_BOUNDSCHECK}} before
-the \texttt{{\tt\#include "rarray.h"}} in the source.
+the \texttt{{\tt\#include <rarray>}} in the source.
 %\\
 %Regardless of \texttt{{\tt RA\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
 
@@ -606,7 +606,7 @@ The main convenience of this is that one can write functions that take rarray ar
 %TEST THIS
 \begin{verbatim}
 #include <iostream>
-#include "rarray.h"
+#include <rarray>
 void print2d(const rarray<float,2> &s) {
     for (int i=0; i<s.extent(0); i++) {
         for (int j=0; j<s.extent(1); j++)
@@ -819,7 +819,7 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
 
 \subsection{Streaming input and output}
 
-Although it is usually preferrable to store large arrays in binary, rarray does provide streaming operators \texttt{<<} and \texttt{>>} to read and write to standard C++ iostreams.  You need to include an additional header file, \texttt{rarrayio.h} for this.
+Although it is usually preferrable to store large arrays in binary, rarray does provide streaming operators \texttt{<<} and \texttt{>>} to read and write to standard C++ iostreams.  You need to include an additional header file called \texttt{rarrayio} for this.
 
 The output produced by the output streaming operator is like that of automatic arrays initializers: Each dimension is started and ended by \texttt{\{} and \texttt{\}} and components are comma separated. 
 E.g.:\vspace{-9pt}
@@ -827,8 +827,8 @@ E.g.:\vspace{-9pt}
 %TEST THIS
 \begin{verbatim}
   #include <iostream>
-  #include "rarray.h"
-  #include "rarrayio.h"
+  #include <rarray>
+  #include <rarrayio>
   int main() {
     int buf[6] = {1,2,3,4,5,6};
     rarray<int,2> arr(buf,3,2);

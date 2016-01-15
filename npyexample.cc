@@ -27,7 +27,7 @@
 #include <cmath>
 #include <cstring>
 #include <complex>
-#include "rarray.h"
+#include <rarray>
 
 struct my_traits_def { 
     enum { other = '?', INT='i', UNSIGNED='u', FLOAT='f', COMPLEX='c', BOOL='b' }; 

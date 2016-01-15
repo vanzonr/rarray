@@ -1,5 +1,5 @@
 //
-// benchmark2Daccess.cc - speed test for rarray.h
+// benchmark2Daccess.cc - speed test for rarray
 //
 // Copyright (c) 2013-2015  Ramses van Zon
 //
@@ -23,7 +23,7 @@
 //
 
 #include "elapsed.h"
-#include "rarray.h"
+#include <rarray>
 #include <vector>
 #include <cstdlib>
 #include <cmath>

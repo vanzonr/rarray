@@ -1,5 +1,5 @@
 # 
-# Makefile - make file for rarray.h
+# Makefile - make file for rarray
 #
 # Copyright (c) 2013-2015  Ramses van Zon
 #
@@ -27,7 +27,7 @@
 # To build and run benchmark test:        make benchmark
 # To build the documentation:             make doc
 # To test the code in the documentation:  make doctest
-# To install rarray.h:                    make [PREFIX=directory]
+# To install the header files:            make install [PREFIX=directory]
 #
 
 include config.mk
@@ -63,10 +63,10 @@ config.mk:
 	@echo "Error: Run 'configure' to create config.mk"
 	@false
 
-install: rarray.h rarrayio.h rarraydoc.pdf rarraymacros.h rarraydelmacros.h
+install: rarray rarrayio rarraydoc.pdf rarraymacros.h rarraydelmacros.h
 	mkdir -p ${PREFIX}/include
-	cp rarray.h ${PREFIX}/include/rarray.h
-	cp rarrayio.h ${PREFIX}/include/rarrayio.h
+	cp rarray ${PREFIX}/include/rarray
+	cp rarrayio ${PREFIX}/include/rarrayio
 	cp rarraymacros.h ${PREFIX}/include/rarraymacros.h
 	cp rarraydelmacros.h ${PREFIX}/include/rarraydelmacros.h
 	mkdir -p ${PREFIX}/share/rarray
@@ -101,7 +101,7 @@ doc%.cc: doctestgenerator.sh
 	sh doctestgenerator.sh
 
 doctestgenerator.sh: rarraydoc.tex config.mk
-	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' rarraydoc.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include "rarray.h"/' | grep -v verbatim> doctestgenerator.sh
+	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' rarraydoc.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include <rarray>/' | grep -v verbatim> doctestgenerator.sh
 
 test: $(TESTNAME) $(TESTXNAME)
 	./$(TESTNAME) --report_level=detailed
@@ -112,7 +112,7 @@ valgrindtest: $(TESTNAME)
 rarraytests: $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(TESTNAME).o: $(TESTNAME).cc rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h config.mk
+$(TESTNAME).o: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 benchmark: benchmark2d benchmark4d
@@ -158,10 +158,10 @@ $(BENCHMARK4DNAMEF): $(BENCHMARK4DNAMEF).f90 $(PASS)f.o config.mk
 $(PASS)f.o: $(PASS)f.f90 config.mk
 	$(FC) -c -O0 -g -o $@ $<
 
-$(BENCHMARK2DNAME).o: $(BENCHMARK2DNAME).cc rarray.h rarraymacros.h rarraydelmacros.h elapsed.h config.mk
+$(BENCHMARK2DNAME).o: $(BENCHMARK2DNAME).cc rarray rarraymacros.h rarraydelmacros.h elapsed.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4DNAME).o: $(BENCHMARK4DNAME).cc rarray.h rarraymacros.h rarraydelmacros.h  elapsed.h config.mk
+$(BENCHMARK4DNAME).o: $(BENCHMARK4DNAME).cc rarray rarraymacros.h rarraydelmacros.h elapsed.h config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: $(PASS).cc config.mk
@@ -174,13 +174,13 @@ covertest: \
  missing_from_test.txt \
  summary
 
-coverage_in_code.txt: rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h
+coverage_in_code.txt: rarray rarraymacros.h rarraydelmacros.h rarrayio
 	@echo "Extracting lines from array.h that generate profile messages"
-	\grep -n RA_IFTRACESAY rarray.h | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_IFTRACESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
+	\grep -n RA_IFTRACESAY rarray | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_IFTRACESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
 
 coverage_in_test.txt: output_from_test.txt output_from_nitest.txt 
 	@echo "Filtering profile messages from test output"
-	grep -h IFTRACE output_from_test.txt output_from_nitest.txt | sort -u | sed 's/IFTRACE rarray.h@//' | tr '\t' ' ' | sort -n | sed 's/^[0-9]*: //' > coverage_in_test.txt
+	grep -h IFTRACE output_from_test.txt output_from_nitest.txt | sort -u | sed 's/IFTRACE rarray@//' | tr '\t' ' ' | sort -n | sed 's/^[0-9]*: //' > coverage_in_test.txt
 
 output_from_test.txt: profiletests
 	@echo "Run tests with profile messages on"
@@ -197,12 +197,12 @@ missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
 	comm -2 -3 _coverage_in_code.txt _coverage_in_test.txt | sort -n > missing_from_test.txt
 	rm -f _coverage_in_code.txt _coverage_in_test.txt
 
-profiletests: $(TESTNAME).cc rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h config.mk
-	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on"
+profiletests: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
+	@echo "Compile $(TESTNAME).cc and rarray with profile messages on"
 	$(CXX) $(CXXFLAGS) ${TESTCPPFLAGS} $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests ${TESTLDFLAGS} 
 
-profilenitests: $(TESTNAME).cc rarray.h rarraymacros.h rarraydelmacros.h rarrayio.h config.mk
-	@echo "Compile $(TESTNAME).cc and rarray.h with profile messages on and skipping intermediate objects for indexing"
+profilenitests: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
+	@echo "Compile $(TESTNAME).cc and rarray with profile messages on and skipping intermediate objects for indexing"
 	$(CXX) -DRA_SKIPINTERMEDIATE $(CXXFLAGS) $(TESTCPPFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profilenitests  $(TESTLDFLAGS)
 
 summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
