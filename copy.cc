@@ -3,7 +3,7 @@
 
 int main() 
 {
-    rarray<double,2> a(2,2),b;
+    rarray<double,2> a(2,2), b;
 
     a = 7, 6, 5, 4;
 
@@ -18,6 +18,10 @@ int main()
     a.reshape_force(1,2);
 
     std::cout << "a=" << a << std::endl;
-    std::cout << "b=" << b << std::endl;
 
+    if (b.is_valid()) {
+        std::cout << "b=" << b << std::endl;
+    } else {
+        std::cout << "b no longer valid" << std::endl;
+    }
 }
