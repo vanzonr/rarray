@@ -1458,8 +1458,8 @@ BOOST_AUTO_TEST_CASE(testreshape)
     rarray<float,1> novela2(a2);
     novela[3] = 4;
     novela.reshape(4);
-    a.reshape_force(dim);
-    a.reshape_force(*dim);
+    a.reshape(dim);
+    a.reshape(*dim);
     BOOST_CHECK(novela.extent(0)==4);
     BOOST_CHECK(novela[3]==4);
     BOOST_CHECK(novela2.extent(0)==7);
@@ -1470,7 +1470,7 @@ BOOST_AUTO_TEST_CASE(testreshape)
     rarray<float,2> novelb(b);
     rarray<float,2> novelb2(novelb);
     novelb.reshape(10,7);
-    b.reshape_force(dim);
+    b.reshape(dim);
     BOOST_CHECK(novelb.extent(0)==10);
     BOOST_CHECK(novelb.extent(1)==7);
     BOOST_CHECK(novelb2.extent(0)==7);
@@ -1497,7 +1497,7 @@ BOOST_AUTO_TEST_CASE(testreshape)
     novele.reshape(13,7,10,2,4);            // TODO: check
     novelf.reshape(5,6,1,13,10,7);          // TODO: check
     novelg.reshape(dimr);                   // TODO: check
-    novelg.reshape_force(2,5,6,1,13,10,7);  // TODO: check
+    novelg.reshape(2,5,6,1,13,10,7);        // TODO: check
     novelh.reshape(4,3,2,3,4,3,2,3);        // TODO: check
     noveli.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
     novelj.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
