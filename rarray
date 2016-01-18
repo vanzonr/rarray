@@ -230,7 +230,6 @@ class rarray {
     RA_INLINE_ void init_shallow(const T* thedata, parray_t parray);              // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
-    RA_INLINE_ void reshape_general(const int* extent);                           // general reshape function
     static RA_INLINE_ parray_t new_except_base(T* buffer, const int* extent);     // allocate the chain of pointers, except the base
     static RA_INLINE_ T*       base(parray_t parray);                             // find base of a chain of pointers:
 
@@ -330,7 +329,6 @@ class rarray<T,1> {
     RA_INLINE_ void init_shallow(const T* thedata, parray_t parray);              // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
-    RA_INLINE_ void reshape_general(const int* extent);                           // general reshape function
     static RA_INLINE_ parray_t new_except_base(T* buffer, const int* extent);     // allocate the chain of pointers, except the base
     static RA_INLINE_ T* base(parray_t parray) ;                                  // find base of a chain of pointers
 
@@ -1581,21 +1579,11 @@ template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::in
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-RA_DUPLICATE_BODY(
-template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::reshape(const int* extent),
-template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::reshape(const int* extent),
-{
-    RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::reshape(const int*)");
-    reshape_general(extent);
- })
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 template<typename T,int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape_general(const int* extent)
+void ra::rarray<T,R>::reshape(const int* extent)
 {
     // common method to reshape an array (takes an c-array argument)
-    RA_IFTRACESAY("void rarray<T,R>::reshape_general(const int* extent)");
+    RA_IFTRACESAY("void rarray<T,R>::reshape(const int* extent)");
     RA_CHECKORSAY(parray_ != RA_NULLPTR, "null pointer");
     int tot1 = 1, tot2 = 1;
     for (int i=0;i<R;i++) {
@@ -1623,9 +1611,9 @@ void ra::rarray<T,R>::reshape_general(const int* extent)
 }
 
 template<typename T> RA_INLINE_
-void ra::rarray<T,1>::reshape_general(const int* extent)
+void ra::rarray<T,1>::reshape(const int* extent)
 {
-    RA_IFTRACESAY("void rarray<T,1>::reshape_general(const int* extent)");
+    RA_IFTRACESAY("void rarray<T,1>::reshape(const int* extent)");
     RA_CHECKORSAY(parray_ != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(*extent <= *extent_, "reshaping beyond underlying memory buffer");
     T* buffer = get_buffer();
@@ -1657,7 +1645,7 @@ void ra::rarray<T,1>::reshape(int n0)
     RA_CHECKORSAY(R==1, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0, "zero shape not allowed");
     const int extent[1] = {n0};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_
@@ -1669,7 +1657,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1)
     RA_CHECKORSAY(n0!=0 and n1!=0, "zero shape not allowed");
     // reuse common method
     const int extent[R] = {n0,n1};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -1680,7 +1668,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2)
     RA_CHECKORSAY(R==3, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_
@@ -1691,7 +1679,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3)
     RA_CHECKORSAY(R==4, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_
@@ -1702,7 +1690,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4)
     RA_CHECKORSAY(R==5, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_
@@ -1713,7 +1701,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5)
     RA_CHECKORSAY(R==6, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_
@@ -1724,7 +1712,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
     RA_CHECKORSAY(R==7, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -1735,7 +1723,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
     RA_CHECKORSAY(R==8, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_
@@ -1746,7 +1734,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
     RA_CHECKORSAY(R==9, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -1757,7 +1745,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
     RA_CHECKORSAY(R==10, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -1768,7 +1756,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
     RA_CHECKORSAY(R==11, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero shape not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
-    reshape_general(extent);
+    reshape(extent);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
