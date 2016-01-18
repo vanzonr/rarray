@@ -371,7 +371,7 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
         // read the shape
         ra::read_and_parse_shape<T,R>(in, extent, 0);
         // allocate array
-        r = ra::rarray<T,R>(extent);;
+        r = ra::rarray<T,R>(extent);
         // fill array
         ra::read_and_parse_shape<T,R>(in, 0, r.ptr_array());
         return in;

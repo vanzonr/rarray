@@ -2463,25 +2463,11 @@ BOOST_AUTO_TEST_CASE(test_comma_assignment)
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-//rarray<double,2>::return_type
-
-#if __cplusplus <= 199711L
-
-rarray<double,2>::return_type f(double a){
-    rarray<double,2> z(2,3);
-    z.fill(a);
-    return z;
-}
-
-#else
-
 rarray<double,2> f(double a){
     rarray<double,2> z(2,3);
     z.fill(a);
     return z;
 }
-
-#endif
 
 BOOST_AUTO_TEST_CASE(test_function_returning_rarray)
 {

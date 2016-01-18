@@ -1473,10 +1473,13 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
     // rarray assignment operator from other rarray
     RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(const rarray<T,R>&)");
     if (&a != this) {
-        clear();
+        thedata_ = a.thedata_;
+        parray_ = a.parray_;
         extent_ = const_cast<int*>(a.extent_);
-        init_shallow(a.thedata_, a.parray_, a.cleans_);
         ismine_ = a.ismine_;
+        rdcount_ = a.rdcount_; if (rdcount_ != RA_NULLPTR) (*rdcount_)++;
+        rscount_ = a.rscount_; if (rscount_ != RA_NULLPTR) (*rscount_)++;
+        cleans_ = a.cleans_;
         cleans_ = false;
     }
     return *this;
