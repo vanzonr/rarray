@@ -220,13 +220,10 @@ class rarray {
     const T*     thedata_;                                             // for now, used only in expressions
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
-    bool         ismine_;                                              // does the container own the data buffer?
     int*         rdcount_;                                             // reference count for the data (make atomic later)
     int*         rscount_;                                             // reference count for the shape (make atomic later)
-    mutable bool cleans_;                                              // alternative to ref counting: am I the one that cleans?
     //
     RA_INLINEF T* get_buffer() const;                                             // get start of current contiguous buffer
-    RA_INLINE_ void init_shallow(const T* thedata, parray_t parray, bool& cleans);// setup new rarray object
     RA_INLINE_ void init_shallow(const T* thedata, parray_t parray);              // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
@@ -319,13 +316,10 @@ class rarray<T,1> {
     const T*     thedata_;                                             // for now, used only in expressions
     parray_t     parray_;                                              // start of the array of pointers
     int*         extent_;                                              // array of number of elements in each dimension
-    bool         ismine_;                                              // does the container own the data buffer?
     int*         rdcount_;                                             // reference counter for the data
     int*         rscount_;                                             // reference counter for the shape
-    mutable bool cleans_;                                              // alternative to ref counting: I am the one that cleans?
 
     RA_INLINEF T*   get_buffer() const;                                           // get start of current contiguous buffer  
-    RA_INLINE_ void init_shallow(const T* thedata, parray_t parray, bool& cleans);// setup new rarray object
     RA_INLINE_ void init_shallow(const T* thedata, parray_t parray);              // setup new rarray object
     RA_INLINE_ void init_parray(T* buffer, const int* extent);                    // setup new rarray object
     RA_INLINE_ void init_data(const int* extent, int extenttot);                  // setup new rarray object
@@ -549,10 +543,8 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>::rarray(
   : thedata_(RA_NULLPTR) RA_COMMA
     parray_(RA_NULLPTR) RA_COMMA
     extent_(RA_NULLPTR) RA_COMMA
-    ismine_(false)      RA_COMMA
     rdcount_(RA_NULLPTR) RA_COMMA
-    rscount_(RA_NULLPTR) RA_COMMA
-    cleans_(false)
+    rscount_(RA_NULLPTR)
 {
     // constructor for an undefined array
     RA_IFTRACESAY("rarray<T,R>::rarray()");
@@ -568,7 +560,6 @@ ra::rarray<T,1>::rarray(int n0)
     // constructor for rank==1
     RA_IFTRACESAY("rarray<T,1>::rarray(int)");
     init_data(&n0, n0); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -580,7 +571,6 @@ ra::rarray<T,R>::rarray(int n0, int n1)
     RA_CHECKORSAY(n0!=0 and n1!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1};
     init_data(extent, n0*n1); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -592,7 +582,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2)
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2};
     init_data(extent, n0*n1*n2); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -604,7 +593,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3)
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3};
     init_data(extent, n0*n1*n2*n3); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -616,7 +604,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4)
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4};
     init_data(extent, n0*n1*n2*n3*n4); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -628,7 +615,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5)
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
     init_data(extent, n0*n1*n2*n3*n4*n5); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -640,7 +626,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6)
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
     init_data(extent, n0*n1*n2*n3*n4*n5*n6); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -652,7 +637,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, 
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
     init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -664,7 +648,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, 
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
     init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -676,7 +659,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, 
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
     init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8*n9); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -688,7 +670,6 @@ ra::rarray<T,R>::rarray(int n0, int n1, int n2, int n3, int n4, int n5, int n6, 
     RA_CHECKORSAY(n0!=0 and n1!=0 and n2!=0 and n3!=0 and n4!=0 and n5!=0 and n6!=0 and n7!=0 and n8!=0 and n9!=0 and n10!=0, "zero shape in constructor not allowed");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     init_data(extent, n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -705,8 +686,6 @@ ra::rarray<T,R>::rarray(const int* extent)
         volume *= extent[i];
     RA_CHECKORSAY(volume!=0,"zero shape in constructor not allowed");
     init_data(extent, volume); // also initializes reference counters
-    ismine_ = true;
-    cleans_ = true;
 }
 
 template<typename T> RA_INLINE_ 
@@ -716,7 +695,6 @@ ra::rarray<T,1>::rarray(const int* extent)
     RA_IFTRACESAY("rarray<T,1>::rarray(const int*)");
     RA_CHECKORSAY(*extent!=0,"zero shape in constructor not allowed");
     init_data(extent, extent[0]); // also initializes reference counters
-    ismine_ = cleans_ = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -731,8 +709,6 @@ ra::rarray<T,1>::rarray(T* buffer, int n0)
     const int extent[1] = {n0};
     init_parray(buffer, extent); // also initializes reference counters
     thedata_ = buffer;
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -743,8 +719,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1)
     RA_CHECKORSAY(R==2, "wrong rank in constructor");
     const int extent[R] = {n0,n1};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -755,8 +729,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2)
     RA_CHECKORSAY(R==3, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -767,8 +739,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3)
     RA_CHECKORSAY(R==4, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -779,8 +749,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4)
     RA_CHECKORSAY(R==5, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -791,8 +759,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
     RA_CHECKORSAY(R==6, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -803,20 +769,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
     RA_CHECKORSAY(R==7, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
-}
-
-template<typename T,int R> RA_INLINE_ 
-ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7)
-{
-    // constructor for R=8
-    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int, int)");
-    RA_CHECKORSAY(R==8, "wrong rank in constructor");
-    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
-    init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -827,8 +779,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
     RA_CHECKORSAY(R==9, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -839,8 +789,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
     RA_CHECKORSAY(R==10, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 template<typename T,int R> RA_INLINE_ 
@@ -851,8 +799,6 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
     RA_CHECKORSAY(R==11, "wrong rank in constructor");
     const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10};
     init_parray(buffer, extent); // also initializes reference counters
-    cleans_ = true;
-    ismine_ = false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -866,8 +812,6 @@ template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1>::rarray(
     // constructor for any I (the only way for R>11)
     RA_IFTRACESAY("rarray<T,R>::rarray(T*, const int*)");
     init_parray(buffer, extent); // also initializes reference counters
-    ismine_ = false;
-    cleans_ = true;
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -967,9 +911,7 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
     // copy constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.thedata_, a.parray_, a.cleans_);
-    ismine_ = a.ismine_;
-    cleans_ = false;
+    init_shallow(a.thedata_, a.parray_);
     rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) ++*rdcount_;
     rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) ++*rscount_;
 }
@@ -979,9 +921,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     // copy constructor
     RA_IFTRACESAY("rarray<T,R>::rarray(const rarray<T,1>&)");
     extent_ = const_cast<int*>(a.extent_);
-    init_shallow(a.thedata_, a.parray_, a.cleans_);
-    ismine_ = a.ismine_;
-    cleans_ = false;
+    init_shallow(a.thedata_, a.parray_);
     rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) ++*rdcount_;
     rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) ++*rscount_;
 }
@@ -1010,15 +950,11 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
     thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
-    ismine_ = a.ismine_;
-    cleans_ = a.cleans_;
     rdcount_ = a.rdcount_;
     rscount_ = a.rscount_;
-    a.cleans_ = false;
     a.thedata_ = RA_NULLPTR;
     a.parray_ = RA_NULLPTR;
     a.extent_ = RA_NULLPTR;
-    a.ismine_ = false;
     a.rdcount_ = RA_NULLPTR;
     a.rscount_ = RA_NULLPTR;
 }
@@ -1029,17 +965,13 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
-    ismine_ = a.ismine_;
     rdcount_ = a.rdcount_;
     rscount_ = a.rscount_;
-    cleans_ = a.cleans_;
     a.thedata_ = RA_NULLPTR;
     a.parray_ = RA_NULLPTR;
     a.extent_ = RA_NULLPTR;
-    a.ismine_ = false;
     a.rdcount_ = RA_NULLPTR;
     a.rscount_ = RA_NULLPTR;
-    a.cleans_ = false;
 }
 #endif
 
@@ -1447,17 +1379,13 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
     thedata_ = a.thedata_;
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
-    ismine_ = a.ismine_;
     rdcount_ = a.rdcount_;
     rscount_ = a.rscount_;
-    cleans_ = a.cleans_;
     a.thedata_ = RA_NULLPTR;
     a.parray_ = RA_NULLPTR;
     a.extent_ = RA_NULLPTR;
-    a.ismine_ = false;
     a.rdcount_ = RA_NULLPTR;
     a.rscount_ = RA_NULLPTR;
-    a.cleans_ = false;
     return *this;
 })
 
@@ -1474,11 +1402,8 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
         thedata_ = a.thedata_;
         parray_ = a.parray_;
         extent_ = const_cast<int*>(a.extent_);
-        ismine_ = a.ismine_;
         rdcount_ = a.rdcount_; if (rdcount_ != RA_NULLPTR) (*rdcount_)++;
         rscount_ = a.rscount_; if (rscount_ != RA_NULLPTR) (*rscount_)++;
-        cleans_ = a.cleans_;
-        cleans_ = false;
     }
     return *this;
 })
@@ -1510,33 +1435,16 @@ template<typename T>                T* ra::subrarray<T RA_COMMA 1>::get_buffer()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RA_DUPLICATE_BODY(
-template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(const T* thedata RA_COMMA parray_t parray, bool& cleans),
-template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(const T* thedata RA_COMMA parray_t parray, bool& cleans),
-{
-    // shallow init function : reuses buffer and parray
-    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t, bool&)");
-    RA_CHECKORSAY(    thedata != RA_NULLPTR, "null pointer");
-    RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
-    RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
-    thedata_ = thedata;
-    parray_ = parray;
-    cleans_ = false;
-})
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-RA_DUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINE_ void ra::rarray<T RA_COMMA R>::init_shallow(const T* thedata RA_COMMA parray_t parray),
 template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::init_shallow(const T* thedata RA_COMMA parray_t parray),
 {
     // shallow init function for subrarray: reuses buffer and parray
-    RA_IFTRACESAY("void rarray<T,R>::init_shallow(parray_t)");
+    RA_IFTRACESAY("void rarray<T,R>::init_shallow(const T*, parray_t)");
     RA_CHECKORSAY(    thedata != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(      parray != RA_NULLPTR, "null pointer");
     RA_CHECKORSAY(base(parray) != RA_NULLPTR, "null pointer");
     thedata_ = thedata;
     parray_ = parray;
-    cleans_ = false;
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1553,8 +1461,7 @@ template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::in
     extent_ = new int[R];
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
-    bool oldcleans = true;
-    init_shallow(buffer, parray, oldcleans);
+    init_shallow(buffer, parray);
     // New rarray, allocate and initialize the reference counters for data and shape:
     rdcount_ = new int(2); // this does not own the data; a reference count of 2 means the data will never be released.
     rscount_ = new int(1); // this owns the shape
@@ -1572,9 +1479,7 @@ template<typename T>                RA_INLINE_ void ra::rarray<T RA_COMMA 1>::in
     RA_CHECKORSAY( extenttot >= 0, "negative number of elements");
     T* buffer = new T[extenttot];
     init_parray(buffer, extent);
-    ismine_ = true;
     *rdcount_ = 1; // indicate that this rarray owns its data
-    cleans_ = true; // who else would do it?
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1607,7 +1512,6 @@ void ra::rarray<T,R>::reshape(const int* extent)
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
     parray_ = new_except_base(buffer, extent_);
-    cleans_ = true;    
 }
 
 template<typename T> RA_INLINE_
@@ -1632,7 +1536,6 @@ void ra::rarray<T,1>::reshape(const int* extent)
     for (int i=0;i<R;i++)
         extent_[i] = extent[i];
     parray_ = new_except_base(buffer, extent_); // no need for R=1
-    cleans_ = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1770,7 +1673,7 @@ template<typename T>                RA_INLINEF void ra::rarray<T RA_COMMA 1>::cl
     // decrease reference counters: clear is called in destructors and assignments operators too, so this only needs to happen here
     if (rdcount_ != RA_NULLPTR) {
         (*rdcount_) --;        
-        if (*rdcount_ == 0 and ismine_) {
+        if (*rdcount_ == 0) {
             delete[] get_buffer();
             delete rdcount_;
         }
@@ -1788,10 +1691,8 @@ template<typename T>                RA_INLINEF void ra::rarray<T RA_COMMA 1>::cl
     thedata_ = RA_NULLPTR;
     parray_ = RA_NULLPTR;
     extent_ = RA_NULLPTR;
-    ismine_ = false;
     rdcount_ = RA_NULLPTR;
     rscount_ = RA_NULLPTR;
-    cleans_ = false;
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
