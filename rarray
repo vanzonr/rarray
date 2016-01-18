@@ -772,6 +772,16 @@ ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n
 }
 
 template<typename T,int R> RA_INLINE_ 
+ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7) 
+{
+    // constructor for R=7
+    RA_IFTRACESAY("rarray<T,R>::rarray(T*, int, int, int, int, int, int, int)");
+    RA_CHECKORSAY(R==7, "wrong rank in constructor");
+    const int extent[R] = {n0,n1,n2,n3,n4,n5,n6,n7};
+    init_parray(buffer, extent); // also initializes reference counters
+}
+
+template<typename T,int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8)
 {
     // constructor for R=9
