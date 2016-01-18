@@ -20,28 +20,37 @@ void testcopy(double value1, double value2)
         BOOST_CHECK(b[i]==d[i]);
     }
 }
+void test_reference_counting()
+{
+    rarray<double,2>* b;
+    b = new rarray<double,2>(10,30);
+    b->fill(13.0);
+    rarray<double,2> c(*b);
+    delete b;
+    BOOST_CHECK(c.extent(0)==10);
+    BOOST_CHECK(c.extent(1)==30);
+    BOOST_CHECK(c[0][0]==13.0);
+    BOOST_CHECK(c[9][29]==13.0);
+    b = new rarray<double,2>(5,6);
+    b->fill(5.0);
+    rarray<double,1> d((*b)[3]);
+    delete b;
+}
 
 int main() 
 {
     // rarray<double,2> a(2,2), b , d;
-
     // a = 7, 6, 5, 4;
-
     // d = a;
-    
-    // std::cout << "a=" << a << std::endl;
-
+     // std::cout << "a=" << a << std::endl;
     // b = a;
     // std::cout << "b=" << b << std::endl;
-
     // rarray<double,2> c(3,3);
     // c.fill(1.0);
-
     // a.reshape(1,2);
-
     // std::cout << "a=" << a << std::endl;
-
     // std::cout << "b=" << b << std::endl;
 
-    testcopy(7.0,13.2);
+    //testcopy(7.0,13.2);
+    test_reference_counting();
 }
