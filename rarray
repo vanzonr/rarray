@@ -36,9 +36,6 @@
 namespace ra { template<typename T,int R> class rarray;    }
 namespace ra { template<typename T,int R> class subrarray; }
 namespace ra { template<typename T>       class CommaOp;   }
-#if __cplusplus <= 199711L
-namespace ra { template<typename T,int R> class rtnrarray; }
-#endif
 
 // Forward definitions to support array expressions //
 
@@ -127,12 +124,6 @@ class rarray {
     typedef Iterator<const T>                         const_iterator;   // iterator type for constant access
     typedef typename PointerArray<T,R>::type          parray_t;         // shorthand for T*const*const*...
     typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t; // shorthand for T***...
-    #if __cplusplus <= 199711L
-    typedef rtnrarray<T,R>                            return_type;      // in c++03, return type of function must be this
-    #else
-    typedef rarray<T,R>                               return_type;      // also defined in c++11 for c++-version-agnosticity
-    #endif
-
     RA_INLINE_ rarray();                                                          // constructor leaving rarray undefined 
     RA_INLINE_ rarray(int n0, int n1);                                            // constructor creating its own buffer for R=2
     RA_INLINE_ rarray(int n0, int n1, int n2);                                                                            // R=3
@@ -160,10 +151,7 @@ class rarray {
     RA_INLINEF rarray(const subrarray<T,R> &a);                                   // copy constructor
     RA_INLINE_ rarray<T,R>& operator=(const rarray<T,R> &a);                      // array assignment operator
     RA_INLINE_ rarray<T,R>& operator=(const subrarray<T,R> &a);                   // array assignment operator
-    #if __cplusplus <= 199711L
-    RA_INLINEF rarray(const return_type& x);                                      // move-like constructor
-    rarray<T,R>& operator=(const return_type& x);                                 // move-like assignment operator
-    #else
+    #if __cplusplus > 199711L
     rarray(rarray<T,R>&& x);                                                      // move constructor
     rarray<T,R>& operator=(rarray<T,R>&& x);                                      // move assignment operator
     #endif
@@ -203,7 +191,7 @@ class rarray {
     RA_INLINE_ void reshape_force(const int* extent);                                                                     // R>11
     //
     RA_INLINE_ bool                is_clear()           const;                    // check if undefined
-    RA_INLINE_ return_type         copy()               const;                    // return a copy
+    RA_INLINE_ rarray<T,R>         copy()               const;                    // return a copy
     RA_INLINE_ int                 extent(int i)        const;                    // retrieve array size in dimension i
     RA_INLINE_ const int*          shape()              const;                    // retrieve array sizes in all dimensions
     RA_INLINE_ int                 size()               const;                    // retrieve the total number of elements  
@@ -258,9 +246,6 @@ class rarray {
     static RA_INLINE_ T*       base(parray_t parray);                             // find base of a chain of pointers:
 
     friend class subrarray<T,R>;
-    #if __cplusplus <= 199711L
-    friend class rtnrarray<T,R>;
-    #endif
 
 }; // end definition rarray<T,R>
 
@@ -278,12 +263,6 @@ class rarray<T,1> {
     typedef Iterator<const T>                         const_iterator;   // iterator type for constant access
     typedef typename PointerArray<T,1>::type          parray_t;         // conforming shorthand for T*
     typedef typename PointerArray<T,1>::noconst_type  noconst_parray_t; // conforming shorthand for T*
-    #if __cplusplus <= 199711L
-    typedef rtnrarray<T,1>                            return_type;      // in c++03, return type of function must be this
-    #else
-    typedef rarray<T,1>                               return_type;      // also defined in c++11 for c++-version-agnosticity
-    #endif
-
     RA_INLINEF rarray();                                                          // constructor leaving object undefined
     RA_INLINE_ rarray(int n0);                                                    // constructor creating own buffer
     RA_INLINE_ rarray(const int* extent);                                         // constructor creating own buffer from pointer, for conformity
@@ -293,10 +272,7 @@ class rarray<T,1> {
     RA_INLINEF rarray(const subrarray<T,1> &a);                                   // copy constructor    
     RA_INLINE_ rarray<T,1>& operator=(const rarray<T,1> &a);                      // assignment operator
     RA_INLINE_ rarray<T,1>& operator=(const subrarray<T,1> &a);                   // assignment operator
-    #if __cplusplus <= 199711L
-    RA_INLINEF rarray(const return_type& x);                                      // move-like constructor
-    rarray<T,1>& operator=(const return_type& x);                                 // move-like assignment operator
-    #else
+    #if __cplusplus > 199711L
     rarray(rarray<T,1>&& x);                                                      // move constructor
     rarray<T,1>& operator=(rarray<T,1>&& x);                                      // move assignment operator
     #endif
@@ -308,7 +284,7 @@ class rarray<T,1> {
     RA_INLINE_ void reshape_force(int n0);                                        // to change shape of an original array (only shrinking is defined)
     RA_INLINE_ void reshape_force(const int* extent);                             // ditto, for conformity
     RA_INLINE_ bool                is_clear()           const;                    // check if undefined
-    RA_INLINE_ return_type         copy()               const;                    // return a copy
+    RA_INLINE_ rarray<T,1>         copy()               const;                    // return a copy
     RA_INLINE_ int                 extent(int i)        const;                    // retrieve array size in dimension i
     RA_INLINE_ const int*          shape()              const;                    // retrieve array sizes in all dimensions
     RA_INLINE_ int                 size()               const;                    // retrieve the total number of elements
@@ -372,77 +348,7 @@ class rarray<T,1> {
     static RA_INLINE_ T* base(parray_t parray) ;                                  // find base of a chain of pointers
 
     friend class subrarray<T,1>;
-    #if __cplusplus <= 199711L
-    friend class rtnrarray<T,1>;
-    #endif
 }; // end definition rarray<T,1>
-
-// return type for returning rarrays from functions, need in c++03, but not in c++11, which has move semantics
-#if __cplusplus <= 199711L
-template<typename T,int R> 
-class rtnrarray { 
-  public:
-    // construct the reference 
-    rtnrarray(const rarray<T,R> &x)
-      : thedata_(x.thedata_),
-        parray_(x.parray_),
-        extent_(x.extent_),
-        ismine_(x.ismine_),
-        rdcount_(x.rdcount_),
-        rscount_(x.rscount_),
-        cleans_(x.cleans_)
-    {
-        x.cleans_ = false; // must preserve the ownership semantics
-    }
-    // construct the reference 
-    rtnrarray(const rtnrarray<T,R> &x)
-      : thedata_(x.thedata_),
-        parray_(x.parray_),
-        extent_(x.extent_),
-        ismine_(x.ismine_),
-        rdcount_(x.rdcount_),
-        rscount_(x.rscount_),
-        cleans_(x.cleans_)
-    {
-        // rvalues never 'clean', so no need to keep track
-        // of ownership
-    }
-    // assign one reference to another.
-    rtnrarray& operator=(const rtnrarray<T,R> &x) {
-        thedata_ = x.thedata_;
-        parray_ = x.parray_;
-        extent_ = x.extent_;
-        ismine_ = x.ismine_;
-        rdcount_ = x.rdcount_;
-        rscount_ = x.rscount_;
-        cleans_ = x.cleans_;
-        return *this;
-    }
-    // assignment operator to create a reference to another. 
-    rtnrarray& operator=(const rarray<T,R> &x) {
-        thedata_ = x.thedata_;
-        parray_ = x.parray_;
-        extent_ = x.extent_;
-        ismine_ = x.ismine_;
-        rdcount_ = x.rdcount_;
-        rscount_ = x.rscount_;
-        cleans_ = x.cleans_;
-        x.cleans_ = false; // must transfer ownership
-        return *this;
-    }
-  private:
-    typedef typename rarray<T,R>::parray_t parray_t;      // shorthand for T*const*const*...
-    const T*  thedata_;                                   // point to the data
-    parray_t  parray_;                                    // start of the array of pointers
-    int*      extent_;                                    // array of number of elements in each dimension
-    bool      ismine_;                                    // does the container own the data buffer?
-    int*      rdcount_;                                   // data reference counter
-    int*      rscount_;                                   // shape reference counter
-    bool      cleans_;                                    // alternative to ref counting: I am the one that cleans?
-    friend class rarray<T,R>;
-};
-
-#endif
 
 // Definition class subrarray <T,R>
 
@@ -578,17 +484,17 @@ template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
 template<typename A,int R>                                                        RA_INLINE_ int extent_given_byte_size(const rarray<A,R>& a, int i, int byte_size); // use rarray's extent function
 // Template functions to convert automatic arrays, for conversion with RARRAY macro
 // To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
-template<typename A>                                                              RA_INLINE_ typename rarray<A,1>::return_type  make_rarray_given_byte_size(A a[], int byte_size);                              //for 1d array
-template<typename A,int Z>                                                        RA_INLINE_ typename rarray<A,2>::return_type  make_rarray_given_byte_size(A a[][Z], int byte_size);                           //for 2d array
-template<typename A,int Y,int Z>                                                  RA_INLINE_ typename rarray<A,3>::return_type  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);                        //for 3d array
-template<typename A,int X,int Y,int Z>                                            RA_INLINE_ typename rarray<A,4>::return_type  make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size);                     //for 4d array
-template<typename A,int W,int X,int Y,int Z>                                      RA_INLINE_ typename rarray<A,5>::return_type  make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size);                  //for 5d array
-template<typename A,int V,int W,int X,int Y,int Z>                                RA_INLINE_ typename rarray<A,6>::return_type  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size);               //for 6d array
-template<typename A,int U,int V,int W,int X,int Y,int Z>                          RA_INLINE_ typename rarray<A,7>::return_type  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size);            //for 7d array
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    RA_INLINE_ typename rarray<A,8>::return_type  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size);         //for 8d array
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              RA_INLINE_ typename rarray<A,9>::return_type  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);      //for 9d array
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        RA_INLINE_ typename rarray<A,10>::return_type make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);   //for 10d array
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  RA_INLINE_ typename rarray<A,11>::return_type make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);//for 11d array
+template<typename A>                                                              RA_INLINE_ rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size);                              //for 1d array
+template<typename A,int Z>                                                        RA_INLINE_ rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size);                           //for 2d array
+template<typename A,int Y,int Z>                                                  RA_INLINE_ rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);                        //for 3d array
+template<typename A,int X,int Y,int Z>                                            RA_INLINE_ rarray<A,4>  make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size);                     //for 4d array
+template<typename A,int W,int X,int Y,int Z>                                      RA_INLINE_ rarray<A,5>  make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size);                  //for 5d array
+template<typename A,int V,int W,int X,int Y,int Z>                                RA_INLINE_ rarray<A,6>  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size);               //for 6d array
+template<typename A,int U,int V,int W,int X,int Y,int Z>                          RA_INLINE_ rarray<A,7>  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size);            //for 7d array
+template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    RA_INLINE_ rarray<A,8>  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size);         //for 8d array
+template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              RA_INLINE_ rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);      //for 9d array
+template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        RA_INLINE_ rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);   //for 10d array
+template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  RA_INLINE_ rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);//for 11d array
 template<typename A,int R>                                                        RA_INLINE_ rarray<A,R> make_rarray_given_byte_size(rarray<A,R> a, int byte_size); // trivial action for rarray
 
 } // end namespace ra
@@ -598,7 +504,7 @@ template<typename A,int R>                                                      
 // mimic the behavior of std::move
 namespace std {
 template<typename T, int R>
-ra::rtnrarray<T,R> move(const ra::rarray<T,R>& x)
+ra::rarray<T,R> move(const ra::rarray<T,R>& x)
 {
     return x;
 }
@@ -1079,8 +985,8 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
     init_shallow(a.thedata_, a.parray_, a.cleans_);
     ismine_ = a.ismine_;
     cleans_ = false;
-    rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) *rdcount_ ++;
-    rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) *rscount_ ++;
+    rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) ++*rdcount_;
+    rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) ++*rscount_;
 }
 
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(const rarray<T RA_COMMA 1> &a)
@@ -1091,8 +997,8 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     init_shallow(a.thedata_, a.parray_, a.cleans_);
     ismine_ = a.ismine_;
     cleans_ = false;
-    rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) (*rdcount_)++;
-    rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) (*rscount_)++;
+    rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) ++*rdcount_;
+    rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) ++*rscount_;
 }
 
 // rarray copy constructor from subrarray
@@ -1105,38 +1011,13 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     RA_IFTRACESAY("rarray<T,R>::rarray(const subrarray<T,R>&)");
     extent_ = const_cast<int*>(a.extent_);
     init_shallow(a.data(), a.parray_);
-    rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) *(rdcount_)++;
-    rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) *(rscount_)++;
+    rdcount_ = a.rdcount_;  if (rdcount_ != RA_NULLPTR) ++*rdcount_;
+    rscount_ = a.rscount_;  if (rscount_ != RA_NULLPTR) ++*rscount_;
 })
 
 // rarray move or move-like constructors
 
-#if __cplusplus <= 199711L
-template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(const typename rarray<T RA_COMMA R>::return_type &a)
-{
-    // move-like constructor
-    RA_IFTRACESAY("rarray<T,R>::rarray(const rtnrarray<T,R>&)");
-    thedata_ = a.thedata_;
-    parray_ = a.parray_;
-    extent_ = const_cast<int*>(a.extent_);
-    ismine_ = a.ismine_;
-    cleans_ = a.cleans_;
-    rdcount_ = a.rdcount_;
-    sdcount_ = a.sdcount_;
-}
-template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(const typename rarray<T RA_COMMA 1>::return_type &a)
-{
-    // move-like constructor
-    RA_IFTRACESAY("rarray<T,R>::rarray(const rtnrarray<T,1>&)");
-    thedata_ = a.thedata_;
-    parray_ = a.parray_;
-    extent_ = const_cast<int*>(a.extent_);
-    ismine_ = a.ismine_;
-    cleans_ = a.cleans_;
-    rdcount_ = a.rdcount_;
-    sdcount_ = a.sdcount_;
-}
-#else
+#if __cplusplus > 199711L
 template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(rarray<T RA_COMMA R> &&a)
 {
     // move constructor
@@ -1149,6 +1030,12 @@ template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>::rarray(
     rdcount_ = a.rdcount_;
     rscount_ = a.rscount_;
     a.cleans_ = false;
+    a.thedata_ = RA_NULLPTR;
+    a.parray_ = RA_NULLPTR;
+    a.extent_ = RA_NULLPTR;
+    a.ismine_ = false;
+    a.rdcount_ = RA_NULLPTR;
+    a.rscount_ = RA_NULLPTR;
 }
 template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(rarray<T RA_COMMA 1> &&a)
 {
@@ -1158,9 +1045,15 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
-    cleans_ = a.cleans_;
     rdcount_ = a.rdcount_;
     rscount_ = a.rscount_;
+    cleans_ = a.cleans_;
+    a.thedata_ = RA_NULLPTR;
+    a.parray_ = RA_NULLPTR;
+    a.extent_ = RA_NULLPTR;
+    a.ismine_ = false;
+    a.rdcount_ = RA_NULLPTR;
+    a.rscount_ = RA_NULLPTR;
     a.cleans_ = false;
 }
 #endif
@@ -1170,7 +1063,7 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>::rarray(
 
 // rarray deep copy
 
-template<typename T RA_COMMA int R> RA_INLINE_ typename ra::rarray<T RA_COMMA R>::return_type ra::rarray<T RA_COMMA R>::copy() const
+template<typename T RA_COMMA int R> RA_INLINE_ ra::rarray<T RA_COMMA R> ra::rarray<T RA_COMMA R>::copy() const
 {
     // create an independent, deep copy (regular copy is shallow)
     RA_IFTRACESAY("rarray<T,R> rarray<T,R>::copy() const");
@@ -1188,7 +1081,7 @@ template<typename T RA_COMMA int R> RA_INLINE_ typename ra::rarray<T RA_COMMA R>
     }
 }
 
-template<typename T>                RA_INLINE_ typename ra::rarray<T RA_COMMA 1>::return_type ra::rarray<T RA_COMMA 1>::copy() const
+template<typename T>                RA_INLINE_ ra::rarray<T RA_COMMA 1> ra::rarray<T RA_COMMA 1>::copy() const
 {
     // create an independent, deep copy (regular copy is shallow)
     RA_IFTRACESAY("rarray<T,R> rarray<T,R>::copy() const");
@@ -1558,23 +1451,7 @@ template<typename T> RA_INLINEF T& ra::subrarray<T,1>::operator[](int i) const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if __cplusplus <= 199711L
-
-RA_DUPLICATE_BODY(
-                  template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>& ra::rarray<T RA_COMMA R>::operator=(const typename ra::rarray<T RA_COMMA R>::return_type &a),
-                  template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rarray<T RA_COMMA 1>::operator=(const typename ra::rarray<T RA_COMMA 1>::return_type &a),
-{
-    // rarray assignment operator from other rarray
-    RA_IFTRACESAY("rarray<T,R>& rarray<T,R>::operator=(const rtnrarray<T,R>&)");
-    thedata_ = a.thedata_;
-    parray_ = a.parray_;
-    extent_ = const_cast<int*>(a.extent_);
-    ismine_ = a.ismine_;
-    cleans_ = a.cleans_;
-    return *this;
-})
-
-#else
+#if __cplusplus > 199711L
 
 RA_DUPLICATE_BODY(
 template<typename T RA_COMMA int R> RA_INLINEF ra::rarray<T RA_COMMA R>& ra::rarray<T RA_COMMA R>::operator=(ra::rarray<T RA_COMMA R> &&a),
@@ -1586,7 +1463,15 @@ template<typename T>                RA_INLINEF ra::rarray<T RA_COMMA 1>& ra::rar
     parray_ = a.parray_;
     extent_ = const_cast<int*>(a.extent_);
     ismine_ = a.ismine_;
+    rdcount_ = a.rdcount_;
+    rscount_ = a.rscount_;
     cleans_ = a.cleans_;
+    a.thedata_ = RA_NULLPTR;
+    a.parray_ = RA_NULLPTR;
+    a.extent_ = RA_NULLPTR;
+    a.ismine_ = false;
+    a.rdcount_ = RA_NULLPTR;
+    a.rscount_ = RA_NULLPTR;
     a.cleans_ = false;
     return *this;
 })
@@ -1741,14 +1626,25 @@ void ra::rarray<T,R>::reshape_general(const int* extent, bool force)
     RA_CHECKORSAY(tot2 <= tot1, "reshaping beyond underlying memory buffer");
     if (parray_ != RA_NULLPTR and (not cleans_ or force))  // cannot reshape originals unless forced
     {
-        if (not cleans_) {
+        if (false and not cleans_) {
             T* buffer = get_buffer();    // get buffer address
             ismine_ = false;             // protect buffer from being deleted
             clear();                     // deallocate everything else
             init_parray(buffer, extent); // reallocate pointer arrays
         } else {
             T* buffer = get_buffer();
-            delete[] parray_;
+            if (rscount_ != RA_NULLPTR) {
+                (*rscount_) --;        
+                if (*rscount_ == 0) {
+                    if (R > 1) {
+                        delete[] parray_;
+                    }
+                    delete[] extent_;
+                    delete rscount_;
+                }
+            }
+            rscount_ = new int(1);
+            extent_ = new int[R];
             for (int i=0;i<R;i++)
                 extent_[i] = extent[i];
             parray_ = new_except_base(buffer, extent_);
@@ -1766,13 +1662,29 @@ void ra::rarray<T,1>::reshape_general(const int* extent, bool force)
     RA_CHECKORSAY(not cleans_ or force, "reshape only allowed on shallow copy of rarray");
     if (parray_ != RA_NULLPTR and (not cleans_ or force))  // cannot reshape originals unless forced
     {
-        if (not cleans_) {
+        if (false and not cleans_) {
             T* buffer = get_buffer();    // get buffer address        
             ismine_ = false;             // protect buffer from being deleted
             clear();                      // deallocate everything else
             init_parray(buffer, extent); // reallocate pointer arrays
         } else {
-            *extent_ = *extent;
+            T* buffer = get_buffer();
+            if (rscount_ != RA_NULLPTR) {
+                (*rscount_) --;        
+                if (*rscount_ == 0) {
+                    if (R > 1) {
+                        delete[] parray_;
+                    }
+                    delete[] extent_;
+                    delete rscount_;
+                }
+            }
+            rscount_ = new int(1);
+            extent_ = new int[R];
+            for (int i=0;i<R;i++)
+                extent_[i] = extent[i];
+            //parray_ = new_except_base(buffer, extent_); // no need for R=1
+            //*extent_ = *extent;
         }
     }
     cleans_ = true;
@@ -1907,7 +1819,7 @@ void ra::rarray<T,R>::reshape(int n0, int n1, int n2, int n3, int n4, int n5, in
 template<typename T> RA_INLINE_ 
 void ra::rarray<T,1>::reshape_force(int n0)
 {
-    // constructor for R=1
+    // reshape method for R=1
     RA_IFTRACESAY("void rarray<T,1>::reshape_force(int)");
     RA_CHECKORSAY(R==1, "wrong rank in reshape");
     RA_CHECKORSAY(n0!=0, "zero shape not allowed");
@@ -2028,79 +1940,38 @@ void ra::rarray<T,R>::reshape_force(int n0, int n1, int n2, int n3, int n4, int 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// RA_DUPLICATE_BODY(
-// template<typename T RA_COMMA int R> RA_INLINEF void ra::rarray<T RA_COMMA R>::clear(),
-// template<typename T>                RA_INLINEF void ra::rarray<T RA_COMMA 1>::clear(),
-// {
-//     //  rarray private cleanup routine
-//     RA_IFTRACESAY("void rarray<T,R>::clear()");
-//     // decrease reference counters: clear is called in destructors and assignments operators too, so this only needs to happen here
-//     if (rdcount_ != RA_NULLPTR) (*rdcount_) --;
-//     if (rscount_ != RA_NULLPTR) (*rscount_) --;
-//     // cleans_ mechanism to be will be replaced
-//     if (parray_ != RA_NULLPTR and cleans_) {
-//         if (ismine_) 
-//             delete[] get_buffer(); 
-//         if (R > 1)
-//             delete[] parray_;
-//         delete[] extent_;
-//     }
-//     parray_ = RA_NULLPTR;
-//     cleans_ = false;
-//     // clean up reference counters that are not needed anymore
-//     if (rdcount_ != RA_NULLPTR) if ((*rdcount_)==0) delete rdcount_;
-//     if (rscount_ != RA_NULLPTR) if ((*rscount_)==0) delete rscount_;
-// })
-
-template<typename T>                RA_INLINEF void ra::rarray<T RA_COMMA 1>::clear()
+RA_DUPLICATE_BODY(
+template<typename T RA_COMMA int R> RA_INLINEF void ra::rarray<T RA_COMMA R>::clear(),
+template<typename T>                RA_INLINEF void ra::rarray<T RA_COMMA 1>::clear(),
 {
     //  rarray private cleanup routine
     RA_IFTRACESAY("void rarray<T,R>::clear()");
     // decrease reference counters: clear is called in destructors and assignments operators too, so this only needs to happen here
-    if (rdcount_ != RA_NULLPTR) (*rdcount_) --;
-    if (rscount_ != RA_NULLPTR) (*rscount_) --;
-    // cleans_ mechanism to be will be replaced
-    if (parray_ != RA_NULLPTR and cleans_) {
-        if (ismine_) 
-            delete[] get_buffer(); 
-        if (R > 1)
-            delete[] parray_;
-        delete[] extent_;
+    if (rdcount_ != RA_NULLPTR) {
+        (*rdcount_) --;        
+        if (*rdcount_ == 0 and ismine_) {
+            delete[] get_buffer();
+            delete rdcount_;
+        }
     }
+    if (rscount_ != RA_NULLPTR) {
+        (*rscount_) --;        
+        if (*rscount_ == 0) {
+            if (R > 1) {
+                delete[] parray_;
+            }
+            delete[] extent_;
+            delete rscount_;
+        }
+    }
+    thedata_ = RA_NULLPTR;
     parray_ = RA_NULLPTR;
+    extent_ = RA_NULLPTR;
+    ismine_ = false;
+    rdcount_ = RA_NULLPTR;
+    rscount_ = RA_NULLPTR;
     cleans_ = false;
-    // clean up reference counters that are not needed anymore
-    if (rdcount_ != RA_NULLPTR) if ((*rdcount_)==0) delete rdcount_;
-    if (rscount_ != RA_NULLPTR) if ((*rscount_)==0) delete rscount_;
-}
-
-template<typename T RA_COMMA int R> RA_INLINEF void ra::rarray<T RA_COMMA R>::clear()
-{
-    //  rarray private cleanup routine
-    RA_IFTRACESAY("void rarray<T,R>::clear()");
-    // decrease reference counters: clear is called in destructors and assignments operators too, so this only needs to happen here
-    if (rdcount_ != RA_NULLPTR) (*rdcount_) --;
-    if (rscount_ != RA_NULLPTR) (*rscount_) --;
-    // cleans_ mechanism to be will be replaced
-    if (parray_ != RA_NULLPTR and cleans_) {
-        if (ismine_) 
-            delete[] get_buffer(); 
-        if (R > 1)
-            delete[] parray_;
-        delete[] extent_;
-    }
-    parray_ = RA_NULLPTR;
-    cleans_ = false;
-    // clean up reference counters that are not needed anymore
-    if (rdcount_ != RA_NULLPTR and (*rdcount_)==0) {
-        delete rdcount_;
-        rdcount_ = RA_NULLPTR;
-    }
-    if (rscount_ != RA_NULLPTR and (*rscount_)==0) {
-        delete rscount_;
-        rscount_ = RA_NULLPTR;
-    }
-}
+})
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2494,7 +2365,7 @@ int ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size)
 // convert to rarray
 
 template<typename A> RA_INLINE_ 
-typename ra::rarray<A,1>::return_type ra::make_rarray_given_byte_size(A a[], int byte_size) 
+ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,1> make_rarray_given_byte_size(A[],int)");
     const int z = byte_size/sizeof(A);
@@ -2502,7 +2373,7 @@ typename ra::rarray<A,1>::return_type ra::make_rarray_given_byte_size(A a[], int
 }
 
 template<typename A,int Z> RA_INLINE_ 
-typename ra::rarray<A,2>::return_type ra::make_rarray_given_byte_size(A a[][Z], int byte_size) 
+ra::rarray<A,2> ra::make_rarray_given_byte_size(A a[][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,2> make_rarray_given_byte_size(A[][Z],int)");
     const int y = byte_size/sizeof(A)/Z;
@@ -2510,7 +2381,7 @@ typename ra::rarray<A,2>::return_type ra::make_rarray_given_byte_size(A a[][Z], 
 }
 
 template<typename A,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,3>::return_type ra::make_rarray_given_byte_size(A a[][Y][Z], int byte_size) 
+ra::rarray<A,3> ra::make_rarray_given_byte_size(A a[][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,3> make_rarray_given_byte_size(A[][Y][Z],int)");
     const int x = byte_size/sizeof(A)/Z/Y;
@@ -2518,7 +2389,7 @@ typename ra::rarray<A,3>::return_type ra::make_rarray_given_byte_size(A a[][Y][Z
 }
 
 template<typename A,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,4>::return_type ra::make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size) 
+ra::rarray<A,4> ra::make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,4> make_rarray_given_byte_size(A[][X][Y][Z],int)");
     const int w = byte_size/sizeof(A)/X/Z/Y;
@@ -2526,7 +2397,7 @@ typename ra::rarray<A,4>::return_type ra::make_rarray_given_byte_size(A a[][X][Y
 }
 
 template<typename A,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,5>::return_type ra::make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size) 
+ra::rarray<A,5> ra::make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,5> make_rarray_given_byte_size(A[][W][X][Y][Z],int)");
     const int v = byte_size/sizeof(A)/W/X/Z/Y;
@@ -2534,7 +2405,7 @@ typename ra::rarray<A,5>::return_type ra::make_rarray_given_byte_size(A a[][W][X
 }
 
 template<typename A,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,6>::return_type ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size) 
+ra::rarray<A,6> ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,6> make_rarray_given_byte_size(A[][V][W][X][Y][Z],int)");
     const int u = byte_size/sizeof(A)/V/W/X/Z/Y;
@@ -2542,7 +2413,7 @@ typename ra::rarray<A,6>::return_type ra::make_rarray_given_byte_size(A a[][V][W
 }
 
 template<typename A,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,7>::return_type ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size) 
+ra::rarray<A,7> ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,7> make_rarray_given_byte_size(A[][U][V][W][X][Y][Z],int)");
     const int t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
@@ -2550,7 +2421,7 @@ typename ra::rarray<A,7>::return_type ra::make_rarray_given_byte_size(A a[][U][V
 }
 
 template<typename A,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,8>::return_type ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size) 
+ra::rarray<A,8> ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,8> make_rarray_given_byte_size(A[][T][U][V][W][X][Y][Z],int)");
     const int s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
@@ -2558,7 +2429,7 @@ typename ra::rarray<A,8>::return_type ra::make_rarray_given_byte_size(A a[][T][U
 }
 
 template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,9>::return_type ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size) 
+ra::rarray<A,9> ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,9> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
     const int r = byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
@@ -2566,7 +2437,7 @@ typename ra::rarray<A,9>::return_type ra::make_rarray_given_byte_size(A a[][S][T
 }
 
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,10>::return_type ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size) 
+ra::rarray<A,10> ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,10> make_rarray_given_byte_size(A[][R][S][T][U][V][W][X][Y][Z],int)");
     const int q = byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
@@ -2574,7 +2445,7 @@ typename ra::rarray<A,10>::return_type ra::make_rarray_given_byte_size(A a[][R][
 }
 
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-typename ra::rarray<A,11>::return_type ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size) 
+ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size) 
 {
     RA_IFTRACESAY("rarray<A,11> make_rarray_given_byte_size(A[][Q][R][S][T][U][V][W][X][Y][Z],int)");
     const int p = byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
