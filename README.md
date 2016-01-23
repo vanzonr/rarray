@@ -20,10 +20,11 @@ Rather than do so by hand, you can use the included Makefile, which
 can also compile the unit tests and benchmarks.  The configure command
 sets up the makefile for your compiler.  You can type
 
-  ./configure
+    ./configure
 
-or 
-   ./configure --prefix=PATH
+or
+
+    ./configure --prefix=PATH
 
 for a non-default installation file.  To pick your compiler, have the
 CXX environment variable point to the right compiler command.
@@ -33,6 +34,7 @@ command, then the Makefile should be enough to compile the unit tests
 and benchmarks:
 
    make test
+   
    make benchmark
 
 To create the (pdf) documentation, you need to have pdflatex
