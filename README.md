@@ -12,10 +12,9 @@ named 'LICENSE', and license statements in the source files.
 Installation
 ============
 
-To use this header-only library, one merely needs to copy the header
-file rarray to the directory of the source files that include it,
-or to a default directory where the compiler will look for header
-files (e.g. /usr/include or /usr/local/include). 
+To use this header-only library, you can copy the files rarray, rarrayio,
+rarraymacros.h, rarraydelmacros.h to the directory "/usr/include" or
+some other directory that the compiler searches for header files.
 
 Rather than do so by hand, you can use the included Makefile, which
 can also compile the unit tests and benchmarks.  The configure command
@@ -46,6 +45,12 @@ PATH/share/doc, respectively, type
 
    make install
 
+or
+
+   make install PREFIX=<BASEDIR>
+
+The latter will copy the header files to <BASEDIR>/include.
+
 Be aware that the Makefile has not been extensively tested.
 
 The rarray library has been tested with the GNU g++ compiler version
@@ -69,9 +74,9 @@ reported to the same address.
 Files
 =====
 
-rarray.h               The (header-only) library defining runtime arrays.
+rarray                 The (header-only) library defining runtime arrays.
 
-rarrayio.h             Additional I/O routines for the runtime arrays
+rarrayio               Additional I/O routines for the runtime arrays
 
 rarraymacros.h         Internal header files
 rarraydelmacros.h

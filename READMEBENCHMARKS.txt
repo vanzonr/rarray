@@ -97,7 +97,7 @@ To check code coverage of tests:        make covertest
 To build and run benchmark test:        make benchmark
 To build the documentation:             make doc
 To test the code in the documentation:  make doctest
-To install rarray.h:                    make [PREFIX=directory]
+To install rarray:                      make install [PREFIX=directory]
 
 Note that in 'make benchmark', the code is compiled with optimization,
 but not whole-program optimization, as this can cause some steps to be
