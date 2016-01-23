@@ -44,13 +44,14 @@ installed, and type
 To install the header and documentation to PATH/include and
 PATH/share/doc, respectively, type
 
-    make install
+    sudo make install
 
 or
 
     make install PREFIX="[BASEDIR]"
 
-The latter will copy the header files to "[BASEDIR]/include".
+The latter will copy the header files to "[BASEDIR]/include". (If this
+is a system directory, you may again need "sudo".)
 
 Be aware that the Makefile has not been extensively tested.
 
