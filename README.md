@@ -48,9 +48,9 @@ PATH/share/doc, respectively, type
 
 or
 
-    make install PREFIX="<BASEDIR>"
+    make install PREFIX="[BASEDIR]"
 
-The latter will copy the header files to "<BASEDIR>/include".
+The latter will copy the header files to "[BASEDIR]/include".
 
 Be aware that the Makefile has not been extensively tested.
 
