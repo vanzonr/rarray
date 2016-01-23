@@ -33,25 +33,24 @@ If you have a recent gnu, intel, ibm or clang compiler, and the 'make'
 command, then the Makefile should be enough to compile the unit tests
 and benchmarks:
 
-   make test
-   
-   make benchmark
+    make test   
+    make benchmark
 
 To create the (pdf) documentation, you need to have pdflatex
 installed, and type
 
-   make doc
+    make doc
 
 To install the header and documentation to PATH/include and
 PATH/share/doc, respectively, type
 
-   make install
+    make install
 
 or
 
-   make install PREFIX=<BASEDIR>
+    make install PREFIX="<BASEDIR>"
 
-The latter will copy the header files to <BASEDIR>/include.
+The latter will copy the header files to "<BASEDIR>/include".
 
 Be aware that the Makefile has not been extensively tested.
 
