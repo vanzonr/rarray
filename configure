@@ -54,7 +54,8 @@ function detect_library()
     if [ "$libdir" ]; then
         libdir="-L$libdir"
     fi
-    local tmpfile=$(mktemp --suffix .cc)
+    local tmpdir=$(mktemp -d)
+    local tmpfile=$tmpdir/temp.cc
     cat > $tmpfile <<-EOF
 	#include "$headerfile"
 	int main(){return 0;}
@@ -77,6 +78,8 @@ EOF
             acclibdir="$acclibdir -LZ{$libvar}"
         fi
     fi
+    rm -f $tmpfile
+    rm -rf $tmpdir
 }
 
 if [[ "$1" == "--help" ]]; then
