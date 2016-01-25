@@ -30,7 +30,7 @@
 # To install the header files:            make install [PREFIX=directory]
 #
 
-include config.mk
+-include config.mk
 
 PREFIX?=/usr
 
@@ -56,30 +56,64 @@ BENCHMARK2DNAMEF=benchmark2Dfrtrn
 BENCHMARK4DNAMEF=benchmark4Dfrtrn
 PASS=optbarrier
 
+help:
+	@echo ""
+	@echo "This makefile can install, test, and benchmark the rarray library."
+	@echo ""
+	@echo "  To install the header files:            make install [PREFIX=directory]"
+	@echo "  To build and run unit tests:            make test"
+	@echo "  To run unit tests through valgrind:     make valgrindtest"
+	@echo "  To check code coverage of tests:        make covertest"
+	@echo "  To build and run benchmark test:        make benchmark"
+	@echo "  To rebuild the documentation:           make doc"
+	@echo "  To test the code in the documentation:  make doctest"
+	@echo ""
+	@echo "Only the first one is mandatory, the other six are all optional and"
+	@echo "not required for installation."
+	@echo ""
+	@echo "Prerequisites (apart from standard unix tools):"
+	@echo "  test, covertest, doctest    config.mk"
+	@echo "  valgrindtest                config.mk + valgrind"
+	@echo "  benchmark                   config.mk"
+	@echo ""
+	@echo "Here, config.mk is a file that must be created by running ./configure first. "
+	@echo "The configure script detects your compiler and searches for the Blitz++, BOOST, "
+	@echo "Armadillo and Eigen libraries for comparison in the benchmarks but will skip "
+	@echo "them if they are not installed."
+	@echo ""
+	@echo ""
+	@echo "Note: The config.mk file is not required for installation, because rarray"
+	@echo "is a header-only library."
+
 all: test valgrindtest covertest benchmark doctest 
 
-.PHONY: clean test covertest benchmark install doctest doc valgrindtest
+.PHONY: clean test covertest benchmark install doctest doc valgrindtest help
 
 config.mk:
-	@echo "Error: Run 'configure' to create config.mk"
+	@echo "Warning: Run 'configure' to create config.mk"
 	@false
 
 install: rarray rarrayio rarraydoc.pdf rarraymacros.h rarraydelmacros.h
 	mkdir -p ${PREFIX}/include
-	cp rarray ${PREFIX}/include/rarray
-	cp rarrayio ${PREFIX}/include/rarrayio
-	cp rarraymacros.h ${PREFIX}/include/rarraymacros.h
-	cp rarraydelmacros.h ${PREFIX}/include/rarraydelmacros.h
+	cp -p rarray ${PREFIX}/include/rarray
+	cp -p rarrayio ${PREFIX}/include/rarrayio
+	cp -p rarraymacros.h ${PREFIX}/include/rarraymacros.h
+	cp -p rarraydelmacros.h ${PREFIX}/include/rarraydelmacros.h
 	mkdir -p ${PREFIX}/share/rarray
-	cp rarraydoc.pdf ${PREFIX}/share/rarray
+	cp -p rarraydoc.pdf ${PREFIX}/share/rarray
 
-doc: rarraydoc.pdf
+doc: rarraydoc-new.pdf
 
-rarraydoc.pdf: rarraydoc.tex
+rarraydoc-old.pdf:
+	mv rarraydoc.pdf rarraydoc-old.pdf
+
+rarraydoc-new.pdf: rarraydoc.tex rarraydoc-old.pdf
+	pdflatex rarraydoc.tex 
 	pdflatex rarraydoc.tex 
 	mv rarraydoc.pdf rarraydoc0.pdf
 	qpdf --stream-data=uncompress rarraydoc0.pdf rarraydoc.pdf
 	rm -f rarraydoc0.pdf
+	cp -f rarraydoc.pdf rarraydoc-new.pdf
 
 doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x config.mk
 	./doc1.x

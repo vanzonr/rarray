@@ -814,9 +814,54 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
   }
 \end{verbatim}%
 %END TEST THIS
-\vspace{-14pt}
+\vspace{-14pt} 
 \end{framed}
 
+\pagebreak
+\appendix
+
+\section{Installation}
+
+To use this header-only library, you can copy the files rarray, rarrayio,
+rarraymacros.h, rarraydelmacros.h to the directory "/usr/include" or
+some other directory that the compiler searches for header files.
+Rather than doing so by hand, you can use the included Makefile, which
+can also compile the unit tests and benchmarks.  To install without
+running tests or benchmarks, simply do:
+
+\begin{verbatim}
+    make install PREFIX="[BASEDIR]"
+\end{verbatim}
+to install the header files in the "[BASEDIR]/include" directory, and
+the documentation in \linebreak "[BASEDIR]/share/doc".  If the include directory
+is not in the compiler's search path, you will need to pass an option
+to the compiler directing to that directory
+(i.e. -I[BASEDIR]/include). If you have sudo permissions, you can also do
+\begin{verbatim}
+    sudo make install
+\end{verbatim}
+which is the same as \texttt{sudo make install PREFIX=/usr}.
+
+For the tests and benchmarks, one first needs to run
+\begin{verbatim}
+    ./configure
+\end{verbatim}
+to set up the makefile for your compiler. 
+Note that to pick your compiler, you should have the CXX environment
+variable point to the right compiler command. 
+If you have a recent gnu, intel, ibm or clang compiler, and the 'make'
+command, then the Makefile should be enough to compile and run the
+unit tests and benchmarks:
+\begin{verbatim}
+    make test
+    make valgrindtest
+    make benchmark
+\end{verbatim}
+Be aware that the Makefile has not been extensively tested.
+
+The rarray library has been tested with the GNU g++ compiler version
+4.8.0 and up, the Intel C++ compiler version 13, IBM's XL C++ compiler
+version 12 and up, and clang 3.5.
 
 
 \end{document}

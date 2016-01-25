@@ -17,41 +17,50 @@ rarraymacros.h, rarraydelmacros.h to the directory "/usr/include" or
 some other directory that the compiler searches for header files.
 
 Rather than do so by hand, you can use the included Makefile, which
-can also compile the unit tests and benchmarks.  The configure command
-sets up the makefile for your compiler.  You can type
+can also compile the unit tests and benchmarks.  To install without
+running tests or benchmarks, simply do:
+
+    make install PREFIX="[BASEDIR]"
+
+to install the header files in the "[BASEDIR]/include" directory, and
+the documentation in "[BASEDIR]/share/doc".  If the include directory
+is not in the compiler's search path, you will need to pass an option
+to the compiler directing to that directory
+(i.e. -I[BASEDIR]/include).
+
+If you have sudo permissions, you can also do
+   
+    sudo make install
+
+to install the header and documentation to /usr/include and
+/usr/share/doc, respectively.
+
+Testing
+=======
+
+To compile the tests and the benchmarks, the "configure" command needs
+to be run first, in order to set up the makefile for your compiler.
+You can type
 
     ./configure
 
 or
 
-    ./configure --prefix=PATH
+    ./configure --prefix="[BASEDIR]"
 
-for a non-default installation file.  To pick your compiler, have the
-CXX environment variable point to the right compiler command.
+The latter form changes the default location of "make install" from
+"/usr" to "[BASEDIR]".
+
+Note that to pick your compiler, you should have the CXX environment
+variable point to the right compiler command.
 
 If you have a recent gnu, intel, ibm or clang compiler, and the 'make'
-command, then the Makefile should be enough to compile the unit tests
-and benchmarks:
+command, then the Makefile should be enough to compile and run the
+unit tests and benchmarks:
 
-    make test   
+    make test
+    make valgrindtest
     make benchmark
-
-To create the (pdf) documentation, you need to have pdflatex
-installed, and type
-
-    make doc
-
-To install the header and documentation to PATH/include and
-PATH/share/doc, respectively, type
-
-    sudo make install
-
-or
-
-    make install PREFIX="[BASEDIR]"
-
-The latter will copy the header files to "[BASEDIR]/include". (If this
-is a system directory, you may again need "sudo".)
 
 Be aware that the Makefile has not been extensively tested.
 
@@ -62,8 +71,19 @@ version 12 and up, and clang 3.5.
 Documentation
 =============
 
-Documentation can be found in the pdf file 'rarraydoc.pdf', which is
-generated from the LaTeX file rarraydoc.tex.
+The rarray library comes with documentation in rararaydoc.pdf. To
+re-create the pdf documentation, you need to have pdflatex and qpdf
+installed, and type
+
+    make doc
+
+which then runs pdflatex on the LaTeX file rarraydoc.tex.
+
+Known Bugs
+==========
+
+The current reference counting scheme fails when using slices of
+rarrays where the original rarray is deleted or out of scope.
 
 Reporting Bugs
 ==============
@@ -102,7 +122,7 @@ benchmark4Daccess.cc   benchmark code for 4d arrays comparing rarray,
 benchmark4Dfrtrn.f90   fortran benchmark code for 4d arrays for
                        comparison
 
-elasped.h              Header file used by the benchmarks to measure
+elapsed.h              Header file used by the benchmarks to measure
                        elapsed time
 
 optbarrier.cc          Contains dummy function whose call acts as a 
@@ -138,4 +158,4 @@ npyexample.cc          Rough example on how to write a rarray to a
 README.md              This file.
 
 
-- 19 December 2014
+- 25 January 2016
