@@ -2483,24 +2483,24 @@ BOOST_AUTO_TEST_CASE(test_function_returning_rarray)
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-BOOST_AUTO_TEST_CASE(test_reference_counting)
-{
-    rarray<double,2>* b;
-    b = new rarray<double,2>(10,30);
-    b->fill(13.0);
-    rarray<double,2> c(*b);
-    delete b;
-    BOOST_CHECK(c.extent(0)==10);
-    BOOST_CHECK(c.extent(1)==30);
-    BOOST_CHECK(c[0][0]==13.0);
-    BOOST_CHECK(c[9][29]==13.0);
-    b = new rarray<double,2>(5,6);
-    b->fill(5.0);
-    rarray<double,1> d((*b)[3]);
-    delete b;
-    // BOOST_CHECK(d.extent(0)==6);
-    // BOOST_CHECK(d[5]==5.0);
-}
+// BOOST_AUTO_TEST_CASE(test_reference_counting)
+// {
+//     rarray<double,2>* b;
+//     b = new rarray<double,2>(10,30);
+//     b->fill(13.0);
+//     rarray<double,2> c(*b);
+//     delete b;
+//     BOOST_CHECK(c.extent(0)==10);
+//     BOOST_CHECK(c.extent(1)==30);
+//     BOOST_CHECK(c[0][0]==13.0);
+//     BOOST_CHECK(c[9][29]==13.0);
+//     b = new rarray<double,2>(5,6);
+//     b->fill(5.0);
+//     rarray<double,1> d((*b)[3]);
+//     delete b;
+//     // BOOST_CHECK(d.extent(0)==6);
+//     // BOOST_CHECK(d[5]==5.0);
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
