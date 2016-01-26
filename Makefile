@@ -154,6 +154,7 @@ benchmark: benchmark2d benchmark4d
 
 benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo benchmark on a 2d array example
+	@./$(BENCHMARK2DNAME) 1 > /dev/null
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 2) 
 	@./$(BENCHMARK2DNAME) 3
 	@./$(BENCHMARK2DNAME) 4
@@ -167,6 +168,7 @@ benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 
 benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@echo benchmark on a 4d array example
+	@./$(BENCHMARK4DNAME) 1 >& /dev/null
 	@(ulimit -s 4000000; ./$(BENCHMARK4DNAME) 2) 
 	@./$(BENCHMARK4DNAME) 3
 	@./$(BENCHMARK4DNAME) 4

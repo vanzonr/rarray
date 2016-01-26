@@ -60,7 +60,7 @@ function detect_library()
 	#include "$headerfile"
 	int main(){return 0;}
 EOF
-    if ! $CXX -DBOOST_TEST_NO_MAIN $incdir $libdir $tmpfile $addlib &> /dev/null; then 
+    if ! $CXX $CPPFLAGS -E -DBOOST_TEST_NO_MAIN $incdir $libdir $tmpfile $addlib &> /dev/null; then 
         echo "not found"
         if [ -n "$compilewithout" ]; then
             echo -n " $compilewithout" >> config.mk
@@ -129,6 +129,7 @@ else
             #CXX=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
             :
         fi
+        CPPFLAGS=$(grep CPPFLAGS= ${CXXMKINC}|cut -f2- -d=)
         echo "Generating config.mk from ${CXXMKINC}"
         FC=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
         if which $FC >& /dev/null; then
