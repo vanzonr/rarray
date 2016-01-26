@@ -493,6 +493,9 @@ ra::rarray<T,R> move(const ra::rarray<T,R>& x)
 #include <utility>
 #endif
 
+// needed for std::copy
+#include <algorithm> 
+
 
 //------------------------------------------------//
 //                                                //
