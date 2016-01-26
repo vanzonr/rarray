@@ -3,8 +3,8 @@
 #
 CXX=clang++
 CXXFLAGS=-g -std=c++11 
-CPPFLAGS=-Wall
-CPPFLAGSOPT=-DNDEBUG
+CPPFLAGS=-Wall -D__extern_always_inline=inline 
+CPPFLAGSOPT=-DNDEBUG -D__extern_always_inline=inline 
 CXXFLAGSOPT=-O3 -fstrict-aliasing -ffast-math -march=native
 FC=gfortrand
 FFLAGS=-O3 -fstrict-aliasing -ffast-math -march=native

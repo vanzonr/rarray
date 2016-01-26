@@ -54,7 +54,7 @@ function detect_library()
     if [ "$libdir" ]; then
         libdir="-L$libdir"
     fi
-    local tmpdir=$(mktemp -d)
+    local tmpdir=$(mktemp -d -t configure.XXXXX)
     local tmpfile=$tmpdir/temp.cc
     cat > $tmpfile <<-EOF
 	#include "$headerfile"

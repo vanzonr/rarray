@@ -130,7 +130,7 @@ doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x 
 	./doc12.x
 
 doc%.x: doc%.cc
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+	$(CXX) -I. $(CXXFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 doc%.cc: doctestgenerator.sh
 	sh doctestgenerator.sh
@@ -154,7 +154,6 @@ benchmark: benchmark2d benchmark4d
 
 benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo benchmark on a 2d array example
-	@./$(BENCHMARK2DNAME) 1
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 2) 
 	@./$(BENCHMARK2DNAME) 3
 	@./$(BENCHMARK2DNAME) 4
@@ -164,10 +163,10 @@ benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@./$(BENCHMARK2DNAME) 8
 	@./$(BENCHMARK2DNAME) 9
 	@./$(BENCHMARK2DNAMEF)
+	@./$(BENCHMARK2DNAME) 1
 
 benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@echo benchmark on a 4d array example
-	@./$(BENCHMARK4DNAME) 1
 	@(ulimit -s 4000000; ./$(BENCHMARK4DNAME) 2) 
 	@./$(BENCHMARK4DNAME) 3
 	@./$(BENCHMARK4DNAME) 4
@@ -177,6 +176,7 @@ benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@./$(BENCHMARK4DNAME) 8
 	@./$(BENCHMARK4DNAME) 9
 	@./$(BENCHMARK4DNAMEF)
+	@./$(BENCHMARK4DNAME) 1
 
 $(BENCHMARK2DNAME): $(BENCHMARK2DNAME).o $(PASS).o config.mk
 	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)
