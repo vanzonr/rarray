@@ -72,7 +72,7 @@ stream
 endstream
 endobj
 67 0 obj
-<< /Author () /CreationDate (D:20160125141722-05'00') /Creator (LaTeX with hyperref package) /Keywords () /ModDate (D:20160125141722-05'00') /PTEX.Fullbanner (This is pdfTeX, Version 3.14159265-2.6-1.40.16 \(TeX Live 2015\) kpathsea version 6.2.1) /Producer (pdfTeX-1.40.16) /Subject () /Title () /Trapped /False >>
+<< /Author () /CreationDate (D:20160127151502-05'00') /Creator (LaTeX with hyperref package) /Keywords () /ModDate (D:20160127151502-05'00') /PTEX.Fullbanner (This is pdfTeX, Version 3.14159265-2.6-1.40.16 \(TeX Live 2015\) kpathsea version 6.2.1) /Producer (pdfTeX-1.40.16) /Subject () /Title () /Trapped /False >>
 endobj
 68 0 obj
 << /Type /ObjStm /Length 6189 /N 100 /First 836 >>
@@ -1761,7 +1761,7 @@ ET
 endstream
 endobj
 186 0 obj
-<< /Length 4260 >>
+<< /Length 4258 >>
 stream
 BT
 /F37 10.9091 Tf 198.72 710.516 Td [(4)-1000(Comparison)-291(with)-291(standard)-291(alternatives)-11035(7)]TJ
@@ -1804,7 +1804,7 @@ q
 []0 d 0 J 0.398 w 0 0 m 0 173.399 l S
 Q
 BT
-/F32 10.9091 Tf 92.819 516.499 Td [(#include)-525(<vector>)]TJ 0 -13.549 Td [(int)-525(main\050\051)-525({)]TJ 17.182 -13.549 Td [(using)-525(std::vector;)]TJ 0 -13.55 Td [(int)-525(n)-525(=)-525(256;)-8400(//)-525(size)-525(per)-525(dimension)]TJ 0 -13.549 Td [(vector<vector<vector<float>>>)-525(v\050n\051;//)-525(allocate)-525(for)-525(top)-525(dimension)]TJ 0 -13.549 Td [(for)-525(\050int)-525(i=0;i<n;i++\051)-525({)]TJ 17.182 -13.549 Td [(v[i].reserve\050n\051;)-4725(//)-525(allocate)-525(vectors)-525(for)-525(middle)-525(dimension)]TJ 0 -13.549 Td [(for)-525(\050int)-525(j=0;j<n;j++\051)]TJ 17.181 -13.55 Td [(v[i][j].reserve\050n\051;)-1575(//)-525(allocate)-525(elements)-525(in)-525(last)-525(dimension)]TJ -34.363 -13.549 Td [(})]TJ 0 -13.549 Td [(v[1][2][3])-525(=)-525(105;)-5775(//)-525(assign)-525(to)-525(element)-525(\050for)-525(example\051)]TJ -17.182 -13.549 Td [(})]TJ
+/F32 10.9091 Tf 92.819 516.499 Td [(#include)-525(<vector>)]TJ 0 -13.549 Td [(int)-525(main\050\051)-525({)]TJ 17.182 -13.549 Td [(using)-525(std::vector;)]TJ 0 -13.55 Td [(int)-525(n)-525(=)-525(256;)-8400(//)-525(size)-525(per)-525(dimension)]TJ 0 -13.549 Td [(vector<vector<vector<float>>>)-525(v\050n\051;//)-525(allocate)-525(for)-525(top)-525(dimension)]TJ 0 -13.549 Td [(for)-525(\050int)-525(i=0;i<n;i++\051)-525({)]TJ 17.182 -13.549 Td [(v[i].resize\050n\051;)-4725(//)-525(allocate)-525(vectors)-525(for)-525(middle)-525(dimension)]TJ 0 -13.549 Td [(for)-525(\050int)-525(j=0;j<n;j++\051)]TJ 17.181 -13.55 Td [(v[i][j].resize\050n\051;)-1575(//)-525(allocate)-525(elements)-525(in)-525(last)-525(dimension)]TJ -34.363 -13.549 Td [(})]TJ 0 -13.549 Td [(v[1][2][3])-525(=)-525(105;)-5775(//)-525(assign)-525(to)-525(element)-525(\050for)-525(example\051)]TJ -17.182 -13.549 Td [(})]TJ
 ET
 q
 1 0 0 1 539.801 359.575 cm
@@ -2344,13 +2344,13 @@ ET
 endstream
 endobj
 195 0 obj
-<< /Type /XRef /Length 980 /W [ 1 3 1 ] /Info 67 0 R /Root 66 0 R /Size 196 /ID [<aef5e59739ab1d89f7ca8b9187212f8f><78c0fdbd972b378a3194c0db44c1f073>] >>
+<< /Type /XRef /Length 980 /W [ 1 3 1 ] /Info 67 0 R /Root 66 0 R /Size 196 /ID [<f02807ba6eefa22acfbf5c694b80ceaa><e0a1e1494896086d08bee9123a459ab4>] >>
 stream
                              	  
                                                !  "  #  $  %  &  '  (  )  *  +  ,  -  .  /  0  1  2  3  4  5  6  7  8  9  :  ;  <  =  >  ?  @ ,É  .   D   D  D  D  D  D  D  D  D  D	  D
-  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   D!  D"  D#  D$  D%  D&  D'  D(  D)  D*  D+  D,  D-  D.  D/  D0  D1  D2  D3  D4  D5  D6  D7  D8  D9  D:  D;  D<  D=  D>  D?  D@  DA  DB  DC  DD  DE  DF  DG  DH  DI  DJ  DK  DL  DM  DN  DO  DP  DQ  DR  DS  DT  DU  DV  DW  DX  DY  DZ  D[  D\  D]  D^  D_  D`  Da  Db  Dc F–  €  Êu  òþ  -Ä K h´ ˆp ¥6 øy ˜ (€ <² RÎ q ‡ø ¦ ¶Þ Íþ ç' › B 1— E O ]* 
+  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   D!  D"  D#  D$  D%  D&  D'  D(  D)  D*  D+  D,  D-  D.  D/  D0  D1  D2  D3  D4  D5  D6  D7  D8  D9  D:  D;  D<  D=  D>  D?  D@  DA  DB  DC  DD  DE  DF  DG  DH  DI  DJ  DK  DL  DM  DN  DO  DP  DQ  DR  DS  DT  DU  DV  DW  DX  DY  DZ  D[  D\  D]  D^  D_  D`  Da  Db  Dc F–  €  Êu  òþ  -Ä K h´ ˆp ¥6 øy ˜ (€ <² RÎ q ‡ø ¦ ¶Ü Íü ç% ™ @ 1• E  O ]( 
 endstream
 endobj
 startxref
-220458
+220456
 %%EOF

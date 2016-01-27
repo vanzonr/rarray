@@ -429,9 +429,9 @@ solution using the STL:
      int n = 256;                // size per dimension
      vector<vector<vector<float>>> v(n);// allocate for top dimension
      for (int i=0;i<n;i++) {
-        v[i].reserve(n);         // allocate vectors for middle dimension
+        v[i].resize(n);         // allocate vectors for middle dimension
         for (int j=0;j<n;j++) 
-           v[i][j].reserve(n);   // allocate elements in last dimension
+           v[i][j].resize(n);   // allocate elements in last dimension
      }
      v[1][2][3] = 105;           // assign to element (for example)
   }

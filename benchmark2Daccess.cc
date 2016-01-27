@@ -194,9 +194,9 @@ double case_vector(int repeat)
     std::vector< std::vector<float> > b(n); 
     std::vector< std::vector<float> > c(n);
     for (int i=0;i<n;i++) {
-      a[i].reserve(n);
-      b[i].reserve(n);
-      c[i].reserve(n);
+      a[i].resize(n);
+      b[i].resize(n);
+      c[i].resize(n);
     }
     while (repeat--) {
         for (int i=0;i<n;i++)

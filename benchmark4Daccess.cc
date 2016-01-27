@@ -222,22 +222,22 @@ double case_vector(int repeat)
     std::vector< std::vector< std::vector< std::vector<float> > > > b(n);
     std::vector< std::vector< std::vector< std::vector<float> > > > c(n);
     for (int i=0;i<n;i++) {
-      a[i].reserve(n);
-      b[i].reserve(n);
-      c[i].reserve(n);
+      a[i].resize(n);
+      b[i].resize(n);
+      c[i].resize(n);
     }
     for (int i=0;i<n;i++) 
         for (int j=0;j<n;j++) {
-            a[i][j].reserve(n);
-            b[i][j].reserve(n);
-            c[i][j].reserve(n);
+            a[i][j].resize(n);
+            b[i][j].resize(n);
+            c[i][j].resize(n);
         }
     for (int i=0;i<n;i++) 
         for (int j=0;j<n;j++) 
             for (int k=0;k<n;k++) {
-                a[i][j][k].reserve(n);
-                b[i][j][k].reserve(n);
-                c[i][j][k].reserve(n);
+                a[i][j][k].resize(n);
+                b[i][j][k].resize(n);
+                c[i][j][k].resize(n);
             }
     while (repeat--) {
         for (int i=0;i<n;i++)
