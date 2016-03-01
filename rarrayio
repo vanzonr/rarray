@@ -271,10 +271,21 @@ T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+char get_but_eat_newline(std::istream & in)
+{
+    // helper function to read a character but omit leading and trailing newlines (not other whitespace).
+    char ch1='\n';
+    while (ch1=='\n') ch1 = in.get();
+    char ch2='\n';
+    while (ch2=='\n') ch2 = in.get();
+    in.putback(ch2);
+    return ch1;
+}
+                                         
 template<typename T, int R> RA_INLINE_
-void ra::read_and_parse_shape(std::istream &                             in, 
-                                    int*                                       shape, 
-                                    typename ra::PointerArray<T,R>::type p)
+void ra::read_and_parse_shape(std::istream &                       in, 
+                              int*                                 shape, 
+                              typename ra::PointerArray<T,R>::type p)
 {
     RA_IFTRACESAY("void read_and_parse_shape(std::istream&,int*,PointerArray<T,R>::type)");
     size_t init_file_ptr = in.tellg();
