@@ -154,10 +154,10 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
     RA_IFTRACESAY("std::ostream& text_output(std::ostream&,const rarray<T,R>&)");
     if (not r.is_clear()) {
-        o << '{';
+        o << "{\n"; // new newline
         for (int i=0; i<r.extent(0); i++)  {
             if (i>0)
-                o << ',';
+                o << ",\n"; // new newline
             #ifndef RA_SKIPINTERMEDIATE
             o << r[i];
             #else
@@ -173,7 +173,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
             o << ra::rarray<T,R-1>(subdata, r.shape()+1);
             #endif
         }
-        o << '}';
+        o << "}\n"; // new newline
     } else {
         for (int i=0; i<R; i++) 
             o << '{';
@@ -209,10 +209,10 @@ template<typename T,int R> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
 {
     RA_IFTRACESAY("std::ostream& text_output(std::ostream&,const subrarray<T,R>&)");
-    o << '{' << r[0];
+    o << "{\n" << r[0];
     for (int i=1; i<r.extent(0); i++) 
-        o << ',' << r[i];
-    o << '}';
+        o << ",\n" << r[i];
+    o << "}\n";
     return o;
 }
 
@@ -227,7 +227,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,1>& r)
         std::string result;
         strstr << r[i];
         result = strstr.str();
-        if (result.find_first_of("{,}#") != std::string::npos)
+        if (result.find_first_of("{,}#\n") != std::string::npos)
             o << '#' << result.size() << ':';
         o << result;
     }
@@ -271,14 +271,22 @@ T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const int* indices
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-char get_but_eat_newline(std::istream & in)
+static char get_but_eat_newline(std::istream & in, bool trailingtoo=true)
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).
     char ch1='\n';
     while (ch1=='\n') ch1 = in.get();
-    char ch2='\n';
-    while (ch2=='\n') ch2 = in.get();
-    in.putback(ch2);
+    // would like to peal off newlines here too, but this seems to be delicate in how it plays with eof.
+    if (trailingtoo) {
+        while (true) {
+            char ch2 = in.get();
+            if (in.eof()) break;
+            if (ch2 !='\n') {
+                in.putback(ch2);
+                break;
+            }
+        }
+    }
     return ch1;
 }
                                          
@@ -295,7 +303,7 @@ void ra::read_and_parse_shape(std::istream &                       in,
             current_shape[i] = 1;
             if (shape)
                 shape[i] = 0;
-            if (in.get() != '{') 
+            if (get_but_eat_newline(in) != '{')  // eat
                 throw std::istream::failure("Format error");
         }
         int current_depth = R-1; // start scanning the deepest level
@@ -304,7 +312,7 @@ void ra::read_and_parse_shape(std::istream &                       in,
                 char         lastchar;
                 std::string  word = "";
                 do {
-                    lastchar = in.get();
+                    lastchar = get_but_eat_newline(in);
                     if (lastchar != ',' and lastchar != '}')
                         word += lastchar;
                     if (word == "#") {
@@ -316,7 +324,7 @@ void ra::read_and_parse_shape(std::istream &                       in,
                         int skip = atoi(skipstr.c_str());
                         for (int i=0; i<skip; i++) 
                             word += in.get();
-                        lastchar = in.get();
+                        lastchar = get_but_eat_newline(in); // eat
                     }
                     if (lastchar == ',') {
                         if (p) 
@@ -334,11 +342,13 @@ void ra::read_and_parse_shape(std::istream &                       in,
                         shape[current_depth] = current_shape[current_depth];
                 current_depth--;
             } else {
-                switch (in.get()) {
-                  case ',':
+                switch (get_but_eat_newline(in,false)) { // eat but leave trailing newline
+                   case ',':
+                    {char ch1='\n'; while (ch1=='\n' or ch1==' ' or ch1=='\t') ch1 = in.get(); in.putback(ch1);}                   
                     current_shape[current_depth]++;
                     break;
                   case '{':
+                    {char ch1='\n'; while (ch1=='\n' or ch1==' ' or ch1=='\t') ch1 = in.get(); in.putback(ch1);}
                     current_depth++;
                     current_shape[current_depth] = 1;
                     break;
