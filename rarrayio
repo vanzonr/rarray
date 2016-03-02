@@ -173,12 +173,13 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
             o << ra::rarray<T,R-1>(subdata, r.shape()+1);
             #endif
         }
-        o << "}\n"; // new newline
+        o << "\n}"; // new newline
     } else {
         for (int i=0; i<R; i++) 
             o << '{';
         for (int i=0; i<R; i++) 
             o << '}';
+        o << "\n"; // new newline
     }
     return o;
 }
@@ -212,7 +213,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,R>& r)
     o << "{\n" << r[0];
     for (int i=1; i<r.extent(0); i++) 
         o << ",\n" << r[i];
-    o << "}\n";
+    o << "\n}";
     return o;
 }
 
@@ -275,12 +276,18 @@ static char get_but_eat_newline(std::istream & in, bool trailingtoo=true)
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).
     char ch1='\n';
-    while (ch1=='\n') ch1 = in.get();
+    while (ch1=='\n') {
+        ch1 = in.get();
+    }
     // would like to peal off newlines here too, but this seems to be delicate in how it plays with eof.
     if (trailingtoo) {
         while (true) {
             char ch2 = in.get();
-            if (in.eof()) break;
+            if (in.eof()) {
+                in.clear();
+                in.seekg(0,std::ios::end);
+                break;
+            }
             if (ch2 !='\n') {
                 in.putback(ch2);
                 break;
