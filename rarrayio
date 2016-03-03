@@ -196,7 +196,9 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
             std::string result;
             strstr << r[i];
             result = strstr.str();
-            if (result.find_first_of("{,}#") != std::string::npos)
+            if (result.find_first_of("{,}#") != std::string::npos
+                and not
+                (result[0]=='(' and result[result.size()-1]==')' and result.substr(1,result.size()-2).find_first_of(")") == std::string::npos) )
                 o << '#' << result.size() << ':';
             o << result;
         }
@@ -228,7 +230,9 @@ std::ostream& ra::text_output(std::ostream &o, const ra::subrarray<T,1>& r)
         std::string result;
         strstr << r[i];
         result = strstr.str();
-        if (result.find_first_of("{,}#\n") != std::string::npos)
+        if (result.find_first_of("{,}#\n") != std::string::npos
+                        and not
+            (result[0]=='(' and result[result.size()-1]==')' and result.substr(1,result.size()-2).find_first_of(")") == std::string::npos) )
             o << '#' << result.size() << ':';
         o << result;
     }
@@ -323,6 +327,8 @@ void ra::read_and_parse_shape(std::istream &                       in,
                     if (lastchar != ',' and lastchar != '}')
                         word += lastchar;
                     if (word == "#") {
+                        // special encoding, allowing for output that
+                        // contains commands and cruly braces
                         word="";
                         std::string skipstr;
                         do {
@@ -332,6 +338,18 @@ void ra::read_and_parse_shape(std::istream &                       in,
                         for (int i=0; i<skip; i++) 
                             word += in.get();
                         lastchar = get_but_eat_newline(in); // eat
+                    } else if (word == "(") {
+                        // another special encoding for output that
+                        // starts with a opening parenthesis (, and
+                        // end with a closing parenthesis ), and
+                        // contain anything but a ).
+                        const int safeguardcount=1024*1024;
+                        int count=0;
+                        while (lastchar!=')' and count<safeguardcount) {
+                            word += (lastchar = in.get());
+                            count++;
+                        }
+                        lastchar = in.get();
                     }
                     if (lastchar == ',') {
                         if (p) 

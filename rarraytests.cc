@@ -37,6 +37,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <complex>
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +102,7 @@ const T* getconstdata(const rarray<T,R>& a)
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef boost::mpl::list<double,Compound,array<Compound,3> > testconstructors_types;
+typedef boost::mpl::list<double,Compound,array<Compound,3>, std::complex<float> > testconstructors_types;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(testconstructors, T, testconstructors_types)
 {
@@ -2135,10 +2136,12 @@ BOOST_AUTO_TEST_CASE(testoutput)
     double c[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
     rarray<double,1> q(a,5);
     rarray<double,2> r(b,4,4);
+    rarray<std::complex<double>,2> ca((std::complex<double>*)b,2,2);
+    rarray<std::complex<double>,1> cb((std::complex<double>*)b,3);
     rarray<double,3> s(c,3,3,3);
     std::stringstream out;
-    out << q << r << s;
-    BOOST_CHECK(out.str() == "{1,2,3,4,5}{\n{1,2,3,4},\n{5,6,7,8},\n{9,10,11,12},\n{13,14,15,16}\n}{\n{\n{1,2,3},\n{4,5,6},\n{7,8,9}\n},\n{\n{10,11,12},\n{13,14,15},\n{16,17,18}\n},\n{\n{19,20,21},\n{22,23,24},\n{25,26,27}\n}\n}");
+    out << q << r << s << ca << cb;
+    BOOST_CHECK(out.str() == "{1,2,3,4,5}{\n{1,2,3,4},\n{5,6,7,8},\n{9,10,11,12},\n{13,14,15,16}\n}{\n{\n{1,2,3},\n{4,5,6},\n{7,8,9}\n},\n{\n{10,11,12},\n{13,14,15},\n{16,17,18}\n},\n{\n{19,20,21},\n{22,23,24},\n{25,26,27}\n}\n}{\n{(1,2),(3,4)},\n{(5,6),(7,8)}\n}{(1,2),(3,4),(5,6)}");
     std::stringstream instr("  \t\n{{{#2:14,5},{2,#3:{}2},{#7:{1,2,3},1}},{{4},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
     std::string outstr("{\n{\n{14,5},\n{2,0},\n{0,1}\n},\n{\n{4,0},\n{5,5},\n{6,6}\n},\n{\n{7,7},\n{8,8},\n{9,9}\n}\n}");   
     rarray<int,3> intarray;
