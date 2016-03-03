@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{January 18, 2016\vspace{-7mm}}
+\date{March 3, 2016 (version 1.1)\vspace{-7mm}}
 
 \maketitle
 
@@ -553,7 +553,11 @@ This method creates deep copy of the rarray, i.e., an independent rarray with th
 
 Although it is usually preferrable to store large arrays in binary, rarray does provide streaming operators \texttt{<<} and \texttt{>>} to read and write to standard C++ iostreams.  You need to include an additional header file called \texttt{rarrayio} for this.
 
-The output produced by the output streaming operator is like that of automatic arrays initializers: Each dimension is started and ended by \texttt{\{} and \texttt{\}} and components are comma separated. 
+The output produced by the output streaming operator is like that of
+automatic arrays initializers: Each dimension is started and ended by
+\texttt{\{} and \texttt{\}} and components are comma separated.
+Except for the inner dimension, newlines are included in the output,
+but no spaces, and no trailing newline.
 E.g.:\vspace{-9pt}
 \begin{framed}\vspace{-18pt}%
 %TEST THIS
@@ -570,11 +574,35 @@ E.g.:\vspace{-9pt}
 %END TEST THIS
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}\noindent
-will print \texttt{\{\{1,2\},\{3,4\},\{5,6\}\}}. The streaming operators use those of the element types. 
+will print the following:
+\begin{verbatim}
+{
+{1,2},
+{3,4},
+{5,6}
+}
+\end{verbatim}
+Apart from inserting curly braces, commas, and newlines, The streaming operators use those of the element types. 
 
-Reading would not be unambiguous for some types, e.g. for \texttt{std::string}, that can contain the syntactic elements `\texttt{\{}', `\texttt{\}}', `\texttt{,}', or `\texttt{\#}'.  If thse elements are found in the output of an element, the element is prepended with a string that encodes the string length of the output. This prepending string starts with a '\texttt\#' character, then the length of the string output for the element  (excluding the prepended part), followed by a `\texttt:' character.
+The streaming operators are designed such that the format that is
+written out by the \texttt{<<} operator, should be readable by the
+\texttt{>>} operator.  
+Without further formatting tules, reading would not be unambiguous for
+some types, e.g. for
+\texttt{std::string}, that can contain the syntactic elements
+`\texttt{\{}', `\texttt{\}}', `\texttt{,}', or `\texttt{\#}'.  If these elements are found in the output of an element, the element is prepended with a string that encodes the string length of the output. This prepending string starts with a '\texttt\#' character, then the length of the string output for the element  (excluding the prepended part), followed by a `\texttt:' character.
 
-The input stream operators expect the same format as input.
+An exception to the '\texttt\#' formatting rule exists for types that
+stream out such that the first output character is '\texttt(' and the
+last is '\texttt)', with no other '\texttt)' characters
+intervening. Such output does not require the '\texttt#'
+formatting. Complex numbers are a prime example of a type with such
+output and input.
+
+Note that while the input stream operators expect the same format as
+the output produces by the output streams, they but will
+not care if newlines are not there. However, there should not be any extraneous
+whitespace in the input.
 
 \section{Overheads}
 

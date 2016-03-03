@@ -3,7 +3,7 @@ rarray - multidimensional array class template
 
 rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
-compilers to generate fast code.  The current version is 1.0.
+compilers to generate fast code.  The current version is 1.1.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -79,6 +79,15 @@ installed, and type
 
 which then runs pdflatex on the LaTeX file rarraydoc.tex.
 
+History
+=======
+
+Dec 2013: First implementation of the header-only library rarray for runtime (dynamic) multidimensional arrays
+
+Jan 2014: Version 1.0: Code put on github
+
+Mar 2015: Version 1.1: Changed the text output format used to use newlines
+
 Known Bugs
 ==========
 
@@ -107,6 +116,8 @@ rarraydoc.tex          LaTeX source of the documentation
 rarraydoc.pdf          Pdf format of the documentation
 
 rarraytests.cc         regression test suite (using Boost.Test)
+
+oldboostlessrarraytestsuite.cc older regression test suite (without Boost.Test)
 
 benchmark2Daccess.cc   benchmark code for 2d arrays comparing rarray,
                        blitz, eigen, boost, armadillo, dynamic and
