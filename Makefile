@@ -144,7 +144,7 @@ test: $(TESTNAME) $(TESTXNAME)
 valgrindtest: $(TESTNAME)
 	valgrind --tool=memcheck ./$(TESTNAME)
 
-rarraytests: $(TESTNAME).o config.mk
+$(TESTNAME): $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 $(TESTNAME).o: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk

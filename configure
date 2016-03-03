@@ -165,7 +165,7 @@ else
         #######################################################
         echo >> config.mk
         if grep DNOBOOST config.mk &>/dev/null; then
-            echo "TESTNAME=rarraytestsuite" >> config.mk
+            echo "TESTNAME=oldboostlessrarraytestsuite" >> config.mk
 
         else
             echo "TESTNAME=rarraytests" >> config.mk
