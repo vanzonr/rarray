@@ -166,7 +166,12 @@ READMEBENCHMARK.txt    Explanation of what the 2d and 4d benchmarks
 npyexample.cc          Rough example on how to write a rarray to a
                        numpy file.
 
+rarrayfftwexample.cc   Example of using rarray in combination with 
+                       the FFTW3 library.
+
+rarrayblasexample.cc   Example of using rarray in combination with 
+                       the cblas interface to the BLAS library.
+                       
 README.md              This file.
 
-
-- 25 January 2016
+- 8 March 2016

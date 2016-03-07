@@ -63,7 +63,7 @@ The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \t
 \\
 \rule{0pt}{14pt}Define a \texttt{n$\times$m$\times$k} array of \texttt{float}s with&
 \\
-data already allocated at a pointer \texttt{ptr}:&
+data pre-allocated at a pointer \texttt{ptr}:&
 \texttt{rarray<float,3> c(ptr,n,m,k);}
 \\
 \rule{0pt}{14pt}Element i,j,k of the array \texttt{b}:&
@@ -100,7 +100,8 @@ data already allocated at a pointer \texttt{ptr}:&
 
 \newpage
 \
-
+\tableofcontents
+\newpage
 \section{Introduction}
 
 While C and thus C++ has some support for multidimensional arrays
@@ -211,7 +212,7 @@ The guarrantee of contiguity means strided arrays are not supported.
 \begin{itemize}\itemsep0pt\parskip2pt
 \item Can use any data type {\tt T} and any rank {\tt R}.
 \item Elements are accessible using repeated square brackets, like C/C++ arrays.
-\item Views on existing contiguous arrays.
+\item Views on pre-allocated contiguous arrays.
 \item Does shallow, reference counted, copies by default, but also has a deep {\tt copy}
   method.
 \item Use of move semantics when used in c++11 (for efficiency).
@@ -240,6 +241,7 @@ The guarrantee of contiguity means strided arrays are not supported.
 \section{Using rarrays}
 
 \subsection{Defining a multidimensional rarray}
+\label{definerarray}
 
 To use \texttt{rarray}, first include the header file:
 \begin{framed}\vspace{-14pt}%
@@ -261,22 +263,26 @@ declared as follows:
 \vspace{-14pt}
 \end{framed}
 \noindent
-or, using an external, already allocated buffer, as
+or, using an external, pre-allocated buffer, as
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
-  float* data=new float[256*256*256];  
-  rarray<float,3> s(data,256,256,256);
+  float* pre_alloc_data=new float[256*256*256];  
+  rarray<float,3> s(pre_alloc_data,256,256,256);
   s[1][2][3] = 105;
   // do whatever you need with s
-  delete[] data;
+  delete[] pre_alloc_data;
+  s.clear();
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
 Without the \texttt{delete[]} statement in the latter example, there would be a memory leak. This reflects that rarray is in this case not responsible
 for the content. The data pointer can also be retrieved using
-\texttt{s.data()}. 
+\texttt{s.data()}. The \texttt{s.clear()} statement ensures there are
+no dangling references to this data left in \texttt{s}. 
 
-Even in the former case (\texttt{rarray<float,3> s(256,256,256)}), one can release the memory of this array by calling \texttt{s.clear()} before the rarray goes out of scope.
+In the former case (\texttt{rarray<float,3> s(256,256,256)}), calling
+\texttt{s.clear()} before the rarray goes out of scope would
+release the memory of this array.
 
 The construction specifying a number of extents as arguments works for arrays with rank up to and including 11. For arrays with larger rank, you have to pass an pointer to the array of extents.
 
@@ -295,6 +301,22 @@ For example:\vspace{-9pt}
 \vspace{-12pt}
 \end{framed}%\vspace{-8pt}\noindent
 
+In addition to the explicit assignment of each element, there is an
+alternative way to assign values to the elements of an rarray using a
+comma separate form, as follows
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix(3,3);
+  matrix = 1,2,3,
+           4,5,6,
+           7,8,9;
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+This is usefully mostly for small matrices (as in tests), as entering
+large rarrays in this way is rather impractical.
+
 \subsection{Copying and function arguments}
 
 In C++, when we copy a variable of a built-in type to a new variable, the new copy is completely independent of the old variable. Likewise, the default way of passing arguments to a function involves a complete copy for built-in types.  For C-style arrays, however, only the pointer to the first element gets copied, not the whole array. The latter is called a shallow copy. Rarrays use shallow copies much like pointers. 
@@ -302,7 +324,7 @@ In C++, when we copy a variable of a built-in type to a new variable, the new co
 What does this essentially mean? Well:
 \begin{enumerate}
 \item You can pass rarrays by value to function, which is as if you
-  were passing a pointer. (Passing by reference also works, of course.)
+  were passing a pointer. (Passing by reference also works.)
 \item When you assign one rarray to another, the other simply points to the old one.
 \item If you wish to do a deep copy, i.e., create a new array independent of the old array, you need to use the \texttt{copy} method.
 \end{enumerate}
@@ -400,7 +422,7 @@ the \texttt{{\tt\#include <rarray>}} in the source.
 %\\
 %Regardless of \texttt{{\tt RA\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
 
-\pagebreak
+%\pagebreak
 
 \section{Comparison with standard alternatives}
 
@@ -595,7 +617,7 @@ some types, e.g. for
 An exception to the '\texttt\#' formatting rule exists for types that
 stream out such that the first output character is '\texttt(' and the
 last is '\texttt)', with no other '\texttt)' characters
-intervening. Such output does not require the '\texttt#'
+intervening. Such output does not require the '\texttt\#'
 formatting. Complex numbers are a prime example of a type with such
 output and input.
 
@@ -604,15 +626,78 @@ the output produces by the output streams, they but will
 not care if newlines are not there. However, there should not be any extraneous
 whitespace in the input.
 
-\section{Overheads}
+\section{Performance}
+
+\subsection{General performance consideration}
+
+(Note: flags in this section are given in their linux notation).
+
+\noindent
+\texttt{rarray} is written specifically with performance in
+mind. However, the way it manages to mimic the natural c and c++ way
+of using multi-dimensional arrays, i.e. with (repeated) square
+brackets, would come at a high cost of function calls and temporary
+objects. The rarray library tries to inline most function calls to avoid this
+cost, but it needs the c++ compiler's optimization capabilities to
+help out. Even the lowest optimization levels, such as obtained with
+the \texttt{-O1} flag, will enable this.
+
+Rarray is meant to be used with higher levels of optimization. When
+compiled with higher optimization levels, such as \texttt{-O3
+  -fstrict-aliasing} for \texttt{g++}, inlining should make the rarray
+objects at least as fast as the textbook solution for multidimensional
+arrays mentioned in the introduction, for most
+compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on
+x86, and with xlC 12.1 on power 6).
+
+\subsection{Debugging}
+
+When debugging a code with a symbolic debugger (e.g. gdb), in addition
+to compiling with an option to include symbols\footnote{Names of
+  functions and other information regarding the code such as line
+  numbers and file names are collectively called ``symbols''.} into
+the executatble (e.g. \texttt{-g}), one usually switches off the
+compiler's optimization capabilities (\texttt{-O0}), because it can
+change the order of instructions in the code, which makes debugging
+very difficult. As explained above, when working with rarray, turning
+of the compiler's optimization options, can cause the program to
+become quite a bit slower, which can also hamper debugging.  If the
+bug is unlikely to occur in rarray, it may be worth trying build with
+a mild optimization level such as \texttt{-O1} for debugging.
+
+If, on the other hand, the bug is in rarray, one likely needs to
+switch off optimization to see what is going on.  In addition to the
+\texttt{-O0} flag, this also requires switching off forced inlining,
+using the \texttt{-DRA\_INLINE=inline} flag.
+
+\subsection{Profiling}
+
+Sampling profiling tools (such as \texttt{gprof}) work by periodically
+recording the state and call stack of the program as it runs.  They
+can be very useful for performance analysis. When using these tools
+with rarray, it is advisable to compile with a minimum level of
+optimization \texttt{-O1}. Otherwise, a lot of the internal function
+calls of rarray that could simply be optimized away, and would pollute
+the sampling. 
+
+A hint regarding the current state of gprof and gcc (Mar 2016):  the
+newer gcc compilers encode symbols
+differently than earlier versions, and gprof relies on the earlier
+format. This can impede e.g. profiling by line number. Compiling (and
+linking) with the \texttt{-gstabs} flags enables the earlier way of encoding
+symbols in  the application, and allows for gprof to function fully.
 
 \subsection{Memory overhead using the rarray class}
 
 The memory overhead here comes from having to store the dimensions and a pointer-to-pointer structure.  The latter account for most of the memory overhead.   A rarray object of 100$\times$100$\times$100$\times$100  doubles on a 64-bit machine will have a memory overhead of a bit over 1\%. In general, the memory overhead as a percentage is roughly 100\% divided by the last dimension. Therefore, avoid rarrays with a small last dimension such as 100$\times$100$\times$100$\times$2.
 
-\subsection{Performance overhead using the rarray class}
+\subsection{Compilation overhead using the rarray class}
 
-When compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on x86, and with xlC 12.1 on power 6).
+There is an overhead in the compilation stage, but this is very compiler dependent.
+
+\subsection{More details regarding the performance overhead}
+
+As mentioned above, when compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on x86, and with xlC 12.1 on power 6).
 So in that sense, no there is no performance overhead.  However, with \texttt{{\tt RA\_BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
 
 Let us give a bit more details as to why there should not be any performance overhead. Temporary intermediate expression in a multi-bracketed expression (such as a[5] in a[5][6][7]) are represented by an intermediate class called rarray\_intermediate. This prevents assignment to such expressions and allows the optional bound checking to work.  Most compilers (gcc, intel) can optimize these intermediate classes away when bounds checking is off. However
@@ -622,9 +707,99 @@ To get full speedup for these less-optimizing compilers, you can define the prep
 
 Note that when \texttt{RA\_BOUNDSCHECK} is set, it will switch off \texttt{RA\_SKIPINTERMEDIATE}.
 
-\subsection{Compilation overhead using the rarray class}
+\section{Working with libraries}
+\label{libraries}
 
-There is an overhead in the compilation stage, but this is very compiler dependent.
+Performance was one reason for writing the rarray library.  Being able
+to pass such arrays to numerical libraries was another.
+
+Many numerical libraries, such as BLAS, LAPACK and FFTW, are C or
+fortran based and their API requires that
+\begin{enumerate}
+\item the array elements are stored contiguously in memory,
+\item one passes the pointer to the first element, and
+\item one passes the dimensions of the array explicitly.
+\end{enumerate}
+Rarray helps in satisfying these requirement as follows:
+\begin{enumerate}
+\item Elements of a rarray are always stored contiguously in memory
+\item The pointer to the first elements of the array can be found with
+  the member function \texttt{data}
+\item The dimensions of the arrays can be found from
+    the\texttt{extent} member functions of rarray (or, for
+    one-dimensional arrays, with the \texttt{size} function.
+\end{enumerate}
+
+Here is an example to call the matrix-matrix multiplication routine
+from blas, using the cblas interface:
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TET THIS
+\begin{verbatim}
+  #include <iostream>
+  #include <rarray>
+  #include <rarrayio>
+  #include <cblas.h>
+  int main() {
+     int m = 2, k=3, n =4;
+     rarray<double,2> a(m,k), b(k,n), c(m,n);
+     a = 1,-2,3,
+         2,-1,0;
+     b = -1,3,-2,1,
+         -2,1,-3,2,
+         -3,2,-1,3;
+     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                 c.extent(0),c.extent(1),a.extent(1), 1.0,
+                 a.data(), a.extent(1),
+                 b.data(), b.extent(1),
+                 1.0,
+                 c.data(), c.extent(1));
+     std::cout << "a=" << a << '\n'
+               << "a=" << b << '\n' 
+               << "c=a*b=" << c << '\n';
+  }
+\end{verbatim}%
+%END TET THIS
+\vspace{-14pt}\end{framed}\vspace{-8pt}
+\noindent
+See the blas documentation, for the precise meaning and operation of
+(c)blas.
+
+Especially when working with complex data, an extra conversion may be
+required. For instance, working with the library called FFTW3, the
+following is a way to compute the fourier transform of a complex
+rarray:
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TET THIS
+\begin{verbatim}
+  #include <iostream>
+  #include <complex>
+  #include <rarray>
+  #include <rarrayio>
+  #include <fftw3.h>
+  int main() {
+     int n = 4;
+     rarray<std::complex<double>,1> a(n), b(n);
+     a = 1.3+5.0i, 1.0, 5.0i, 2.0-5.0i;
+     fftw_plan plan = fftw_plan_dft_1d(a.size(),
+                        (fftw_complex*)a.data(), (fftw_complex*)b.data(), 
+                        FFTW_FORWARD, FFTW_ESTIMATE);
+     fftw_execute(plan);
+     fftw_destroy_plan(plan);
+     std::cout << "a=" << a << '\n' << "FT(a)=" << b << '\n';
+  }
+\end{verbatim}%
+%END TET THIS
+\vspace{-14pt}\end{framed}\vspace{-8pt}
+\noindent
+Note that this example uses the concise c++14 notation for complex
+variables (compile with \texttt{-std=c++14} or equivalent). Again, for the precise meaning of the fftw function call, see the documentation of
+that library.
+
+Finally, it is worth noting that many numerical libraries care about
+the ``alignment'' of the data.  Rarray currently does not have any way of
+facilitating alignment, but a user can allocate aligned
+data and pass it as a pre-existing buffer to the rarray constructor
+(see \ref{definerarray}).
 
 \section{Conversions}
 
@@ -701,7 +876,9 @@ We will briefly looking at these cases separately now.
 \subsection{Conversion to a {\tt T*} or a {\tt const T*}}
 
 A function may expect a multidimensional array to be passed as a
-simple pointer to the first element, of the form \texttt{T*}, or of the form  \texttt{const T*}. A rarray object
+simple pointer to the first element, of the form \texttt{T*}, or of
+the form  \texttt{const T*}. This is the case for most c or fortran
+libraries, as disussed above in \ref{libraries}. A rarray object
 \texttt{s} of type \texttt{rarray{\tt<}T,I{\tt>}} can be passed to these
 functions using the syntax \texttt{s.data()}, which yields a
 \texttt{T*}.
