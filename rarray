@@ -2209,4 +2209,11 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 // for now:
 using ra::rarray; 
 
+#if __cplusplus > 199711L
+// add rvector, rmatrix and rtensor shortcut types
+template<typename T> using rvector = rarray<T,1>;
+template<typename T> using rmatrix = rarray<T,2>;
+template<typename T> using rtensor = rarray<T,3>;
+#endif
+
 #endif
