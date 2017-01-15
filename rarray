@@ -2206,8 +2206,27 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 #define INDEX(A,X,I) RARRAY(A).index(X,I)
 #define as_rarray(A) ra::make_rarray_given_byte_size(A,sizeof(A)) 
 
+namespace ra {
+
+template<typename S>
+rarray<S,1> rlinear(S x1, S x2, int n=0, bool end_incl=true)
+{
+    if (n==0) {
+        n = x2 - x1 + end_incl;
+    }
+    rarray<S,1> x(n);
+    for (int i = 0; i < n; i++)
+        x[i] = x1 + ((x2-x1)*(long long int)(i))/(n-end_incl);
+    if (end_incl)
+        x[n-1] = x2;
+    return x;
+}
+
+}
+
 // for now:
-using ra::rarray; 
+using ra::rarray;
+using ra::rlinear; 
 
 #if __cplusplus > 199711L
 // add rvector, rmatrix and rtensor shortcut types

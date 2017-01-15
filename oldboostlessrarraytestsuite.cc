@@ -2730,6 +2730,39 @@ array<compound,3> operator+(const array<compound,3> &a,
     return result;
 }
 
+
+int testrlinear() {
+    int a = 1, b = 30;
+    auto r = rlinear(a,b);
+    int i = a;
+    for (auto x: r) {
+        CHECK(x==i);
+        i++;
+    }
+    auto r2 = rlinear(0,30,4);
+    int check2[] = {0,10,20,30};
+    int j = 0;
+    for (auto y: r2) {
+        CHECK(y == check2[j]);
+        j++;
+    }
+    auto r3 = rlinear(0,30,3,false);
+    int check3[] = {0,10,20};
+    int k = 0;
+    for (auto z: r3) {
+        CHECK(z == check3[k]);
+        k++;
+    }
+    auto r4 = rlinear(0.0, 30.0, 4);
+    double check4[] = {0.0, 10.0, 20.0, 30.0};
+    int l = 0;
+    for (auto zz: r3) {
+        CHECK(zz == check4[l]);
+        l++;
+    }
+    return ALLCLEAR;
+}
+
 //////////////////////////////////////////////////////////////////////
 
 int main() 
@@ -2798,6 +2831,7 @@ int main()
 
     PASSORRETURN(testcomma_assignment());
 
+    PASSORRETURN(testrlinear());
     return ALLCLEAR;
 }
 
