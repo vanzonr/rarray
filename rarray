@@ -29,6 +29,7 @@
 
 #include <stdexcept>
 #include <cstdlib>
+
 #include "rarraymacros.h"
 
 // Forward definitions of ra::rarray<T,R> and ra::subrarray<T,R>
@@ -92,22 +93,67 @@ class Iterator {
     RA_INLINEF T&        operator*   () const;                                    // dereference
     RA_INLINEF Iterator& operator++  ();                                          // pre-incrememt
     RA_INLINE_ Iterator  operator++ (int);                                        // post-increment
+    RA_INLINEF Iterator& operator--  ();                                          // pre-incrememt
+    RA_INLINE_ Iterator  operator-- (int);                                        // post-increment
     RA_INLINE_ bool      operator== (const Iterator<T>& other) const;             // comparison: equal to
     RA_INLINEF bool      operator!= (const Iterator<T>& other) const;             // comparison: not equal to
     RA_INLINE_ bool      operator<  (const Iterator<T>& other) const;             // comparison: less than
     RA_INLINE_ bool      operator>  (const Iterator<T>& other) const;             // comparison: greater than
     RA_INLINE_ bool      operator<= (const Iterator<T>& other) const;             // comparison: less than or equal to
     RA_INLINE_ bool      operator>= (const Iterator<T>& other) const;             // comparison: greater than or equal to
+    // missing: +=int, +int, int+, -=int, -int, -, [],
+    //
+    RA_INLINE  Iterator  operator+(int n) const {
+        return Iterator(pointer_ + n , pointer_min_, pointer_max_plus_one_);
+    }
+    RA_INLINE  Iterator& operator+=(int n) {
+        pointer_ += n;
+        return *this;
+    }
+    RA_INLINE  int operator-(const Iterator<T>& that) const {
+        return this->pointer_ - that.pointer_;
+    }
+    RA_INLINE  Iterator  operator-(int n) const {
+        return Iterator(pointer_ - n , pointer_min_, pointer_max_plus_one_);
+    }
+    RA_INLINE  Iterator& operator-=(int n) {
+        pointer_ -= n;
+        return *this;
+    }
+    T& operator[](int i) const {
+        return *(pointer_+i);
+    }
   private:
     T*  pointer_;
     T*  pointer_min_;
     T*  pointer_max_plus_one_;
     RA_INLINE_ Iterator(T* ptr, int size);
+    RA_INLINE_ Iterator(T* ptr, T* ptr_min, T* ptr_max_p1) : pointer_(ptr), pointer_min_(ptr_min), pointer_max_plus_one_(ptr_max_p1) {}
     template<typename,int> friend class rarray;
     template<typename,int> friend class subrarray;
 };
 
-
+template<typename T>
+Iterator<T> operator+(int n, const Iterator<T>& a)
+{
+    return a.operator+(n);
+}
+    
+}//close namespace ra for a moment
+#include <iterator>
+namespace std {
+    template<typename T>
+    class iterator_traits<ra::Iterator<T>> {
+    public:
+        typedef	std::ptrdiff_t difference_type;
+        typedef T value_type;
+        typedef T* pointer;
+        typedef T& reference;
+        typedef	std::random_access_iterator_tag iterator_category;
+    };
+}
+namespace ra {//reopen ra
+    
 //------------------------------------------------//
 //                                                //
 //               I N T E R F A C E                //
@@ -1820,6 +1866,32 @@ ra::Iterator<T> ra::Iterator<T>::operator++(int)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename T> RA_INLINEF 
+ra::Iterator<T>& ra::Iterator<T>::operator--()
+{
+    // Iterator pre-decrememt
+    RA_IFTRACESAY("Iterator<T> Iterator<T>::operator++()");
+    RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator");
+    RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
+    --pointer_;
+    return *this;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T> RA_INLINE_
+ra::Iterator<T> ra::Iterator<T>::operator--(int)
+{
+    // Iterator post-decrement
+    RA_IFTRACESAY("Iterator<T> Iterator<T>::operator++(int)");
+    RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_max_plus_one_ >= pointer_min_, "invalid iterator");
+    RA_CHECKORSAY(pointer_ != RA_NULLPTR and pointer_ >= pointer_min_ and pointer_ < pointer_max_plus_one_, "iterator out of bounds");
+    ra::Iterator<T> saved = *this;
+    --pointer_;
+    return saved;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T> RA_INLINE_
 bool ra::Iterator<T>::operator==(const Iterator<T>& other) const
@@ -2211,9 +2283,8 @@ namespace ra {
 template<typename S>
 rarray<S,1> rlinear(S x1, S x2, int n=0, bool end_incl=true)
 {
-    if (n==0) {
+    if (n==0)
         n = x2 - x1 + end_incl;
-    }
     rarray<S,1> x(n);
     for (int i = 0; i < n; i++)
         x[i] = x1 + ((x2-x1)*(long long int)(i))/(n-end_incl);

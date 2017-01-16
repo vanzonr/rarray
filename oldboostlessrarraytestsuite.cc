@@ -29,6 +29,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 #if __cplusplus <= 199711L
 #define nullptr 0 
@@ -2731,6 +2732,8 @@ array<compound,3> operator+(const array<compound,3> &a,
 }
 
 
+//////////////////////////////////////////////////////////////////////
+
 int testrlinear() {
     int a = 1, b = 30;
     auto r = rlinear(a,b);
@@ -2760,6 +2763,23 @@ int testrlinear() {
         CHECK(zz == check4[l]);
         l++;
     }
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+int testsort()
+{
+    int n=10;
+    rvector<double> s(n);
+    s = 4.1, 4.2, 4.3, 4.0, 3.1,
+        4.4, 5.0, -1.1, -2.2, 4.5;
+    std::sort(s.begin(), s.end());
+    // expected:
+    rvector<double> e(n);
+    e = -2.2, -1.1, 3.1, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0;
+    for (int i=0;i<n;i++)
+        CHECK(s[i]==e[i]);
     return ALLCLEAR;
 }
 
@@ -2832,6 +2852,9 @@ int main()
     PASSORRETURN(testcomma_assignment());
 
     PASSORRETURN(testrlinear());
+
+    PASSORRETURN(testsort());
+
     return ALLCLEAR;
 }
 

@@ -22,6 +22,7 @@
 # THE SOFTWARE.
 #
 # To build and run unit tests:            make test
+# To build and run old unit tests:        make oldtest
 # To run unit tests through valgrind:     make valgrindtest
 # To check code coverage of tests:        make covertest
 # To build and run benchmark test:        make benchmark
@@ -50,6 +51,7 @@ FC?=gfortran
 FFLAGS?=-O2
 
 TESTNAME?=rarraytests
+OLDTESTNAME?=oldboostlessrarraytestsuite
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
 BENCHMARK2DNAMEF=benchmark2Dfrtrn
@@ -141,13 +143,22 @@ doctestgenerator.sh: rarraydoc.tex config.mk
 test: $(TESTNAME) $(TESTXNAME)
 	./$(TESTNAME) --report_level=detailed
 
+oldtest: $(OLDTESTNAME)
+	./$(OLDTESTNAME) --report_level=detailed
+
 valgrindtest: $(TESTNAME)
 	valgrind --tool=memcheck ./$(TESTNAME)
 
 $(TESTNAME): $(TESTNAME).o config.mk
 	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
+$(OLDTESTNAME): $(OLDTESTNAME).o config.mk
+	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+
 $(TESTNAME).o: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
+	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(OLDTESTNAME).o: $(OLDTESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 benchmark: benchmark2d benchmark4d
@@ -249,13 +260,13 @@ summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
 	@wc -l missing_from_test.txt
 
 clean:
-	rm -f $(TESTNAME).o rarrayextest.o $(TESTNAME)-cov.o $(TEXTXNAME).o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
+	rm -f $(TESTNAME).o $(OLDTESTNAME).o rarrayextest.o $(TESTNAME)-cov.o $(TEXTXNAME).o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
 	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
 	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x \
 	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doc11.cc doc12.cc doctestgenerator.sh \
 	rarraydoc.aux rarraydoc.log rarraydoc.out rarraydoc.dvi
 
 distclean: clean
-	rm -f config.mk $(TESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) $(TESTXNAME)
+	rm -f config.mk $(TESTNAME) $(OLDTESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) $(TESTXNAME)
 
 
