@@ -2293,11 +2293,60 @@ rarray<S,1> rlinear(S x1, S x2, int n=0, bool end_incl=true)
     return x;
 }
 
+template<class T>
+class Xrange {
+  private:
+    struct const_iterator {
+        const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
+        bool operator!=(const const_iterator& other) const {
+            return i_ != other.i_;
+        }
+        const const_iterator& operator++() {
+            i_+=di_;
+            if (di_>0 && i_ >= b_)
+               i_ = b_;
+            if (di_<0 && i_ <= b_)
+               i_ = b_;
+            return *this;
+        }
+        const T& operator*() {
+            return i_;
+        }
+        T i_, di_, b_;
+    };
+    T a_, b_, d_;
+  public:
+    Xrange(T a, T b, T d): a_(a), b_(a + ((b-a)/d)*d), d_(d) 
+    {}
+    const_iterator begin() const {
+        return const_iterator(a_, d_, b_);
+    }
+    const_iterator end() const {
+        return const_iterator(b_, d_, b_);
+    }
+};
+
+template<class T>
+Xrange<T> xrange(T end) {
+    return Xrange<T>((T)0, end, (T)1);
+}
+
+template<class S, class T>
+Xrange<T> xrange(S begin, T end) {
+    return Xrange<T>((T)begin, end, (T)1);
+}
+
+template<class S, class T, class U>
+Xrange<T> xrange(S begin, T end, U step) {
+    return Xrange<T>((T)begin, end, (T)step);
+}
+
 }
 
 // for now:
 using ra::rarray;
-using ra::rlinear; 
+using ra::rlinear;
+using ra::xrange; 
 
 #if __cplusplus > 199711L
 // add rvector, rmatrix and rtensor shortcut types

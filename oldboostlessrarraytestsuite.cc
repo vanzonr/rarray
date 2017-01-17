@@ -2785,6 +2785,37 @@ int testsort()
 
 //////////////////////////////////////////////////////////////////////
 
+int testxrange()
+{
+    int i=0;
+    for (auto z: xrange(10))
+        CHECK(z==i++);
+    CHECK(i==10);
+    i=2;
+    for (auto z: xrange(2, 7))
+        CHECK(z==i++);
+    CHECK(i==7);
+    i=4;
+    for (auto z: xrange(4, 1, -1))
+        CHECK(z==i--);
+    CHECK(i==1);
+    i=4;
+    for (auto z: xrange(4.25, 1.25, -1))
+        CHECK(z==.25+(i--));
+    CHECK(i==1);
+    i=4;
+    for (auto z: xrange(4.25, 1.20, -1))
+        CHECK(z==.25+(i--));
+    CHECK(i==0);
+    int sum=0;
+    for (auto z: xrange(100))
+        sum += z;
+    CHECK(sum==4950);
+    return ALLCLEAR;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 int main() 
 {
     double d1 = -2.2, d2 = 7.1;
@@ -2854,6 +2885,8 @@ int main()
     PASSORRETURN(testrlinear());
 
     PASSORRETURN(testsort());
+
+    PASSORRETURN(testxrange());
 
     return ALLCLEAR;
 }
