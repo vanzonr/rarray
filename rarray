@@ -143,7 +143,7 @@ Iterator<T> operator+(int n, const Iterator<T>& a)
 #include <iterator>
 namespace std {
     template<typename T>
-    class iterator_traits<ra::Iterator<T>> {
+    class iterator_traits<ra::Iterator<T> > {
     public:
         typedef	std::ptrdiff_t difference_type;
         typedef T value_type;

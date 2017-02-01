@@ -95,14 +95,14 @@ config.mk:
 	@echo "Warning: Run 'configure' to create config.mk"
 	@false
 
-install: rarray rarrayio rarraydoc.pdf rarraymacros.h rarraydelmacros.h
+install: rarray rarrayio rarraydoc.pdf rarraymacros.h rarraydelmacros.h hardinclude
 	mkdir -p ${PREFIX}/include
-	cp -p rarray ${PREFIX}/include/rarray
+	./hardinclude rarray rarraymacros.h rarraydelmacros.h > ${PREFIX}/include/rarray
 	cp -p rarrayio ${PREFIX}/include/rarrayio
-	cp -p rarraymacros.h ${PREFIX}/include/rarraymacros.h
-	cp -p rarraydelmacros.h ${PREFIX}/include/rarraydelmacros.h
 	mkdir -p ${PREFIX}/share/rarray
 	cp -p rarraydoc.pdf ${PREFIX}/share/rarray
+
+hardinclude: hardinclude.cc
 
 doc: rarraydoc-new.pdf
 
