@@ -286,6 +286,23 @@ release the memory of this array.
 
 The construction specifying a number of extents as arguments works for arrays with rank up to and including 11. For arrays with larger rank, you have to pass an pointer to the array of extents.
 
+\subsection{rvector, rmatrix, rtensor (c++11 only)}
+
+When compiling in c++11 mode, there are short cut types for
+one-dimensional, two dimensional and three dimensional arrays, called
+rvector, rmatrix and rtensor, respectively. The following equivalences hold:
+
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+rvector<T> = rarray<T,1>
+rmatrix<T> = rarray<T,2>
+rtensor<T> = rarray<T,3>
+\end{verbatim}
+\end{framed}
+
+This only works in the c++11 standard and above.
+
+
 \subsection{Accessing the elements}
 
 The elements of rarray objects are accessed using the repeated square
