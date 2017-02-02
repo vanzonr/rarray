@@ -3,7 +3,7 @@ rarray - multidimensional array class template
 
 rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
-compilers to generate fast code.  The current version is 1.1.
+compilers to generate fast code.  The current version is 1.2.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -12,9 +12,9 @@ named 'LICENSE', and license statements in the source files.
 Installation
 ============
 
-To use this header-only library, you can copy the files rarray, rarrayio,
-rarraymacros.h, rarraydelmacros.h to the directory "/usr/include" or
-some other directory that the compiler searches for header files.
+To use this header-only library, the files rarray and rarrayio must be
+copied to the directory "/usr/include" or some other directory that
+the compiler searches for header files.
 
 Rather than do so by hand, you can use the included Makefile, which
 can also compile the unit tests and benchmarks.  To install without
@@ -87,6 +87,11 @@ Dec 2013: First implementation of the header-only library rarray for runtime (dy
 Jan 2014: Version 1.0: Code put on github
 
 Mar 2015: Version 1.1: Changed the text output format used to use newlines
+
+Feb 2017: Version 1.2: Added c++11 aliases rvector, rmatrix and
+                       rtensor. Eliminated the need for rarraymacros.h
+                       and rarraydelmacros.h in the installed version
+                       of rarray.
 
 Known Bugs
 ==========
