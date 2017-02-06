@@ -402,9 +402,16 @@ int main(int argc,char**argv)
     }
     double check = case_exact(repeat);
     double eps = 1e-6;
-    if (fabs(1-answer/check)>=eps)
-        printf("%lf does not match exact result of %lf\n", 
-               answer/n/n, check/n/n);
+    if (fabs(1-answer/check)>=eps) {
+        if (fabs(answer) == 0.0) {
+            printf("(skipped - library not installed) ");
+            fflush(stdout);
+        } else {
+            printf("%lf does not match exact result of %lf\n", 
+                   answer/n/n, check/n/n);
+            fflush(stdout);
+        }
+    }
     stopwatchStop(&s);
 }
 

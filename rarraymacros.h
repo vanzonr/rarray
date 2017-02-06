@@ -26,6 +26,7 @@
 // following macro produced output to be used to determine which
 // functions are exercised.
 #ifdef RA_TRACETEST
+#include <iostream>
 #define RA_IFTRACESAY(a) std::cerr << "IFTRACE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
 #else
 #define RA_IFTRACESAY(a) 
@@ -35,6 +36,7 @@
 // check its first argument and throw an exception if it is not true.
 // checkOrSay is intended to be used for bound checks.
 #ifdef RA_BOUNDSCHECK
+#include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
 // BOUNDCHECK is incompatible with SKIPINTERMEDIATE (see below)
 #ifdef RA_SKIPINTERMEDIATE
