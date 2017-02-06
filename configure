@@ -137,7 +137,7 @@ else
         else
             echo "WARNING: Omitting non-existing fortran compiler ${FC}."
             grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
-            echo FC=nofortran >> config.mk
+            echo FC=./nofortran >> config.mk
         fi
         # detect installation of BLITZ (only needed for benchmarks)
         echo -e "#\n# Variables for compiling\n#">> config.mk
