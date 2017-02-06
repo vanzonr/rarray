@@ -40,7 +40,7 @@ using namespace std;
 bool file_exists(const char* file_name)
 {
     assert(file_name);
-    return ifstream(file_name);
+    return ifstream(file_name).is_open();
 }
 
 // check if string is one of a set of strings
