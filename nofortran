@@ -1,0 +1,10 @@
+#!/bin/sh
+while [ -n "$1" -a "$1" != "-o" ]
+do
+    shift
+done
+if [ "$1" = "-o" -a -n "$2" ]
+then
+    echo "echo \"fortran:   (skipped - no fortan compiler)\"" > $2
+    chmod +x $2
+fi
