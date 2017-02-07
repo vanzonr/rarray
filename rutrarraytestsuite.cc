@@ -31,7 +31,7 @@
 #include <sstream>
 #include <complex>
 #include <algorithm>
-#include "../../Code/5_LIBRARIES/rut/rut.h"
+#include "rut/rut.h"
 
 //////////////////////////////////////////////////////////////////////
 // AUXILIARY STUFF
