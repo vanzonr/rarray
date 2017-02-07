@@ -821,64 +821,6 @@ array<compound,3> a2 = {{compound(-1,-2),compound(3,-4),compound(5,-6)}};
 //////////////////////////////////////////////////////////////////////
 
 template<typename T> 
-int testconstructors_with_functions() 
-{
-    int dim[3] = {7,21,13};
-    rarray<T,3> a(7,21,13);
-    rarray<T,3> b(dim);
-    rarray<T,3> c(b);
-    const int* asize = shapeof(a);
-    CHECK(dataof(a));
-    CHECK(countof(a)==7*21*13);
-    CHECK(asize);
-    CHECK(asize[0] == dim[0]);
-    CHECK(asize[1] == dim[1]);
-    CHECK(asize[2] == dim[2]);
-    CHECK(extentof(a,0) == dim[0]);
-    CHECK(extentof(a,1) == dim[1]);
-    CHECK(extentof(a,2) == dim[2]);
-    CHECK(shapeof(a)[0] == dim[0]);
-    CHECK(shapeof(a)[1] == dim[1]);
-    CHECK(shapeof(a)[2] == dim[2]);
-#ifndef RA_SKIPINTERMEDIATE
-    CHECK(shapeof(a[0])[0] == dim[1]);
-    CHECK(shapeof(a[0][1])[0] == dim[2]);
-#endif
-    CHECK(dataof(b));
-    CHECK(countof(b)==7*21*13);
-    CHECK(extentof(b,0) == dim[0]);
-    CHECK(extentof(b,1) == dim[1]);
-    CHECK(extentof(b,2) == dim[2]);
-    CHECK(dataof(c));
-    CHECK(countof(c)==7*21*13);
-    CHECK(extentof(c,0) == dim[0]);
-    CHECK(extentof(c,1) == dim[1]);
-    CHECK(extentof(c,2) == dim[2]);
-    CHECK(dataof(c)==dataof(c));
-#ifndef RA_SKIPINTERMEDIATE
-    CHECK(countof(b[2])==21*13);
-    CHECK(countof(b[2][10])==13);
-    CHECK(extentof(c[2],0) == dim[1]);
-    CHECK(extentof(c[2],1) == dim[2]);
-#endif
-    return ALL_CLEAR;
-}
-
-
-//<--- test
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-template<typename T> 
 int testaccessors(T value1, T value2) 
 {
     // Exercises the following methods of the rarray<T,{1,2,3}> class
@@ -923,6 +865,24 @@ int testaccessors(T value1, T value2)
     return ALL_CLEAR;
 }
 
+UNIT_TEST(testaccessors_double)
+{
+    return testaccessors<double>(d1,d2);
+}
+END_UNIT_TEST
+
+UNIT_TEST(testaccessors_compound)
+{
+    return testaccessors<compound>(c1,c2);
+}
+END_UNIT_TEST
+
+UNIT_TEST(testaccessors_array_compound_3)
+{
+    return testaccessors<array<compound,3> >(a1,a2);
+}
+END_UNIT_TEST
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -966,6 +926,10 @@ int testsliceconstructor()
     return ALL_CLEAR;
 }
 
+template UNIT_TEST_IMPORT(testsliceconstructor<double>);
+template UNIT_TEST_IMPORT(testsliceconstructor<compound>);
+template UNIT_TEST_IMPORT((testsliceconstructor<array<compound,3> >));
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -987,9 +951,7 @@ int testcopy(T value1, T value2)
             }
         }
     }
-
     rarray<T,3> d(b.copy());
-
     CHECK(d.data()!=b.data());
     CHECK(d.extent(0)==b.extent(0));
     CHECK(d.extent(1)==b.extent(1));
@@ -1001,45 +963,26 @@ int testcopy(T value1, T value2)
             }
         }
     }
-
     return ALL_CLEAR;
 }
 
-//////////////////////////////////////////////////////////////////////
-
-template<typename T> 
-int testcopy_with_functions(T value1, T value2) 
+UNIT_TEST(testcopy_double)
 {
-    rarray<T,3> b(100,40,3);
-    const int l = extentof(b,0);
-    const int m = extentof(b,1);
-    const int n = extentof(b,2);
-    T value3 = value1;
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
-                b[i][j][k] = value3;
-                value3 = value3+value2;
-            }
-        }
-    }
-
-    rarray<T,3> d(copy(b));
-
-    CHECK(dataof(d)!=dataof(b));
-    CHECK(extentof(d,0)==extentof(b,0));
-    CHECK(extentof(d,1)==extentof(b,1));
-    CHECK(extentof(d,2)==extentof(b,2));
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
-                CHECK(b[i][j][k]==d[i][j][k]);
-            }
-        }
-    }
-
-    return ALL_CLEAR;
+    return testcopy<double>(d1,d2);
 }
+END_UNIT_TEST
+
+UNIT_TEST(testcopy_compound)
+{
+    return testcopy<compound>(c1,c2);
+}
+END_UNIT_TEST
+
+UNIT_TEST(testcopy_array_compound_3)
+{
+    return testcopy<array<compound,3> >(a1,a2);
+}
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1065,6 +1008,24 @@ int testcopy1d(T value1, T value2)
     return ALL_CLEAR;
 }
 
+UNIT_TEST(testcopy1d_double)
+{
+    return testcopy1d<double>(d1,d2);
+}
+END_UNIT_TEST
+
+UNIT_TEST(testcopy1d_compound)
+{
+    return testcopy1d<compound>(c1,c2);
+}
+END_UNIT_TEST
+
+UNIT_TEST(testcopy1d_array_compound_3)
+{
+    return testcopy1d<array<compound,3> >(a1,a2);
+}
+END_UNIT_TEST
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -1087,23 +1048,6 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
         }
     }
 }
-
-//////////////////////////////////////////////////////////////////////
-
-template<typename T>
-void print(std::ostream& o, const rarray<T,2>& m)
-{
-    const int r=m.extent(0);
-    const int c=m.extent(1);
-    for (int i=0;i<r;i++) {
-        for (int j=0;j<c;j++) {
-            o << std::setw(15) << m[i][j] << ' ';
-        }
-        o << '\n';
-    }
-}
-
-//////////////////////////////////////////////////////////////////////
 
 template<typename T>
 int testmmm() {
@@ -1128,6 +1072,33 @@ int testmmm() {
     return ALL_CLEAR;
 }
 
+template UNIT_TEST_IMPORT(testmmm<int>);
+template UNIT_TEST_IMPORT(testmmm<double>);
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+std::string print1d(const rarray<float,1> &a) 
+{
+    std::stringstream s;
+    const int n = EXTENT(a,0);
+    for (int i=0;i<n-1;i++)
+        s << a[i] << ' ';
+    s << a[n-1];
+    return s.str();
+}
+
+UNIT_TEST(test1dautoconversions)
+{
+    const int n=9;
+    float b[n] = {1,2,3,4,5,6,7,8,9};
+    const rarray<float,1> a = RARRAY(b);
+    CHECK(EXTENT(a,0)==EXTENT(b,0));
+    std::string s = print1d(RARRAY(b));
+    CHECK(s=="1 2 3 4 5 6 7 8 9");
+}
+END_UNIT_TEST
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -1138,16 +1109,12 @@ void print1d_1(float* a, int n, std::ostream &out)
     out << std::endl;
 }
 
-//////////////////////////////////////////////////////////////////////
-
 void print1d_2(const float* a, int n, std::ostream &out) 
 {
     for (int i=0;i<n;i++) 
         out << a[i] << ' ';
     out << std::endl;
 }
-
-//////////////////////////////////////////////////////////////////////
 
 void print1d_3(const rarray<float,1> &a, std::ostream &out) 
 {
@@ -1156,8 +1123,6 @@ void print1d_3(const rarray<float,1> &a, std::ostream &out)
     out << std::endl;
 }
 
-//////////////////////////////////////////////////////////////////////
-
 void print1d_4(const rarray<const float,1>& a, std::ostream &out)
 {
     for (int i=0;i<a.extent(0);i++) 
@@ -1165,9 +1130,7 @@ void print1d_4(const rarray<const float,1>& a, std::ostream &out)
     out << std::endl;
 }
 
-//////////////////////////////////////////////////////////////////////
-
-int test1dconversions()
+UNIT_TEST(test1dconversions)
 {
     const int n=9;
     rarray<float,1> a(n);
@@ -1190,8 +1153,8 @@ int test1dconversions()
     CHECK(s6.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_4(c.const_ref(), s7);
     CHECK(s7.str()=="1 2 3 4 5 6 7 8 9 \n");
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1310,9 +1273,7 @@ void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
   cout << '\n';
 }
 
-//////////////////////////////////////////////////////////////////////
-
-int test2dconversions()
+UNIT_TEST(test2dconversions)
 {
     const int n = 9;
     const int m = 5;
@@ -1353,14 +1314,11 @@ int test2dconversions()
     CHECK(s7.str()==s1.str());
     print2d_8(c.const_ref(), s8);
     CHECK(s8.str()==s1.str());
-    return ALL_CLEAR;
 }
-
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-
-// Six different signatures of a print function for a tensor: 
 
 // print_1 takes a double-pointer tensor, whose elements and row
 // pointers could be changed. Dangerous.
@@ -1379,8 +1337,6 @@ void print3d_1(float***a, int n, int m, int l, std::ostream& cout)
     cout << '\n';
 }
 
-//////////////////////////////////////////////////////////////////////
-
 // print3d_2 takes a tensor whose elements are constant, but whose row
 // pointers could in principle be changed. Dangerous, but common!
 // - Not const-correct.
@@ -1397,8 +1353,6 @@ void print3d_2(const float***a, int n, int m, int l, std::ostream& cout)
     }
     cout << '\n';
 }
-
-//////////////////////////////////////////////////////////////////////
 
 // print3d_3 takes a tensor, which is a pointer to a set of pointers. The
 // row pointers are constant, but the elements would be changable.
@@ -1417,8 +1371,6 @@ void print3d_3(float *const*const* a, int n, int m, int l, std::ostream& cout)
     cout << '\n';
 }
 
-//////////////////////////////////////////////////////////////////////
-
 // print3d_4 takes a constant tensor, as a set of pointers to rows. Both
 // the row pointers and the elements are const, and can't be changed.
 // - Const-correct.
@@ -1435,8 +1387,6 @@ void print3d_4(const float*const*const*a, int n, int m, int l, std::ostream& cou
     }
     cout << '\n';
 }
-
-//////////////////////////////////////////////////////////////////////
 
 // print3d_5 wants the tensor as a contiguous memory block.
 // because of absence of const, print3d_5 could change the elements of a. 
@@ -1456,8 +1406,6 @@ void print3d_5(float *a, int n, int m, int l, std::ostream& cout)
     cout << '\n';
 }
 
-//////////////////////////////////////////////////////////////////////
-
 // print3d_6 wants the constant tensor as a contiguous memory block.
 // because of const, print3d_6 cannot change the elements of a. 
 // - Const-correct
@@ -1474,8 +1422,6 @@ void print3d_6(const float *a, int n, int m, int l, std::ostream& cout)
     }
     cout << '\n';
 }
-
-//////////////////////////////////////////////////////////////////////
 
 // print3d_7 takes the wrapper 3d class, which already contains its dimensions
 // because of const, print3d_7 cannot change the elements of a.
@@ -1494,7 +1440,7 @@ void print3d_7(const rarray<float,3> &a, std::ostream& cout)
     cout << '\n';
 }
 
-int test3dconversions() 
+UNIT_TEST(test3dconversions)
 {
     const int n = 9;
     const int m = 5;
@@ -1536,201 +1482,8 @@ int test3dconversions()
     CHECK(s6.str()==s1.str());
     print3d_7(c, s7);
     CHECK(s7.str()==s1.str());
-    return ALL_CLEAR;
 }
-
-int testconversions() {
-    CHECK(test1dconversions()==ALL_CLEAR);
-    CHECK(test2dconversions()==ALL_CLEAR);
-    CHECK(test3dconversions()==ALL_CLEAR);
-    return ALL_CLEAR;
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-int testassignment()
-{
-    const int n=10;
-    const int m=100;
-    const int p=3;
-    int l = 0;
-    rarray<float,3> a(n,m,p);
-    rarray<float,3> b;
-    for (int i=0;i<n;i++)
-        for (int j=0;j<m;j++)
-            for (int k=0;k<p;k++)
-                a[i][j][k] = float(l++);
-    b = a;
-    CHECK(b.data()==a.data());
-    //CHECK(b.ptr_array()==a.ptr_array()); // not yet, b has its own ptr_array.
-    CHECK(b.extent(0)==a.extent(0));
-    CHECK(b.extent(1)==a.extent(1));
-    CHECK(b.extent(2)==a.extent(2));
-#ifndef RA_SKIPINTERMEDIATE
-    rarray<float,2> e;
-    e = a[2];
-    CHECK(e.data()==a[2].data());
-    CHECK(e.extent(0)==a.extent(1));
-    CHECK(e.extent(1)==a.extent(2));    
-#endif
-    rarray<float,1> c(2048);
-    rarray<float,1> d;
-    d = c;
-    CHECK(d.data()==c.data());
-    CHECK(d.extent(0)==c.extent(0));
-    return ALL_CLEAR;
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-#ifndef RA_SKIPINTERMEDIATE
-int testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
-{
-    const float* a1=a[1].data();
-    CHECK(a1==data1check); 
-    CHECK(a[1].ptr_array());
-    CHECK(a[1].noconst_ptr_array());
-    CHECK(a[1].const_ref().ptr_array());
-    CHECK(a[1][2].ptr_array());
-    CHECK(a[1][2].noconst_ptr_array());
-    CHECK(a[1][2].const_ref().ptr_array());
-    return ALL_CLEAR;
-}
-#endif
-
-//////////////////////////////////////////////////////////////////////
-
-int testconstintermediate()
-{
-#ifdef RA_SKIPINTERMEDIATE
-    return ALL_CLEAR;
-#else
-    rarray<float,3> a(7,8,9);
-    int l=0;
-    for (int i=0;i<7;i++)
-        for (int j=0;j<8;j++)
-            for (int k=0;k<9;k++)
-                a[i][j][k] = float(l++);
-    return testconstintermediatefunction(a,a[1].data());
-#endif
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-void fill_1d_rarray(rarray<float,1> a, float value)
-{
-    for (int i=0; i < a.size(); i++)
-        a[i] = value;
-}
-
-int testintermediateconversion()
-{
-    rarray<float,2> a(10,10);
-    a[2][7]=14;
-#ifndef RA_SKIPINTERMEDIATE
-    fill_1d_rarray(a[2], 13);
-    CHECK(a[2][7]==13);
-#endif
-    return ALL_CLEAR;
-}
-
-int testreshape() 
-{
-    int dim[7] = {7,10,13,2,4,5,21};
-    int dimr[7] = {21,5,4,2,13,10,7};
-    int dim12[12] = {2,3,4,3,2,3,4,3,2,3,4,3};
-    int dimr12[12] = {4,3,2,3,4,3,2,3,2,3,4,3};//first 7 in reversed order
-    rarray<float,1> a(dim), a2(a.data(),a.shape());
-    rarray<float,2> b(dim), b2(b);
-    rarray<float,3> c(dim), c2(c);
-    rarray<float,4> d(dim);
-    rarray<float,5> e(dim);
-    rarray<float,6> f(dim);
-    rarray<float,7> g(dim);
-    rarray<float,8> h(dim12);
-    rarray<float,9> i(dim12);
-    rarray<float,10> j(dim12);
-    rarray<float,11> k(dim12);
-    rarray<float,12> l(dim12);
-
-    rarray<float,1> novela(a);
-    rarray<float,1> novela2(a2);
-    novela[3] = 4;
-    novela.reshape(4);
-    a.reshape(dim);
-    a.reshape(*dim);
-    CHECK(novela.extent(0)==4);
-    CHECK(novela[3]==4);
-    CHECK(novela2.extent(0)==7);
-    novela2.reshape(4);
-    CHECK(novela2.extent(0)==4);
-    CHECK(novela2[3]==4);
-    b[5][6] = 5;
-    rarray<float,2> novelb(b);
-    rarray<float,2> novelb2(novelb);
-    novelb.reshape(10,7);
-    b.reshape(dim);
-    CHECK(novelb.extent(0)==10);
-    CHECK(novelb.extent(1)==7);
-    CHECK(novelb2.extent(0)==7);
-    CHECK(novelb2.extent(1)==10);
-    CHECK(novelb[8][0] == 5);
-    c[4][8][3] = 6;
-    rarray<float,3> novelc(c);
-    novelc.reshape(10,7,13);
-    CHECK(novelc.extent(0)==10);
-    CHECK(novelc.extent(1)==7);
-    CHECK(novelc.extent(2)==13);
-    CHECK(novelc[6][6][3] == 6);
-    rarray<float,4> noveld(d);
-    rarray<float,5> novele(e);
-    rarray<float,6> novelf(f);
-    rarray<float,7> novelg(g);
-    rarray<float,7> novelg2(g);
-    rarray<float,8> novelh(h);
-    rarray<float,9> noveli(i);
-    rarray<float,10> novelj(j);
-    rarray<float,11> novelk(k);
-    rarray<float,12> novell(l);
-    noveld.reshape(2,2,2,2);                // TODO: check
-    novele.reshape(13,7,10,2,4);            // TODO: check
-    novelf.reshape(5,6,1,13,10,7);          // TODO: check
-    novelg.reshape(dimr);                   // TODO: check
-    novelg.reshape(2,5,6,1,13,10,7);  // TODO: check
-    novelh.reshape(4,3,2,3,4,3,2,3);        // TODO: check
-    noveli.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
-    novelj.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
-    novelk.reshape(4,3,2,3,4,3,2,3,2,3,4);  // TODO: check
-    novell.reshape(dimr12);                 // TODO: check
-    return ALL_CLEAR;
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-std::string print1d(const rarray<float,1> &a) 
-{
-    std::stringstream s;
-    const int n = EXTENT(a,0);
-    for (int i=0;i<n-1;i++)
-        s << a[i] << ' ';
-    s << a[n-1];
-    return s.str();
-}
-
-int test1dautoconversion() 
-{
-    const int n=9;
-    float b[n] = {1,2,3,4,5,6,7,8,9};
-    const rarray<float,1> a = RARRAY(b);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
-    std::string s = print1d(RARRAY(b));
-    CHECK(s=="1 2 3 4 5 6 7 8 9");
-    return ALL_CLEAR;
-}
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1749,7 +1502,7 @@ std::string print2d(const rarray<float,2> &a)
     return s.str();
 }
 
-int test2dautoconversion() 
+UNIT_TEST(test2dautoconversion) 
 {
     const int n=2;
     const int m=7;
@@ -1762,6 +1515,7 @@ int test2dautoconversion()
     CHECK(s=="1 2 3 4 5 6 7\n8 9 8 7 6 5 4\n");
     return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1784,7 +1538,7 @@ std::string print3d(const rarray<float,3> &a)
     return s.str();
 }
 
-int test3dautoconversion() 
+UNIT_TEST(test3dautoconversion) 
 {
     const int n=2;
     const int m=7;
@@ -1798,8 +1552,8 @@ int test3dautoconversion()
     std::string s = print3d(RARRAY(b));
     CHECK(s=="{1,2,3}{2,3,4}{3,4,5}{4,5,6}{5,6,7}{6,7,8}{7,8,9}\n"
              "{8,7,6}{9,8,7}{8,7,6}{7,6,5}{6,5,4}{5,4,3}{4,3,2}\n");
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1828,7 +1582,7 @@ std::string print4d(const rarray<float,4> &a)
     return s.str();
 }
 
-int test4dautoconversion() 
+UNIT_TEST(test4dautoconversion) 
 {
     const int p=2;
     const int n=2;
@@ -1850,8 +1604,8 @@ int test4dautoconversion()
     CHECK(s==
           "{[1 2 3][2 3 4][3 4 5][4 5 6][5 6 7][6 7 8][7 8 9]}{[8 7 6][9 8 7][8 7 6][7 6 5][6 5 4][5 4 3][4 3 2]}\n"
           "{[1 2 3][2 3 6][3 6 5][6 5 9][5 9 7][9 7 8][7 8 9]}{[8 7 9][9 8 7][8 7 9][7 9 5][9 5 6][5 6 3][6 3 2]}\n");
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1891,7 +1645,7 @@ std::string print5d(const rarray<float,5> &a)
     return s.str();
 }
 
-int test5dautoconversion() 
+UNIT_TEST(test5dautoconversion) 
 {
     const int p=2;
     const int n=2;
@@ -1925,8 +1679,8 @@ int test5dautoconversion()
     CHECK(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
           "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n");
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1970,7 +1724,7 @@ std::string print6d(const rarray<float,6> &a)
     return s.str();
 }
 
-int test6dautoconversion() 
+UNIT_TEST(test6dautoconversion) 
 {
     const int q=2;
     const int p=2;
@@ -2034,22 +1788,286 @@ int test6dautoconversion()
 "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n\n"
 "{[(1,-2,-3)(2,-3,-4)(3,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-3)(4,-3,-2)]}{[(1,-2,-3)(2,-3,-6)(3,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-3)(6,-3,-2)]}\n"
 "{[(1,-2,-7)(2,-7,-4)(7,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-7)(4,-7,-2)]}{[(1,-2,-7)(2,-7,-6)(7,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-7)(6,-7,-2)]}\n\n");
+}
+END_UNIT_TEST
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+template<typename T> 
+int testconstructors_with_functions() 
+{
+    int dim[3] = {7,21,13};
+    rarray<T,3> a(7,21,13);
+    rarray<T,3> b(dim);
+    rarray<T,3> c(b);
+    const int* asize = shapeof(a);
+    CHECK(dataof(a));
+    CHECK(countof(a)==7*21*13);
+    CHECK(asize);
+    CHECK(asize[0] == dim[0]);
+    CHECK(asize[1] == dim[1]);
+    CHECK(asize[2] == dim[2]);
+    CHECK(extentof(a,0) == dim[0]);
+    CHECK(extentof(a,1) == dim[1]);
+    CHECK(extentof(a,2) == dim[2]);
+    CHECK(shapeof(a)[0] == dim[0]);
+    CHECK(shapeof(a)[1] == dim[1]);
+    CHECK(shapeof(a)[2] == dim[2]);
+#ifndef RA_SKIPINTERMEDIATE
+    CHECK(shapeof(a[0])[0] == dim[1]);
+    CHECK(shapeof(a[0][1])[0] == dim[2]);
+#endif
+    CHECK(dataof(b));
+    CHECK(countof(b)==7*21*13);
+    CHECK(extentof(b,0) == dim[0]);
+    CHECK(extentof(b,1) == dim[1]);
+    CHECK(extentof(b,2) == dim[2]);
+    CHECK(dataof(c));
+    CHECK(countof(c)==7*21*13);
+    CHECK(extentof(c,0) == dim[0]);
+    CHECK(extentof(c,1) == dim[1]);
+    CHECK(extentof(c,2) == dim[2]);
+    CHECK(dataof(c)==dataof(c));
+#ifndef RA_SKIPINTERMEDIATE
+    CHECK(countof(b[2])==21*13);
+    CHECK(countof(b[2][10])==13);
+    CHECK(extentof(c[2],0) == dim[1]);
+    CHECK(extentof(c[2],1) == dim[2]);
+#endif
     return ALL_CLEAR;
 }
 
-int test6autoconversion() {
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-    CHECK(test1dautoconversion()==ALL_CLEAR);
-    CHECK(test2dautoconversion()==ALL_CLEAR);
-    CHECK(test3dautoconversion()==ALL_CLEAR);
-    CHECK(test4dautoconversion()==ALL_CLEAR);
-    CHECK(test5dautoconversion()==ALL_CLEAR);
-    CHECK(test6dautoconversion()==ALL_CLEAR);
+
+template<typename T> 
+int testcopy_with_functions(T value1, T value2) 
+{
+    rarray<T,3> b(100,40,3);
+    const int l = extentof(b,0);
+    const int m = extentof(b,1);
+    const int n = extentof(b,2);
+    T value3 = value1;
+    for (int i=0; i<l; i++) {
+        for (int j=0; j<m; j++) {
+            for (int k=0; k<n; k++) {
+                b[i][j][k] = value3;
+                value3 = value3+value2;
+            }
+        }
+    }
+
+    rarray<T,3> d(copy(b));
+
+    CHECK(dataof(d)!=dataof(b));
+    CHECK(extentof(d,0)==extentof(b,0));
+    CHECK(extentof(d,1)==extentof(b,1));
+    CHECK(extentof(d,2)==extentof(b,2));
+    for (int i=0; i<l; i++) {
+        for (int j=0; j<m; j++) {
+            for (int k=0; k<n; k++) {
+                CHECK(b[i][j][k]==d[i][j][k]);
+            }
+        }
+    }
+
     return ALL_CLEAR;
 }
 
-int test7dautoconversion() {
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////
+
+template<typename T>
+void print(std::ostream& o, const rarray<T,2>& m)
+{
+    const int r=m.extent(0);
+    const int c=m.extent(1);
+    for (int i=0;i<r;i++) {
+        for (int j=0;j<c;j++) {
+            o << std::setw(15) << m[i][j] << ' ';
+        }
+        o << '\n';
+    }
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+UNIT_TEST(testassignment)
+{
+    const int n=10;
+    const int m=100;
+    const int p=3;
+    int l = 0;
+    rarray<float,3> a(n,m,p);
+    rarray<float,3> b;
+    for (int i=0;i<n;i++)
+        for (int j=0;j<m;j++)
+            for (int k=0;k<p;k++)
+                a[i][j][k] = float(l++);
+    b = a;
+    CHECK(b.data()==a.data());
+    //CHECK(b.ptr_array()==a.ptr_array()); // not yet, b has its own ptr_array.
+    CHECK(b.extent(0)==a.extent(0));
+    CHECK(b.extent(1)==a.extent(1));
+    CHECK(b.extent(2)==a.extent(2));
+#ifndef RA_SKIPINTERMEDIATE
+    rarray<float,2> e;
+    e = a[2];
+    CHECK(e.data()==a[2].data());
+    CHECK(e.extent(0)==a.extent(1));
+    CHECK(e.extent(1)==a.extent(2));    
+#endif
+    rarray<float,1> c(2048);
+    rarray<float,1> d;
+    d = c;
+    CHECK(d.data()==c.data());
+    CHECK(d.extent(0)==c.extent(0));
+    return ALL_CLEAR;
+}
+END_UNIT_TEST
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+#ifndef RA_SKIPINTERMEDIATE
+int testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
+{
+    const float* a1=a[1].data();
+    CHECK(a1==data1check); 
+    CHECK(a[1].ptr_array());
+    CHECK(a[1].noconst_ptr_array());
+    CHECK(a[1].const_ref().ptr_array());
+    CHECK(a[1][2].ptr_array());
+    CHECK(a[1][2].noconst_ptr_array());
+    CHECK(a[1][2].const_ref().ptr_array());
+    return ALL_CLEAR;
+}
+#endif
+
+UNIT_TEST(testconstintermediate)
+{
+#ifdef RA_SKIPINTERMEDIATE
+    return ALL_CLEAR;
+#else
+    rarray<float,3> a(7,8,9);
+    int l=0;
+    for (int i=0;i<7;i++)
+        for (int j=0;j<8;j++)
+            for (int k=0;k<9;k++)
+                a[i][j][k] = float(l++);
+    return testconstintermediatefunction(a,a[1].data());
+#endif
+}
+END_UNIT_TEST
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+void fill_1d_rarray(rarray<float,1> a, float value)
+{
+    for (int i=0; i < a.size(); i++)
+        a[i] = value;
+}
+
+UNIT_TEST(testintermediateconversion)
+{
+    rarray<float,2> a(10,10);
+    a[2][7]=14;
+#ifndef RA_SKIPINTERMEDIATE
+    fill_1d_rarray(a[2], 13);
+    CHECK(a[2][7]==13);
+#endif
+}
+END_UNIT_TEST
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+UNIT_TEST(testreshape)
+{
+    int dim[7] = {7,10,13,2,4,5,21};
+    int dimr[7] = {21,5,4,2,13,10,7};
+    int dim12[12] = {2,3,4,3,2,3,4,3,2,3,4,3};
+    int dimr12[12] = {4,3,2,3,4,3,2,3,2,3,4,3};//first 7 in reversed order
+    rarray<float,1> a(dim), a2(a.data(),a.shape());
+    rarray<float,2> b(dim), b2(b);
+    rarray<float,3> c(dim), c2(c);
+    rarray<float,4> d(dim);
+    rarray<float,5> e(dim);
+    rarray<float,6> f(dim);
+    rarray<float,7> g(dim);
+    rarray<float,8> h(dim12);
+    rarray<float,9> i(dim12);
+    rarray<float,10> j(dim12);
+    rarray<float,11> k(dim12);
+    rarray<float,12> l(dim12);
+    rarray<float,1> novela(a);
+    rarray<float,1> novela2(a2);
+    novela[3] = 4;
+    novela.reshape(4);
+    a.reshape(dim);
+    a.reshape(*dim);
+    CHECK(novela.extent(0)==4);
+    CHECK(novela[3]==4);
+    CHECK(novela2.extent(0)==7);
+    novela2.reshape(4);
+    CHECK(novela2.extent(0)==4);
+    CHECK(novela2[3]==4);
+    b[5][6] = 5;
+    rarray<float,2> novelb(b);
+    rarray<float,2> novelb2(novelb);
+    novelb.reshape(10,7);
+    b.reshape(dim);
+    CHECK(novelb.extent(0)==10);
+    CHECK(novelb.extent(1)==7);
+    CHECK(novelb2.extent(0)==7);
+    CHECK(novelb2.extent(1)==10);
+    CHECK(novelb[8][0] == 5);
+    c[4][8][3] = 6;
+    rarray<float,3> novelc(c);
+    novelc.reshape(10,7,13);
+    CHECK(novelc.extent(0)==10);
+    CHECK(novelc.extent(1)==7);
+    CHECK(novelc.extent(2)==13);
+    CHECK(novelc[6][6][3] == 6);
+    rarray<float,4> noveld(d);
+    rarray<float,5> novele(e);
+    rarray<float,6> novelf(f);
+    rarray<float,7> novelg(g);
+    rarray<float,7> novelg2(g);
+    rarray<float,8> novelh(h);
+    rarray<float,9> noveli(i);
+    rarray<float,10> novelj(j);
+    rarray<float,11> novelk(k);
+    rarray<float,12> novell(l);
+    noveld.reshape(2,2,2,2);                // TODO: check
+    novele.reshape(13,7,10,2,4);            // TODO: check
+    novelf.reshape(5,6,1,13,10,7);          // TODO: check
+    novelg.reshape(dimr);                   // TODO: check
+    novelg.reshape(2,5,6,1,13,10,7);  // TODO: check
+    novelh.reshape(4,3,2,3,4,3,2,3);        // TODO: check
+    noveli.reshape(4,3,2,3,4,3,2,3,2);      // TODO: check
+    novelj.reshape(4,3,2,3,4,3,2,3,2,3);    // TODO: check
+    novelk.reshape(4,3,2,3,4,3,2,3,2,3,4);  // TODO: check
+    novell.reshape(dimr12);                 // TODO: check
+}
+END_UNIT_TEST
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+UNIT_TEST(test7dautoconversion)
+{
     int seven[2][2][2][2][2][2][2] = {{{{{{{0}}}}}}}; 
     char expected_output[] =
            "{\n{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
@@ -2067,12 +2085,14 @@ int test7dautoconversion() {
     CHECK(EXTENT(seven,4) == 2);
     CHECK(EXTENT(seven,5) == 2);
     CHECK(EXTENT(seven,6) == 2);
-
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
-int test8dautoconversion() {
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
+UNIT_TEST(test8dautoconversion) 
+{
     int eight[2][2][2][2][2][2][2][2] = {{{{{{{{0}}}}}}}}; 
     char expected_output[] =
           "{\n{\n{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
@@ -2095,12 +2115,14 @@ int test8dautoconversion() {
     CHECK(EXTENT(eight,5) == 2);
     CHECK(EXTENT(eight,6) == 2);
     CHECK(EXTENT(eight,7) == 2);
-
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
-int test9dautoconversion() {
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
 
+UNIT_TEST(test9dautoconversion)
+{
     int nine[2][2][2][2][2][2][2][2][2] = {{{{{{{{{0}}}}}}}}}; 
     char expected_output[] =
          "{\n{\n{\n{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
@@ -2131,12 +2153,14 @@ int test9dautoconversion() {
     CHECK(EXTENT(nine,6) == 2);
     CHECK(EXTENT(nine,7) == 2);
     CHECK(EXTENT(nine,8) == 2);
-
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
-int test10dautoconversion() {
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
+UNIT_TEST(test10dautoconversion)
+{
     int ten[2][2][2][2][2][2][2][2][2][2] = {{{{{{{{{{0}}}}}}}}}}; 
     char expected_output[] =
         "{\n{\n{\n{\n{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
@@ -2184,12 +2208,14 @@ int test10dautoconversion() {
     CHECK(EXTENT(ten,7) == 2);
     CHECK(EXTENT(ten,8) == 2);
     CHECK(EXTENT(ten,9) == 2);
-
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
-int test11dautoconversion() {
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
+UNIT_TEST(test11dautoconversion)
+{
     // can't resist: WHEEEEEEEEEEE!
     int eleven[2][2][2][2][2][2][2][2][2][2][2] =
          {{{{{{{{{{{0,0},{0,0}},{{0,0},{0,0}}},{{{0,0},{0,0}},{{0,0},{0,0}}}},{{{{0,0},{0,0}},{{0,0},{0,0}}},{{{0,0},{0,0}},{{0,0},{0,0}}}}}, 
@@ -2335,22 +2361,14 @@ int test11dautoconversion() {
     CHECK(EXTENT(eleven,8) == 2);
     CHECK(EXTENT(eleven,9) == 2);
     CHECK(EXTENT(eleven,10) == 2);
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
-int test711autoconversion() {
-
-    CHECK(test7dautoconversion()==ALL_CLEAR);
-    CHECK(test8dautoconversion()==ALL_CLEAR);
-    CHECK(test9dautoconversion()==ALL_CLEAR);
-    CHECK(test10dautoconversion()==ALL_CLEAR);
-    CHECK(test11dautoconversion()==ALL_CLEAR);
-    return ALL_CLEAR;
-}
-
-int testoutput() {
-
+UNIT_TEST(testoutput)
+{
     double a[5]={1,2,3,4,5};
     double b[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
     double c[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
@@ -2395,13 +2413,14 @@ int testoutput() {
     std::stringstream sautoarr;
     sautoarr << RARRAY(autoarr);
     CHECK(sautoarr.str()==outcheck);
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-int testiterators() {
-
+UNIT_TEST(testiterators)
+{
     double a[5]={1,2,3,4,5};
     double b[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
     double c[27]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
@@ -2409,7 +2428,6 @@ int testiterators() {
     rarray<double,2> r(b,4,4);
     rarray<double,3> s(c,3,3,3);
     std::stringstream qout;
-
     for (rarray<double,2>::iterator i=r.begin(); i!=r.end(); ++i)
     {
         *i += 2;
@@ -2418,7 +2436,6 @@ int testiterators() {
     {
         qout << *i << ',';
     }
-
 #ifndef RA_SKIPINTERMEDIATE
     for (rarray<double,2>::const_iterator i=r[1].cbegin(); i!=r[1].cend(); i++)
     {
@@ -2427,20 +2444,14 @@ int testiterators() {
 #else
     qout << "7,8,9,10,";
 #endif
-
     CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,");
-
     const rarray<double,2> rview = r;
-
     for (rarray<double,2>::const_iterator i=rview.begin(); i!=rview.end(); i++)
     {
         qout << *i << ',';
     }
-
     CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
-
     std::stringstream rout;
-
 #if __cplusplus <= 199711L
     for (auto ap = q.begin(); ap != q.end(); ++ap)
     {
@@ -2452,17 +2463,12 @@ int testiterators() {
         a *= 2;
     }
 #endif
-
-
     for (rarray<double,2>::const_iterator i=q.cbegin(); i!=q.cend(); i++)
     {
         qout << *i << ',';
     }
-
     CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
-
     const rarray<double,1> qconst = q;
-
 #if __cplusplus <= 199711L
     for (auto bp=qconst.begin(); bp != qconst.end(); ++bp)
     {
@@ -2474,12 +2480,9 @@ int testiterators() {
         rout << b << ',';
     }
 #endif
-
     CHECK(rout.str() == "2,4,6,8,10,");
-
     #ifndef RA_SKIPINTERMEDIATE
     std::stringstream check;
-    
 #if __cplusplus <= 199711L
     for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
         *cp *= 2;
@@ -2495,32 +2498,26 @@ int testiterators() {
     for (const auto& c: s[1])
         check << c << ',';
 #endif
-
     for (rarray<double,2>::const_iterator i=s[2].cbegin(); i!=s[2].cend(); i++)
     {
         check << *i << ',';
     }
-
     CHECK(check.str() == "20,22,24,26,28,30,42,44,46,19,20,21,22,23,24,25,26,27,");
-
     #endif
-
     auto sb = s.begin();
     auto se = s.end();
-
     CHECK(not (sb==se));
     CHECK(sb < se);
     CHECK(sb <= se);
     CHECK(se > sb);
     CHECK(se >= sb);
-         
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-int testfill()
+UNIT_TEST(testfill)
 {
     rarray<float,2> a(3,3);
     a.fill(1.23f);
@@ -2528,21 +2525,19 @@ int testfill()
         for (int j=0;j<EXTENT(a,1);j++) {
             CHECK(a[i][j]==1.23f);
         }
-    }
-    
+    }    
     rarray<float,1> b(5);
     b.fill(1.24f);
     for (int i=0;i<EXTENT(a,0);i++) {
         CHECK(b[i]==1.24f);
     }
-    
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-int testindex()
+UNIT_TEST(testindex)
 {
 
     rarray<float,1> a(6);
@@ -2643,12 +2638,13 @@ int testindex()
         c.index(i,ind);
         CHECK(ind[1]==*i);
     }
-    
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
+
+//////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-int testcomma_assignment()
+UNIT_TEST(testcomma_assignment)
 {
     rarray<double,1> b(8);
     b.fill(0);
@@ -2725,16 +2721,14 @@ int testcomma_assignment()
 
 #endif
 
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////
-
-int testrlinear() {
+UNIT_TEST(testrlinear)
+{
     int a = 1, b = 30;
     auto r = rlinear(a,b);
     int i = a;
@@ -2763,12 +2757,13 @@ int testrlinear() {
         CHECK(zz == check4[l]);
         l++;
     }
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-int testsort()
+UNIT_TEST(testsort)
 {
     int n=10;
     rvector<double> s(n);
@@ -2780,12 +2775,13 @@ int testsort()
     e = -2.2, -1.1, 3.1, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0;
     for (int i=0;i<n;i++)
         CHECK(s[i]==e[i]);
-    return ALL_CLEAR;
 }
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-int testxrange()
+UNIT_TEST(testxrange)
 {
     int i=0;
     for (auto z: xrange(10))
@@ -2811,65 +2807,8 @@ int testxrange()
     for (auto z: xrange(100))
         sum += z;
     CHECK(sum==4950);
-    return ALL_CLEAR;
 }
-
-//////////////////////////////////////////////////////////////////////
-
-#define PASSORRETURN(x)
-
-int gmain() 
-{
-    double d1 = -2.2, d2 = 7.1;
-    compound c1(1,2), c2(-7,13);
-    array<compound,3> a1 = {{compound(1,2),compound(3,4),compound(5,6)}};
-    array<compound,3> a2 = {{compound(-1,-2),compound(3,-4),compound(5,-6)}};
-
-
-    PASSORRETURN(testaccessors<double>(d1,d2));
-    PASSORRETURN(testaccessors<compound>(c1,c2));
-    PASSORRETURN((testaccessors<array<compound,3> >(a1,a2)));
-
-    PASSORRETURN(testsliceconstructor<double>());
-    PASSORRETURN(testsliceconstructor<compound>());
-    PASSORRETURN((testsliceconstructor<array<compound,3> >()));
-
-    PASSORRETURN(testcopy<double>(d1,d2));
-    PASSORRETURN(testcopy<compound>(c1,c2));
-    PASSORRETURN((testcopy<array<compound,3> >(a1,a2)));
-
-    PASSORRETURN(testcopy1d<double>(d1,d2));
-    PASSORRETURN(testcopy1d<compound>(c1,c2));
-    PASSORRETURN((testcopy1d<array<compound,3> >(a1,a2)));
-
-    PASSORRETURN(testmmm<int>());
-    PASSORRETURN(testmmm<double>());
-
-    PASSORRETURN(testconversions());
-    PASSORRETURN(testconstintermediate()); 
-    PASSORRETURN(testassignment());
-    PASSORRETURN(testintermediateconversion());
-    PASSORRETURN(testreshape());
-    PASSORRETURN(test6autoconversion());
-    PASSORRETURN(testoutput());
-    PASSORRETURN(testiterators());
-
-    PASSORRETURN(test711autoconversion());
-
-    PASSORRETURN(testfill());
-
-    PASSORRETURN(testindex());
-
-    PASSORRETURN(testcomma_assignment());
-
-    PASSORRETURN(testrlinear());
-
-    PASSORRETURN(testsort());
-
-    PASSORRETURN(testxrange());
-
-    return ALL_CLEAR;
-}
+END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
