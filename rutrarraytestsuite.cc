@@ -29,6 +29,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <complex>
 #include <algorithm>
 #include "../../Code/5_LIBRARIES/rut/rut.h"
 
@@ -140,6 +141,7 @@ int testconstructors()
 template UNIT_TEST_IMPORT(testconstructors<double>);
 template UNIT_TEST_IMPORT(testconstructors<compound>);
 template UNIT_TEST_IMPORT((testconstructors<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -156,6 +158,8 @@ int testconstructors7dimtest()
 
 template UNIT_TEST_IMPORT(testconstructors7dimtest<double>);
 template UNIT_TEST_IMPORT(testconstructors7dimtest<compound>);
+template UNIT_TEST_IMPORT((testconstructors7dimtest<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors7dimtest<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -197,7 +201,9 @@ int testconstructors7dimtest2()
 }
 
 template UNIT_TEST_IMPORT(testconstructors7dimtest2<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimtest2<compound>);
+template UNIT_TEST_IMPORT(testconstructors7dimtest2<compound>)
+template UNIT_TEST_IMPORT((testconstructors7dimtest2<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors7dimtest2<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -355,7 +361,10 @@ int testconstructors7dim()
     return ALL_CLEAR;
 }
 
+template UNIT_TEST_IMPORT(testconstructors7dim<double>);
+template UNIT_TEST_IMPORT(testconstructors7dim<compound>);
 template UNIT_TEST_IMPORT((testconstructors7dim<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors7dim<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -449,6 +458,7 @@ int testconstructors7dimbuf()
 template UNIT_TEST_IMPORT(testconstructors7dimbuf<double>);
 template UNIT_TEST_IMPORT(testconstructors7dimbuf<compound>);
 template UNIT_TEST_IMPORT((testconstructors7dimbuf<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors7dimbuf<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -666,6 +676,7 @@ int testconstructors12dim()
 template UNIT_TEST_IMPORT(testconstructors12dim<double>);
 template UNIT_TEST_IMPORT(testconstructors12dim<compound>);
 template UNIT_TEST_IMPORT((testconstructors12dim<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors12dim<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -808,6 +819,7 @@ int testconstructors12dimbuf()
 template UNIT_TEST_IMPORT(testconstructors12dimbuf<double>);
 template UNIT_TEST_IMPORT(testconstructors12dimbuf<compound>);
 template UNIT_TEST_IMPORT((testconstructors12dimbuf<array<compound,3> >));
+template UNIT_TEST_IMPORT((testconstructors12dimbuf<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -851,8 +863,7 @@ int testaccessors(T value1, T value2)
     for (int i=0; i<l; i++)
         for (int j=0; j<m; j++)
             for (int k=0; k<n; k++)
-                CHECK(a[i][j][k] == value1);
-    
+                CHECK(a[i][j][k] == value1);   
     for (int i=0; i<l; i++) {
         for (int j=0; j<m; j++) {
             for (int k=0; k<n; k++) {
@@ -929,6 +940,7 @@ int testsliceconstructor()
 template UNIT_TEST_IMPORT(testsliceconstructor<double>);
 template UNIT_TEST_IMPORT(testsliceconstructor<compound>);
 template UNIT_TEST_IMPORT((testsliceconstructor<array<compound,3> >));
+template UNIT_TEST_IMPORT((testsliceconstructor<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1877,10 +1889,6 @@ int testcopy_with_functions(T value1, T value2)
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
 //////////////////////////////////////////////////////////////////////
 
 template<typename T>

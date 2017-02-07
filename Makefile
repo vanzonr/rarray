@@ -51,6 +51,7 @@ FC?=gfortran
 FFLAGS?=-O2
 
 TESTNAME?=rarraytests
+RUTESTNAME?=rutrarraytestsuite
 OLDTESTNAME?=oldboostlessrarraytestsuite
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
@@ -142,6 +143,12 @@ doctestgenerator.sh: rarraydoc.tex config.mk
 
 test: $(TESTNAME) $(TESTXNAME)
 	./$(TESTNAME) --report_level=detailed
+
+rutest: $(RUTESTNAME)
+	./$(RUTESTNAME) --report_level=detailed
+
+$(RUTESTNAME): $(RUTESTNAME).cc rut/rut.cc
+	$(CXX) $(CXXFLAGS) -I./rut -o $@ $^
 
 oldtest: $(OLDTESTNAME)
 	./$(OLDTESTNAME) --report_level=detailed
