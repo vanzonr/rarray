@@ -18,6 +18,9 @@ void add_test_to_testsuite(const std::string& testsuitename, const std::string& 
 // for unit tests not built with UNIT_TEST, need an external global counter
 extern int _error_counter;
 
+// a prefix for parallel tests (for mpi, this contains a rank, otherwise is empty)
+extern std::string _prefix;
+
 // macros for definining testsuites and tests
 #define CONCAT0(x,y)  x##y
 #define CONCAT(x,y)   CONCAT0(x,y)
@@ -31,9 +34,9 @@ extern int _error_counter;
 #define UNIT_TEST_NAMED_IMPORT(nm,tn) int tn(); struct Adder##nm { Adder##nm() { add_test_to_testsuite(suitename, #nm, tn); } } adder##nm; 
 
 // macros for checking
-#define ERROR(x)                     {_error_counter++; std::cerr<<__FILE__<<"("<< __LINE__<<"): " << "error: '" x << "' failed\n";}
-#define FAIL(x)                      {_error_counter++; std::cerr<<__FILE__<<"("<< __LINE__<<"): " << "error: '" x << "' failed\n"; return _error_counter;}
-#define ONWARN(x)                    {std::cerr<<__FILE__<<"("<< __LINE__<<"): warning: condition not satisfied: '" x << "'\n"; }
+#define ERROR(x)                     {_error_counter++; std::cerr<<_prefix<<__FILE__<<"("<< __LINE__<<"): " << "error: '" << x << "' failed\n";}
+#define FAIL(x)                      {_error_counter++; std::cerr<<_prefix<<__FILE__<<"("<< __LINE__<<"): " << "error: '" << x << "' failed\n"; return _error_counter;}
+#define ONWARN(x)                    {std::cerr<<_prefix<<__FILE__<<"("<< __LINE__<<"): warning: condition not satisfied: '" << x << "'\n"; }
 #define WARN(x)                      {if (!(x)) ONWARN(#x)}
 #define CHECK(x)                     {if (!(x)) ERROR(#x)}
 #define REQUIRE(x)                   {if (!(x)) FAIL(#x)}

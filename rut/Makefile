@@ -4,7 +4,8 @@
 #
 # Ramses van Zon, 2017
 #
-CXX=g++
+
+CXX?=g++
 CXXFLAGS=-g -O0
 LDLIBS=
 LDFLAGS=
