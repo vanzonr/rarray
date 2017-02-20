@@ -43,21 +43,21 @@ const T* getconstdata(const rarray<T,R>& a)
     return a.data();
 }
 //////////////////////////////////////////////////////////////////////
-class compound 
+class Compound 
 {
   public:
-    compound(): x(0), y(0) {}
-    compound(int x, int y): x(x), y(y) {}
+    Compound(): x(0), y(0) {}
+    Compound(int x, int y): x(x), y(y) {}
     int GetX() { return x; }
     int GetY() { return y; }
-    bool operator==(const compound&other) const {
+    bool operator==(const Compound&other) const {
         return x==other.x and y==other.y;
     }
-    bool operator!=(const compound&other) const {
+    bool operator!=(const Compound&other) const {
         return x!=other.x or y!=other.y;
     }
-    compound operator+(const compound& other) const {
-        return compound(x+other.x,y+other.y);
+    Compound operator+(const Compound& other) const {
+        return Compound(x+other.x,y+other.y);
     }
   private:
     int x;
@@ -80,10 +80,10 @@ struct array {
     }       
 };
 //////////////////////////////////////////////////////////////////////
-array<compound,3> operator+(const array<compound,3> &a,
-                            const array<compound,3> &b)
+array<Compound,3> operator+(const array<Compound,3> &a,
+                            const array<Compound,3> &b)
 {
-    array<compound,3> result = {{a[0]+b[0],a[1]+b[1],a[2]+b[2]}};
+    array<Compound,3> result = {{a[0]+b[0],a[1]+b[1],a[2]+b[2]}};
     return result;
 }
 
@@ -139,8 +139,8 @@ int testconstructors()
 }
 
 template UNIT_TEST_IMPORT(testconstructors<double>);
-template UNIT_TEST_IMPORT(testconstructors<compound>);
-template UNIT_TEST_IMPORT((testconstructors<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors<Compound>);
+template UNIT_TEST_IMPORT((testconstructors<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -157,8 +157,8 @@ int testconstructors7dimtest()
 }
 
 template UNIT_TEST_IMPORT(testconstructors7dimtest<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimtest<compound>);
-template UNIT_TEST_IMPORT((testconstructors7dimtest<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors7dimtest<Compound>);
+template UNIT_TEST_IMPORT((testconstructors7dimtest<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors7dimtest<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -201,8 +201,8 @@ int testconstructors7dimtest2()
 }
 
 template UNIT_TEST_IMPORT(testconstructors7dimtest2<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimtest2<compound>)
-template UNIT_TEST_IMPORT((testconstructors7dimtest2<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors7dimtest2<Compound>)
+template UNIT_TEST_IMPORT((testconstructors7dimtest2<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors7dimtest2<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -362,8 +362,8 @@ int testconstructors7dim()
 }
 
 template UNIT_TEST_IMPORT(testconstructors7dim<double>);
-template UNIT_TEST_IMPORT(testconstructors7dim<compound>);
-template UNIT_TEST_IMPORT((testconstructors7dim<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors7dim<Compound>);
+template UNIT_TEST_IMPORT((testconstructors7dim<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors7dim<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -456,8 +456,8 @@ int testconstructors7dimbuf()
 }
 
 template UNIT_TEST_IMPORT(testconstructors7dimbuf<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimbuf<compound>);
-template UNIT_TEST_IMPORT((testconstructors7dimbuf<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors7dimbuf<Compound>);
+template UNIT_TEST_IMPORT((testconstructors7dimbuf<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors7dimbuf<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -674,8 +674,8 @@ int testconstructors12dim()
 }
 
 template UNIT_TEST_IMPORT(testconstructors12dim<double>);
-template UNIT_TEST_IMPORT(testconstructors12dim<compound>);
-template UNIT_TEST_IMPORT((testconstructors12dim<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors12dim<Compound>);
+template UNIT_TEST_IMPORT((testconstructors12dim<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors12dim<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -817,17 +817,17 @@ int testconstructors12dimbuf()
 }
 
 template UNIT_TEST_IMPORT(testconstructors12dimbuf<double>);
-template UNIT_TEST_IMPORT(testconstructors12dimbuf<compound>);
-template UNIT_TEST_IMPORT((testconstructors12dimbuf<array<compound,3> >));
+template UNIT_TEST_IMPORT(testconstructors12dimbuf<Compound>);
+template UNIT_TEST_IMPORT((testconstructors12dimbuf<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testconstructors12dimbuf<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 double d1 = -2.2, d2 = 7.1;
-compound c1(1,2), c2(-7,13);
-array<compound,3> a1 = {{compound(1,2),compound(3,4),compound(5,6)}};
-array<compound,3> a2 = {{compound(-1,-2),compound(3,-4),compound(5,-6)}};
+Compound c1(1,2), c2(-7,13);
+array<Compound,3> a1 = {{Compound(1,2),Compound(3,4),Compound(5,6)}};
+array<Compound,3> a2 = {{Compound(-1,-2),Compound(3,-4),Compound(5,-6)}};
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -882,15 +882,15 @@ UNIT_TEST(testaccessors_double)
 }
 END_UNIT_TEST
 
-UNIT_TEST(testaccessors_compound)
+UNIT_TEST(testaccessors_Compound)
 {
-    return testaccessors<compound>(c1,c2);
+    return testaccessors<Compound>(c1,c2);
 }
 END_UNIT_TEST
 
-UNIT_TEST(testaccessors_array_compound_3)
+UNIT_TEST(testaccessors_array_Compound_3)
 {
-    return testaccessors<array<compound,3> >(a1,a2);
+    return testaccessors<array<Compound,3> >(a1,a2);
 }
 END_UNIT_TEST
 
@@ -938,8 +938,8 @@ int testsliceconstructor()
 }
 
 template UNIT_TEST_IMPORT(testsliceconstructor<double>);
-template UNIT_TEST_IMPORT(testsliceconstructor<compound>);
-template UNIT_TEST_IMPORT((testsliceconstructor<array<compound,3> >));
+template UNIT_TEST_IMPORT(testsliceconstructor<Compound>);
+template UNIT_TEST_IMPORT((testsliceconstructor<array<Compound,3> >));
 template UNIT_TEST_IMPORT((testsliceconstructor<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
@@ -984,15 +984,15 @@ UNIT_TEST(testcopy_double)
 }
 END_UNIT_TEST
 
-UNIT_TEST(testcopy_compound)
+UNIT_TEST(testcopy_Compound)
 {
-    return testcopy<compound>(c1,c2);
+    return testcopy<Compound>(c1,c2);
 }
 END_UNIT_TEST
 
-UNIT_TEST(testcopy_array_compound_3)
+UNIT_TEST(testcopy_array_Compound_3)
 {
-    return testcopy<array<compound,3> >(a1,a2);
+    return testcopy<array<Compound,3> >(a1,a2);
 }
 END_UNIT_TEST
 
@@ -1026,15 +1026,15 @@ UNIT_TEST(testcopy1d_double)
 }
 END_UNIT_TEST
 
-UNIT_TEST(testcopy1d_compound)
+UNIT_TEST(testcopy1d_Compound)
 {
-    return testcopy1d<compound>(c1,c2);
+    return testcopy1d<Compound>(c1,c2);
 }
 END_UNIT_TEST
 
-UNIT_TEST(testcopy1d_array_compound_3)
+UNIT_TEST(testcopy1d_array_Compound_3)
 {
-    return testcopy1d<array<compound,3> >(a1,a2);
+    return testcopy1d<array<Compound,3> >(a1,a2);
 }
 END_UNIT_TEST
 

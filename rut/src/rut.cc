@@ -136,10 +136,10 @@ int main(int argc, char* argv[])
 {
     // deal with possibility of mpi tests
     #ifdef _MPI
+    int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Errhandler errhandler;
     MPI_Comm_create_errhandler(&mpi_handler, &errhandler);
-    int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&size);
     _prefix = computePrefix(rank,size);
