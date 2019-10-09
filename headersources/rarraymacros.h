@@ -1,7 +1,7 @@
 //
 // rarraymacros.h - Checks and inlining macros used in runtime arrays
 //
-// Copyright (c) 2015  Ramses van Zon
+// Copyright (c) 2015-2019  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,14 @@
 // THE SOFTWARE.
 //
 
-// When running rarraytestsuite.cc compiled with -DRA_TRACETEST, the
-// following macro produced output to be used to determine which
-// functions are exercised.
-#ifdef RA_TRACETEST
-#include <iostream>
-#define RA_IFTRACESAY(a) std::cerr << "IFTRACE " << __FILE__ << '@' << __LINE__<< ":\t" << a << std::endl;
-#else
-#define RA_IFTRACESAY(a) 
-#endif
-
-// Compiling with -DRA_BOUNDSCHECK switches on the checkOrSay macro to
+// Compiling with -DRA_BOUNDSCHECK switches on the RA_CHECKORSAY macro to
 // check its first argument and throw an exception if it is not true.
 // checkOrSay is intended to be used for bound checks.
 #ifdef RA_BOUNDSCHECK
 #include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
-// BOUNDCHECK is incompatible with SKIPINTERMEDIATE (see below)
-#ifdef RA_SKIPINTERMEDIATE
-#undef RA_SKIPINTERMEDIATE
-#endif
 #else
 #define RA_CHECKORSAY(a, b) 
-#endif
-
-#if __cplusplus <= 199711L
-#define RA_NULLPTR 0 
-#else
-#define RA_NULLPTR nullptr
 #endif
 
 // For g++ and icpc, RA_INLINE forces inlining, even without optimization.
@@ -62,7 +42,7 @@
 # if defined(__INTEL_COMPILER)
 #   define RA_INLINE  __forceinline
 # elif defined(__GNUC__)
-#   define RA_INLINE inline __attribute__((always_inline)) 
+#   define RA_INLINE __attribute__((always_inline)) inline
 # else
 #   define RA_INLINE inline
 # endif

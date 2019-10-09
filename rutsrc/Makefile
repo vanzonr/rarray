@@ -1,94 +1,117 @@
-# Makefile
+# 
+# Makefile - make file for rarray unit test library
 #
-# Part of RUT (rarray unit test)
+# Copyright (c) 2017-2019  Ramses van Zon
 #
-# Ramses van Zon, 2017
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+# To install:
+#   make installserialonly [PREFIX=directory]
+# or, for use in mpi applications:
+#   make install [PREFIX=directory]
 #
 
-   VPATH=src
-     LIB=lib
+VPATH=src
 
-      AR=ar rcs
-      SL=ln -s
-      RM=rm -f
+AR=ar rcs
+SL=ln -s
+RM=rm -f
 
-  MPICXX?=mpicxx
-     CXX?=g++
- CXXFLAGS=
-   LDLIBS=-lrut
+MPICXX?=mpicxx
+CXX?=g++
+CXXFLAGS=-g -O0
+LDLIBS=-lrut
 MPILDLIBS=-lrutmpi
-  LDFLAGS=-L$(LIB)
- CPPFLAGS=
 
-  PREFIX?=/usr
+PREFIX?=/usr
 
-   LIBTAG=$(LIB)/.tag
+all: ruttest rutmpitest rutexample1 libraries
 
-all: ruttest rutmpitest rutexample1 $(LIB)/.librut.so.tag $(LIB)/librut.a $(LIB)/.librutmpi.so.tag $(LIB)/librutmpi.a 
+libraries: seriallibrary mpilibrary
+mpilibrary: .librutmpi.so.tag librut.a
+seriallibrary: .librut.so.tag librut.a
 
-ruttest: ruttest.o $(LIB)/.librut.so.tag
-	$(CXX) $(LDFLAGS) -o $@ $< $(LDLIBS)
+library: .librut.so.tag librut.a .librutmpi.so.tag librutmpi.a
 
-rutexample1: rutexample1.o $(LIB)/.librut.so.tag
-	$(CXX) $(LDFLAGS) -o $@ $< $(LDLIBS)
+ruttest: ruttest.o .librut.so.tag
+	${CXX} ${LDFLAGS} -L. -o $@ $< ${LDLIBS}
+
+rutexample1: rutexample1.o .librut.so.tag
+	${CXX} ${LDFLAGS} -L. -o $@ $< ${LDLIBS}
 
 ruttest.o: ruttest.cc rut.h
 
 rutexaple1.o: rutexmple1.cc rut.h
 
-rutmpitest: rutmpitest.o $(LIB)/.librutmpi.so.tag
-	$(MPICXX) $(LDFLAGS) -o $@ $< $(MPILDLIBS)
+rutmpitest: rutmpitest.o .librutmpi.so.tag
+	${MPICXX} ${LDFLAGS} -L. -o $@ $< ${MPILDLIBS}
 
 rutmpitest.o: rutmpitest.cc rut.h
-	$(MPICXX) -D_MPI $(CXXFLAGS) -c -o $@ $<
+	${MPICXX} -D_MPI ${CXXFLAGS} -c -o $@ $<
 
 rut.o: rut.cc rut.h
-	$(CXX) $(CXXFLAGS) -fpic -c -Os -o $@ $<
+	${CXX} ${CXXFLAGS} -fpic -c -Os -o $@ $<
 
 rutmpi.o: rut.cc rut.h
-	$(MPICXX) -D_MPI $(CXXFLAGS) -fpic -c -Os -o $@ $<
+	${MPICXX} -D_MPI ${CXXFLAGS} -fpic -c -Os -o $@ $<
 
-$(LIB)/librut.a: rut.o $(LIBTAG)
-	$(AR) $@ $<
+librut.a: rut.o
+	${AR} $@ $<
 
-$(LIB)/librutmpi.a: rutmpi.o $(LIBTAG)
-	$(AR) $@ $<
+librutmpi.a: rutmpi.o
+	${AR} $@ $<
 
-$(LIBTAG):
-	mkdir -p $(LIB) 
-	touch $(LIB)/.tag
+.librut.so.tag: rut.o
+	${CXX} ${LDFLAGS} -shared -Wl,-soname,librut.so.1 -o librut.so.1.0 rut.o
+	test -h librut.so.1 || ${SL} librut.so.1.0 librut.so.1
+	test -h librut.so || ${SL} librut.so.1 librut.so
+	touch .librut.so.tag
 
-$(LIB)/.librut.so.tag: rut.o $(LIBTAG)
-	$(CXX) $(LDFLAGS) -shared -Wl,-soname,librut.so.1 -o $(LIB)/librut.so.1.0 rut.o
-	test -h $(LIB)/librut.so.1 || $(SL) $(LIB)/librut.so.1.0 $(LIB)/librut.so.1
-	test -h $(LIB)/librut.so || $(SL) $(LIB)/librut.so.1 $(LIB)/librut.so
-	touch $(LIB)/.librut.so.tag
-
-$(LIB)/.librutmpi.so.tag: rutmpi.o $(LIBTAG)
-	$(CXX) $(LDFLAGS) -shared -Wl,-soname,librutmpi.so.1 -o $(LIB)/librutmpi.so.1.0 rutmpi.o
-	test -h $(LIB)/librutmpi.so.1 || $(SL) $(LIB)/librutmpi.so.1.0 $(LIB)/librutmpi.so.1
-	test -h $(LIB)/librutmpi.so || $(SL) $(LIB)/librutmpi.so.1 $(LIB)/librutmpi.so
-	touch $(LIB)/.librutmpi.so.tag
+.librutmpi.so.tag: rutmpi.o
+	${CXX} ${LDFLAGS} -shared -Wl,-soname,librutmpi.so.1 -o librutmpi.so.1.0 rutmpi.o
+	test -h librutmpi.so.1 || ${SL} librutmpi.so.1.0 librutmpi.so.1
+	test -h librutmpi.so || ${SL} librutmpi.so.1 librutmpi.so
+	touch .librutmpi.so.tag
 
 test: ruttest
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB) ./ruttest
+	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./ruttest
 
 mpitest: rutmpitest
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB) mpirun -n 4 ./rutmpitest
-
-.PHONY: clean distclean install
+	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. mpirun -n 4 ./rutmpitest
 
 clean:
-	$(RM) -f ruttest.o rutmpitest.o rut.o rutmpi.o ruttest rutmpitest $(LIB)/.librut.so.tag $(LIB)/.librutmpi.so.tag  rutexample1.o $(LIBTAG)
-	rmdir $(LIB)
+	${RM} ruttest.o rutmpitest.o rut.o rutmpi.o ruttest rutmpitest .librut.so.tag .librutmpi.so.tag rutexample1.o
 
 distclean: clean
-	$(RM) -f rutexample1 ruttest rutmpitest $(LIB)/librut.so $(LIB)/librut.so.1 $(LIB)/librut.so.1.0 $(LIB)/librutmpi.so $(LIB)/librutmpi.so.1 $(LIB)/librutmpi.so.1.0 $(LIB)/librutmpi.a  $(LIB)/librut.a
+	${RM} rutexample1 ruttest rutmpitest librut.so librut.so.1 librut.so.1.0 librutmpi.so librutmpi.so.1 librutmpi.so.1.0 librutmpi.a librut.a
 
-install: lib/librutmpi.so.1.0 lib/librutmpi.a lib/librut.so.1.0 lib/librut.a rut.h
-	cp -f lib/librutmpi.so.1.0 lib/librutmpi.a lib/librut.so.1.0 lib/librut.a $(PREFIX)/lib
-	test -h $(PREFIX)/lib/librut.so.1 || $(SL) $(PREFIX)/lib/librut.so.1.0 $(PREFIX)/lib/librut.so.1
-	test -h $(PREFIX)/lib/librut.so || $(SL) $(PREFIX)/lib/librut.so.1 $(PREFIX)/lib/librut.so
-	test -h $(PREFIX)/lib/librutmpi.so.1 || $(SL) $(PREFIX)/lib/librutmpi.so.1.0 $(PREFIX)/lib/librutmpi.so.1
-	test -h $(PREFIX)/lib/librutpi.so || $(SL) $(PREFIX)/lib/librutmpi.so.1 $(PREFIX)/lib/librutmpi.so
-	cp -f src/rut.h $(PREFIX)/include
+installserialonly: .librut.so.tag librut.a src/rut.h
+	mkdir -p ${PREFIX}/lib
+	mkdir -p ${PREFIX}/include
+	cp -f librut.so.1.0 librut.a ${PREFIX}/lib
+	test -h ${PREFIX}/lib/librut.so.1 || ${SL} ${PREFIX}/lib/librut.so.1.0 ${PREFIX}/lib/librut.so.1
+	test -h ${PREFIX}/lib/librut.so || ${SL} ${PREFIX}/lib/librut.so.1 ${PREFIX}/lib/librut.so
+	cp -f src/rut.h ${PREFIX}/include
+
+install: .librutmpi.so.tag librutmpi.a installserialonly
+	cp -f librutmpi.so.1.0 librutmpi.a ${PREFIX}/lib
+	test -h ${PREFIX}/lib/librutmpi.so.1 || ${SL} ${PREFIX}/lib/librutmpi.so.1.0 ${PREFIX}/lib/librutmpi.so.1
+	test -h ${PREFIX}/lib/librutpi.so || ${SL} ${PREFIX}/lib/librutmpi.so.1 ${PREFIX}/lib/librutmpi.so
+
+.PHONY: all library clean distclean install

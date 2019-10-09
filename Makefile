@@ -1,7 +1,7 @@
 # 
 # Makefile - make file for rarray
 #
-# Copyright (c) 2013-2016  Ramses van Zon
+# Copyright (c) 2013-2019  Ramses van Zon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,38 +21,49 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-# To build and run unit tests:            make test
-# To build and run old unit tests:        make oldtest
-# To run unit tests through valgrind:     make valgrindtest
-# To check code coverage of tests:        make covertest
-# To build and run benchmark test:        make benchmark
-# To build the documentation:             make doc
-# To test the code in the documentation:  make doctest
-# To install the header files:            make install [PREFIX=directory]
+# To install the header files:             make install [PREFIX=directory]
+#
+# This is the only required action.  If (optionally) you want to run
+# the tests and benchmarks, first run './configure' to detect the
+# compiler and certain libraries and create config.mk with the
+# results, then you can do the following:
+#
+# To build and run tests:                 make test
+# To build and run the benchmarks:        make benchmarks
+# To rebuild the headers:                 make headers
+# To rebuild the documentation:           make doc
 #
 
 -include config.mk
 
+SRC=src
+HS=headersources
+
 PREFIX?=/usr
 
-CCL=${CXX}  
 LDFLAGS?=-g
 LDLIBS?= 
 LDFLAGSOPT?=
 LDLIBSOPT?=
-CPPFLAGS=-I.
+CXXFLAGS?=-I. -Irut/include -I${HS} -std=c++11 -O2
+CXXFLAGSDBG?=-I. -Irut/include -I${HS} -std=c++11 -O0 -g
 CXXFLAGSOPT?=-O2
-CHECKCPPFLAGS=-DRA_BOUNDSCHECK
 #MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG -DNOARMADILLO
 #-DNOBLITZ -DNOEIGEN3 -DNOARMADILLO -DNOBOOST
-MORECPPFLAGSOPT?=-DNOBLITZ -DNOBOOST -DNOEIGEN3 -DNOARMADILLO
+MORECPPFLAGSOPT?=-DNOBLITZ -DNOBOOST -DNOEIGEN3 -DNOARMADILLO -DNOOPENBLAS
 MORELDFLAGSOPT?=
 FC?=gfortran
 FFLAGS?=-O2
 
-TESTNAME?=rarraytests
-RUTESTNAME?=rutrarraytestsuite
-OLDTESTNAME?=oldboostlessrarraytestsuite
+# want to add coverage test later:
+#LDFLAGSCOV=-fprofile-arcs -ftest-coverage
+#CXXFLAGSCOV=-fprofile-arcs -ftest-coverage
+#LIBSCOV=
+
+RM=rm -f
+VALGRIND?=valgrind --leak-check=full
+CPPFLAGS=-I. -I${HS}
+
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
 BENCHMARK2DNAMEF=benchmark2Dfrtrn
@@ -64,111 +75,115 @@ help:
 	@echo "This makefile can install, test, and benchmark the rarray library."
 	@echo ""
 	@echo "  To install the header files:            make install [PREFIX=directory]"
-	@echo "  To build and run unit tests:            make test"
-	@echo "  To run unit tests through valgrind:     make valgrindtest"
-	@echo "  To check code coverage of tests:        make covertest"
-	@echo "  To build and run benchmark test:        make benchmark"
+	@echo ""
+	@echo "This is the only required action.  If (optionally) you want to run tests and benchmarks, first run './configure' to detect the compiler and certain libraries and create config.mk with the results, then you can do the following:"
+	@echo ""
+	@echo "  To build and run tests:                 make test"
+	@echo "  To build and run benchmars:             make benchmarks"
+	@echo "  To rebuild the headers:                 make headers"
 	@echo "  To rebuild the documentation:           make doc"
-	@echo "  To test the code in the documentation:  make doctest"
 	@echo ""
-	@echo "Only the first one is mandatory, the other six are all optional and"
-	@echo "not required for installation."
-	@echo ""
-	@echo "Prerequisites (apart from standard unix tools):"
-	@echo "  test, covertest, doctest    config.mk"
-	@echo "  valgrindtest                config.mk + valgrind"
-	@echo "  benchmark                   config.mk"
-	@echo ""
-	@echo "Here, config.mk is a file that must be created by running ./configure first. "
-	@echo "The configure script detects your compiler and searches for the Blitz++, BOOST, "
-	@echo "Armadillo and Eigen libraries for comparison in the benchmarks but will skip "
-	@echo "them if they are not installed."
-	@echo ""
-	@echo ""
-	@echo "Note: The config.mk file is not required for installation, because rarray"
-	@echo "is a header-only library."
 
-all: test valgrindtest covertest benchmark doctest 
+headers: rarray rarrayio
 
-.PHONY: clean test covertest benchmark install doctest doc valgrindtest help
+all: headers test_shared_buffer test_offsets test_shared_shape test_rarray testsuite
 
-config.mk:
-	@echo "Warning: Run 'configure' to create config.mk"
-	@false
+test: run_testsuite run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite
 
-install: rarray rarrayio rarraydoc.pdf rarraymacros.h rarraydelmacros.h hardinclude
+benchmarks: benchmark2d benchmark4d
+
+doc: rarraydoc.pdf
+
+valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite
+
+hardinclude: ${SRC}/hardinclude.cc
+	${CXX} -o $@ $^
+
+rarray: hardinclude ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h
+	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h | ../hardinclude - offsets.h > ../rarray
+
+rarrayio: hardinclude ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h
+	cd ${HS} ; ../hardinclude rarrayio.h rarraymacros.h rarraydelmacros.h > ../rarrayio
+	sed -i 's/"rarray.h"/<rarray>/' rarrayio
+
+install: rarray rarrayio rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
-	./hardinclude rarray rarraymacros.h rarraydelmacros.h > ${PREFIX}/include/rarray
+	cp -p rarray ${PREFIX}/include/rarray
 	cp -p rarrayio ${PREFIX}/include/rarrayio
 	mkdir -p ${PREFIX}/share/rarray
 	cp -p rarraydoc.pdf ${PREFIX}/share/rarray
 
-hardinclude: hardinclude.cc
+rarraydoc.pdf: rarraydoc.tex
+	pdflatex $^
+	pdflatex $^
 
-doc: rarraydoc-new.pdf
+testsuite: testsuite.o rut
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $<  rut/lib/librut.a ${LIBSCOV}
 
-rarraydoc-old.pdf:
-	mv rarraydoc.pdf rarraydoc-old.pdf
+rut:
+	make -C rutsrc installserialonly PREFIX=${PWD}/rut
 
-rarraydoc-new.pdf: rarraydoc.tex rarraydoc-old.pdf
-	pdflatex rarraydoc.tex 
-	pdflatex rarraydoc.tex 
-	mv rarraydoc.pdf rarraydoc0.pdf
-	qpdf --stream-data=uncompress rarraydoc0.pdf rarraydoc.pdf
-	rm -f rarraydoc0.pdf
-	cp -f rarraydoc.pdf rarraydoc-new.pdf
+testsuite.o: ${SRC}/testsuite.cc ${HS}/rarray.h ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h rut
+	${CXX} ${CXXFLAGSDBG} ${CXXFLAGSCOV} -c -o $@ $<  
 
-doctest: doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x config.mk
-	./doc1.x
-	./doc2.x
-	./doc3.x
-	./doc4.x
-	./doc5.x
-	./doc6.x
-	./doc7.x
-	./doc8.x
-	./doc9.x
-	./doc10.x
-	./doc11.x
-	./doc12.x
+test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
+	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
 
-doc%.x: doc%.cc
-	$(CXX) -I. $(CXXFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+test_shared_buffer: test_shared_buffer.o
+	${CXX} ${LDFLAGS} -o $@ $^
 
-doc%.cc: doctestgenerator.sh
-	sh doctestgenerator.sh
+test_offsets.o: ${SRC}/test_offsets.cc ${HS}/offsets.h
+	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
 
-doctestgenerator.sh: rarraydoc.tex config.mk
-	awk '/%TEST THIS/{a=1;n+=1;print "cat > doc" n ".cc << EOF";next}/%END TEST THIS/{a=0; print "EOF\n"}a' rarraydoc.tex | sed -e 's/^  //' -e 's/\\begin{verbatim}/#include <rarray>/' | grep -v verbatim> doctestgenerator.sh
+test_offsets: test_offsets.o
+	${CXX} ${LDFLAGS} -o $@ $^
 
-test: $(TESTNAME) $(TESTXNAME)
-	./$(TESTNAME) --report_level=detailed
+test_shared_shape.o: ${SRC}/test_shared_shape.cc ${HS}/shared_shape.h ${HS}/offsets.h
+	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
 
-rutest: $(RUTESTNAME)
-	./$(RUTESTNAME) --report_level=detailed
+test_shared_shape: test_shared_shape.o
+	${CXX} ${LDFLAGS} -o $@ $^
 
-$(RUTESTNAME): $(RUTESTNAME).cc rut/rut.cc
-	$(CXX) $(CXXFLAGS) -I./rut -o $@ $^
+test_rarray.o: ${SRC}/test_rarray.cc ${HS}/offsets.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/rarray.h
+	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
 
-oldtest: $(OLDTESTNAME)
-	./$(OLDTESTNAME) --report_level=detailed
+test_rarray: test_rarray.o
+	${CXX} ${LDFLAGS} -o $@ $^
 
-valgrindtest: $(TESTNAME)
-	valgrind --tool=memcheck ./$(TESTNAME)
+clean:
+	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc *.cc.gcov *.h.gcov array.gcov  basic_string.tcc.gcov  complex.gcov  list.tcc.gcov  new.gcov  system_error.gcov  vector.tcc.gcov testsuite.gcda testsuite.gcno
 
-$(TESTNAME): $(TESTNAME).o config.mk
-	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+distclean:
+	make clean
+	make rarray rarrayio doc	
+	make clean
+	${RM} test_shared_buffer test_offsets test_shared_shape test_rarray testsuite hardinclude benchmark2Daccess benchmark4Daccess benchmark2Dfrtrn benchmark4Dfrtrn config.mk
+	${RM} -r rut/
+	make -C rutsrc distclean
 
-$(OLDTESTNAME): $(OLDTESTNAME).o config.mk
-	$(CCL) $(TESTLDFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+run_test_shared_buffer: test_shared_buffer
+	${VALGRIND} ./test_shared_buffer
 
-$(TESTNAME).o: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+run_test_offsets: test_offsets
+	${VALGRIND} ./test_offsets
 
-$(OLDTESTNAME).o: $(OLDTESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CHECKCPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+run_test_shared_shape: test_shared_shape
+	${VALGRIND} ./test_shared_shape
 
-benchmark: benchmark2d benchmark4d
+run_test_rarray: test_rarray
+	${VALGRIND} ./test_rarray
+
+run_testsuite: testsuite
+	./testsuite
+	#gcov ./testsuite
+
+run_valgrind_testsuite: testsuite
+	${VALGRIND} ./testsuite
+
+list:
+	@grep '^[^#[:space:]].*:' Makefile
+
+.PHONY: list
 
 benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo Comparison benchmark on a 2d array example
@@ -199,81 +214,25 @@ benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@./$(BENCHMARK4DNAME) 1
 
 $(BENCHMARK2DNAME): $(BENCHMARK2DNAME).o $(PASS).o config.mk
-	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)
+	$(CXX) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)
 
 $(BENCHMARK4DNAME): $(BENCHMARK4DNAME).o $(PASS).o config.mk
-	$(CCL) $(LDFLAGSOPT) -o $@ $(BENCHMARK4DNAME).o $(PASS).o $(LDLIBS)
+	$(CXX) $(LDFLAGSOPT) -o $@ $(BENCHMARK4DNAME).o $(PASS).o $(LDLIBS)
 
-$(BENCHMARK2DNAMEF): $(BENCHMARK2DNAMEF).f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ $(BENCHMARK2DNAMEF).f90 $(PASS)f.o 
+$(BENCHMARK2DNAMEF): ${SRC}/$(BENCHMARK2DNAMEF).f90 $(PASS)f.o config.mk
+	$(FC) $(FFLAGS) -o $@ ${SRC}/$(BENCHMARK2DNAMEF).f90 $(PASS)f.o 
 
-$(BENCHMARK4DNAMEF): $(BENCHMARK4DNAMEF).f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ $(BENCHMARK4DNAMEF).f90 $(PASS)f.o 
+$(BENCHMARK4DNAMEF): ${SRC}/$(BENCHMARK4DNAMEF).f90 $(PASS)f.o config.mk
+	$(FC) $(FFLAGS) -o $@ ${SRC}/$(BENCHMARK4DNAMEF).f90 $(PASS)f.o 
 
-$(PASS)f.o: $(PASS)f.f90 config.mk
+$(PASS)f.o: ${SRC}/$(PASS)f.f90 config.mk
 	$(FC) -c -O0 -g -o $@ $<
 
-$(BENCHMARK2DNAME).o: $(BENCHMARK2DNAME).cc rarray rarraymacros.h rarraydelmacros.h elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+$(BENCHMARK2DNAME).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
+	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4DNAME).o: $(BENCHMARK4DNAME).cc rarray rarraymacros.h rarraydelmacros.h elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGSOPT) -c -o $@ $<
+$(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
+	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(PASS).o: $(PASS).cc config.mk
+$(PASS).o: ${SRC}/$(PASS).cc config.mk
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
-
-covertest: \
- output_from_test.txt  \
- coverage_in_test.txt  \
- coverage_in_code.txt  \
- missing_from_test.txt \
- summary
-
-coverage_in_code.txt: rarray rarraymacros.h rarraydelmacros.h rarrayio
-	@echo "Extracting lines from array.h that generate profile messages"
-	\grep -n RA_IFTRACESAY rarray | grep -v '#define' | grep -v '#undef' | sed -e 's/   RA_IFTRACESAY("//' -e 's/");.*//' -e 's/\/\*\*\///' -e 's/\/\*!!!!\*\///'  | sort -n | sed 's/^[0-9]*: //'> coverage_in_code.txt
-
-coverage_in_test.txt: output_from_test.txt output_from_nitest.txt 
-	@echo "Filtering profile messages from test output"
-	grep -h IFTRACE output_from_test.txt output_from_nitest.txt | sort -u | sed 's/IFTRACE rarray@//' | tr '\t' ' ' | sort -n | sed 's/^[0-9]*: //' > coverage_in_test.txt
-
-output_from_test.txt: profiletests
-	@echo "Run tests with profile messages on"
-	./profiletests 2> output_from_test.txt
-
-output_from_nitest.txt: profilenitests
-	@echo "Run tests with profile messages on"
-	./profilenitests 2> output_from_nitest.txt
-
-missing_from_test.txt: coverage_in_code.txt coverage_in_test.txt
-	@echo "Determine profiling lines in array.h that did not get executed"
-	sort coverage_in_code.txt > _coverage_in_code.txt 
-	sort coverage_in_test.txt > _coverage_in_test.txt
-	comm -2 -3 _coverage_in_code.txt _coverage_in_test.txt | sort -n > missing_from_test.txt
-	rm -f _coverage_in_code.txt _coverage_in_test.txt
-
-profiletests: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
-	@echo "Compile $(TESTNAME).cc and rarray with profile messages on"
-	$(CXX) $(CXXFLAGS) ${TESTCPPFLAGS} $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profiletests ${TESTLDFLAGS} 
-
-profilenitests: $(TESTNAME).cc rarray rarraymacros.h rarraydelmacros.h rarrayio config.mk
-	@echo "Compile $(TESTNAME).cc and rarray with profile messages on and skipping intermediate objects for indexing"
-	$(CXX) -DRA_SKIPINTERMEDIATE $(CXXFLAGS) $(TESTCPPFLAGS) $(CPPFLAGS) -DRA_TRACETEST $(TESTNAME).cc -o profilenitests  $(TESTLDFLAGS)
-
-summary: coverage_in_code.txt coverage_in_test.txt missing_from_test.txt
-	@echo "Summary:"
-	@wc -l coverage_in_code.txt
-	@wc -l coverage_in_test.txt
-	@wc -l missing_from_test.txt
-
-clean:
-	rm -f $(TESTNAME).o $(OLDTESTNAME).o rarrayextest.o $(TESTNAME)-cov.o $(TEXTXNAME).o $(TESTNAME)-ni-cov.o $(BENCHMARK4DNAME).o $(BENCHMARK2DNAME).o $(PASS).o $(PASS)f.o \
-	profiletests profilenitests output_from_test.txt output_from_nitest.txt coverage_in_code.txt coverage_in_test.txt missing_from_test.txt  \
-	doc1.x doc2.x doc3.x doc4.x doc5.x doc6.x doc7.x doc8.x doc9.x doc10.x doc11.x doc12.x \
-	doc1.cc doc2.cc doc3.cc doc4.cc doc5.cc doc6.cc doc7.cc doc8.cc doc9.cc doc10.cc doc11.cc doc12.cc doctestgenerator.sh \
-	rarraydoc.aux rarraydoc.log rarraydoc.out rarraydoc.dvi hardinclude
-
-distclean: clean
-	rm -f config.mk $(TESTNAME) $(OLDTESTNAME) $(BENCHMARK2DNAME) $(BENCHMARK4DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK4DNAMEF) $(TESTXNAME)
-
-

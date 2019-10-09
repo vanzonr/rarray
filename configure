@@ -50,9 +50,13 @@ function detect_library()
     local libvar=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $1}')
     if [ "$incdir" ]; then
         incdir="-I$incdir"
+    elif pkg-config --exists ${modulename,,}; then
+        incdir=$(pkg-config --cflags ${modulename,,})
     fi
     if [ "$libdir" ]; then
         libdir="-L$libdir"
+    elif pkg-config --exists ${modulename,,}; then
+        incdir=$(pkg-config --libs-only-L ${modulename,,})
     fi
     local tmpdir=$(mktemp -d -t configure.XXXXX)
     local tmpfile=$tmpdir/temp.cc
@@ -103,12 +107,12 @@ else
     
     echo -n "Selecting C++ compiler... "
     # compiler must be in the set 
-    compilerset="clang++ xlc++ icpc g++"
+    compilerset="xlc++ icpc g++ clang++"
     # or be specified in the environment variable CXX
     compilerset="${CXX} ${compilerset}"
     for compiler in ${compilerset}; do
         if which ${compiler} >& /dev/null; then
-            CXXMKINC="compiler.${compiler}.mk"  #for each compiler there is an include makefile
+            CXXMKINC="compilerconfigs/compiler.${compiler}.mk"  #for each compiler there is an include makefile
             if [ -f "${CXXMKINC}" ]; then
                 echo ${compiler}
                 CXX=${compiler}
@@ -144,7 +148,6 @@ else
         accincdir=""
         acclibdir=""
         #########################################################
-        detect_library BOOST boost/test/included/unit_test.hpp "" "" ""
         if [ "$accincdir" ]; then
             echo "TESTCPPFLAGS=${accincdir:1}" | sed 's/-IZ/-I$/g' >> config.mk
         fi
@@ -160,18 +163,13 @@ else
         #########################################################
         detect_library BLITZ blitz/array.h -DNOBLITZ "" ""
         #########################################################
-        detect_library EIGEN3 eigen3/Eigen/Dense -DNOEIGEN3 "-DNDEBUG -DEIGEN_NO_DEBUG" ""
+        detect_library EIGEN3 Eigen/Dense -DNOEIGEN3 "-DNDEBUG -DEIGEN_NO_DEBUG" ""
         #########################################################
         detect_library ARMADILLO armadillo -DNOARMADILLO -DARMA_NO_DEBUG ""
+        #########################################################
+        detect_library OPENBLAS openblas_config.h -DNOOPENBLAS -DOPENBLAS ""
         #######################################################
         echo >> config.mk
-        if grep DNOBOOST config.mk &>/dev/null; then
-            echo "TESTNAME=oldboostlessrarraytestsuite" >> config.mk
-
-        else
-            echo "TESTNAME=rarraytests" >> config.mk
-        fi
-        rm -f ./a.out
         # Extra include dirs added to MORECPPFLAGS
         if [ "$accincdir" ]; then
             echo "MORECPPFLAGS=${accincdir:1}"  | sed 's/-IZ/-I$/g' >> config.mk
@@ -184,7 +182,6 @@ else
         # print what to do next
         echo "To build and run unit tests:            make test"
         echo "To run unit tests through valgrind:     make valgrindtest"
-        echo "To check code coverage of tests:        make covertest"
         echo "To build and run benchmark test:        make benchmark"
         echo "To build the documentation:             make doc"
         echo "To test the code in the documentation:  make doctest"

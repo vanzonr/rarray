@@ -28,7 +28,7 @@ program frtrn2dspeed
   implicit none
   
   ! integer, parameter   :: n = 13376
-  integer, parameter   :: n = 10000
+  integer, parameter   :: n = 5000
   integer, parameter   :: repeat = 3
   real(8), parameter   :: eps = 1.0e-6
   integer              :: i,j,k,l,r,countstart,countfinish,countrate,countmax

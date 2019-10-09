@@ -1,9 +1,26 @@
-// rut.cc
+// rut.cc - Implementation part of RUT (rarray unit test)
 //
-// Implementation part of RUT (rarray unit test)
+// Copyright (c) 2017-2019  Ramses van Zon
 //
-// Ramses van Zon, 2017
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+
 #include "rut.h"
 #ifdef _MPI
 #include <mpi.h>
@@ -169,7 +186,9 @@ int main(int argc, char* argv[])
         for (it = tsit->second.begin(); it != tsit->second.end(); ++it)
         {
             std::stringstream testheader;
-            testheader << "Running test case '" << it->first << "' (" << (testindex++) << "/" << tsit->second.size() << ")" << std::endl;
+            //testheader << "Running test case '" << it->first << "' (" << (testindex++) << "/" << tsit->second.size() << ")" << std::endl;
+            testheader <<"["<< (testindex++) <<"/"<< tsit->second.size() << "] "
+                       << it->first << std::endl;
             PRINT_ONCE(testheader);
             std::stringstream testoutput;
             try {
@@ -183,7 +202,7 @@ int main(int argc, char* argv[])
                 // an exception.
                 if (exitcode==0) {
                     if (::_error_counter == 0) {
-                        testoutput << ">>>> " << _prefix << "No errors in '" << it->first << "'.\n";
+                        testoutput << ">>>> " << _prefix << "All checks passed in '" << it->first << "'.\n";
                         testspassed++;
                     } else {
                         testoutput << ">>>> " << _prefix << abs(::_error_counter) << " error(s) in '" << it->first << "'." << std::endl;
@@ -207,7 +226,7 @@ int main(int argc, char* argv[])
                 } else if (error_counter > 0) {                    
                     testoutput << ">>>> " << _prefix << abs(error_counter) << " error(s) detected in '" << it->first << "'.\n";
                 } else {
-                    testoutput << ">>>> " << _prefix << "No errors in '" << it->first << "'.\n";
+                    testoutput << ">>>> " << _prefix << "All checks passed in '" << it->first << "'.\n";
                     testspassed++;
                 }
             }

@@ -23,7 +23,7 @@
 //
 
 #include "elapsed.h"
-#include <rarray>
+#include "rarray.h"
 #include <vector>
 #include <cstdlib>
 #include <cmath>
@@ -43,7 +43,7 @@
 #endif
 
 #ifndef NOEIGEN3
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

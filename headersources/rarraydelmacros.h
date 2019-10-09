@@ -1,7 +1,7 @@
 //
 // rarraydelmacros.h - Undefine checks and inlining macros used in runtime arrays
 //
-// Copyright (c) 2015  Ramses van Zon
+// Copyright (c) 2015-2019  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,8 @@
 // THE SOFTWARE.
 //
 
-#undef RA_IFTRACESAY
 #undef RA_CHECKORSAY
-#undef RA_DUPLICATE_BODY
-#undef RA_QUADRUPLICATE_BODY
-#undef RA_SEXTUPLICATE_BODY
-#undef RA_OCTUPLICATE_BODY
-#undef RA_COMMA
 #undef RA_INLINE
 #undef RA_INLINEF
 #undef RA_INLINE_
-#undef RA_NULLPTR
 

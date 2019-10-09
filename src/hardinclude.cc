@@ -83,8 +83,13 @@ int main(int argc, char** argv)
                   << endl;
         return 1;
     } else {
-        for (int i = 1; i < argc; i++) {
-            if (not file_exists(argv[i])) {
+        if ( ( (argv[1][0] != '-') or (argv[1][1] != '\0')) and (not file_exists(argv[1])) ) {
+            cerr << "ERROR: File " << argv[1]
+                 << " does not exist or is not readable." << endl;
+            return 1;                
+        }
+        for (int i = 2; i < argc; i++) {
+            if ( not file_exists(argv[i]) ) {
                 cerr << "ERROR: File " << argv[i]
                           << " does not exist or is not readable." << endl;
                 return 1;                
@@ -95,8 +100,9 @@ int main(int argc, char** argv)
     }
 
     // start processing:
-    ifstream in(inputfile);
-
+    ifstream infile(inputfile);
+    istream& in = (inputfile[0] == '-'  and inputfile[1] == '\0')?cin:infile;
+        
     while (in.good() && !in.eof()) {
         // read in a line from the file
         string line;

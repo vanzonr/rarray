@@ -3,101 +3,82 @@ rarray - multidimensional array class template
 
 rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
-compilers to generate fast code.  The current version is 1.2.
+compilers to generate fast code.
+
+The current version is 2.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
 named 'LICENSE', and license statements in the source files.
 
-Installation
-============
-
-To use this header-only library, the files rarray and rarrayio must be
-copied to the directory "/usr/include" or some other directory that
-the compiler searches for header files.
-
-Rather than do so by hand, you can use the included Makefile, which
-can also compile the unit tests and benchmarks.  To install without
-running tests or benchmarks, simply do:
-
-    make install PREFIX="[BASEDIR]"
-
-to install the header files in the "[BASEDIR]/include" directory, and
-the documentation in "[BASEDIR]/share/doc".  If the include directory
-is not in the compiler's search path, you will need to pass an option
-to the compiler directing to that directory
-(i.e. -I[BASEDIR]/include).
-
-If you have sudo permissions, you can also do
-   
-    sudo make install
-
-to install the header and documentation to /usr/include and
-/usr/share/doc, respectively.
-
-Testing
-=======
-
-To compile the tests and the benchmarks, the "configure" command needs
-to be run first, in order to set up the makefile for your compiler.
-You can type
-
-    ./configure
-
-or
-
-    ./configure --prefix="[BASEDIR]"
-
-The latter form changes the default location of "make install" from
-"/usr" to "[BASEDIR]".
-
-Note that to pick your compiler, you should have the CXX environment
-variable point to the right compiler command.
-
-If you have a recent gnu, intel, ibm or clang compiler, and the 'make'
-command, then the Makefile should be enough to compile and run the
-unit tests and benchmarks:
-
-    make test
-    make valgrindtest
-    make benchmark
-
-Be aware that the Makefile has not been extensively tested.
-
-The rarray library has been tested with the GNU g++ compiler version
-4.8.0 and up, the Intel C++ compiler version 13, IBM's XL C++ compiler
-version 12 and up, and clang 3.5.
+For details on the installation procedure see the file named 'INSTALL'.
 
 Documentation
 =============
 
-The rarray library comes with documentation in rararaydoc.pdf. To
-re-create the pdf documentation, you need to have pdflatex and qpdf
+The rarray library comes with documentation in rararaydoc.pdf.
+
+The LaTeX source of the documentation is rarraydoc.tex. To re-create
+the pdf documentation from this source, you need to have pdflatex
 installed, and type
 
     make doc
 
-which then runs pdflatex on the LaTeX file rarraydoc.tex.
+Release History and Changes
+===========================
 
-History
-=======
+ * Version 0.x, December 2013
 
-Dec 2013: First implementation of the header-only library rarray for runtime (dynamic) multidimensional arrays
+   First implementation of the header-only library rarray for runtime
+   (dynamic) multidimensional arrays. Added references counting around
+   that time.
 
-Jan 2014: Version 1.0: Code put on github
+ * Version 1.0, January 2014
 
-Mar 2015: Version 1.1: Changed the text output format used to use newlines
+   Code put on github.
 
-Feb 2017: Version 1.2: Added c++11 aliases rvector, rmatrix and
-                       rtensor. Eliminated the need for rarraymacros.h
-                       and rarraydelmacros.h in the installed version
-                       of rarray.
+ * Version 1.1, March 2015
 
-Known Bugs
-==========
+   Changed the text output format used to use newlines.
+   Reference counting removed. 
 
-The current reference counting scheme fails when using slices of
-rarrays where the original rarray is deleted or out of scope.
+ * Version 1.2, February 2017
+
+   Added c++11 aliases rvector, rmatrix and rtensor. Eliminated the
+   need for rarraymacros.h and rarraydelmacros.h in the installed
+   version of rarray. Reference counting reenabled.
+
+ * Version 2.0, October 2019
+
+   To fix a persistent memory leak, rarray was rewritten from the
+   ground up, leaving most of the API unchanged, except for the
+   following:
+   
+     - From this version on, rarray only works with C++11 (or higher).
+
+     - To use the member function rarray::reshape() with a new shape
+       that is smaller than the old one, an additional function
+       parameter "ra::RESIZE::ALLOWED" must be supplied.
+     
+     - To get array bounds checking of indices, you must use the new
+       at() member function of rarray instead of square parenthesis.
+
+     - Rarray now has its own unit testing library, 'rut'.
+
+Known issues
+============
+
+  * Reference counting should be atomic, but isn't yet. Creating
+    shallow copies in threaded code can thus lead to race conditions.
+
+  * Defining RA_BOUNDSCHECK only activates partial bounds checking
+    because some the optional but expensive index-range chekcing
+    capability got lost in the rewrite.
+
+  * To get a sub-array, you need to use the rarray::at() member
+    function. 
+
+  * Rarray objects automatically convert into T*const*... pointers.
 
 Reporting Bugs
 ==============
@@ -110,54 +91,20 @@ reported to the same address.
 Files
 =====
 
-rarray                 The (header-only) library defining runtime arrays.
+In the top directory
+---------------------
 
-rarrayio               Additional I/O routines for the runtime arrays
-
-rarraymacros.h         Internal header files
-rarraydelmacros.h
+rarray                 Header file defining runtime arrays (produced from headersources)
+rarrayio               Header file defining I/O for rarrays (produced from headersources)
 
 rarraydoc.tex          LaTeX source of the documentation
 rarraydoc.pdf          Pdf format of the documentation
 
-rarraytests.cc         regression test suite (using Boost.Test)
-
-oldboostlessrarraytestsuite.cc older regression test suite (without Boost.Test)
-
-benchmark2Daccess.cc   benchmark code for 2d arrays comparing rarray,
-                       blitz, eigen, boost, armadillo, dynamic and
-                       automatic arrays
-
-benchmark2Dfrtrn.f90   fortran benchmark code for 2d arrays for
-                       comparison
- 
-benchmark4Daccess.cc   benchmark code for 4d arrays comparing rarray,
-                       blitz, eigen, biist. dynamic and automatic
-                       arrays
-
-benchmark4Dfrtrn.f90   fortran benchmark code for 4d arrays for
-                       comparison
-
-elapsed.h              Header file used by the benchmarks to measure
-                       elapsed time
-
-optbarrier.cc          Contains dummy function whose call acts as a 
-                       barrier against code reordering; used in the
-                       c++ benchmarks to avoid skewed comparisons
-
-optbarrierf.f90        Fortran version of optbarrier.cc
-
 configure              A non-autotools configure script for compiling 
                        benchmarks; Creates config.mk
 
-compiler.clang++.mk    Compiler dependence flags for the Makefile. Used
-compiler.g++.mk        as input to create config.mk by configure
-compiler.icpc.mk
-compiler.xlC.mk
-compiler.xlc++.mk
-
-Makefile               Makefile to build example, regression tests, 
-                       benchmarks, and documentation pdf; Reads in config.mk
+Makefile               Makefile to build unit tests, benchmarks, and
+                       documentation pdf; Uses config.mk 
 
 WARRANTY               File that expresses that there is no warranty
 
@@ -165,18 +112,92 @@ LICENSE                Text of the MIT license
 
 AUTHOR                 Name and email address of the author
 
+INSTALL                More hints on how to install and build tests and benchmarks.
+
 READMEBENCHMARK.txt    Explanation of what the 2d and 4d benchmarks
                        actually do
 
-npyexample.cc          Rough example on how to write a rarray to a
-                       numpy file.
-
-rarrayfftwexample.cc   Example of using rarray in combination with 
-                       the FFTW3 library.
-
-rarrayblasexample.cc   Example of using rarray in combination with 
-                       the cblas interface to the BLAS library.
-                       
 README.md              This file.
 
-- 8 March 2016
+
+In the directory 'headersources'
+---------------------------------
+
+elapsed.h              Header to measure time, used in benchmarks
+
+rarray.h               Header source file defining runtime arrays
+ 
+rarrayio.h             Header source file for I/O routines
+ 
+rarraymacros.h         Internal macros and functions
+rarraydelmacros.h
+
+shared_buffer.h        Internal header that implements a reference-counted array
+shared_shape.h         Internal header that implements a reference-counted shape structure
+offsets.h              Internal header to compute pointer offsets within the shape structure
+
+
+In the directory 'src'
+-----------------------
+
+hardinclude.cc         Code that creates generates the header files
+                       from the internal headersources.
+
+test_rarray.cc         Simple tests for rarray
+
+testsuite.cc           Rarray unit test/regression test suite (using 'rut')
+
+test_offsets.cc        Tests for internal offsets.h header
+
+test_shared_buffer.cc  Tests for internal shared_buffer.h header
+
+test_shared_shape.cc   Tests for internal shared_shape.h header 
+
+benchmark2Daccess.cc   Benchmark code for 2d arrays comparing rarray,
+                       blitz, eigen, boost, armadillo, dynamic and
+                       automatic arrays
+
+benchmark4Daccess.cc   Benchmark code for 4d arrays comparing rarray,
+                       blitz, eigen, biist. dynamic and automatic
+                       arrays
+
+optbarrier.cc          Contains dummy function whose call acts as a 
+                       barrier against code reordering; used in the
+                       c++ benchmarks to avoid false comparisons
+
+benchmark2Dfrtrn.f90   Fortran benchmark code for 2d arrays
+ 
+benchmark4Dfrtrn.f90   Fortran benchmark code for 4d arrays
+
+optbarrierf.f90        Fortran version of optbarrier.cc
+
+
+In the directory 'compilerconfigs'
+-----------------------------------
+
+compiler.clang++.mk    Compiler dependence flags for the Makefile. Used
+compiler.g++.mk        as input to create config.mk by configure
+compiler.icpc.mk
+compiler.xlC.mk
+compiler.xlC_r.mk
+compiler.xlc++.mk
+
+
+In the directory 'rutsrc'
+-------------------------
+
+This contains code for the unit test library (only used for rarray unit tests).
+
+Makefile               Makefile to build the rut library
+  
+In subdirectory 'src':
+   
+  rut.h                Header file for the unit test library
+  rut.cc               Implementation file for the unit test library
+  rutexample1.cc       Example of using rut
+  ruttest.cc           Test of using rut (should fail)
+  rutmpitest.cc        Test of using rut with mpi (preliminary)
+
+
+
+- October 2019

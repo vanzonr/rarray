@@ -1,6 +1,7 @@
-// rutexample1.cc - example for the rarray-unit-test (rut)
 //
-// Copyright (c) 2017-2019  Ramses van Zon
+// test_rarray.cc - simple tests for rarray
+//
+// Copyright (c) 2019  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,28 +22,13 @@
 // THE SOFTWARE.
 //
 
-#include "rut.h"
-#include <iostream>
+#include "rarray.h"
 
-int add( int i, int j ) { return i+j+1; }
-
-TEST_SUITE(mytestsuite)    
-
-UNIT_TEST(testname)
+int main()
 {
-    WARN(1==1);
-    // six ways to detect and report the same error:
-    CHECK( add(2,2) == 4 );          // #1 continues on error
-    REQUIRE( add(2,2) == 5 );        // #2 throws on error
-    if ( add(2,2) != 4 )
-        ERROR( "Ouch...");           // #3 continues on error
-    if ( add(2,2) != 5 )
-        FAIL( "Ouch..." );           // #4 throws on error
-    if ( add(2,2) != 4 )
-        throw "Oops...";                   // #5 throws on error
-    return add(2,2) == 4 ? 0 : 1;          // #6 returns error code
+    rarray<double,2> a(100,100);
+    double *const*z = a;
+    a[2][3] = 4.4;
+    return !(int(a[2][3])==4);
 }
-END_UNIT_TEST
-
-END_TEST_SUITE
 

@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{February 2, 2017 (version 1.2)\vspace{-7mm}}
+\date{October 8, 2019 (version 2.0)\vspace{-7mm}}
 
 \maketitle
 
@@ -52,7 +52,7 @@ libraries (CBLAS, LAPACKE).
 
 \noindent\textbf{How:}
 
-The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. For io, use the additional header file \texttt{rarrayio}.
+The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. For I/O, use the additional header file \texttt{rarrayio}.
 
 \
 
@@ -90,7 +90,7 @@ data pre-allocated at a pointer \texttt{ptr}:&
 \texttt{rarray<float,3> h=RARRAY(f).copy();}
 \\
 \rule{0pt}{14pt}Output a rarray to screen:&
-\texttt{std::cout << h << endl;}
+\texttt{std::cout << h << std::endl;}
 \\
 \rule{0pt}{14pt}Read a rarray from keyboard:&
 \texttt{std::cin >> h;}
@@ -145,9 +145,18 @@ dynamically allocated during runtime, is as follows:
   }
 \end{verbatim}%
 \vspace{-12pt}\end{framed}\vspace{-5pt}%
-Drawbacks of this solution are the non-contiguous buffer for the
-elements (so it's unusable for many libraries) and having to keep
-track of array dimensions.
+Drawbacks of this solution are:
+\begin{itemize}
+  \item the non-contiguous buffer for the elements, making it unusable
+    for many numerical libraries,
+  \item having to keep track of array dimensions,
+  \item having the intermediate pointers be non-const, so the
+    internal pointer structure can be changed
+    (conceptually, \texttt{a} ought to be of type \texttt{float*const*const*}, which would prevent this, but then one wouldn't be able to
+    assign to be intermediate pointers in the above code, and therefore wouldn't be able
+    to create the array except with some delicate const casts\footnote{Truth
+      be told, the rarray library does that, but only internally}).
+\end{itemize}
 At first, there seems to be no shortage of libraries to fill this
 lack of \cxx\ support for dynamic multi-dimensional arrays, such as
 \begin{itemize}\itemsep 0pt \parskip 0pt
@@ -159,7 +168,9 @@ lack of \cxx\ support for dynamic multi-dimensional arrays, such as
 \end{itemize}
 These typically do have some runtime overhead compared to the above
 textbook solution, or do not allow arbitrary ranks. In contrast, the purpose of the rarray
-library is to be a minimal interface for runtime multidimensional arrays with
+library is to be a minimal interface for runtime multidimensional
+arrays of
+arbitrary rank with
 \emph{minimal to no performance overhead} compared to the textbook solution.
 
 \noindent{\bf Example:\vspace{-7pt}}
@@ -169,7 +180,7 @@ library is to be a minimal interface for runtime multidimensional arrays with
   #include <rarray>
   int main() 
   {
-     rarray<float,3> a(256, 256, 256);
+     rtensor<float> a(256, 256, 256);
      a[1][2][3] = 105;
   }
 \end{verbatim}%
@@ -177,7 +188,7 @@ library is to be a minimal interface for runtime multidimensional arrays with
 \vspace{-14pt}%
 \end{framed}
 
-\noindent{\bf Design Points}
+\noindent{\bf Design Points of rarray}
 
 \begin{enumerate}\itemsep1pt\parskip3pt
  
@@ -188,7 +199,7 @@ structure.
 
 The compatibility requirement with pointer-to-pointer structures
 is achieved by allocating a pointer-to-pointer structure. This
-accounts for most of the memory overhead of using rarray.
+structure accounts for most of the memory overhead from using \texttt{rarray}.
 
 \item To be as fast as pointer-to-pointer structures.
 
@@ -203,8 +214,6 @@ Relatedly, it should be allowed to use an existing buffer.
     
 The guarrantee of contiguity means strided arrays are not supported.
 
-\item To optionally allow bounds checking.
-
 \item To avoid some of the cluttered sematics around \texttt{const} correctness when converting to pointer-to-pointer structers.
 \end{enumerate}
 
@@ -215,13 +224,12 @@ The guarrantee of contiguity means strided arrays are not supported.
 \item Views on pre-allocated contiguous arrays.
 \item Does shallow, reference counted, copies by default, but also has a deep {\tt copy}
   method.
-\item Use of move semantics when used in c++11 (for efficiency).
+\item Use of c++11 move semantics for efficiency (from version 2.0
+  onwards, rarray requires c++11).
 \item Can be emptied with the {\tt clear} method.
 \item Can be filled with a uniform value with the {\tt fill} method.
 \item Can be reshaped.
 \item Automatic C-style arrays can be converted to rarrays using {\tt RARRAY}.
-\item Checks index bounds if the preprocessor
-  constant {\tt RA\_BOUNDSCHECK} is defined. 
 \item A method {\tt is\_clear} to check if the rarray is uninitialized.
 \item A method to get the number of elements in each
   dimension (\texttt{extent}), or in all dimensions (\texttt{shape}).
@@ -250,6 +258,7 @@ To use \texttt{rarray}, first include the header file:
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
+\noindent
 This defines the (template) classes \texttt{rarray{\tt<}T,R{\tt>}}, where
 \texttt T is the element type, and \texttt R is the
 rank (a positive integer).  Instances can now be
@@ -286,7 +295,7 @@ release the memory of this array.
 
 The construction specifying a number of extents as arguments works for arrays with rank up to and including 11. For arrays with larger rank, you have to pass an pointer to the array of extents.
 
-\subsection{rvector, rmatrix, rtensor (c++11 only)}
+\subsection{Shorthand rarray types: rvector, rmatrix, rtensor}
 
 When compiling in c++11 mode, there are short cut types for
 one-dimensional, two dimensional and three dimensional arrays, called
@@ -298,10 +307,8 @@ rvector<T> = rarray<T,1>
 rmatrix<T> = rarray<T,2>
 rtensor<T> = rarray<T,3>
 \end{verbatim}
-\end{framed}
-
-This only works in the c++11 standard and above.
-
+\vspace{-18pt}\end{framed}\noindent
+for any type \texttt{T}.
 
 \subsection{Accessing the elements}
 
@@ -336,19 +343,19 @@ large rarrays in this way is rather impractical.
 
 \subsection{Copying and function arguments}
 
-In C++, when we copy a variable of a built-in type to a new variable, the new copy is completely independent of the old variable. Likewise, the default way of passing arguments to a function involves a complete copy for built-in types.  For C-style arrays, however, only the pointer to the first element gets copied, not the whole array. The latter is called a shallow copy. Rarrays use shallow copies much like pointers. 
+In C++, when we copy a variable of a built-in type to a new variable, the new copy is completely independent of the old variable. Likewise, the default way of passing arguments to a function involves a complete copy for built-in types.  For C-style arrays, however, only the pointer to the first element gets copied, not the whole array. The latter is called a shallow copy. Rarrays use shallow copies much like pointers, but uses reference counting to know when memory can be released (similar to the \texttt{std::shared\_ptr<T>} of C++11). 
 
 What does this essentially mean? Well:
 \begin{enumerate}
 \item You can pass rarrays by value to function, which is as if you
-  were passing a pointer. (Passing by reference also works.)
+  were passing a pointer.\linebreak (Passing by reference also works.)
 \item When you assign one rarray to another, the other simply points to the old one.
 \item If you wish to do a deep copy, i.e., create a new array independent of the old array, you need to use the \texttt{copy} method.
 \end{enumerate}
 
 \subsection{Returning a rarray from a function\label{returnvalues}}
 
-Because rarray uses reference counting, returning a rarray from a
+Because rarray uses reference counting and implements move semantics, returning an rarray from a
 function poses no problems.
 
 Consider the function \texttt{zeros} used in \texttt{main()}:
@@ -370,18 +377,11 @@ int main() {
 %END TEST THIS
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
-In line 2, a rarray \texttt{r} is created, and filled, on line 3, with zeros.
-What happens on line 4, depends on whether the compiler supports the
-C++11 standard. If it does, things work as intended, in that on line 4, \texttt{r} gets moved out of
+In line 2, a rarray \texttt{r} is created, and filled, on line 3, with
+zeros. On line 4, \texttt{r} gets moved out of
 the function and into \texttt{s}, using C++11's move
 semantics. Move semantics cause \texttt{r} to be left in an empty state
-that will not deallocate the memory associated with the array upon
-exiting the function, leaving that task to \texttt{s} in the caller. However, if the compiler does not support move semantices,
-then on line 4, the array \texttt{r} is shallowly copied out of the
-function and into \texttt{s} on line 7. Once copied into \texttt{s},
-Because in this process, reference counters keep track of whether the
-data in the rarray is still used, \texttt{r} does not get destroyed or
-left in an invalid state, and things still work as intended.
+that will not deallocate the memory associated with the array \texttt{s}.
 
 \subsection{Reshaping the rarray}
 
@@ -395,17 +395,18 @@ void dump(const rarray<double,3>& r) {
    rarray<double,1> rflat(r.data(), r.size());
    for (int i=0;i<r.size();i++)
        std::cout << rflat[i] << ' ';
-  std::cout << std::endl;
+   std::cout << std::endl;
 }
 \end{verbatim}%
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
-\item or one can reshape the existing rarray with the desired dimensions. E.g.
+\item or one can reshape the existing rarray with the desired
+  dimensions. E.g.
 \vspace{-2pt}
 \begin{framed}\vspace{-4pt}%
 \begin{verbatim}
 void dump(rarray<double,3> r) {
-   r.reshape(r.data(), 1, 1, r.size());
+   r.reshape(1, 1, r.size());
    for (int i=0;i<r.size();i++)
        std::cout << r[0][0][i] << ' ';
   std::cout << std::endl;
@@ -413,38 +414,38 @@ void dump(rarray<double,3> r) {
 \end{verbatim}%
 \vspace{-12pt}
 \end{framed}\vspace{-8pt}
-The latter only works if the new and old shape have the same ranks.
 \end{enumerate}
-It should be stressed that the last example has no side effects for
-the shape of the original rarray that was passed to the \texttt{dump}
-function, that original arrays retains its shape.
-Note that in both methods, the total size of the new shape should be
-less or equal to that of the old shape, because no additional data is
-allocated by the reshape method.
+The latter only works if the new and old shape have the same ranks and
+the number of elements stays the same. It is possible to reshape an
+rarray to have less elements, but only by explicitly passing a last
+parameter \texttt{ra::RESIZE::ALLOWED}, e.g.
+\begin{framed}\vspace{-4pt}%
+\begin{verbatim}
+void dump(rarray<double,3> r) {
+   r.reshape(1, 1, r.size()/2, ra::RESIZE::ALLOWED);
+   for (int i=0;i<r.size();i++)
+       std::cout << r[0][0][i] << ' ';
+  std::cout << std::endl;
+}
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}
+\noindent It should be stressed that the last example has no side effects for
+the shape of the original rarray that was passed to the function,
+because the rarray was passed by value, which implies a shallow copy;
+the original array retains its shape. It the array was passed by
+reference, the original array would of course be changed.
 
-\subsection{Optional bounds checking}
-
-If the preprocessor constant \texttt{{\tt RA\_BOUNDSCHECK}} is defined, an
-\texttt{out\_of\_bounds} exception is thrown~if
-\begin{itemize}\itemsep0pt\parskip3pt
-\item an index is too small or too large;
-\item the size of dimension is requested that does not exist (in a call to \texttt{extent(int i)});
-\item a constructor is called with a zero pointer for the buffer or for the dimensions array;
-\item a constructor is called with too few or too many arguments (for \texttt{R}$<=11$).
-\end{itemize}
-\texttt{{\tt RA\_BOUNDSCHECK}} can be defined by
-adding the {\tt -DRA\_BOUNDSCHECK} argument to the compilation command, or
-by \texttt{{\tt\#define RA\_BOUNDSCHECK}} before
-the \texttt{{\tt\#include <rarray>}} in the source.
-%\\
-%Regardless of \texttt{{\tt RA\_BOUNDSCHECK}}, an exception is raised if the %memory allocation for rarray fails.
+It is never possible to do a reshape that leads to more elements,
+because, by design, the reshape method should not allocated any
+memory.
 
 %\pagebreak
 
 \section{Comparison with standard alternatives}
 
-The more-or-less equivalent automatic array version 
-
+Compared to the textbook method (page 3) or the rarray method (page 4)
+of declaring an array, the more-or-less equivalent automatic array version 
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
   float arr[256][256][256]; 
@@ -453,12 +454,12 @@ The more-or-less equivalent automatic array version
 \vspace{-14pt}\end{framed}
 \noindent
 is a little simpler, but automatic arrays are allocated on the stack,
-which is typically of limited size. Another drawback is that this array cannot be passed to functions that do
-not hard-code exactly matching dimensions except for the last
+which is typically of limited size. Another big drawback is that this array cannot be passed to functions that do
+not hard-code exact matching dimensions except for the last
 one.
 
 Using rarray also has benefits over another common \cxx\ 
-solution using the STL:
+solution, i.e. using the Standard Template Library:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 %TEST THIS
 \begin{verbatim}
@@ -492,29 +493,29 @@ Effectively, the interface part of a rarray object is defined as follows:%
 template<typename T, int R>
 class rarray {
 public:    
- rarray();                               // create uninitialized array
- rarray(int extent0, ...);               // constructor for R<=11
- rarray(const int* extents);             // alternative: extents in array
- rarray(T* data, int extent0, ...);      // construct with existing data
- rarray(T* data, const int* extents);    // alternative: extents in array
- rarray(const rarray<T,R> &a);           // shallow copy constructor   
- ~rarray();                              // destructor 
- void reshape(int extent0, ...);         // change copy's shape (not data)
- void reshape(const int* extent);        // change copy's  shape (not data)
- void         clear();                   // release memory
- void         fill(const T& value);      // fill with uniform value
- bool         is_clear();         const; // check if uninitialized;
- rarray<T,R>  copy()              const; // deep copy
- const int*   shape()             const; // all extents as C-style array
- int          extent(int i)       const; // extent in dimension i
- int          size()              const; // total number of elements
- T*           data()              const; // start of internal buffer
- T*const*...  ptr_array();        const; // convert to a T*const*... 
- T**...       noconst_ptr_array() const; // converts to a T**... 
- rarray<const T,R>&  const_ref()  const; // convert to const elements
+ rarray();                                 // create uninitialized array
+ rarray(size_type extent0, ...);           // constructor for R<=11
+ rarray(const size_type* extents);         // alternative: extents in array
+ rarray(T* data, size_type extent0, ...);  // construct with existing data
+ rarray(T* data, const size_type* extents);// alternative: extents in array
+ rarray(const rarray<T,R> &a);             // shallow copy constructor   
+ ~rarray();                                // destructor 
+ void reshape(size_type extent0, ...);     // change copy's shape (not data)
+ void reshape(const int* size_type);       // change copy's  shape (not data)
+ void clear();                             // release memory
+ void fill(const T& value);                // fill with uniform value
+ bool is_clear() const;                    // check if uninitialized;
+ rarray<T,R> copy() const;                 // deep copy
+ const size_type*  shape() const;          // all extents as C-style array
+ size_type extent(int i) const;            // extent in dimension i
+ size_type size() const;                   // total number of elements
+ T* data() const;                          // start of internal buffer
+ T*const*... ptr_array() const;            // convert to a T*const*... 
+ T**... noconst_ptr_array() const;         // converts to a T**... 
+ rarray<const T,R>&  const_ref() const;    // convert to const elements
  rarray<T,R>& operator=(const rarray<T,R> &a);// shallow assignment
- rarray<const T,R-1> operator[](int i) const; // element access
- rarray<T,R-1>       operator[](int i);       // element access
+ operator T*const*... ();                  // enables element access for assignment
+ operator const T*const*... () const;      // enables element access with []
 };
 \end{verbatim}
 \end{framed}
@@ -548,7 +549,8 @@ This method returns a pointer to the first element of the array.
 
 \noindent\textbf{Definition:} \texttt{T*const*... ptr\_array() const;}
 
-This method returns a pointer to a \texttt{T*const*...}. 
+This method returns a pointer to a \texttt{T*const*...}.  Note that
+rarrays have an automatic conversion to this type.
 
 %\subsubsection{Get const-casted pointer equivalent: \tt noconst_ptr\_array}
 
@@ -564,7 +566,9 @@ This method creates reference to this with const elements.
 
 \noindent\textbf{Definition:} \texttt{void reshape(int extent0, ...);}
 
-This method can be used to change the shape of the rarray. The data in the underlying buffer will not change. Note that the number of dimensions must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11. 
+This method can be used to change the shape of the rarray. The data in
+the underlying buffer will not change. Note that the number of
+dimensions (i.e., the rank) must remain the same and the total new size must be less or equal to the old size.  This works only for arrays with rank up to and including 11. 
 
 \noindent\textbf{Definition:} \texttt{void reshape(const int* extents);}
 
@@ -621,12 +625,13 @@ will print the following:
 {5,6}
 }
 \end{verbatim}
-Apart from inserting curly braces, commas, and newlines, The streaming operators use those of the element types. 
+Apart from inserting curly braces, commas, and newlines, the streaming
+operators use the streaming operators of the element types. 
 
 The streaming operators are designed such that the format that is
 written out by the \texttt{<<} operator, should be readable by the
 \texttt{>>} operator.  
-Without further formatting tules, reading would not be unambiguous for
+Without further formatting rules, reading would not be unambiguous for
 some types, e.g. for
 \texttt{std::string}, that can contain the syntactic elements
 `\texttt{\{}', `\texttt{\}}', `\texttt{,}', or `\texttt{\#}'.  If these elements are found in the output of an element, the element is prepended with a string that encodes the string length of the output. This prepending string starts with a '\texttt\#' character, then the length of the string output for the element  (excluding the prepended part), followed by a `\texttt:' character.
@@ -647,8 +652,6 @@ whitespace in the input.
 
 \subsection{General performance consideration}
 
-(Note: flags in this section are given in their linux notation).
-
 \noindent
 \texttt{rarray} is written specifically with performance in
 mind. However, the way it manages to mimic the natural c and c++ way
@@ -663,9 +666,7 @@ Rarray is meant to be used with higher levels of optimization. When
 compiled with higher optimization levels, such as \texttt{-O3
   -fstrict-aliasing} for \texttt{g++}, inlining should make the rarray
 objects at least as fast as the textbook solution for multidimensional
-arrays mentioned in the introduction, for most
-compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on
-x86, and with xlC 12.1 on power 6).
+arrays mentioned in the introduction.
 
 \subsection{Debugging}
 
@@ -712,18 +713,6 @@ The memory overhead here comes from having to store the dimensions and a pointer
 
 There is an overhead in the compilation stage, but this is very compiler dependent.
 
-\subsection{More details regarding the performance overhead}
-
-As mentioned above, when compiled with optimization on (\texttt{-O3 -fstrict-aliasing} is a good default), inlining should make the rarray objects at least as fast as the textbook solution above, for most compilers (tested with gcc 4.6.1 -- 4.8.2 and, icc 12.1.5 -- 13.1.1 on x86, and with xlC 12.1 on power 6).
-So in that sense, no there is no performance overhead.  However, with \texttt{{\tt RA\_BOUNDSCHECK}} defined, one incurs a compiler and machine dependent performance hit.
-
-Let us give a bit more details as to why there should not be any performance overhead. Temporary intermediate expression in a multi-bracketed expression (such as a[5] in a[5][6][7]) are represented by an intermediate class called rarray\_intermediate. This prevents assignment to such expressions and allows the optional bound checking to work.  Most compilers (gcc, intel) can optimize these intermediate classes away when bounds checking is off. However
-some compilers (e.g. pgi) cannot do this and suffer from speed degredation because of these intermediate objects.
-
-To get full speedup for these less-optimizing compilers, you can define the preprocessor constant \texttt{RA\_SKIPINTERMEDIATE} (usually with a \texttt{-DRA\_SKIPINTERMEDIATE} compiler option).  Intermediate expression in a multi-bracketed expression are then replaced by bare pointers-to-pointers.
-
-Note that when \texttt{RA\_BOUNDSCHECK} is set, it will switch off \texttt{RA\_SKIPINTERMEDIATE}.
-
 \section{Working with libraries}
 \label{libraries}
 
@@ -739,12 +728,12 @@ fortran based and their API requires that
 \end{enumerate}
 Rarray helps in satisfying these requirement as follows:
 \begin{enumerate}
-\item Elements of a rarray are always stored contiguously in memory
+\item Elements of a rarray are always stored contiguously in memory.
 \item The pointer to the first elements of the array can be found with
-  the member function \texttt{data}
+  the member function \texttt{data()}.
 \item The dimensions of the arrays can be found from
-    the\texttt{extent} member functions of rarray (or, for
-    one-dimensional arrays, with the \texttt{size} function.
+    the \texttt{extent} or \texttt{shape} member functions of rarray (or, for
+    one-dimensional arrays, also with the \texttt{size} member function).
 \end{enumerate}
 
 Here is an example to call the matrix-matrix multiplication routine
@@ -757,15 +746,15 @@ from blas, using the cblas interface:
   #include <rarrayio>
   #include <cblas.h>
   int main() {
-     int m = 2, k=3, n =4;
-     rarray<double,2> a(m,k), b(k,n), c(m,n);
+     int m=2, k=3, n=4;
+     rmatrix<double> a(m,k), b(k,n), c(m,n);
      a = 1,-2,3,
          2,-1,0;
      b = -1,3,-2,1,
          -2,1,-3,2,
          -3,2,-1,3;
      cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                 c.extent(0),c.extent(1),a.extent(1), 1.0,
+                 c.extent(0), c.extent(1), a.extent(1), 1.0,
                  a.data(), a.extent(1),
                  b.data(), b.extent(1),
                  1.0,
@@ -795,7 +784,7 @@ rarray:
   #include <fftw3.h>
   int main() {
      int n = 4;
-     rarray<std::complex<double>,1> a(n), b(n);
+     rvector<std::complex<double>> a(n), b(n);
      a = 1.3+5.0i, 1.0, 5.0i, 2.0-5.0i;
      fftw_plan plan = fftw_plan_dft_1d(a.size(),
                         (fftw_complex*)a.data(), (fftw_complex*)b.data(), 
@@ -888,7 +877,6 @@ With the \texttt{const} keyword, the number of useful \cxx\ forms for multidimen
  \texttt{T*}, \texttt{const T*}, \texttt{T*const*}, \texttt{const T*const*}, \texttt{T**}, and \texttt{const T**}.
 Using the rarray library, const-correct argument passing requires the \texttt{data} or \texttt{ptr\_array} method but non-const-correct argument passing will require the \texttt{noconst\_ptr\_array} function, possibly combined with \texttt{const\_ref}.
 We will briefly looking at these cases separately now.
-%  Each will be started with a simple example, followed by an explanation.
 
 \subsection{Conversion to a {\tt T*} or a {\tt const T*}}
 
@@ -942,8 +930,11 @@ C++ accepts a \texttt{float*} instead of a \texttt{const float*}, so \texttt{dat
 \subsection{Conversion to a {\tt T*const*} or a {\tt const T*const*} }
 
 \noindent
-In \texttt{T*const*}, the middle const means that one cannot reassign the row pointers.
-The rarray classes can be converted to this type using the \texttt{ptr\_array()} method. 
+In \texttt{T*const*}, the middle const means that one cannot reassign
+the row pointers. 
+The rarray classes can be converted to this type using the
+\texttt{ptr\_array()} method, but rarrays  also an automatic
+conversion to this type.
 For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt{T*const*const*const*}, etc.
 
 \noindent
@@ -959,6 +950,8 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
   int main() {
      rarray<float,2> s(40, 40);
      fill3(s.ptr_array(), s.extent(0), s.extent(1), 3.14);
+     // or, since rarray 2.0:
+     fill3(s, s.extent(0), s.extent(1), 3.14);
   }
 \end{verbatim}%
 %END TEST THIS
@@ -979,6 +972,7 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
   int main() {
      rarray<float,2> s(40, 40);
      float z = add4(s.ptr_array(), 40, 40);
+     // or,, since rarray 2.0,  z = add4(s, 40, 40);
   }
 \end{verbatim}%
 %END TEST THIS
@@ -987,7 +981,7 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
 
 \noindent
 \cxx\ accepts a \texttt{T*const*} where a \texttt{const T*const*} is expected, so here one can again use the method \texttt{ptr\_array()}.
-This extends to its generalizations \texttt{const T*const*const*}, \texttt{const T*const*const*const*}, etc., as well.
+This extends to its generalizations \texttt{const T*const*const*},\linebreak \texttt{const T*const*const*const*}, etc., as well.
 
 
 \subsection{Conversion to a {\tt T**}}
@@ -1044,46 +1038,85 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
 
 \section{Installation}
 
-To use this header-only library, you can copy the files rarray, rarrayio,
-rarraymacros.h, rarraydelmacros.h to the directory "/usr/include" or
-some other directory that the compiler searches for header files.
-Rather than doing so by hand, you can use the included Makefile, which
-can also compile the unit tests and benchmarks.  To install without
-running tests or benchmarks, simply do:
-
+Rarray is a header-only library, so you could just copy the headers \texttt{rarray} and
+\texttt{rarrayio} to the directory \texttt{/usr/include} or some other directory
+that your C++ compiler searches for header files.  Alternatively, you could use the command
 \begin{verbatim}
-    make install PREFIX="[BASEDIR]"
+    make install PREFIX=[BASEDIR]
 \end{verbatim}
-to install the header files in the "[BASEDIR]/include" directory, and
-the documentation in \linebreak "[BASEDIR]/share/doc".  If the include directory
-is not in the compiler's search path, you will need to pass an option
-to the compiler directing to that directory
-(i.e. -I[BASEDIR]/include). If you have sudo permissions, you can also do
+This installs the header files in the \texttt{[BASEDIR]/include} directory,
+and the documentation in\linebreak \texttt{[BASEDIR]/share/doc}.
+If you have sudo permissions, you can also do
 \begin{verbatim}
     sudo make install
 \end{verbatim}
-which is the same as \texttt{sudo make install PREFIX=/usr}.
+to install the header and documentation to /usr/include and /usr/share/doc,
+respectively. Note that this will fail on recent MacOS versions,
+in which case, try \texttt{sudo make install PREFIX=/usr/local}.
 
-For the tests and benchmarks, one first needs to run
+To modify rarray or rarrayio, do not edit these file
+separately. Instead, you should edit the files in the
+\texttt{headersources} directory.  You can use the included Makefile
+to assemble the rarray headers with
+\begin{verbatim}
+    make headers
+\end{verbatim}
+
+If you're editing the documentation (this file), you need pdflatex, and you should edit\linebreak \texttt{rarraydoc.tex} and then do
+\begin{verbatim}
+    make doc
+\end{verbatim}
+
+The Makefile can also be used to compile and run the unit tests and benchmarks. Simply do:
 \begin{verbatim}
     ./configure
-\end{verbatim}
-to set up the makefile for your compiler. 
-Note that to pick your compiler, you should have the CXX environment
-variable point to the right compiler command. 
-If you have a recent gnu, intel, ibm or clang compiler, and the 'make'
-command, then the Makefile should be enough to compile and run the
-unit tests and benchmarks:
-\begin{verbatim}
     make test
-    make valgrindtest
-    make benchmark
+    make benchmarks
 \end{verbatim}
-Be aware that the Makefile has not been extensively tested.
+The \texttt{configure} command should work under Linux if you have a recent
+gnu, intel, ibm or clang compiler.  Note that to pick your compiler,
+you may have the set the CXX environment variable point to the right
+compiler command (e.g. \texttt{export CXX=clang++}) before running \texttt{configure}.
 
-The rarray library has been tested with the GNU g++ compiler version
-4.8.0 and up, the Intel C++ compiler version 13, IBM's XL C++ compiler
-version 12 and up, and clang 3.5.
+If the include directory is not in the compiler's search path, you
+will need to pass an option to the compiler directing to that
+directory (i.e. \texttt{-I[BASEDIR]/include}) or, for gcc and intel compilers,
+set the CPATH environment variable.
+
+\newpage
+
+\section{History}
+
+Dec 2013:
+
+First implementation of the header-only library \texttt{rarray} for runtime multidimensional arrays.
+
+\noindent
+Jan 2014: Version 1.0
+
+Code put on github
+
+\noindent
+Mar 2015: Version 1.1
+
+Changed the text output format used to use newlines
+
+\noindent
+Feb 2017: Version 1.2
+
+Added C++11 aliases rvector, rmatrix and rtensor. Eliminated the need
+for rarraymacros.h and rarraydelmacros.h in the installed version of
+rarray.
+
+\noindent
+Oct 2019: Version 2.0
+
+Prompted by a deeply rooted memory leak, this version is a full
+rewrite of rarray from the ground up, leaving most of the application
+interface unchanged.  Rarray now \textbf{requires} C++11.
+The optional but expensive capability to do index range checking has
+partially been lost in the rewrite.  Rarray comes with its own unit testing
+library now, 'rut'.
 
 
 \end{document}

@@ -63,45 +63,14 @@ following libraries or techniques:
 8. blitz (version 2)
 9. eigen3
 
-There is a fortran implementation of the same algorithm as well.
+There is a Fortran implementation of the same algorithm as well.
 
 Different libraries use different (default) ordering of elements
 (i.e. row-major vs column-major). In order to be fair, the benchmark
 implementations have been adapted to lead to non-strided memory
 access.
 
-Compiling the benchmarks
-========================
-
-Because rarray is a header only library, it needs no compiling, but
-the benchmarks do. All 2d c++ benchmarks are in benchmark2Daccess.cc,
-the 4d ones are in benchmark4Daccess.cc, whereas the fortran versions
-are in benchmark2Dfrtrn.f90 and benchmark4Dfrtrn.f90, respectively.
-
-A Makefile is provided to do compilation on unix/linux.  A 'configure'
-script should be run first to detect the compiler and to detect which
-of the alternative multidimensional array libraries have been
-installed.
-
-You can tell configure what your compiler is by setting the
-environment variables 'CXX'. You also can tell 'configure' where to
-look for header files of the alternative multidimensional array
-libraries by setting environment variables such as EIGEN3_I and
-EIGEN3_L.
-
-After running configure:
-
-To build and run unit tests:            make test
-To run unit tests through valgrind:     make valgrindtest
-To check code coverage of tests:        make covertest
-To build and run benchmark test:        make benchmark
-To build the documentation:             make doc
-To test the code in the documentation:  make doctest
-To install rarray:                      make install [PREFIX=directory]
-
-Note that in 'make benchmark', the code is compiled with optimization,
-but not whole-program optimization, as this can cause some steps to be
-skipped and skew the timing.
-
+The benchmarks can be compiled with the Makefile, after running
+'configure'.
 
 
