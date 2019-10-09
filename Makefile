@@ -99,32 +99,34 @@ valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} -o $@ $^
 
-rarray: hardinclude ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h
+rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h
+	make hardinclude
 	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h | ../hardinclude - offsets.h > ../rarray
 
-rarrayio: hardinclude ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h
+rarrayio: ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h
+	make hardinclude
 	cd ${HS} ; ../hardinclude rarrayio.h rarraymacros.h rarraydelmacros.h > ../rarrayio
 	sed -i 's/"rarray.h"/<rarray>/' rarrayio
 
 install: rarray rarrayio rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
-	cp -p rarray ${PREFIX}/include/rarray
-	cp -p rarrayio ${PREFIX}/include/rarrayio
+	cp -f rarray ${PREFIX}/include/rarray
+	cp -f rarrayio ${PREFIX}/include/rarrayio
 	mkdir -p ${PREFIX}/share/rarray
-	cp -p rarraydoc.pdf ${PREFIX}/share/rarray
+	cp -f rarraydoc.pdf ${PREFIX}/share/rarray
 
 rarraydoc.pdf: rarraydoc.tex
 	pdflatex $^
 	pdflatex $^
 
 testsuite: testsuite.o rut
-	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $<  rut/lib/librut.a ${LIBSCOV}
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< -Lrut/lib -lrut ${LIBSCOV}
 
 rut:
 	make -C rutsrc installserialonly PREFIX=${PWD}/rut
 
-testsuite.o: ${SRC}/testsuite.cc ${HS}/rarray.h ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h rut
-	${CXX} ${CXXFLAGSDBG} ${CXXFLAGSCOV} -c -o $@ $<  
+testsuite.o: ${SRC}/testsuite.cc rarray rarrayio rut
+	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGSCOV} -c -o $@ $<  
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
 	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
@@ -144,14 +146,14 @@ test_shared_shape.o: ${SRC}/test_shared_shape.cc ${HS}/shared_shape.h ${HS}/offs
 test_shared_shape: test_shared_shape.o
 	${CXX} ${LDFLAGS} -o $@ $^
 
-test_rarray.o: ${SRC}/test_rarray.cc ${HS}/offsets.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/rarray.h
-	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
+test_rarray.o: ${SRC}/test_rarray.cc rarray
+	${CXX} -std=c++11 -I. -O2 -g -c -o $@ $<
 
 test_rarray: test_rarray.o
 	${CXX} ${LDFLAGS} -o $@ $^
 
 clean:
-	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc *.cc.gcov *.h.gcov array.gcov  basic_string.tcc.gcov  complex.gcov  list.tcc.gcov  new.gcov  system_error.gcov  vector.tcc.gcov testsuite.gcda testsuite.gcno
+	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc 
 
 distclean:
 	make clean
@@ -175,7 +177,6 @@ run_test_rarray: test_rarray
 
 run_testsuite: testsuite
 	./testsuite
-	#gcov ./testsuite
 
 run_valgrind_testsuite: testsuite
 	${VALGRIND} ./testsuite
@@ -235,4 +236,4 @@ $(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h $
 	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: ${SRC}/$(PASS).cc config.mk
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) -c -o $@ $<

@@ -27,7 +27,9 @@
 
 #if __cplusplus >= 201103L
 
+#ifndef RARRAY_H
 #include "rarray.h"
+#endif
 #include <string>
 #include <sstream>
 #include <iostream>

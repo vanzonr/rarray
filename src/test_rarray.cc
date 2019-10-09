@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 //
 
-#include "rarray.h"
+#include <rarray>
 
 int main()
 {
