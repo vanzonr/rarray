@@ -38,12 +38,11 @@
 #include <list>
 #include "rarraymacros.h"
 
-// Input/output streaming operators in global namespace
+// add everything else 'ra' namespace
+namespace ra {
+    
 template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
 template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
-
-// add everything else to 'ra' namespace
-namespace ra {
 
 template<typename T,int R> RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
 template<typename T>       RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,1>& r);
@@ -103,8 +102,7 @@ void parse_strings(const std::list<std::pair<token,std::string>> & tokens, const
 //------------------------------------------------//
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T, int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T, R>& r)
+template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream &o, const ra::rarray<T, R>& r)
 {
     if (R>1) {
         return ra::text_output(o,r);
@@ -350,9 +348,8 @@ void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 template<typename T,int R> RA_INLINE_
-std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
+std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
 {    
     ra::size_type extent[R] = {0};
     auto X = ra::parse_shape(in, R, extent);
@@ -363,7 +360,6 @@ std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
     ra::parse_strings<T,R>(X, extent, r.ptr_array());
     return in;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Get rid of the macros

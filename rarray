@@ -1436,133 +1436,178 @@ template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(ra::size_type n0)
   : buffer_(n0),
     shape_({n0}, buffer_.begin())
-{}
+{
+    static_assert( R==1, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1)
   : buffer_(n0*n1),
     shape_({n0,n1}, buffer_.begin())
-{}
+{
+    static_assert( R==2, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2)
   : buffer_(n0*n1*n2),
     shape_({n0,n1,n2}, buffer_.begin())
-{}
+{
+    static_assert( R==3, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3)
   : buffer_(n0*n1*n2*n3),
     shape_({n0,n1,n2,n3}, buffer_.begin())
-{}
+{
+    static_assert( R==4, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4)
   : buffer_(n0*n1*n2*n3*n4),
     shape_({n0,n1,n2,n3,n4}, buffer_.begin())
-{}
+{
+    static_assert( R==5, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5)
   : buffer_(n0*n1*n2*n3*n4*n5),
     shape_({n0,n1,n2,n3,n4,n5}, buffer_.begin())
-{}
+{
+    static_assert( R==6, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6)
   : buffer_(n0*n1*n2*n3*n4*n5*n6),
     shape_({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin())
-{}
+{
+    static_assert( R==7, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin())
-{}
+{
+    static_assert( R==8, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin())
-{}
+{
+    static_assert( R==9, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin())
-{}
+{
+    static_assert( R==10, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin())
-{}
+{
+    static_assert( R==11, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0)
   : buffer_(n0,  buffer),
     shape_({n0}, buffer)
-{}
+{
+    static_assert( R==1, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1)
   : buffer_(n0*n1,  buffer),
     shape_({n0,n1}, buffer)
-{}
+{
+    static_assert( R==2, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2)
   : buffer_(n0*n1*n2,  buffer),
     shape_({n0,n1,n2}, buffer)
-{}
+{
+    static_assert( R==3, "Incorrect number of dimensions in rarray constructor.");
+}
+
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3)
   : buffer_(n0*n1*n2*n3,  buffer),
     shape_({n0,n1,n2,n3}, buffer)
-{}
+{
+    static_assert( R==4, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4)
   : buffer_(n0*n1*n2*n3*n4,  buffer),
     shape_({n0,n1,n2,n3,n4}, buffer)
-{}
+{
+    static_assert( R==5, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5)
   : buffer_(n0*n1*n2*n3*n4*n5,  buffer),
     shape_({n0,n1,n2,n3,n4,n5}, buffer)
-{}
+{
+    static_assert( R==6, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6)
   : buffer_(n0*n1*n2*n3*n4*n5*n6,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6}, buffer)
-{}
+{
+    static_assert( R==7, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7}, buffer)
-{}
+{
+    static_assert( R==8, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer)
-{}
+{
+    static_assert( R==9, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer)
-{}
+{
+    static_assert( R==10, "Incorrect number of dimensions in rarray constructor.");
+}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer)
-{}
+{
+    static_assert( R==11, "Incorrect number of dimensions in rarray constructor.");
+}
 
 namespace ra {
 RA_INLINE_ size_type mul(const size_type * x, int n) {
@@ -1615,111 +1660,208 @@ void ra::rarray<T,R>::clear()
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0, RESIZE resize_allowed)
 {
-    if (size() == n0 or (resize_allowed == RESIZE::ALLOWED and size() >= n0))
+    static_assert( R==1, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0)) {
+        
         shape_ = shared_shape<T,R>({n0}, buffer_.begin());
-    else
+
+    } else {
+
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(size_type n0,size_type n1, RESIZE resize_allowed)
+void ra::rarray<T,R>::reshape(size_type n0, size_type n1, RESIZE resize_allowed)
 {
-    if (size() == n0*n1 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1))
+    static_assert( R==2, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0*n1
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1)) {
+        
         shape_ = shared_shape<T,R>({n0,n1}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
-void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2, RESIZE resize_allowed)
+void ra::rarray<T,R>::reshape(size_type n0, size_type n1, size_type n2, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2))
+    static_assert( R==3, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0*n1*n2
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2}, buffer_.begin());
-    else
+        
+    } else {
+            
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
+
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3))
+    static_assert( R==4, "Incorrect number of dimensions in rarray::reshape method.");
+
+    if (size() == n0*n1*n2*n3
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4))
+    static_assert( R==5, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0*n1*n2*n3*n4
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4*n5 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5))
+    static_assert( R==6, "Incorrect number of dimensions in rarray::reshape method.");
+
+    if (size() == n0*n1*n2*n3*n4*n5
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4*n5*n6 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6))
+    static_assert( R==7, "Incorrect number of dimensions in rarray::reshape method.");
+        
+    if (size() == n0*n1*n2*n3*n4*n5*n6
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4*n5*n6*n7 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7))
+    static_assert( R==8, "Incorrect number of dimensions in rarray::reshape method.");
+        
+    if (size() == n0*n1*n2*n3*n4*n5*n6*n7
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8))
+    static_assert( R==9, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9))
+    static_assert( R==10, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10, RESIZE resize_allowed)
 {
-    if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10 or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10))
+    static_assert( R==11, "Incorrect number of dimensions in rarray::reshape method.");
+    
+    if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10
+        or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10)) {
+        
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin());
-    else
+
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+
+    }
 }
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(const size_type* newshape, RESIZE resize_allowed)
 {
-    if (size() == mul(newshape,R) or (resize_allowed == RESIZE::ALLOWED and size() >= mul(newshape,R)))
+    if (size() == mul(newshape,R)
+        or (resize_allowed == RESIZE::ALLOWED and size() >= mul(newshape,R))) {
+        
         shape_ = shared_shape<T,R>((const std::array<size_type,R>&)(*newshape), buffer_.begin());
-    else
+        
+    } else {
+        
         throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        
+    }
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::~rarray()
@@ -1778,9 +1920,9 @@ ra::rarray<T,R> ra::rarray<T,R>::copy() const {
     // return a copy
     rarray<T,R> clone;
     clone.buffer_ = buffer_.copy();
-    clone.shape_ = ra::shared_shape<T,R>(shape_.extent(), clone.buffer_.begin());
-    // clone.shape_ = shape_.copy();
-    // clone.shape_.relocate(clone2.buffer_.begin()); // something is wrong with relocate for some types
+    // clone.shape_ = ra::shared_shape<T,R>(shape_.extent(), clone.buffer_.begin());
+    clone.shape_ = shape_.copy();
+    clone.shape_.relocate(clone.buffer_.begin()); // something is wrong with relocate for some types
     return clone;
 }
 
