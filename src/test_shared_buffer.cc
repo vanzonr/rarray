@@ -142,7 +142,7 @@ int test_shared_buffer_main()
 
     {
         ra::shared_buffer<double> a(N);
-        assert(&a[0] != nullptr);
+        assert(a.begin() != nullptr);
         assert(a.size() == N);
     }
 

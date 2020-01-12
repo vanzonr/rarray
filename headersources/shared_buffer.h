@@ -80,7 +80,7 @@ class shared_buffer
     //shared_buffer<const T> slice(size_type from, size_type to) const;
 
     // size
-    const size_type size() const;
+    size_type size() const;
 
     // create deep copy
     shared_buffer<T> copy() const;
@@ -271,7 +271,7 @@ shared_buffer<T>::~shared_buffer()
 }
 
 template<class T>
-const typename shared_buffer<T>::size_type shared_buffer<T>::size() const
+typename shared_buffer<T>::size_type shared_buffer<T>::size() const
 {
     return size_;
 }

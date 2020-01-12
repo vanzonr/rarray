@@ -45,8 +45,10 @@ LDFLAGS?=-g
 LDLIBS?= 
 LDFLAGSOPT?=
 LDLIBSOPT?=
-CXXFLAGS?=-I. -Irut/include -I${HS} -std=c++11 -O2
-CXXFLAGSDBG?=-I. -Irut/include -I${HS} -std=c++11 -O0 -g
+CXXFLAGS?=-std=c++11 -O2
+CXXFLAGSDBG?=-O0 -g
+CXXFLAGS+=-I. -Irut/include -I${HS} -std=c++11 
+CXXFLAGSDBG+=-I. -Irut/include -I${HS} -std=c++11 
 CXXFLAGSOPT?=-O2
 #MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG -DNOARMADILLO
 #-DNOBLITZ -DNOEIGEN3 -DNOARMADILLO -DNOBOOST
@@ -120,13 +122,13 @@ rarraydoc.pdf: rarraydoc.tex
 	pdflatex $^
 
 testsuite: testsuite.o rut
-	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< -Lrut/lib -lrut ${LIBSCOV}
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< -Lrut/lib -Wl,-Bstatic -lrut -Wl,-Bdynamic ${LIBSCOV}
 
 rut:
 	make -C rutsrc installserialonly PREFIX=${PWD}/rut
 
 testsuite.o: ${SRC}/testsuite.cc rarray rarrayio rut
-	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGSCOV} -c -o $@ $<  
+	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<  
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
 	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
