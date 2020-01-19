@@ -5,7 +5,7 @@ rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
 compilers to generate fast code.
 
-The current version is 2.0.
+The current version is 2.1.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -65,11 +65,16 @@ Release History and Changes
 
      - Rarray now has its own unit testing library, 'rut'.
 
+ * Version 2.1, January 2020
+
+   Reference counting of rarray data is now done atomically, so
+   copying rarrays should now be thread-safe.
+   
+   One character names of substructures, used in debugging rarray
+   itself, were removed.
+  
 Known issues
 ============
-
-  * Reference counting should be atomic, but isn't yet. Creating
-    shallow copies in threaded code can thus lead to race conditions.
 
   * Defining RA_BOUNDSCHECK only activates partial bounds checking
     because some the optional but expensive index-range chekcing
@@ -79,6 +84,8 @@ Known issues
     function. 
 
   * Rarray objects automatically convert into T*const*... pointers.
+
+  * Cannot force aligned of data yet.
 
 Reporting Bugs
 ==============
