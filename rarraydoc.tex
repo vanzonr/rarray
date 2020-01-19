@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{October 8, 2019 (version 2.0)\vspace{-7mm}}
+\date{January 19, 2020 (version 2.1)\vspace{-7mm}}
 
 \maketitle
 
@@ -222,7 +222,7 @@ The guarrantee of contiguity means strided arrays are not supported.
 \item Can use any data type {\tt T} and any rank {\tt R}.
 \item Elements are accessible using repeated square brackets, like C/C++ arrays.
 \item Views on pre-allocated contiguous arrays.
-\item Does shallow, reference counted, copies by default, but also has a deep {\tt copy}
+\item Does shallow, (atomic) reference counted, copies by default, but also has a deep {\tt copy}
   method.
 \item Use of c++11 move semantics for efficiency (from version 2.0
   onwards, rarray requires c++11).
@@ -343,7 +343,13 @@ large rarrays in this way is rather impractical.
 
 \subsection{Copying and function arguments}
 
-In C++, when we copy a variable of a built-in type to a new variable, the new copy is completely independent of the old variable. Likewise, the default way of passing arguments to a function involves a complete copy for built-in types.  For C-style arrays, however, only the pointer to the first element gets copied, not the whole array. The latter is called a shallow copy. Rarrays use shallow copies much like pointers, but uses reference counting to know when memory can be released (similar to the \texttt{std::shared\_ptr<T>} of C++11). 
+In C++, when we copy a variable of a built-in type to a new variable,
+the new copy is completely independent of the old variable. Likewise,
+the default way of passing arguments to a function involves a complete
+copy for built-in types.  For C-style arrays, however, only the
+pointer to the first element gets copied, not the whole array. The
+latter is called a shallow copy. Rarrays use shallow copies much like
+pointers, but uses atomic reference counting to know when memory can be released (similar to the \texttt{std::shared\_ptr<T>} of C++11). 
 
 What does this essentially mean? Well:
 \begin{enumerate}
@@ -355,7 +361,7 @@ What does this essentially mean? Well:
 
 \subsection{Returning a rarray from a function\label{returnvalues}}
 
-Because rarray uses reference counting and implements move semantics, returning an rarray from a
+Because rarray uses atomic reference counting and implements move semantics, returning an rarray from a
 function poses no problems.
 
 Consider the function \texttt{zeros} used in \texttt{main()}:
@@ -1117,6 +1123,17 @@ interface unchanged.  Rarray now \textbf{requires} C++11.
 The optional but expensive capability to do index range checking has
 partially been lost in the rewrite.  Rarray comes with its own unit testing
 library now, 'rut'.
+
+\noindent
+Jan 2020: Version 2.1
+
+Reference counting of rarray data is now done atomically, so copying
+rarrays should now be thread-safe.  One-character names of
+substructures, used in debugging rarray itself, were
+removed. Streaming operators for rarrays moved to the \texttt{ra}
+namespace.
+
+
 
 
 \end{document}
