@@ -35,6 +35,7 @@
 #include <stdexcept>
 #include <memory>
 #include <cstring>
+#include <atomic>
 
 int test_shared_buffer_main(); // for testing
 
@@ -119,7 +120,7 @@ class shared_buffer
     T*        data_;
     T*        orig_;
     size_type size_;
-    int*      refs_;
+    std::atomic<int>* refs_;
 
     friend int ::test_shared_buffer_main(); // for testing
 
@@ -162,7 +163,7 @@ shared_buffer<T>::shared_buffer()
 
 template<class T>
 shared_buffer<T>::shared_buffer(size_type size)
-  : data_(new T[size]), orig_(data_), size_(size), refs_(new int(1))
+    : data_(new T[size]), orig_(data_), size_(size), refs_(new std::atomic<int>(1))
 {
     // construct buffer
     name_ = _buffername++;
@@ -372,7 +373,7 @@ void shared_buffer<T>::resize(size_type newsize, bool keep_content)
         // create a new buffer
         T* newdata = new T[newsize];
         T* neworig = newdata;
-        int* newrefs = new int(1);
+        std::atomic<int>* newrefs = new std::atomic<int>(1);
         // copy content if so requested
         if (keep_content) {
             size_t n = ((size_<newsize)?size_:newsize);
@@ -431,10 +432,10 @@ void shared_buffer<T>::incref() {
 template<class T>
 void shared_buffer<T>::decref() {
     if (refs_) {
-        (*refs_)--;
-        if (*refs_ == 0) {
+        if (--(*refs_) == 0) {
             delete[] orig_;
             delete refs_;
+            uninit();
         }
     }
 }

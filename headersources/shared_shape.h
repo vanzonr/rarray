@@ -33,6 +33,7 @@
 #include "offsets.h"
 #include <array>
 #include <stdexcept>
+#include <atomic>
 
 int test_shared_shape_main();
 
@@ -106,7 +107,7 @@ class shared_shape
 
     std::array<size_type,R> extent_;
     ptrs_type ptrs_;
-    int*      refs_;
+    std::atomic<int>* refs_;
     void***   orig_;
     size_type noffsets_;
     size_type ndataoffsets_;
@@ -133,7 +134,7 @@ class shared_shape<T,0> {
   private:
     std::array<size_type,0> extent_;
     ptrs_type ptrs_;
-    int*      refs_;
+    std::atomic<int>* refs_;
     void***   orig_;
     size_type noffsets_;
     size_type ndataoffsets_;
@@ -163,7 +164,7 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&extent, T*data)
     noffsets_ = P.get_num_offsets();
     ndataoffsets_ = P.get_num_data_offsets();
     if (R>1) {
-        refs_ = new int(1);
+        refs_ = new std::atomic<int>(1);
     } else {
         orig_ = nullptr;
     }
@@ -321,7 +322,7 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
     copy_of_this.noffsets_ = noffsets_;
     copy_of_this.ndataoffsets_ = ndataoffsets_;
     if (R>1) {
-        copy_of_this.refs_ = new int(1);
+        copy_of_this.refs_ = new std::atomic<int>(1);
         copy_of_this.orig_ = new void**[noffsets_];
         std::copy((void***)ptrs_, (void***)(ptrs_) + noffsets_, copy_of_this.orig_);
         std::ptrdiff_t shift = copy_of_this.orig_ - (void***)(ptrs_);
@@ -395,11 +396,11 @@ void shared_shape<T,R>::decref()
 {
     // decrease the reference counter
     if (refs_) {
-        (*refs_)--;
-        if (*refs_ == 0) {
+        if (--(*refs_) == 0) {
             if (R>1)
                 delete[] orig_;
             delete refs_;
+            uninit();
         }
     }
 }
