@@ -72,7 +72,10 @@ Release History and Changes
    
    One character names of substructures, used in debugging rarray
    itself, were removed.
-  
+
+   Streaming operators for rarrays moved to the ra namespace.
+
+
 Known issues
 ============
 
