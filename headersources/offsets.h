@@ -1,9 +1,9 @@
 // offsets.h
 //
-// Header for the helper class for rarray 2.0 to compute pointer
+// Header for the helper class for rarray 2.x to compute pointer
 // offsets in a multidimensional array.
 //
-// Copyright (c) 2018-2019  Ramses van Zon
+// Copyright (c) 2018-2020  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,6 @@
 
 /***************************************************************************/
 
-static char _ptrptrname = 'A';
-
 class Offsets
 {
   public:
@@ -58,7 +56,6 @@ class Offsets
     ssize_t ndataoffsets_;
 
     // for testing and debugging purposes
-    char name_;
     friend int test_offsets_main(); 
 };
 
@@ -66,7 +63,6 @@ class Offsets
 
 inline Offsets::Offsets(const std::vector<ssize_t>& dims)
 {
-    name_ = _ptrptrname++;
     std::vector<ssize_t> extent(dims);
     rank_ = extent.size();
     ssize_t noffsets = 0;

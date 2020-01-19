@@ -3,10 +3,10 @@
 // Header to define a 'shape', which is the pointer-to-pointer
 // interface to a multidimensional array, but one that remembers its
 // shape.  Uses reference counting for the pointer-to-pointer
-// structure, but the actual data is a simple pointer. Intended as a
-// building block for rarray 2.0.
+// structure, but the actual data is a simple pointer.  One of the
+// building blocks for rarray 2.x.
 //
-// Copyright (c) 2018-2019  Ramses van Zon
+// Copyright (c) 2018-2020  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +40,6 @@ int test_shared_shape_main();
 /***************************************************************************/
 
 namespace ra {
-// for debugging purposes, every shape gets a one-character name.
-static char _shapename = 'A'; 
 
 /***************************************************************************/
 
@@ -120,7 +118,6 @@ class shared_shape
     template<class U, int S> friend class shared_shape; // for "at"
 
     // for testing and debugging:
-    char name_; 
     friend int ::test_shared_shape_main();
 };
 
@@ -148,7 +145,6 @@ template<class T, int R>
 shared_shape<T,R>::shared_shape()
 {
     // uninitialized shape
-    name_ = _shapename++;
     uninit();
 }
 
@@ -157,7 +153,6 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&extent, T*data)
   : extent_(extent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
 {
     // construct shape 
-    name_ = _shapename++;
     Offsets P({extent_.begin(),extent_.end()});
     orig_ = P.apply_offsets(data);
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
@@ -180,7 +175,6 @@ shared_shape<T,R>::shared_shape(const shared_shape& other)
     ndataoffsets_(other.ndataoffsets_)
 {
     // copy constructor
-    name_ = _shapename++;
     incref();
 }
 
@@ -194,7 +188,6 @@ shared_shape<T,R>::shared_shape(shared_shape&& other)
     ndataoffsets_(other.ndataoffsets_)
 {
     // move constructor
-    name_ = _shapename++;
     other.uninit();
 }
 

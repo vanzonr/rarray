@@ -3,9 +3,9 @@
 // Header that defines a buffer class with reference counting (a bit
 // like shared_array in boost, I suppose).  Can also hold a
 // non-reference counted buffer, if one is passed to the constructor.
-// Part of rarray 2.0. 
+// Part of rarray 2.x. 
 //
-// Copyright (c) 2018-2019  Ramses van Zon
+// Copyright (c) 2018-2020  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -127,7 +127,6 @@ class shared_buffer
     void uninit();
     void incref();
     void decref();
-    char name_;
 };
 
 /***************************************************************************/
@@ -157,7 +156,6 @@ template<class T>
 shared_buffer<T>::shared_buffer()
 {
     // uninitialized buffer
-    name_ = _buffername++;
     uninit();
 }
 
@@ -166,7 +164,6 @@ shared_buffer<T>::shared_buffer(size_type size)
     : data_(new T[size]), orig_(data_), size_(size), refs_(new std::atomic<int>(1))
 {
     // construct buffer
-    name_ = _buffername++;
 }
 
 template<class T>
@@ -174,7 +171,6 @@ shared_buffer<T>::shared_buffer(size_type size, T* data)
   : data_(data), orig_(nullptr), size_(size), refs_(nullptr)
 {
     // construct buffer as a wrapper
-    name_ = _buffername++;
 }
 
 template<class T>
@@ -182,7 +178,6 @@ shared_buffer<T>::shared_buffer(const shared_buffer<T>& other)
   : data_(other.data_), orig_(other.orig_), size_(other.size_), refs_(other.refs_)
 {
     // copy constructor
-    name_ = _buffername++;
     incref();
 }
 
@@ -190,7 +185,6 @@ template<class T>
 shared_buffer<T>::shared_buffer(shared_buffer<T>&& from)
   : data_(from.data_), orig_(from.orig_), size_(from.size_), refs_(from.refs_)
 {
-    name_ = _buffername++;
     from.uninit();
 }
 
