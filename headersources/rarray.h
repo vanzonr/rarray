@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <utility>
+#include <cmath>
 #include "rarraymacros.h"
 #include "shared_buffer.h"
 #include "shared_shape.h"
@@ -293,10 +294,14 @@ template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>
 template<typename A,int R>                                                        RA_INLINE_ rarray<A,R> make_rarray_given_byte_size(rarray<A,R> a, int byte_size); // trivial action for rarray
 
 template<typename S>
-rarray<S,1> rlinear(S x1, S x2, int n=0, bool end_incl=true)
+rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true)
 {
-    if (n==0)
-        n = x2 - x1 + end_incl;
+    if (n==0) {
+        if (x2>x1)
+            n = x2 - x1 + end_incl;
+        else
+            n = x1 - x2 + end_incl;
+    }
     rarray<S,1> x(n);
     for (int i = 0; i < n; i++)
         x[i] = x1 + ((x2-x1)*(long long int)(i))/(n-end_incl);
@@ -309,6 +314,11 @@ template<class T>
 class Xrange {
   private:
     struct const_iterator {
+        typedef std::ptrdiff_t difference_type;
+        typedef T value_type;
+        typedef T* pointer;
+        typedef T& reference;
+        typedef std::input_iterator_tag iterator_category;
         const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
         bool operator!=(const const_iterator& other) const {
             return i_ != other.i_;
@@ -328,7 +338,8 @@ class Xrange {
     };
     T a_, b_, d_;
   public:
-    Xrange(T a, T b, T d): a_(a), b_(a + ((b-a)/d)*d), d_(d) 
+    Xrange(T a, T b, T d)
+      : a_(a), b_(a + size_t(std::ceil((b-a)/double(d)))*d), d_(d) 
     {}
     const_iterator begin() const {
         return const_iterator(a_, d_, b_);
@@ -1360,7 +1371,7 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 
 // for now:
 using ra::rarray;
-using ra::rlinear;
+using ra::linspace;
 using ra::xrange; 
 
 // add rvector, rmatrix and rtensor shortcut types

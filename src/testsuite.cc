@@ -2780,30 +2780,30 @@ END_UNIT_TEST
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testrlinear)
+UNIT_TEST(testlinspace)
 {
     int a = 1, b = 30;
-    auto r = rlinear(a,b);
+    auto r = linspace(a,b);
     int i = a;
     for (auto x: r) {
         CHECK(x==i);
         i++;
     }
-    auto r2 = rlinear(0,30,4);
+    auto r2 = linspace(0,30,4);
     int check2[] = {0,10,20,30};
     int j = 0;
     for (auto y: r2) {
         CHECK(y == check2[j]);
         j++;
     }
-    auto r3 = rlinear(0,30,3,false);
+    auto r3 = linspace(0,30,3,false);
     int check3[] = {0,10,20};
     int k = 0;
     for (auto z: r3) {
         CHECK(z == check3[k]);
         k++;
     }
-    auto r4 = rlinear(0.0, 30.0, 4);
+    auto r4 = linspace(0.0, 30.0, 4);
     double check4[] = {0.0, 10.0, 20.0, 30.0};
     int l = 0;
     for (auto zz: r3) {
@@ -2860,6 +2860,15 @@ UNIT_TEST(testxrange)
     for (auto z: xrange(100))
         sum += z;
     CHECK(sum==4950);
+    ra::Xrange<int> r(1,11,3);
+    sum = 0;
+    for (int z: r) sum += z;
+    CHECK(sum==22)
+    ra::Xrange<double> rd(1,11,3.2);
+    double dsum = 0;
+    for (double z: rd) dsum += z;
+    std::cout << dsum << "\n"; 
+    CHECK(fabs(dsum-(4.0+6*3.2))<1e-6);
 }
 END_UNIT_TEST
 
