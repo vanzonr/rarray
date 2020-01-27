@@ -623,7 +623,7 @@ void ra::rarray<T,R>::reshape(size_type n0, RESIZE resize_allowed)
 
     } else {
 
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -640,7 +640,7 @@ void ra::rarray<T,R>::reshape(size_type n0, size_type n1, RESIZE resize_allowed)
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -657,7 +657,7 @@ void ra::rarray<T,R>::reshape(size_type n0, size_type n1, size_type n2, RESIZE r
         
     } else {
             
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -675,7 +675,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -692,7 +692,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -709,7 +709,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -726,7 +726,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -743,7 +743,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -760,7 +760,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -777,7 +777,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
@@ -794,7 +794,7 @@ void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n
 
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
 
     }
 }
@@ -809,7 +809,7 @@ void ra::rarray<T,R>::reshape(const size_type* newshape, RESIZE resize_allowed)
         
     } else {
         
-        throw std::out_of_range("Incompatible dimensions in function " + std::string(__PRETTY_FUNCTION__));
+        throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         
     }
 }
