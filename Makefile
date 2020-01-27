@@ -86,6 +86,8 @@ help:
 	@echo "  To rebuild the documentation:           make doc"
 	@echo ""
 
+.PHONY: headers test benchmarks doc valgrindtest install rut clean distclean run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite list benchmark2d benchmark4d
+
 headers: rarray rarrayio
 
 all: headers test_shared_buffer test_offsets test_shared_shape test_rarray testsuite
@@ -185,8 +187,6 @@ run_valgrind_testsuite: testsuite
 
 list:
 	@grep '^[^#[:space:]].*:' Makefile
-
-.PHONY: list
 
 benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo Comparison benchmark on a 2d array example
