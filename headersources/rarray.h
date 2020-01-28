@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <utility>
+#include <string>
 #include <cmath>
 #include "rarraymacros.h"
 #include "shared_buffer.h"
