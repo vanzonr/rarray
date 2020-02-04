@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{January 19, 2020 (version 2.1)\vspace{-7mm}}
+\date{February 3, 2020 (version 2.2)\vspace{-7mm}}
 
 \maketitle
 
@@ -1229,7 +1229,14 @@ substructures, used in debugging rarray itself, were
 removed. Streaming operators for rarrays moved to the \texttt{ra}
 namespace.
 
+\noindent
+Feb 2020: Version 2.2
 
+Several bug fixed with running and installing rarray on MacOS.  The
+rarray unit test library 'rut' was dropped in favour of 'catch2',
+which does everything that 'rut' was intended to do, but better. Since
+'catch2' is header only, this makes running the tests on different
+platforms much easier.
 
 
 \end{document}

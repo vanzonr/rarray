@@ -47,8 +47,8 @@ LDFLAGSOPT?=
 LDLIBSOPT?=
 CXXFLAGS?=-std=c++11 -O2
 CXXFLAGSDBG?=-O0 -g
-CXXFLAGS+=-I. -Irut/include -I${HS} -std=c++11 
-CXXFLAGSDBG+=-I. -Irut/include -I${HS} -std=c++11 
+CXXFLAGS+=-I. -I${HS} -std=c++11 
+CXXFLAGSDBG+=-I. -I${HS} -std=c++11 
 CXXFLAGSOPT?=-O2
 #MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG -DNOARMADILLO
 #-DNOBLITZ -DNOEIGEN3 -DNOARMADILLO -DNOBOOST
@@ -86,7 +86,7 @@ help:
 	@echo "  To rebuild the documentation:           make doc"
 	@echo ""
 
-.PHONY: headers test benchmarks doc valgrindtest install rut clean distclean run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite list benchmark2d benchmark4d
+.PHONY: headers test benchmarks doc valgrindtest install clean distclean run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite list benchmark2d benchmark4d 
 
 headers: rarray rarrayio
 
@@ -98,7 +98,7 @@ benchmarks: benchmark2d benchmark4d
 
 doc: rarraydoc.pdf
 
-valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite
+valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite 
 
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} -o $@ $^
@@ -123,14 +123,14 @@ rarraydoc.pdf: rarraydoc.tex
 	pdflatex $^
 	pdflatex $^
 
-testsuite: testsuite.o rut
-	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< -Lrut/lib -Wl,-Bstatic -lrut -Wl,-Bdynamic ${LIBSCOV}
+testsuite: testsuite.o
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
 
-rut:
-	make -C rutsrc installserialonly PREFIX=${PWD}/rut
-
-testsuite.o: ${SRC}/testsuite.cc rarray rarrayio rut
+testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
 	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<  
+
+catch.hpp:
+	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp 
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
 	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
@@ -157,15 +157,13 @@ test_rarray: test_rarray.o
 	${CXX} ${LDFLAGS} -o $@ $^
 
 clean:
-	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc 
+	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp
 
 distclean:
 	make clean
 	make rarray rarrayio doc	
 	make clean
 	${RM} test_shared_buffer test_offsets test_shared_shape test_rarray testsuite hardinclude benchmark2Daccess benchmark4Daccess benchmark2Dfrtrn benchmark4Dfrtrn config.mk
-	${RM} -r rut/
-	make -C rutsrc distclean
 
 run_test_shared_buffer: test_shared_buffer
 	${VALGRIND} ./test_shared_buffer

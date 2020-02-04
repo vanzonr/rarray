@@ -1,7 +1,7 @@
 //
-// testsuite.cc - testsuite for rarray.h
+// testsuite.cc - testsuite for rarray
 //
-// Copyright (c) 2013-2019  Ramses van Zon
+// Copyright (c) 2013-2020  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,8 @@
 #include <sstream>
 #include <complex>
 #include <algorithm>
-#include "rut.h"
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 
 //////////////////////////////////////////////////////////////////////
 // AUXILIARY STUFF
@@ -63,23 +64,39 @@ class Compound
   private:
     int x;
     int y;
+    friend std::ostream& operator<<(std::ostream &o, const Compound& x);
 };
+std::ostream& operator<<(std::ostream &os, const Compound& x)
+{
+    os << '{' << x.x << ',' << x.y << '}';
+    return os;
+}
 //////////////////////////////////////////////////////////////////////
 template<typename T, int R>
 struct array {
     T elements_[R];
     T& operator[](const int i) { return elements_[i]; }
     const T& operator[](const int i) const { return elements_[i]; }
-    bool operator!=(const struct array& other) {
+    bool operator!=(const struct array& other) const {
         for (int i=0;i<R;i++)
             if (elements_[i] != other.elements_[i])
                 return true;
         return false;
     }
-    bool operator==(const struct array& other) {
+    bool operator==(const struct array& other) const {
         return !operator!=(other);
     }       
 };
+template<typename T, int R>
+std::ostream& operator<<(std::ostream &os, const array<T,R>& x)
+{    
+    os << '{';
+    if (R>0) os << x[0];
+    for (int r=1;r<R;r++)
+        os << ',' << x[r];
+    os << '}';
+    return os;
+}
 //////////////////////////////////////////////////////////////////////
 array<Compound,3> operator+(const array<Compound,3> &a,
                             const array<Compound,3> &b)
@@ -92,14 +109,14 @@ array<Compound,3> operator+(const array<Compound,3> &a,
 //                    T H E   T E S T   S U I T E                   //
 //////////////////////////////////////////////////////////////////////
 
-TEST_SUITE(rarraytestsuite)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors() 
+TEMPLATE_TEST_CASE("test constructors", "",
+                   double, Compound, (array<Compound,3>), (std::complex<float>))
 {
+    using T = TestType;
     // Exercises the following constructors of the rarray<T,3> class
     //   rarray(int,int,int)
     //   rarray(const int*)
@@ -114,61 +131,57 @@ int testconstructors()
     rarray<T,3> b(dim);
     rarray<T,3> c(b);
     const ra::size_type* asize = a.shape();
-    CHECK(a.data());
-    CHECK(a.size()==7*21*13);
-    CHECK(asize);
-    CHECK(asize[0] == dim[0]);
-    CHECK(asize[1] == dim[1]);
-    CHECK(asize[2] == dim[2]);
-    CHECK(a.extent(0) == dim[0]);
-    CHECK(a.extent(1) == dim[1]);
-    CHECK(a.extent(2) == dim[2]);
-    CHECK(b.data());
-    CHECK(b.size()==7*21*13);
-    CHECK(b.extent(0) == dim[0]);
-    CHECK(b.extent(1) == dim[1]);
-    CHECK(b.extent(2) == dim[2]);
-    CHECK(c.data());
-    CHECK(c.size()==7*21*13);
-    CHECK(c.extent(0) == dim[0]);
-    CHECK(c.extent(1) == dim[1]);
-    CHECK(c.extent(2) == dim[2]);
-    CHECK(c.data()==b.data());
+    REQUIRE(a.data());
+    REQUIRE(a.size()==7*21*13);
+    REQUIRE(asize);
+    REQUIRE(asize[0] == dim[0]);
+    REQUIRE(asize[1] == dim[1]);
+    REQUIRE(asize[2] == dim[2]);
+    REQUIRE(a.extent(0) == dim[0]);
+    REQUIRE(a.extent(1) == dim[1]);
+    REQUIRE(a.extent(2) == dim[2]);
+    REQUIRE(b.data());
+    REQUIRE(b.size()==7*21*13);
+    REQUIRE(b.extent(0) == dim[0]);
+    REQUIRE(b.extent(1) == dim[1]);
+    REQUIRE(b.extent(2) == dim[2]);
+    REQUIRE(c.data());
+    REQUIRE(c.size()==7*21*13);
+    REQUIRE(c.extent(0) == dim[0]);
+    REQUIRE(c.extent(1) == dim[1]);
+    REQUIRE(c.extent(2) == dim[2]);
+    REQUIRE(c.data()==b.data());
     b.clear();
-    CHECK(b.is_clear());
-    return ALL_CLEAR;
+    REQUIRE(b.is_clear());
 }
 
-template UNIT_TEST_IMPORT(testconstructors<double>);
-template UNIT_TEST_IMPORT(testconstructors<Compound>);
-template UNIT_TEST_IMPORT((testconstructors<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors<std::complex<float> >));
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors7dimtest() 
+TEMPLATE_TEST_CASE("test constructors 7dim test", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
 {
+    using T = TestType;
     ra::size_type dim[5] = {7,10,13,2,4};
     rarray<T,5> a5(7,10,13,2,4);
     rarray<T,5> b5(dim);
     rarray<T,5> c5(b5);
-    return ALL_CLEAR;
+    // Never finished, it seems.
 }
 
-template UNIT_TEST_IMPORT(testconstructors7dimtest<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimtest<Compound>);
-template UNIT_TEST_IMPORT((testconstructors7dimtest<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors7dimtest<std::complex<float> >));
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors7dimtest2() 
+TEMPLATE_TEST_CASE("test constructors 7dim test 2", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
 {
-    // minimize
+    using T = TestType;
     ra::size_type dim[7] = {7,10,13,2,4,5,21};
     rarray<T,1> z1(7);
     rarray<T,1> a1;
@@ -198,20 +211,18 @@ int testconstructors7dimtest2()
     a1.clear(); //optional here, as a1 will go out of scope
     b7.clear();
 
-    return ALL_CLEAR;
 }
 
-template UNIT_TEST_IMPORT(testconstructors7dimtest2<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimtest2<Compound>)
-template UNIT_TEST_IMPORT((testconstructors7dimtest2<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors7dimtest2<std::complex<float> >));
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors7dim() 
+TEMPLATE_TEST_CASE("test constructors 7dim", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
 {
+    using T = TestType;
     ra::size_type dim[7] = {7,10,13,2,4,5,21};
     rarray<T,1> z1(7);
     rarray<T,1> a1;
@@ -238,141 +249,139 @@ int testconstructors7dim()
     rarray<T,7> b7(dim);
     rarray<T,7> c7(b7);
 
-    CHECK(a1.data());
-    CHECK(b1.data());
-    CHECK(c1.data()==b1.data());
-    CHECK(a2.data());
-    CHECK(b2.data());
-    CHECK(c2.data()==b2.data());
-    CHECK(a3.data());
-    CHECK(b3.data());
-    CHECK(c3.data()==b3.data());
-    CHECK(a4.data());
-    CHECK(b4.data());
-    CHECK(c4.data()==b4.data());
-    CHECK(a5.data());
-    CHECK(b5.data());
-    CHECK(c5.data()==b5.data());
-    CHECK(a6.data());
-    CHECK(b6.data());
-    CHECK(c6.data()==b6.data());
-    CHECK(b7.data());
-    CHECK(c7.data()==b7.data());
+    REQUIRE(a1.data());
+    REQUIRE(b1.data());
+    REQUIRE(c1.data()==b1.data());
+    REQUIRE(a2.data());
+    REQUIRE(b2.data());
+    REQUIRE(c2.data()==b2.data());
+    REQUIRE(a3.data());
+    REQUIRE(b3.data());
+    REQUIRE(c3.data()==b3.data());
+    REQUIRE(a4.data());
+    REQUIRE(b4.data());
+    REQUIRE(c4.data()==b4.data());
+    REQUIRE(a5.data());
+    REQUIRE(b5.data());
+    REQUIRE(c5.data()==b5.data());
+    REQUIRE(a6.data());
+    REQUIRE(b6.data());
+    REQUIRE(c6.data()==b6.data());
+    REQUIRE(b7.data());
+    REQUIRE(c7.data()==b7.data());
 
-    CHECK(b1.size()==7);
-    CHECK(b2.size()==7*10);
-    CHECK(b3.size()==7*10*13);
-    CHECK(b4.size()==7*10*13*2);
-    CHECK(b5.size()==7*10*13*2*4);
-    CHECK(b6.size()==7*10*13*2*4*5);
-    CHECK(b7.size()==7*10*13*2*4*5*21);
+    REQUIRE(b1.size()==7);
+    REQUIRE(b2.size()==7*10);
+    REQUIRE(b3.size()==7*10*13);
+    REQUIRE(b4.size()==7*10*13*2);
+    REQUIRE(b5.size()==7*10*13*2*4);
+    REQUIRE(b6.size()==7*10*13*2*4*5);
+    REQUIRE(b7.size()==7*10*13*2*4*5*21);
 
-    CHECK(a1.extent(0) == dim[0]);
-    CHECK(b1.extent(0) == dim[0]);
-    CHECK(c1.extent(0) == dim[0]);
-    CHECK(a1.shape());
-    CHECK(a1.shape()[0] == dim[0]);
+    REQUIRE(a1.extent(0) == dim[0]);
+    REQUIRE(b1.extent(0) == dim[0]);
+    REQUIRE(c1.extent(0) == dim[0]);
+    REQUIRE(a1.shape());
+    REQUIRE(a1.shape()[0] == dim[0]);
 
-    CHECK(a2.extent(0) == dim[0]);
-    CHECK(a2.extent(1) == dim[1]);
-    CHECK(b2.extent(0) == dim[0]);
-    CHECK(b2.extent(1) == dim[1]);
-    CHECK(c2.extent(0) == dim[0]);
-    CHECK(c2.extent(1) == dim[1]);
+    REQUIRE(a2.extent(0) == dim[0]);
+    REQUIRE(a2.extent(1) == dim[1]);
+    REQUIRE(b2.extent(0) == dim[0]);
+    REQUIRE(b2.extent(1) == dim[1]);
+    REQUIRE(c2.extent(0) == dim[0]);
+    REQUIRE(c2.extent(1) == dim[1]);
 
-    CHECK(a3.extent(0) == dim[0]);
-    CHECK(a3.extent(1) == dim[1]);
-    CHECK(a3.extent(2) == dim[2]);
-    CHECK(b3.extent(0) == dim[0]);
-    CHECK(b3.extent(1) == dim[1]);
-    CHECK(b3.extent(2) == dim[2]);
-    CHECK(c3.extent(0) == dim[0]);
-    CHECK(c3.extent(1) == dim[1]);
-    CHECK(c3.extent(2) == dim[2]);
+    REQUIRE(a3.extent(0) == dim[0]);
+    REQUIRE(a3.extent(1) == dim[1]);
+    REQUIRE(a3.extent(2) == dim[2]);
+    REQUIRE(b3.extent(0) == dim[0]);
+    REQUIRE(b3.extent(1) == dim[1]);
+    REQUIRE(b3.extent(2) == dim[2]);
+    REQUIRE(c3.extent(0) == dim[0]);
+    REQUIRE(c3.extent(1) == dim[1]);
+    REQUIRE(c3.extent(2) == dim[2]);
 
-    CHECK(a4.extent(0) == dim[0]);
-    CHECK(a4.extent(1) == dim[1]);
-    CHECK(a4.extent(2) == dim[2]);
-    CHECK(a4.extent(3) == dim[3]);
-    CHECK(b4.extent(0) == dim[0]);
-    CHECK(b4.extent(1) == dim[1]);
-    CHECK(b4.extent(2) == dim[2]);
-    CHECK(b4.extent(3) == dim[3]);
-    CHECK(c4.extent(0) == dim[0]);
-    CHECK(c4.extent(1) == dim[1]);
-    CHECK(c4.extent(2) == dim[2]);
-    CHECK(c4.extent(3) == dim[3]);
+    REQUIRE(a4.extent(0) == dim[0]);
+    REQUIRE(a4.extent(1) == dim[1]);
+    REQUIRE(a4.extent(2) == dim[2]);
+    REQUIRE(a4.extent(3) == dim[3]);
+    REQUIRE(b4.extent(0) == dim[0]);
+    REQUIRE(b4.extent(1) == dim[1]);
+    REQUIRE(b4.extent(2) == dim[2]);
+    REQUIRE(b4.extent(3) == dim[3]);
+    REQUIRE(c4.extent(0) == dim[0]);
+    REQUIRE(c4.extent(1) == dim[1]);
+    REQUIRE(c4.extent(2) == dim[2]);
+    REQUIRE(c4.extent(3) == dim[3]);
 
-    CHECK(a5.extent(0) == dim[0]);
-    CHECK(a5.extent(1) == dim[1]);
-    CHECK(a5.extent(2) == dim[2]);
-    CHECK(a5.extent(3) == dim[3]);
-    CHECK(a5.extent(4) == dim[4]);
-    CHECK(b5.extent(0) == dim[0]);
-    CHECK(b5.extent(1) == dim[1]);
-    CHECK(b5.extent(2) == dim[2]);
-    CHECK(b5.extent(3) == dim[3]);
-    CHECK(b5.extent(4) == dim[4]);
-    CHECK(c5.extent(0) == dim[0]);
-    CHECK(c5.extent(1) == dim[1]);
-    CHECK(c5.extent(2) == dim[2]);
-    CHECK(c5.extent(3) == dim[3]);
-    CHECK(c5.extent(4) == dim[4]);
+    REQUIRE(a5.extent(0) == dim[0]);
+    REQUIRE(a5.extent(1) == dim[1]);
+    REQUIRE(a5.extent(2) == dim[2]);
+    REQUIRE(a5.extent(3) == dim[3]);
+    REQUIRE(a5.extent(4) == dim[4]);
+    REQUIRE(b5.extent(0) == dim[0]);
+    REQUIRE(b5.extent(1) == dim[1]);
+    REQUIRE(b5.extent(2) == dim[2]);
+    REQUIRE(b5.extent(3) == dim[3]);
+    REQUIRE(b5.extent(4) == dim[4]);
+    REQUIRE(c5.extent(0) == dim[0]);
+    REQUIRE(c5.extent(1) == dim[1]);
+    REQUIRE(c5.extent(2) == dim[2]);
+    REQUIRE(c5.extent(3) == dim[3]);
+    REQUIRE(c5.extent(4) == dim[4]);
 
-    CHECK(a6.extent(0) == dim[0]);
-    CHECK(a6.extent(1) == dim[1]);
-    CHECK(a6.extent(2) == dim[2]);
-    CHECK(a6.extent(3) == dim[3]);
-    CHECK(a6.extent(4) == dim[4]);
-    CHECK(a6.extent(5) == dim[5]);
-    CHECK(b6.extent(0) == dim[0]);
-    CHECK(b6.extent(1) == dim[1]);
-    CHECK(b6.extent(2) == dim[2]);
-    CHECK(b6.extent(3) == dim[3]);
-    CHECK(b6.extent(4) == dim[4]);
-    CHECK(b6.extent(5) == dim[5]);
-    CHECK(c6.extent(0) == dim[0]);
-    CHECK(c6.extent(1) == dim[1]);
-    CHECK(c6.extent(2) == dim[2]);
-    CHECK(c6.extent(3) == dim[3]);
-    CHECK(c6.extent(4) == dim[4]);
-    CHECK(c6.extent(5) == dim[5]);
+    REQUIRE(a6.extent(0) == dim[0]);
+    REQUIRE(a6.extent(1) == dim[1]);
+    REQUIRE(a6.extent(2) == dim[2]);
+    REQUIRE(a6.extent(3) == dim[3]);
+    REQUIRE(a6.extent(4) == dim[4]);
+    REQUIRE(a6.extent(5) == dim[5]);
+    REQUIRE(b6.extent(0) == dim[0]);
+    REQUIRE(b6.extent(1) == dim[1]);
+    REQUIRE(b6.extent(2) == dim[2]);
+    REQUIRE(b6.extent(3) == dim[3]);
+    REQUIRE(b6.extent(4) == dim[4]);
+    REQUIRE(b6.extent(5) == dim[5]);
+    REQUIRE(c6.extent(0) == dim[0]);
+    REQUIRE(c6.extent(1) == dim[1]);
+    REQUIRE(c6.extent(2) == dim[2]);
+    REQUIRE(c6.extent(3) == dim[3]);
+    REQUIRE(c6.extent(4) == dim[4]);
+    REQUIRE(c6.extent(5) == dim[5]);
 
-    CHECK(b7.extent(0) == dim[0]);
-    CHECK(b7.extent(1) == dim[1]);
-    CHECK(b7.extent(2) == dim[2]);
-    CHECK(b7.extent(3) == dim[3]);
-    CHECK(b7.extent(4) == dim[4]);
-    CHECK(b7.extent(5) == dim[5]);
-    CHECK(b7.extent(6) == dim[6]);
-    CHECK(c7.extent(0) == dim[0]);
-    CHECK(c7.extent(1) == dim[1]);
-    CHECK(c7.extent(2) == dim[2]);
-    CHECK(c7.extent(3) == dim[3]);
-    CHECK(c7.extent(4) == dim[4]);
-    CHECK(c7.extent(5) == dim[5]);
-    CHECK(c7.extent(6) == dim[6]);
+    REQUIRE(b7.extent(0) == dim[0]);
+    REQUIRE(b7.extent(1) == dim[1]);
+    REQUIRE(b7.extent(2) == dim[2]);
+    REQUIRE(b7.extent(3) == dim[3]);
+    REQUIRE(b7.extent(4) == dim[4]);
+    REQUIRE(b7.extent(5) == dim[5]);
+    REQUIRE(b7.extent(6) == dim[6]);
+    REQUIRE(c7.extent(0) == dim[0]);
+    REQUIRE(c7.extent(1) == dim[1]);
+    REQUIRE(c7.extent(2) == dim[2]);
+    REQUIRE(c7.extent(3) == dim[3]);
+    REQUIRE(c7.extent(4) == dim[4]);
+    REQUIRE(c7.extent(5) == dim[5]);
+    REQUIRE(c7.extent(6) == dim[6]);
 
     a1.clear(); //optional here, as a1 will go out of scope
     b7.clear();
 
-    CHECK(a1.is_clear());
-    CHECK(b7.is_clear());
-    CHECK(c7.is_clear() == false);
-    return ALL_CLEAR;
+    REQUIRE(a1.is_clear());
+    REQUIRE(b7.is_clear());
+    REQUIRE(c7.is_clear() == false);
 }
 
-template UNIT_TEST_IMPORT(testconstructors7dim<double>);
-template UNIT_TEST_IMPORT(testconstructors7dim<Compound>);
-template UNIT_TEST_IMPORT((testconstructors7dim<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors7dim<std::complex<float> >));
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors7dimbuf()
-{    
+TEMPLATE_TEST_CASE("testconstructors7dimbuf", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
+{
+    using T = TestType;
     ra::size_type dim[7] = {7,10,13,2,4,5,21};
     T* buf = new T[7*10*13*2*4*5*21];
     {
@@ -389,84 +398,82 @@ int testconstructors7dimbuf()
         rarray<T,6> a6(buf, 7,10,13,2,4,5);
         rarray<T,6> b6(buf, dim);
         rarray<T,7> b7(buf, dim);        
-        CHECK(a1.data());
-        CHECK(b1.data());
-        CHECK(a2.data());
-        CHECK(b2.data());
-        CHECK(a3.data());
-        CHECK(b3.data());
-        CHECK(a4.data());
-        CHECK(b4.data());
-        CHECK(a5.data());
-        CHECK(b5.data());
-        CHECK(a6.data());
-        CHECK(b6.data());
-        CHECK(b7.data());
-        CHECK(a1.extent(0) == dim[0]);
-        CHECK(b1.extent(0) == dim[0]);
-        CHECK(a2.extent(0) == dim[0]);
-        CHECK(a2.extent(1) == dim[1]);
-        CHECK(b2.extent(0) == dim[0]);
-        CHECK(b2.extent(1) == dim[1]);
-        CHECK(a3.extent(0) == dim[0]);
-        CHECK(a3.extent(1) == dim[1]);
-        CHECK(a3.extent(2) == dim[2]);
-        CHECK(b3.extent(0) == dim[0]);
-        CHECK(b3.extent(1) == dim[1]);
-        CHECK(b3.extent(2) == dim[2]);
-        CHECK(a4.extent(0) == dim[0]);
-        CHECK(a4.extent(1) == dim[1]);
-        CHECK(a4.extent(2) == dim[2]);
-        CHECK(a4.extent(3) == dim[3]);
-        CHECK(b4.extent(0) == dim[0]);
-        CHECK(b4.extent(1) == dim[1]);
-        CHECK(b4.extent(2) == dim[2]);
-        CHECK(b4.extent(3) == dim[3]);
-        CHECK(a5.extent(0) == dim[0]);
-        CHECK(a5.extent(1) == dim[1]);
-        CHECK(a5.extent(2) == dim[2]);
-        CHECK(a5.extent(3) == dim[3]);
-        CHECK(a5.extent(4) == dim[4]);
-        CHECK(b5.extent(0) == dim[0]);
-        CHECK(b5.extent(1) == dim[1]);
-        CHECK(b5.extent(2) == dim[2]);
-        CHECK(b5.extent(3) == dim[3]);
-        CHECK(b5.extent(4) == dim[4]);
-        CHECK(a6.extent(0) == dim[0]);
-        CHECK(a6.extent(1) == dim[1]);
-        CHECK(a6.extent(2) == dim[2]);
-        CHECK(a6.extent(3) == dim[3]);
-        CHECK(a6.extent(4) == dim[4]);
-        CHECK(a6.extent(5) == dim[5]);
-        CHECK(b6.extent(0) == dim[0]);
-        CHECK(b6.extent(1) == dim[1]);
-        CHECK(b6.extent(2) == dim[2]);
-        CHECK(b6.extent(3) == dim[3]);
-        CHECK(b6.extent(4) == dim[4]);
-        CHECK(b6.extent(5) == dim[5]);
-        CHECK(b7.extent(0) == dim[0]);
-        CHECK(b7.extent(1) == dim[1]);
-        CHECK(b7.extent(2) == dim[2]);
-        CHECK(b7.extent(3) == dim[3]);
-        CHECK(b7.extent(4) == dim[4]);
-        CHECK(b7.extent(5) == dim[5]);
-        CHECK(b7.extent(6) == dim[6]);
+        REQUIRE(a1.data());
+        REQUIRE(b1.data());
+        REQUIRE(a2.data());
+        REQUIRE(b2.data());
+        REQUIRE(a3.data());
+        REQUIRE(b3.data());
+        REQUIRE(a4.data());
+        REQUIRE(b4.data());
+        REQUIRE(a5.data());
+        REQUIRE(b5.data());
+        REQUIRE(a6.data());
+        REQUIRE(b6.data());
+        REQUIRE(b7.data());
+        REQUIRE(a1.extent(0) == dim[0]);
+        REQUIRE(b1.extent(0) == dim[0]);
+        REQUIRE(a2.extent(0) == dim[0]);
+        REQUIRE(a2.extent(1) == dim[1]);
+        REQUIRE(b2.extent(0) == dim[0]);
+        REQUIRE(b2.extent(1) == dim[1]);
+        REQUIRE(a3.extent(0) == dim[0]);
+        REQUIRE(a3.extent(1) == dim[1]);
+        REQUIRE(a3.extent(2) == dim[2]);
+        REQUIRE(b3.extent(0) == dim[0]);
+        REQUIRE(b3.extent(1) == dim[1]);
+        REQUIRE(b3.extent(2) == dim[2]);
+        REQUIRE(a4.extent(0) == dim[0]);
+        REQUIRE(a4.extent(1) == dim[1]);
+        REQUIRE(a4.extent(2) == dim[2]);
+        REQUIRE(a4.extent(3) == dim[3]);
+        REQUIRE(b4.extent(0) == dim[0]);
+        REQUIRE(b4.extent(1) == dim[1]);
+        REQUIRE(b4.extent(2) == dim[2]);
+        REQUIRE(b4.extent(3) == dim[3]);
+        REQUIRE(a5.extent(0) == dim[0]);
+        REQUIRE(a5.extent(1) == dim[1]);
+        REQUIRE(a5.extent(2) == dim[2]);
+        REQUIRE(a5.extent(3) == dim[3]);
+        REQUIRE(a5.extent(4) == dim[4]);
+        REQUIRE(b5.extent(0) == dim[0]);
+        REQUIRE(b5.extent(1) == dim[1]);
+        REQUIRE(b5.extent(2) == dim[2]);
+        REQUIRE(b5.extent(3) == dim[3]);
+        REQUIRE(b5.extent(4) == dim[4]);
+        REQUIRE(a6.extent(0) == dim[0]);
+        REQUIRE(a6.extent(1) == dim[1]);
+        REQUIRE(a6.extent(2) == dim[2]);
+        REQUIRE(a6.extent(3) == dim[3]);
+        REQUIRE(a6.extent(4) == dim[4]);
+        REQUIRE(a6.extent(5) == dim[5]);
+        REQUIRE(b6.extent(0) == dim[0]);
+        REQUIRE(b6.extent(1) == dim[1]);
+        REQUIRE(b6.extent(2) == dim[2]);
+        REQUIRE(b6.extent(3) == dim[3]);
+        REQUIRE(b6.extent(4) == dim[4]);
+        REQUIRE(b6.extent(5) == dim[5]);
+        REQUIRE(b7.extent(0) == dim[0]);
+        REQUIRE(b7.extent(1) == dim[1]);
+        REQUIRE(b7.extent(2) == dim[2]);
+        REQUIRE(b7.extent(3) == dim[3]);
+        REQUIRE(b7.extent(4) == dim[4]);
+        REQUIRE(b7.extent(5) == dim[5]);
+        REQUIRE(b7.extent(6) == dim[6]);
     }
-    delete[] buf;
-    return ALL_CLEAR;
+    delete[] buf;    
 }
 
-template UNIT_TEST_IMPORT(testconstructors7dimbuf<double>);
-template UNIT_TEST_IMPORT(testconstructors7dimbuf<Compound>);
-template UNIT_TEST_IMPORT((testconstructors7dimbuf<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors7dimbuf<std::complex<float> >));
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors12dim() 
+TEMPLATE_TEST_CASE("test constructors 12dim", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
 {
+    using T = TestType;
     ra::size_type dim[12] = {2,3,4,3,2,3,4,3,2,3,4,3};
     rarray<T,7> z7(2,3,4,3,2,3,4);
     rarray<T,7> a7;
@@ -489,202 +496,200 @@ int testconstructors12dim()
     rarray<T,11> c11(b11);
     rarray<T,12> b12(dim);
     rarray<T,12> c12(b12);
-    CHECK(a7.data());
-    CHECK(b7.data());
-    CHECK(c7.data()==b7.data());
-    CHECK(a8.data());
-    CHECK(b8.data());
-    CHECK(c8.data()==b8.data());
-    CHECK(a9.data());
-    CHECK(b9.data());
-    CHECK(c9.data()==b9.data());
-    CHECK(a10.data());
-    CHECK(b10.data());
-    CHECK(c10.data()==b10.data());
-    CHECK(a11.data());
-    CHECK(b11.data());
-    CHECK(c11.data()==b11.data());
-    CHECK(b12.data());
-    CHECK(c12.data()==b12.data());
-    CHECK( b7.size()==2*3*4*3*2*3*4);
-    CHECK( b8.size()==2*3*4*3*2*3*4*3);
-    CHECK( b9.size()==2*3*4*3*2*3*4*3*2);
-    CHECK(b10.size()==2*3*4*3*2*3*4*3*2*3);
-    CHECK(b11.size()==2*3*4*3*2*3*4*3*2*3*4);
-    CHECK(b12.size()==2*3*4*3*2*3*4*3*2*3*4*3);
-    CHECK(a7.extent(0) == dim[0]);
-    CHECK(a7.extent(1) == dim[1]);
-    CHECK(a7.extent(2) == dim[2]);
-    CHECK(a7.extent(3) == dim[3]);
-    CHECK(a7.extent(4) == dim[4]);
-    CHECK(a7.extent(5) == dim[5]);
-    CHECK(a7.extent(6) == dim[6]);
-    CHECK(b7.extent(0) == dim[0]);
-    CHECK(b7.extent(1) == dim[1]);
-    CHECK(b7.extent(2) == dim[2]);
-    CHECK(b7.extent(3) == dim[3]);
-    CHECK(b7.extent(4) == dim[4]);
-    CHECK(b7.extent(5) == dim[5]);
-    CHECK(b7.extent(6) == dim[6]);
-    CHECK(c7.extent(0) == dim[0]);
-    CHECK(c7.extent(1) == dim[1]);
-    CHECK(c7.extent(2) == dim[2]);
-    CHECK(c7.extent(3) == dim[3]);
-    CHECK(c7.extent(4) == dim[4]);
-    CHECK(c7.extent(5) == dim[5]);
-    CHECK(c7.extent(6) == dim[6]);
-    CHECK(a8.extent(0) == dim[0]);
-    CHECK(a8.extent(1) == dim[1]);
-    CHECK(a8.extent(2) == dim[2]);
-    CHECK(a8.extent(3) == dim[3]);
-    CHECK(a8.extent(4) == dim[4]);
-    CHECK(a8.extent(5) == dim[5]);
-    CHECK(a8.extent(6) == dim[6]);
-    CHECK(a8.extent(7) == dim[7]);
-    CHECK(b8.extent(0) == dim[0]);
-    CHECK(b8.extent(1) == dim[1]);
-    CHECK(b8.extent(2) == dim[2]);
-    CHECK(b8.extent(3) == dim[3]);
-    CHECK(b8.extent(4) == dim[4]);
-    CHECK(b8.extent(5) == dim[5]);
-    CHECK(b8.extent(6) == dim[6]);
-    CHECK(b8.extent(7) == dim[7]);
-    CHECK(c8.extent(0) == dim[0]);
-    CHECK(c8.extent(1) == dim[1]);
-    CHECK(c8.extent(2) == dim[2]);
-    CHECK(c8.extent(3) == dim[3]);
-    CHECK(c8.extent(4) == dim[4]);
-    CHECK(c8.extent(5) == dim[5]);
-    CHECK(c8.extent(6) == dim[6]);
-    CHECK(c8.extent(7) == dim[7]);
-    CHECK(a9.extent(0) == dim[0]);
-    CHECK(a9.extent(1) == dim[1]);
-    CHECK(a9.extent(2) == dim[2]);
-    CHECK(a9.extent(3) == dim[3]);
-    CHECK(a9.extent(4) == dim[4]);
-    CHECK(a9.extent(5) == dim[5]);
-    CHECK(a9.extent(6) == dim[6]);
-    CHECK(a9.extent(7) == dim[7]);
-    CHECK(a9.extent(8) == dim[8]);
-    CHECK(b9.extent(0) == dim[0]);
-    CHECK(b9.extent(1) == dim[1]);
-    CHECK(b9.extent(2) == dim[2]);
-    CHECK(b9.extent(3) == dim[3]);
-    CHECK(b9.extent(4) == dim[4]);
-    CHECK(b9.extent(5) == dim[5]);
-    CHECK(b9.extent(6) == dim[6]);
-    CHECK(b9.extent(7) == dim[7]);
-    CHECK(b9.extent(8) == dim[8]);
-    CHECK(c9.extent(0) == dim[0]);
-    CHECK(c9.extent(1) == dim[1]);
-    CHECK(c9.extent(2) == dim[2]);
-    CHECK(c9.extent(3) == dim[3]);
-    CHECK(c9.extent(4) == dim[4]);
-    CHECK(c9.extent(5) == dim[5]);
-    CHECK(c9.extent(6) == dim[6]);
-    CHECK(c9.extent(7) == dim[7]);
-    CHECK(c9.extent(8) == dim[8]);
-    CHECK(a10.extent(0) == dim[0]);
-    CHECK(a10.extent(1) == dim[1]);
-    CHECK(a10.extent(2) == dim[2]);
-    CHECK(a10.extent(3) == dim[3]);
-    CHECK(a10.extent(4) == dim[4]);
-    CHECK(a10.extent(5) == dim[5]);
-    CHECK(a10.extent(6) == dim[6]);
-    CHECK(a10.extent(7) == dim[7]);
-    CHECK(a10.extent(8) == dim[8]);
-    CHECK(a10.extent(9) == dim[9]);
-    CHECK(b10.extent(0) == dim[0]);
-    CHECK(b10.extent(1) == dim[1]);
-    CHECK(b10.extent(2) == dim[2]);
-    CHECK(b10.extent(3) == dim[3]);
-    CHECK(b10.extent(4) == dim[4]);
-    CHECK(b10.extent(5) == dim[5]);
-    CHECK(b10.extent(6) == dim[6]);
-    CHECK(b10.extent(7) == dim[7]);
-    CHECK(b10.extent(8) == dim[8]);
-    CHECK(b10.extent(9) == dim[9]);
-    CHECK(c10.extent(0) == dim[0]);
-    CHECK(c10.extent(1) == dim[1]);
-    CHECK(c10.extent(2) == dim[2]);
-    CHECK(c10.extent(3) == dim[3]);
-    CHECK(c10.extent(4) == dim[4]);
-    CHECK(c10.extent(5) == dim[5]);
-    CHECK(c10.extent(6) == dim[6]);
-    CHECK(c10.extent(7) == dim[7]);
-    CHECK(c10.extent(8) == dim[8]);
-    CHECK(c10.extent(9) == dim[9]);
-    CHECK(a11.extent( 0) == dim[ 0]);
-    CHECK(a11.extent( 1) == dim[ 1]);
-    CHECK(a11.extent( 2) == dim[ 2]);
-    CHECK(a11.extent( 3) == dim[ 3]);
-    CHECK(a11.extent( 4) == dim[ 4]);
-    CHECK(a11.extent( 5) == dim[ 5]);
-    CHECK(a11.extent( 6) == dim[ 6]);
-    CHECK(a11.extent( 7) == dim[ 7]);
-    CHECK(a11.extent( 8) == dim[ 8]);
-    CHECK(a11.extent( 9) == dim[ 9]);
-    CHECK(a11.extent(10) == dim[10]);
-    CHECK(b11.extent( 0) == dim[ 0]);
-    CHECK(b11.extent( 1) == dim[ 1]);
-    CHECK(b11.extent( 2) == dim[ 2]);
-    CHECK(b11.extent( 3) == dim[ 3]);
-    CHECK(b11.extent( 4) == dim[ 4]);
-    CHECK(b11.extent( 5) == dim[ 5]);
-    CHECK(b11.extent( 6) == dim[ 6]);
-    CHECK(b11.extent( 7) == dim[ 7]);
-    CHECK(b11.extent( 8) == dim[ 8]);
-    CHECK(b11.extent( 9) == dim[ 9]);
-    CHECK(b11.extent(10) == dim[10]);
-    CHECK(c11.extent( 0) == dim[ 0]);
-    CHECK(c11.extent( 1) == dim[ 1]);
-    CHECK(c11.extent( 2) == dim[ 2]);
-    CHECK(c11.extent( 3) == dim[ 3]);
-    CHECK(c11.extent( 4) == dim[ 4]);
-    CHECK(c11.extent( 5) == dim[ 5]);
-    CHECK(c11.extent( 6) == dim[ 6]);
-    CHECK(c11.extent( 7) == dim[ 7]);
-    CHECK(c11.extent( 8) == dim[ 8]);
-    CHECK(c11.extent( 9) == dim[ 9]);
-    CHECK(c11.extent(10) == dim[10]);
-    CHECK(b12.extent( 0) == dim[ 0]);
-    CHECK(b12.extent( 1) == dim[ 1]);
-    CHECK(b12.extent( 2) == dim[ 2]);
-    CHECK(b12.extent( 3) == dim[ 3]);
-    CHECK(b12.extent( 4) == dim[ 4]);
-    CHECK(b12.extent( 5) == dim[ 5]);
-    CHECK(b12.extent( 6) == dim[ 6]);
-    CHECK(b12.extent( 7) == dim[ 7]);
-    CHECK(b12.extent( 8) == dim[ 8]);
-    CHECK(b12.extent( 9) == dim[ 9]);
-    CHECK(b12.extent(10) == dim[10]);
-    CHECK(b12.extent(11) == dim[11]);
-    CHECK(c12.extent( 0) == dim[ 0]);
-    CHECK(c12.extent( 1) == dim[ 1]);
-    CHECK(c12.extent( 2) == dim[ 2]);
-    CHECK(c12.extent( 3) == dim[ 3]);
-    CHECK(c12.extent( 4) == dim[ 4]);
-    CHECK(c12.extent( 5) == dim[ 5]);
-    CHECK(c12.extent( 6) == dim[ 6]);
-    CHECK(c12.extent( 7) == dim[ 7]);
-    CHECK(c12.extent( 8) == dim[ 8]);
-    CHECK(c12.extent( 9) == dim[ 9]);
-    CHECK(c12.extent(10) == dim[10]);
-    CHECK(c12.extent(11) == dim[11]);
-    return ALL_CLEAR;
+    REQUIRE(a7.data());
+    REQUIRE(b7.data());
+    REQUIRE(c7.data()==b7.data());
+    REQUIRE(a8.data());
+    REQUIRE(b8.data());
+    REQUIRE(c8.data()==b8.data());
+    REQUIRE(a9.data());
+    REQUIRE(b9.data());
+    REQUIRE(c9.data()==b9.data());
+    REQUIRE(a10.data());
+    REQUIRE(b10.data());
+    REQUIRE(c10.data()==b10.data());
+    REQUIRE(a11.data());
+    REQUIRE(b11.data());
+    REQUIRE(c11.data()==b11.data());
+    REQUIRE(b12.data());
+    REQUIRE(c12.data()==b12.data());
+    REQUIRE( b7.size()==2*3*4*3*2*3*4);
+    REQUIRE( b8.size()==2*3*4*3*2*3*4*3);
+    REQUIRE( b9.size()==2*3*4*3*2*3*4*3*2);
+    REQUIRE(b10.size()==2*3*4*3*2*3*4*3*2*3);
+    REQUIRE(b11.size()==2*3*4*3*2*3*4*3*2*3*4);
+    REQUIRE(b12.size()==2*3*4*3*2*3*4*3*2*3*4*3);
+    REQUIRE(a7.extent(0) == dim[0]);
+    REQUIRE(a7.extent(1) == dim[1]);
+    REQUIRE(a7.extent(2) == dim[2]);
+    REQUIRE(a7.extent(3) == dim[3]);
+    REQUIRE(a7.extent(4) == dim[4]);
+    REQUIRE(a7.extent(5) == dim[5]);
+    REQUIRE(a7.extent(6) == dim[6]);
+    REQUIRE(b7.extent(0) == dim[0]);
+    REQUIRE(b7.extent(1) == dim[1]);
+    REQUIRE(b7.extent(2) == dim[2]);
+    REQUIRE(b7.extent(3) == dim[3]);
+    REQUIRE(b7.extent(4) == dim[4]);
+    REQUIRE(b7.extent(5) == dim[5]);
+    REQUIRE(b7.extent(6) == dim[6]);
+    REQUIRE(c7.extent(0) == dim[0]);
+    REQUIRE(c7.extent(1) == dim[1]);
+    REQUIRE(c7.extent(2) == dim[2]);
+    REQUIRE(c7.extent(3) == dim[3]);
+    REQUIRE(c7.extent(4) == dim[4]);
+    REQUIRE(c7.extent(5) == dim[5]);
+    REQUIRE(c7.extent(6) == dim[6]);
+    REQUIRE(a8.extent(0) == dim[0]);
+    REQUIRE(a8.extent(1) == dim[1]);
+    REQUIRE(a8.extent(2) == dim[2]);
+    REQUIRE(a8.extent(3) == dim[3]);
+    REQUIRE(a8.extent(4) == dim[4]);
+    REQUIRE(a8.extent(5) == dim[5]);
+    REQUIRE(a8.extent(6) == dim[6]);
+    REQUIRE(a8.extent(7) == dim[7]);
+    REQUIRE(b8.extent(0) == dim[0]);
+    REQUIRE(b8.extent(1) == dim[1]);
+    REQUIRE(b8.extent(2) == dim[2]);
+    REQUIRE(b8.extent(3) == dim[3]);
+    REQUIRE(b8.extent(4) == dim[4]);
+    REQUIRE(b8.extent(5) == dim[5]);
+    REQUIRE(b8.extent(6) == dim[6]);
+    REQUIRE(b8.extent(7) == dim[7]);
+    REQUIRE(c8.extent(0) == dim[0]);
+    REQUIRE(c8.extent(1) == dim[1]);
+    REQUIRE(c8.extent(2) == dim[2]);
+    REQUIRE(c8.extent(3) == dim[3]);
+    REQUIRE(c8.extent(4) == dim[4]);
+    REQUIRE(c8.extent(5) == dim[5]);
+    REQUIRE(c8.extent(6) == dim[6]);
+    REQUIRE(c8.extent(7) == dim[7]);
+    REQUIRE(a9.extent(0) == dim[0]);
+    REQUIRE(a9.extent(1) == dim[1]);
+    REQUIRE(a9.extent(2) == dim[2]);
+    REQUIRE(a9.extent(3) == dim[3]);
+    REQUIRE(a9.extent(4) == dim[4]);
+    REQUIRE(a9.extent(5) == dim[5]);
+    REQUIRE(a9.extent(6) == dim[6]);
+    REQUIRE(a9.extent(7) == dim[7]);
+    REQUIRE(a9.extent(8) == dim[8]);
+    REQUIRE(b9.extent(0) == dim[0]);
+    REQUIRE(b9.extent(1) == dim[1]);
+    REQUIRE(b9.extent(2) == dim[2]);
+    REQUIRE(b9.extent(3) == dim[3]);
+    REQUIRE(b9.extent(4) == dim[4]);
+    REQUIRE(b9.extent(5) == dim[5]);
+    REQUIRE(b9.extent(6) == dim[6]);
+    REQUIRE(b9.extent(7) == dim[7]);
+    REQUIRE(b9.extent(8) == dim[8]);
+    REQUIRE(c9.extent(0) == dim[0]);
+    REQUIRE(c9.extent(1) == dim[1]);
+    REQUIRE(c9.extent(2) == dim[2]);
+    REQUIRE(c9.extent(3) == dim[3]);
+    REQUIRE(c9.extent(4) == dim[4]);
+    REQUIRE(c9.extent(5) == dim[5]);
+    REQUIRE(c9.extent(6) == dim[6]);
+    REQUIRE(c9.extent(7) == dim[7]);
+    REQUIRE(c9.extent(8) == dim[8]);
+    REQUIRE(a10.extent(0) == dim[0]);
+    REQUIRE(a10.extent(1) == dim[1]);
+    REQUIRE(a10.extent(2) == dim[2]);
+    REQUIRE(a10.extent(3) == dim[3]);
+    REQUIRE(a10.extent(4) == dim[4]);
+    REQUIRE(a10.extent(5) == dim[5]);
+    REQUIRE(a10.extent(6) == dim[6]);
+    REQUIRE(a10.extent(7) == dim[7]);
+    REQUIRE(a10.extent(8) == dim[8]);
+    REQUIRE(a10.extent(9) == dim[9]);
+    REQUIRE(b10.extent(0) == dim[0]);
+    REQUIRE(b10.extent(1) == dim[1]);
+    REQUIRE(b10.extent(2) == dim[2]);
+    REQUIRE(b10.extent(3) == dim[3]);
+    REQUIRE(b10.extent(4) == dim[4]);
+    REQUIRE(b10.extent(5) == dim[5]);
+    REQUIRE(b10.extent(6) == dim[6]);
+    REQUIRE(b10.extent(7) == dim[7]);
+    REQUIRE(b10.extent(8) == dim[8]);
+    REQUIRE(b10.extent(9) == dim[9]);
+    REQUIRE(c10.extent(0) == dim[0]);
+    REQUIRE(c10.extent(1) == dim[1]);
+    REQUIRE(c10.extent(2) == dim[2]);
+    REQUIRE(c10.extent(3) == dim[3]);
+    REQUIRE(c10.extent(4) == dim[4]);
+    REQUIRE(c10.extent(5) == dim[5]);
+    REQUIRE(c10.extent(6) == dim[6]);
+    REQUIRE(c10.extent(7) == dim[7]);
+    REQUIRE(c10.extent(8) == dim[8]);
+    REQUIRE(c10.extent(9) == dim[9]);
+    REQUIRE(a11.extent( 0) == dim[ 0]);
+    REQUIRE(a11.extent( 1) == dim[ 1]);
+    REQUIRE(a11.extent( 2) == dim[ 2]);
+    REQUIRE(a11.extent( 3) == dim[ 3]);
+    REQUIRE(a11.extent( 4) == dim[ 4]);
+    REQUIRE(a11.extent( 5) == dim[ 5]);
+    REQUIRE(a11.extent( 6) == dim[ 6]);
+    REQUIRE(a11.extent( 7) == dim[ 7]);
+    REQUIRE(a11.extent( 8) == dim[ 8]);
+    REQUIRE(a11.extent( 9) == dim[ 9]);
+    REQUIRE(a11.extent(10) == dim[10]);
+    REQUIRE(b11.extent( 0) == dim[ 0]);
+    REQUIRE(b11.extent( 1) == dim[ 1]);
+    REQUIRE(b11.extent( 2) == dim[ 2]);
+    REQUIRE(b11.extent( 3) == dim[ 3]);
+    REQUIRE(b11.extent( 4) == dim[ 4]);
+    REQUIRE(b11.extent( 5) == dim[ 5]);
+    REQUIRE(b11.extent( 6) == dim[ 6]);
+    REQUIRE(b11.extent( 7) == dim[ 7]);
+    REQUIRE(b11.extent( 8) == dim[ 8]);
+    REQUIRE(b11.extent( 9) == dim[ 9]);
+    REQUIRE(b11.extent(10) == dim[10]);
+    REQUIRE(c11.extent( 0) == dim[ 0]);
+    REQUIRE(c11.extent( 1) == dim[ 1]);
+    REQUIRE(c11.extent( 2) == dim[ 2]);
+    REQUIRE(c11.extent( 3) == dim[ 3]);
+    REQUIRE(c11.extent( 4) == dim[ 4]);
+    REQUIRE(c11.extent( 5) == dim[ 5]);
+    REQUIRE(c11.extent( 6) == dim[ 6]);
+    REQUIRE(c11.extent( 7) == dim[ 7]);
+    REQUIRE(c11.extent( 8) == dim[ 8]);
+    REQUIRE(c11.extent( 9) == dim[ 9]);
+    REQUIRE(c11.extent(10) == dim[10]);
+    REQUIRE(b12.extent( 0) == dim[ 0]);
+    REQUIRE(b12.extent( 1) == dim[ 1]);
+    REQUIRE(b12.extent( 2) == dim[ 2]);
+    REQUIRE(b12.extent( 3) == dim[ 3]);
+    REQUIRE(b12.extent( 4) == dim[ 4]);
+    REQUIRE(b12.extent( 5) == dim[ 5]);
+    REQUIRE(b12.extent( 6) == dim[ 6]);
+    REQUIRE(b12.extent( 7) == dim[ 7]);
+    REQUIRE(b12.extent( 8) == dim[ 8]);
+    REQUIRE(b12.extent( 9) == dim[ 9]);
+    REQUIRE(b12.extent(10) == dim[10]);
+    REQUIRE(b12.extent(11) == dim[11]);
+    REQUIRE(c12.extent( 0) == dim[ 0]);
+    REQUIRE(c12.extent( 1) == dim[ 1]);
+    REQUIRE(c12.extent( 2) == dim[ 2]);
+    REQUIRE(c12.extent( 3) == dim[ 3]);
+    REQUIRE(c12.extent( 4) == dim[ 4]);
+    REQUIRE(c12.extent( 5) == dim[ 5]);
+    REQUIRE(c12.extent( 6) == dim[ 6]);
+    REQUIRE(c12.extent( 7) == dim[ 7]);
+    REQUIRE(c12.extent( 8) == dim[ 8]);
+    REQUIRE(c12.extent( 9) == dim[ 9]);
+    REQUIRE(c12.extent(10) == dim[10]);
+    REQUIRE(c12.extent(11) == dim[11]);    
 }
 
-template UNIT_TEST_IMPORT(testconstructors12dim<double>);
-template UNIT_TEST_IMPORT(testconstructors12dim<Compound>);
-template UNIT_TEST_IMPORT((testconstructors12dim<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors12dim<std::complex<float> >));
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testconstructors12dimbuf()
-{    
+TEMPLATE_TEST_CASE("test constructors 12dim buf", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
+{
+    using T = TestType;
     ra::size_type dim[12] = {2,3,4,3,2,3,4,3,2,3,4,3};
     T* buf = new T[2*3*4*3*2*3*4*3*2*3*4*3];
     {
@@ -699,128 +704,122 @@ int testconstructors12dimbuf()
         rarray<T,11> a11(buf, 2,3,4,3,2,3,4,3,2,3,4);
         rarray<T,11> b11(buf, dim);
         rarray<T,12> b12(buf, dim);       
-        CHECK(a7.data());
-        CHECK(b7.data());
-        CHECK(a8.data());
-        CHECK(b8.data());
-        CHECK(a9.data());
-        CHECK(b9.data());
-        CHECK(a10.data());
-        CHECK(b10.data());
-        CHECK(a11.data());
-        CHECK(b11.data());
-        CHECK(b12.data());
-        CHECK(a7.extent(0) == dim[0]);
-        CHECK(a7.extent(1) == dim[1]);
-        CHECK(a7.extent(2) == dim[2]);
-        CHECK(a7.extent(3) == dim[3]);
-        CHECK(a7.extent(4) == dim[4]);
-        CHECK(a7.extent(5) == dim[5]);
-        CHECK(a7.extent(6) == dim[6]);
-        CHECK(b7.extent(0) == dim[0]);
-        CHECK(b7.extent(1) == dim[1]);
-        CHECK(b7.extent(2) == dim[2]);
-        CHECK(b7.extent(3) == dim[3]);
-        CHECK(b7.extent(4) == dim[4]);
-        CHECK(b7.extent(5) == dim[5]);
-        CHECK(b7.extent(6) == dim[6]);
-        CHECK(a8.extent(0) == dim[0]);
-        CHECK(a8.extent(1) == dim[1]);
-        CHECK(a8.extent(2) == dim[2]);
-        CHECK(a8.extent(3) == dim[3]);
-        CHECK(a8.extent(4) == dim[4]);
-        CHECK(a8.extent(5) == dim[5]);
-        CHECK(a8.extent(6) == dim[6]);
-        CHECK(a8.extent(7) == dim[7]);
-        CHECK(b8.extent(0) == dim[0]);
-        CHECK(b8.extent(1) == dim[1]);
-        CHECK(b8.extent(2) == dim[2]);
-        CHECK(b8.extent(3) == dim[3]);
-        CHECK(b8.extent(4) == dim[4]);
-        CHECK(b8.extent(5) == dim[5]);
-        CHECK(b8.extent(6) == dim[6]);
-        CHECK(b8.extent(7) == dim[7]);
-        CHECK(a9.extent(0) == dim[0]);
-        CHECK(a9.extent(1) == dim[1]);
-        CHECK(a9.extent(2) == dim[2]);
-        CHECK(a9.extent(3) == dim[3]);
-        CHECK(a9.extent(4) == dim[4]);
-        CHECK(a9.extent(5) == dim[5]);
-        CHECK(a9.extent(6) == dim[6]);
-        CHECK(a9.extent(7) == dim[7]);
-        CHECK(a9.extent(8) == dim[8]);
-        CHECK(b9.extent(0) == dim[0]);
-        CHECK(b9.extent(1) == dim[1]);
-        CHECK(b9.extent(2) == dim[2]);
-        CHECK(b9.extent(3) == dim[3]);
-        CHECK(b9.extent(4) == dim[4]);
-        CHECK(b9.extent(5) == dim[5]);
-        CHECK(b9.extent(6) == dim[6]);
-        CHECK(b9.extent(7) == dim[7]);
-        CHECK(b9.extent(8) == dim[8]);
-        CHECK(a10.extent(0) == dim[0]);
-        CHECK(a10.extent(1) == dim[1]);
-        CHECK(a10.extent(2) == dim[2]);
-        CHECK(a10.extent(3) == dim[3]);
-        CHECK(a10.extent(4) == dim[4]);
-        CHECK(a10.extent(5) == dim[5]);
-        CHECK(a10.extent(6) == dim[6]);
-        CHECK(a10.extent(7) == dim[7]);
-        CHECK(a10.extent(8) == dim[8]);
-        CHECK(a10.extent(9) == dim[9]);
-        CHECK(b10.extent(0) == dim[0]);
-        CHECK(b10.extent(1) == dim[1]);
-        CHECK(b10.extent(2) == dim[2]);
-        CHECK(b10.extent(3) == dim[3]);
-        CHECK(b10.extent(4) == dim[4]);
-        CHECK(b10.extent(5) == dim[5]);
-        CHECK(b10.extent(6) == dim[6]);
-        CHECK(b10.extent(7) == dim[7]);
-        CHECK(b10.extent(8) == dim[8]);
-        CHECK(b10.extent(9) == dim[9]);
-        CHECK(a11.extent( 0) == dim[ 0]);
-        CHECK(a11.extent( 1) == dim[ 1]);
-        CHECK(a11.extent( 2) == dim[ 2]);
-        CHECK(a11.extent( 3) == dim[ 3]);
-        CHECK(a11.extent( 4) == dim[ 4]);
-        CHECK(a11.extent( 5) == dim[ 5]);
-        CHECK(a11.extent( 6) == dim[ 6]);
-        CHECK(a11.extent( 7) == dim[ 7]);
-        CHECK(a11.extent( 8) == dim[ 8]);
-        CHECK(a11.extent( 9) == dim[ 9]);
-        CHECK(a11.extent(10) == dim[10]);
-        CHECK(b11.extent( 0) == dim[ 0]);
-        CHECK(b11.extent( 1) == dim[ 1]);
-        CHECK(b11.extent( 2) == dim[ 2]);
-        CHECK(b11.extent( 3) == dim[ 3]);
-        CHECK(b11.extent( 4) == dim[ 4]);
-        CHECK(b11.extent( 5) == dim[ 5]);
-        CHECK(b11.extent( 6) == dim[ 6]);
-        CHECK(b11.extent( 7) == dim[ 7]);
-        CHECK(b11.extent( 8) == dim[ 8]);
-        CHECK(b11.extent( 9) == dim[ 9]);
-        CHECK(b11.extent(10) == dim[10]);
-        CHECK(b12.extent( 0) == dim[ 0]);
-        CHECK(b12.extent( 1) == dim[ 1]);
-        CHECK(b12.extent( 2) == dim[ 2]);
-        CHECK(b12.extent( 3) == dim[ 3]);
-        CHECK(b12.extent( 4) == dim[ 4]);
-        CHECK(b12.extent( 5) == dim[ 5]);
-        CHECK(b12.extent( 6) == dim[ 6]);
-        CHECK(b12.extent( 7) == dim[ 7]);
-        CHECK(b12.extent( 8) == dim[ 8]);
-        CHECK(b12.extent( 9) == dim[ 9]);
-        CHECK(b12.extent(10) == dim[10]);
-        CHECK(b12.extent(11) == dim[11]);
+        REQUIRE(a7.data());
+        REQUIRE(b7.data());
+        REQUIRE(a8.data());
+        REQUIRE(b8.data());
+        REQUIRE(a9.data());
+        REQUIRE(b9.data());
+        REQUIRE(a10.data());
+        REQUIRE(b10.data());
+        REQUIRE(a11.data());
+        REQUIRE(b11.data());
+        REQUIRE(b12.data());
+        REQUIRE(a7.extent(0) == dim[0]);
+        REQUIRE(a7.extent(1) == dim[1]);
+        REQUIRE(a7.extent(2) == dim[2]);
+        REQUIRE(a7.extent(3) == dim[3]);
+        REQUIRE(a7.extent(4) == dim[4]);
+        REQUIRE(a7.extent(5) == dim[5]);
+        REQUIRE(a7.extent(6) == dim[6]);
+        REQUIRE(b7.extent(0) == dim[0]);
+        REQUIRE(b7.extent(1) == dim[1]);
+        REQUIRE(b7.extent(2) == dim[2]);
+        REQUIRE(b7.extent(3) == dim[3]);
+        REQUIRE(b7.extent(4) == dim[4]);
+        REQUIRE(b7.extent(5) == dim[5]);
+        REQUIRE(b7.extent(6) == dim[6]);
+        REQUIRE(a8.extent(0) == dim[0]);
+        REQUIRE(a8.extent(1) == dim[1]);
+        REQUIRE(a8.extent(2) == dim[2]);
+        REQUIRE(a8.extent(3) == dim[3]);
+        REQUIRE(a8.extent(4) == dim[4]);
+        REQUIRE(a8.extent(5) == dim[5]);
+        REQUIRE(a8.extent(6) == dim[6]);
+        REQUIRE(a8.extent(7) == dim[7]);
+        REQUIRE(b8.extent(0) == dim[0]);
+        REQUIRE(b8.extent(1) == dim[1]);
+        REQUIRE(b8.extent(2) == dim[2]);
+        REQUIRE(b8.extent(3) == dim[3]);
+        REQUIRE(b8.extent(4) == dim[4]);
+        REQUIRE(b8.extent(5) == dim[5]);
+        REQUIRE(b8.extent(6) == dim[6]);
+        REQUIRE(b8.extent(7) == dim[7]);
+        REQUIRE(a9.extent(0) == dim[0]);
+        REQUIRE(a9.extent(1) == dim[1]);
+        REQUIRE(a9.extent(2) == dim[2]);
+        REQUIRE(a9.extent(3) == dim[3]);
+        REQUIRE(a9.extent(4) == dim[4]);
+        REQUIRE(a9.extent(5) == dim[5]);
+        REQUIRE(a9.extent(6) == dim[6]);
+        REQUIRE(a9.extent(7) == dim[7]);
+        REQUIRE(a9.extent(8) == dim[8]);
+        REQUIRE(b9.extent(0) == dim[0]);
+        REQUIRE(b9.extent(1) == dim[1]);
+        REQUIRE(b9.extent(2) == dim[2]);
+        REQUIRE(b9.extent(3) == dim[3]);
+        REQUIRE(b9.extent(4) == dim[4]);
+        REQUIRE(b9.extent(5) == dim[5]);
+        REQUIRE(b9.extent(6) == dim[6]);
+        REQUIRE(b9.extent(7) == dim[7]);
+        REQUIRE(b9.extent(8) == dim[8]);
+        REQUIRE(a10.extent(0) == dim[0]);
+        REQUIRE(a10.extent(1) == dim[1]);
+        REQUIRE(a10.extent(2) == dim[2]);
+        REQUIRE(a10.extent(3) == dim[3]);
+        REQUIRE(a10.extent(4) == dim[4]);
+        REQUIRE(a10.extent(5) == dim[5]);
+        REQUIRE(a10.extent(6) == dim[6]);
+        REQUIRE(a10.extent(7) == dim[7]);
+        REQUIRE(a10.extent(8) == dim[8]);
+        REQUIRE(a10.extent(9) == dim[9]);
+        REQUIRE(b10.extent(0) == dim[0]);
+        REQUIRE(b10.extent(1) == dim[1]);
+        REQUIRE(b10.extent(2) == dim[2]);
+        REQUIRE(b10.extent(3) == dim[3]);
+        REQUIRE(b10.extent(4) == dim[4]);
+        REQUIRE(b10.extent(5) == dim[5]);
+        REQUIRE(b10.extent(6) == dim[6]);
+        REQUIRE(b10.extent(7) == dim[7]);
+        REQUIRE(b10.extent(8) == dim[8]);
+        REQUIRE(b10.extent(9) == dim[9]);
+        REQUIRE(a11.extent( 0) == dim[ 0]);
+        REQUIRE(a11.extent( 1) == dim[ 1]);
+        REQUIRE(a11.extent( 2) == dim[ 2]);
+        REQUIRE(a11.extent( 3) == dim[ 3]);
+        REQUIRE(a11.extent( 4) == dim[ 4]);
+        REQUIRE(a11.extent( 5) == dim[ 5]);
+        REQUIRE(a11.extent( 6) == dim[ 6]);
+        REQUIRE(a11.extent( 7) == dim[ 7]);
+        REQUIRE(a11.extent( 8) == dim[ 8]);
+        REQUIRE(a11.extent( 9) == dim[ 9]);
+        REQUIRE(a11.extent(10) == dim[10]);
+        REQUIRE(b11.extent( 0) == dim[ 0]);
+        REQUIRE(b11.extent( 1) == dim[ 1]);
+        REQUIRE(b11.extent( 2) == dim[ 2]);
+        REQUIRE(b11.extent( 3) == dim[ 3]);
+        REQUIRE(b11.extent( 4) == dim[ 4]);
+        REQUIRE(b11.extent( 5) == dim[ 5]);
+        REQUIRE(b11.extent( 6) == dim[ 6]);
+        REQUIRE(b11.extent( 7) == dim[ 7]);
+        REQUIRE(b11.extent( 8) == dim[ 8]);
+        REQUIRE(b11.extent( 9) == dim[ 9]);
+        REQUIRE(b11.extent(10) == dim[10]);
+        REQUIRE(b12.extent( 0) == dim[ 0]);
+        REQUIRE(b12.extent( 1) == dim[ 1]);
+        REQUIRE(b12.extent( 2) == dim[ 2]);
+        REQUIRE(b12.extent( 3) == dim[ 3]);
+        REQUIRE(b12.extent( 4) == dim[ 4]);
+        REQUIRE(b12.extent( 5) == dim[ 5]);
+        REQUIRE(b12.extent( 6) == dim[ 6]);
+        REQUIRE(b12.extent( 7) == dim[ 7]);
+        REQUIRE(b12.extent( 8) == dim[ 8]);
+        REQUIRE(b12.extent( 9) == dim[ 9]);
+        REQUIRE(b12.extent(10) == dim[10]);
+        REQUIRE(b12.extent(11) == dim[11]);
     }
-    delete[] buf;
-    return ALL_CLEAR;
+    delete[] buf;    
 }
-
-template UNIT_TEST_IMPORT(testconstructors12dimbuf<double>);
-template UNIT_TEST_IMPORT(testconstructors12dimbuf<Compound>);
-template UNIT_TEST_IMPORT((testconstructors12dimbuf<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testconstructors12dimbuf<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -834,7 +833,7 @@ array<Compound,3> a2 = {{Compound(-1,-2),Compound(3,-4),Compound(5,-6)}};
 //////////////////////////////////////////////////////////////////////
 
 template<typename T> 
-int testaccessors(T value1, T value2) 
+void testaccessors(T value1, T value2) 
 {
     // Exercises the following methods of the rarray<T,{1,2,3}> class
     //   rarray_intermediate operator[](int i);
@@ -864,44 +863,45 @@ int testaccessors(T value1, T value2)
     for (int i=0; i<l; i++)
         for (int j=0; j<m; j++)
             for (int k=0; k<n; k++)
-                CHECK(a[i][j][k] == value1);   
+                REQUIRE(a[i][j][k] == value1);   
     for (int i=0; i<l; i++) {
         for (int j=0; j<m; j++) {
             for (int k=0; k<n; k++) {
-                CHECK(b[i][j][k] == value2);   
+                REQUIRE(b[i][j][k] == value2);   
             }
         }
     }
     b[6][1][0] = value1;
-    CHECK(c[6][1][0] == value1)
-    return ALL_CLEAR;
+    REQUIRE(c[6][1][0] == value1);    
 }
 
-UNIT_TEST(testaccessors_double)
+TEST_CASE("testaccessors_double")
 {
-    return testaccessors<double>(d1,d2);
+    testaccessors<double>(d1,d2);
 }
-END_UNIT_TEST
 
-UNIT_TEST(testaccessors_Compound)
+
+TEST_CASE("testaccessors_Compound")
 {
-    return testaccessors<Compound>(c1,c2);
+    testaccessors<Compound>(c1,c2);
 }
-END_UNIT_TEST
 
-UNIT_TEST(testaccessors_array_Compound_3)
+
+TEST_CASE("testaccessors_array_Compound_3")
 {
-    return testaccessors<array<Compound,3> >(a1,a2);
+    testaccessors<array<Compound,3> >(a1,a2);
 }
-END_UNIT_TEST
-
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<typename T> 
-int testsliceconstructor() 
+TEMPLATE_TEST_CASE("testsliceconstructor", "",
+                   double,
+                   Compound,
+                   (array<Compound,3>),
+                   (std::complex<float>))
 {
+    using T = TestType;
     // Exercises the following methods of the rarray<T,3> class
     //   rarray_intermediate operator[](int i);
     //   const T* data() const;
@@ -922,33 +922,28 @@ int testsliceconstructor()
     const T* tan = getconstdata(rarray<T,2>(a.at(1)));
     T* tac = a.at(1).data();
 #endif
-    CHECK(tan==tac);
+    REQUIRE(tan==tac);
 #ifndef RA_SKIPINTERMEDIATE
-    CHECK(a.at(1).extent(0)==21);
-    CHECK(a.at(1).extent(1)==13);
-    CHECK(a.at(1).shape()[1]==13);
-    CHECK(a.at(1).at(6).extent(0)==13);
-    CHECK(a.at(1).at(6).shape()[0]==13);
-    CHECK(a.at(1).size()==21*13);
-    CHECK(a.at(1).at(6).size()==13);
+    REQUIRE(a.at(1).extent(0)==21);
+    REQUIRE(a.at(1).extent(1)==13);
+    REQUIRE(a.at(1).shape()[1]==13);
+    REQUIRE(a.at(1).at(6).extent(0)==13);
+    REQUIRE(a.at(1).at(6).shape()[0]==13);
+    REQUIRE(a.at(1).size()==21*13);
+    REQUIRE(a.at(1).at(6).size()==13);
     T* p1 = a.at(3).at(2).data();
     T* p2 = a.at(3).data();
-    CHECK(p1);
-    CHECK(p2);
-#endif
-    return ALL_CLEAR;
+    REQUIRE(p1);
+    REQUIRE(p2);
+#endif    
 }
 
-template UNIT_TEST_IMPORT(testsliceconstructor<double>);
-template UNIT_TEST_IMPORT(testsliceconstructor<Compound>);
-template UNIT_TEST_IMPORT((testsliceconstructor<array<Compound,3> >));
-template UNIT_TEST_IMPORT((testsliceconstructor<std::complex<float> >));
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 template<typename T> 
-int testcopy2d(T value1, T value2) 
+void testcopy2d(T value1, T value2) 
 {
     // Tests following methods:
     //   rarray<T,2> copy() const;
@@ -963,34 +958,33 @@ int testcopy2d(T value1, T value2)
         }
     }
     rarray<T,2> d(b.copy());
-    CHECK(d.data()!=b.data());
-    CHECK(d.extent(0)==b.extent(0));
-    CHECK(d.extent(1)==b.extent(1));
+    REQUIRE(d.data()!=b.data());
+    REQUIRE(d.extent(0)==b.extent(0));
+    REQUIRE(d.extent(1)==b.extent(1));
     for (int i=0; i<l; i++) {
         for (int j=0; j<m; j++) {
             REQUIRE(b[i][j]==d[i][j]);
         }
-    }
-    return ALL_CLEAR;
+    }    
 }
 
-UNIT_TEST(testcopy2d_double)
+TEST_CASE("testcopy2d_double")
 {
-    return testcopy2d<double>(d1,d2);
+    testcopy2d<double>(d1,d2);
 }
-END_UNIT_TEST
 
-UNIT_TEST(testcopy2d_Compound)
-{
-    return testcopy2d<Compound>(c1,c2);
-}
-END_UNIT_TEST
 
-UNIT_TEST(testcopy2d_array_Compound_3)
+TEST_CASE("testcopy2d_Compound")
 {
-    return testcopy2d<array<Compound,3> >(a1,a2);
+    testcopy2d<Compound>(c1,c2);
 }
-END_UNIT_TEST
+
+
+TEST_CASE("testcopy2d_array_Compound_3")
+{
+    testcopy2d<array<Compound,3> >(a1,a2);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -998,7 +992,7 @@ END_UNIT_TEST
 //////////////////////////////////////////////////////////////////////
 
 template<typename T> 
-int testcopy3d(T value1, T value2) 
+void testcopy3d(T value1, T value2) 
 {
     // Tests following methods:
     //   rarray<T,3> copy() const;
@@ -1017,10 +1011,10 @@ int testcopy3d(T value1, T value2)
         }
     }
     rarray<T,3> d(b.copy());
-    CHECK(d.data()!=b.data());
-    CHECK(d.extent(0)==b.extent(0));
-    CHECK(d.extent(1)==b.extent(1));
-    CHECK(d.extent(2)==b.extent(2));
+    REQUIRE(d.data()!=b.data());
+    REQUIRE(d.extent(0)==b.extent(0));
+    REQUIRE(d.extent(1)==b.extent(1));
+    REQUIRE(d.extent(2)==b.extent(2));
     for (int i=0; i<l; i++) {
         for (int j=0; j<m; j++) {
             for (int k=0; k<n; k++) {
@@ -1028,32 +1022,31 @@ int testcopy3d(T value1, T value2)
             }
         }
     }
-    return ALL_CLEAR;
 }
 
-UNIT_TEST(testcopy3d_double)
+TEST_CASE("testcopy3d_double")
 {
-    return testcopy3d<double>(d1,d2);
+    testcopy3d<double>(d1,d2);
 }
-END_UNIT_TEST
 
-UNIT_TEST(testcopy3d_Compound)
-{
-    return testcopy3d<Compound>(c1,c2);
-}
-END_UNIT_TEST
 
-UNIT_TEST(testcopy3d_array_Compound_3)
+TEST_CASE("testcopy3d_Compound")
 {
-    return testcopy3d<array<Compound,3> >(a1,a2);
+    testcopy3d<Compound>(c1,c2);
 }
-END_UNIT_TEST
+
+
+TEST_CASE("testcopy3d_array_Compound_3")
+{
+    testcopy3d<array<Compound,3> >(a1,a2);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 template<typename T> 
-int testcopy1d(T value1, T value2) 
+void testcopy1d(T value1, T value2) 
 {
     // Tests following methods:
     //   rarray<T,1> copy() const;
@@ -1065,31 +1058,31 @@ int testcopy1d(T value1, T value2)
         value3 = value3+value2;
     }
     rarray<T,1> d(b.copy());
-    CHECK(d.data()!=b.data());
-    CHECK(d.extent(0)==b.extent(0));
+    REQUIRE(d.data()!=b.data());
+    REQUIRE(d.extent(0)==b.extent(0));
     for (int i=0; i<n; i++) {
         REQUIRE(b[i]==d[i]);
     }
-    return ALL_CLEAR;
+    
 }
 
-UNIT_TEST(testcopy1d_double)
+TEST_CASE("testcopy1d_double")
 {
-    return testcopy1d<double>(d1,d2);
+    testcopy1d<double>(d1,d2);
 }
-END_UNIT_TEST
 
-UNIT_TEST(testcopy1d_Compound)
-{
-    return testcopy1d<Compound>(c1,c2);
-}
-END_UNIT_TEST
 
-UNIT_TEST(testcopy1d_array_Compound_3)
+TEST_CASE("testcopy1d_Compound")
 {
-    return testcopy1d<array<Compound,3> >(a1,a2);
+    testcopy1d<Compound>(c1,c2);
 }
-END_UNIT_TEST
+
+
+TEST_CASE("testcopy1d_array_Compound_3")
+{
+    testcopy1d<array<Compound,3> >(a1,a2);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1114,8 +1107,9 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
     }
 }
 
-template<typename T>
-int testmmm() {
+TEMPLATE_TEST_CASE("testmmm", "", int, double)
+{                  
+    using T = TestType;
     T bdata[3*3] = { 1,  2,  3,
                      4,  5,  6,
                      7,  8,  9};
@@ -1131,14 +1125,11 @@ int testmmm() {
     mmm(a,b,c);
     for (int i=0;i<3;i++) {
         for (int j=0;j<3;j++) {
-            CHECK(a[i][j]==adata[i*3+j]);
+            REQUIRE(a[i][j]==adata[i*3+j]);
         }
     }
-    return ALL_CLEAR;
+    
 }
-
-template UNIT_TEST_IMPORT(testmmm<int>);
-template UNIT_TEST_IMPORT(testmmm<double>);
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1153,16 +1144,16 @@ std::string print1d(const rarray<float,1> &a)
     return s.str();
 }
 
-UNIT_TEST(test1dautoconversions)
+TEST_CASE("test1dautoconversions")
 {
     const int n=9;
     float b[n] = {1,2,3,4,5,6,7,8,9};
     const rarray<float,1> a = RARRAY(b);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
+    REQUIRE(EXTENT(a,0)==EXTENT(b,0));
     std::string s = print1d(RARRAY(b));
-    CHECK(s=="1 2 3 4 5 6 7 8 9");
+    REQUIRE(s=="1 2 3 4 5 6 7 8 9");
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1195,7 +1186,7 @@ void print1d_4(const rarray<const float,1>& a, std::ostream &out)
     out << std::endl;
 }
 
-UNIT_TEST(test1dconversions)
+TEST_CASE("test1dconversions")
 {
     const int n=9;
     rarray<float,1> a(n);
@@ -1203,23 +1194,22 @@ UNIT_TEST(test1dconversions)
         a[i] = i+1;
     const rarray<float,1>& c=a;
     std::stringstream s1,s2,s3,s4,s5,s6,s7;
-    //print1d_1(c.ptr_array(), c.extent(0), std::cout);
     print1d_1(c.ptr_array(), c.extent(0), s1);
-    CHECK(s1.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s1.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_2(c.noconst_ptr_array(), c.extent(0), s2);
-    CHECK(s2.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s2.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_1(a.data(), c.extent(0), s3);
-    CHECK(s3.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s3.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_2(c.data(), c.extent(0), s4);
-    CHECK(s4.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s4.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_3(c, s5);
-    CHECK(s5.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s5.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_4(a.const_ref(), s6);
-    CHECK(s6.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s6.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_4(c.const_ref(), s7);
-    CHECK(s7.str()=="1 2 3 4 5 6 7 8 9 \n");
+    REQUIRE(s7.str()=="1 2 3 4 5 6 7 8 9 \n");
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1338,7 +1328,7 @@ void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
   cout << '\n';
 }
 
-UNIT_TEST(test2dconversions)
+TEST_CASE("test2dconversions")
 {
     const int n = 9;
     const int m = 5;
@@ -1354,7 +1344,7 @@ UNIT_TEST(test2dconversions)
     std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
  // print2d_1(c, a.extent(0), a.extent(1), s1); won't work, one needs:
     print2d_1(c.noconst_ptr_array(), c.extent(0), c.extent(1), s1);
-    CHECK(s1.str()==
+    REQUIRE(s1.str()==
           "11 12 13 14 15 \n"
           "21 22 23 24 25 \n"
           "31 32 33 34 35 \n" 
@@ -1366,21 +1356,21 @@ UNIT_TEST(test2dconversions)
           "91 92 93 94 95 \n\n");
  // print2d_2(c, c.extent(0), c.extent(1), s2); // won't work, one needs:
     print2d_2(c.const_ref().noconst_ptr_array(), c.extent(0), c.extent(1), s2);
-    CHECK(s2.str()==s1.str());
+    REQUIRE(s2.str()==s1.str());
     print2d_3(c.ptr_array(), c.extent(0), c.extent(1), s3);
-    CHECK(s3.str()==s1.str());
+    REQUIRE(s3.str()==s1.str());
     print2d_4(c.ptr_array(), c.extent(0), c.extent(1), s4);
-    CHECK(s4.str()==s1.str());
+    REQUIRE(s4.str()==s1.str());
     print2d_5(a.data(), c.extent(0), c.extent(1), s5);
-    CHECK(s5.str()==s1.str());
+    REQUIRE(s5.str()==s1.str());
     print2d_6(c.data(), c.extent(0), c.extent(1), s6);
-    CHECK(s6.str()==s1.str());
+    REQUIRE(s6.str()==s1.str());
     print2d_7(c, s7);
-    CHECK(s7.str()==s1.str());
+    REQUIRE(s7.str()==s1.str());
     print2d_8(c.const_ref(), s8);
-    CHECK(s8.str()==s1.str());
+    REQUIRE(s8.str()==s1.str());
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1505,7 +1495,7 @@ void print3d_7(const rarray<float,3> &a, std::ostream& cout)
     cout << '\n';
 }
 
-UNIT_TEST(test3dconversions)
+TEST_CASE("test3dconversions")
 {
     const int n = 9;
     const int m = 5;
@@ -1523,7 +1513,7 @@ UNIT_TEST(test3dconversions)
     //  const rarray<float,3>* pa = &a;
   //print3d_1(c, c.extent(0), c.extent(1), c.extent(2)); //won't work, one needs:
     print3d_1(c.noconst_ptr_array(), c.extent(0), c.extent(1), c.extent(2), s1); 
-    CHECK(s1.str()==
+    REQUIRE(s1.str()==
      "111 112       \t121 122       \t131 132       \t141 142       \t151 152       \t\n"
      "211 212       \t221 222       \t231 232       \t241 242       \t251 252       \t\n"
      "311 312       \t321 322       \t331 332       \t341 342       \t351 352       \t\n"
@@ -1535,20 +1525,20 @@ UNIT_TEST(test3dconversions)
      "911 912       \t921 922       \t931 932       \t941 942       \t951 952       \t\n\n");
  // print3d_2(c, c.extent(0), c.extent(1), c.extent(2)); won't work, one needs:
     print3d_2(c.const_ref().noconst_ptr_array(), c.extent(0), c.extent(1), c.extent(2), s2); 
-    CHECK(s2.str()==s1.str());    
+    REQUIRE(s2.str()==s1.str());    
     print3d_3(c.ptr_array(), c.extent(0), c.extent(1), c.extent(2), s3); 
-    CHECK(s3.str()==s1.str());
+    REQUIRE(s3.str()==s1.str());
     print3d_4(c.ptr_array(), c.extent(0), c.extent(1), c.extent(2), s4);
-    CHECK(s4.str()==s1.str());
+    REQUIRE(s4.str()==s1.str());
  // print3d_5(c, c.extent(0), c.extent(1), c.extent(2)); won't work, one needs
     print3d_5(a.data(), c.extent(0), c.extent(1), c.extent(2), s5);
-    CHECK(s5.str()==s1.str());
+    REQUIRE(s5.str()==s1.str());
     print3d_6(c.data(), c.extent(0), c.extent(1), c.extent(2), s6);
-    CHECK(s6.str()==s1.str());
+    REQUIRE(s6.str()==s1.str());
     print3d_7(c, s7);
-    CHECK(s7.str()==s1.str());
+    REQUIRE(s7.str()==s1.str());
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1567,20 +1557,20 @@ std::string print2d(const rarray<float,2> &a)
     return s.str();
 }
 
-UNIT_TEST(test2dautoconversion) 
+TEST_CASE("test2dautoconversion") 
 {
     const int n=2;
     const int m=7;
     float b[n][m] = {{1,2,3,4,5,6,7},
                      {8,9,8,7,6,5,4}};
     const rarray<float,2> a = RARRAY(b);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
-    CHECK(EXTENT(a,1)==EXTENT(b,1));
+    REQUIRE(EXTENT(a,0)==EXTENT(b,0));
+    REQUIRE(EXTENT(a,1)==EXTENT(b,1));
     std::string s = print2d(RARRAY(b));
-    CHECK(s=="1 2 3 4 5 6 7\n8 9 8 7 6 5 4\n");
-    return ALL_CLEAR;
+    REQUIRE(s=="1 2 3 4 5 6 7\n8 9 8 7 6 5 4\n");
+    
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1603,7 +1593,7 @@ std::string print3d(const rarray<float,3> &a)
     return s.str();
 }
 
-UNIT_TEST(test3dautoconversion) 
+TEST_CASE("test3dautoconversion") 
 {
     const int n=2;
     const int m=7;
@@ -1611,14 +1601,14 @@ UNIT_TEST(test3dautoconversion)
     float b[n][m][l] = {{{1,2,3},{2,3,4},{3,4,5},{4,5,6},{5,6,7},{6,7,8},{7,8,9}},
                         {{8,7,6},{9,8,7},{8,7,6},{7,6,5},{6,5,4},{5,4,3},{4,3,2}}};
     const rarray<float,3> a = RARRAY(b);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
-    CHECK(EXTENT(a,1)==EXTENT(b,1));
-    CHECK(EXTENT(a,2)==EXTENT(b,2));
+    REQUIRE(EXTENT(a,0)==EXTENT(b,0));
+    REQUIRE(EXTENT(a,1)==EXTENT(b,1));
+    REQUIRE(EXTENT(a,2)==EXTENT(b,2));
     std::string s = print3d(RARRAY(b));
-    CHECK(s=="{1,2,3}{2,3,4}{3,4,5}{4,5,6}{5,6,7}{6,7,8}{7,8,9}\n"
+    REQUIRE(s=="{1,2,3}{2,3,4}{3,4,5}{4,5,6}{5,6,7}{6,7,8}{7,8,9}\n"
              "{8,7,6}{9,8,7}{8,7,6}{7,6,5}{6,5,4}{5,4,3}{4,3,2}\n");
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1647,7 +1637,7 @@ std::string print4d(const rarray<float,4> &a)
     return s.str();
 }
 
-UNIT_TEST(test4dautoconversion) 
+TEST_CASE("test4dautoconversion") 
 {
     const int p=2;
     const int n=2;
@@ -1661,16 +1651,16 @@ UNIT_TEST(test4dautoconversion)
          {{8,7,9},{9,8,7},{8,7,9},{7,9,5},{9,5,6},{5,6,3},{6,3,2}}}
     };
     const rarray<float,4> a = RARRAY(b);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
-    CHECK(EXTENT(a,1)==EXTENT(b,1));
-    CHECK(EXTENT(a,2)==EXTENT(b,2));
-    CHECK(EXTENT(a,3)==EXTENT(b,3));
+    REQUIRE(EXTENT(a,0)==EXTENT(b,0));
+    REQUIRE(EXTENT(a,1)==EXTENT(b,1));
+    REQUIRE(EXTENT(a,2)==EXTENT(b,2));
+    REQUIRE(EXTENT(a,3)==EXTENT(b,3));
     std::string s = print4d(RARRAY(b));
-    CHECK(s==
+    REQUIRE(s==
           "{[1 2 3][2 3 4][3 4 5][4 5 6][5 6 7][6 7 8][7 8 9]}{[8 7 6][9 8 7][8 7 6][7 6 5][6 5 4][5 4 3][4 3 2]}\n"
           "{[1 2 3][2 3 6][3 6 5][6 5 9][5 9 7][9 7 8][7 8 9]}{[8 7 9][9 8 7][8 7 9][7 9 5][9 5 6][5 6 3][6 3 2]}\n");
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1710,7 +1700,7 @@ std::string print5d(const rarray<float,5> &a)
     return s.str();
 }
 
-UNIT_TEST(test5dautoconversion) 
+TEST_CASE("test5dautoconversion") 
 {
     const int p=2;
     const int n=2;
@@ -1735,17 +1725,17 @@ UNIT_TEST(test5dautoconversion)
         }
     };
     const rarray<float,5> a = RARRAY(b);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
-    CHECK(EXTENT(a,1)==EXTENT(b,1));
-    CHECK(EXTENT(a,2)==EXTENT(b,2));
-    CHECK(EXTENT(a,3)==EXTENT(b,3));
-    CHECK(EXTENT(a,4)==EXTENT(b,4));
+    REQUIRE(EXTENT(a,0)==EXTENT(b,0));
+    REQUIRE(EXTENT(a,1)==EXTENT(b,1));
+    REQUIRE(EXTENT(a,2)==EXTENT(b,2));
+    REQUIRE(EXTENT(a,3)==EXTENT(b,3));
+    REQUIRE(EXTENT(a,4)==EXTENT(b,4));
     std::string s = print5d(RARRAY(b));
-    CHECK(s==
+    REQUIRE(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
           "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n");
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1789,7 +1779,7 @@ std::string print6d(const rarray<float,6> &a)
     return s.str();
 }
 
-UNIT_TEST(test6dautoconversion) 
+TEST_CASE("test6dautoconversion") 
 {
     const int q=2;
     const int p=2;
@@ -1835,72 +1825,72 @@ UNIT_TEST(test6dautoconversion)
     };    
     const rarray<float,6> a = RARRAY(b);
     const rarray<float,6> c = RARRAY(a);
-    CHECK(EXTENT(a,0)==EXTENT(b,0));
-    CHECK(EXTENT(a,1)==EXTENT(b,1));
-    CHECK(EXTENT(a,2)==EXTENT(b,2));
-    CHECK(EXTENT(a,3)==EXTENT(b,3));
-    CHECK(EXTENT(a,4)==EXTENT(b,4));
-    CHECK(EXTENT(a,5)==EXTENT(b,5));
+    REQUIRE(EXTENT(a,0)==EXTENT(b,0));
+    REQUIRE(EXTENT(a,1)==EXTENT(b,1));
+    REQUIRE(EXTENT(a,2)==EXTENT(b,2));
+    REQUIRE(EXTENT(a,3)==EXTENT(b,3));
+    REQUIRE(EXTENT(a,4)==EXTENT(b,4));
+    REQUIRE(EXTENT(a,5)==EXTENT(b,5));
     std::string s = print6d(RARRAY(b));
-    CHECK(s==
+    REQUIRE(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
 "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n\n"
 "{[(1,-2,-3)(2,-3,-4)(3,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-3)(4,-3,-2)]}{[(1,-2,-3)(2,-3,-6)(3,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-3)(6,-3,-2)]}\n"
 "{[(1,-2,-7)(2,-7,-4)(7,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-7)(4,-7,-2)]}{[(1,-2,-7)(2,-7,-6)(7,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-7)(6,-7,-2)]}\n\n");
     s = print6d(RARRAY(c));
-    CHECK(s==
+    REQUIRE(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
 "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n\n"
 "{[(1,-2,-3)(2,-3,-4)(3,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-3)(4,-3,-2)]}{[(1,-2,-3)(2,-3,-6)(3,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-3)(6,-3,-2)]}\n"
 "{[(1,-2,-7)(2,-7,-4)(7,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-7)(4,-7,-2)]}{[(1,-2,-7)(2,-7,-6)(7,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-7)(6,-7,-2)]}\n\n");
 }
-END_UNIT_TEST
+
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
 template<typename T> 
-int testconstructors_with_functions() 
+void testconstructors_with_functions() 
 {
     ra::size_type dim[3] = {7,21,13};
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
     rarray<T,3> c(b);
     const int* asize = shapeof(a);
-    CHECK(dataof(a));
-    CHECK(countof(a)==7*21*13);
-    CHECK(asize);
-    CHECK(asize[0] == dim[0]);
-    CHECK(asize[1] == dim[1]);
-    CHECK(asize[2] == dim[2]);
-    CHECK(extentof(a,0) == dim[0]);
-    CHECK(extentof(a,1) == dim[1]);
-    CHECK(extentof(a,2) == dim[2]);
-    CHECK(shapeof(a)[0] == dim[0]);
-    CHECK(shapeof(a)[1] == dim[1]);
-    CHECK(shapeof(a)[2] == dim[2]);
+    REQUIRE(dataof(a));
+    REQUIRE(countof(a)==7*21*13);
+    REQUIRE(asize);
+    REQUIRE(asize[0] == dim[0]);
+    REQUIRE(asize[1] == dim[1]);
+    REQUIRE(asize[2] == dim[2]);
+    REQUIRE(extentof(a,0) == dim[0]);
+    REQUIRE(extentof(a,1) == dim[1]);
+    REQUIRE(extentof(a,2) == dim[2]);
+    REQUIRE(shapeof(a)[0] == dim[0]);
+    REQUIRE(shapeof(a)[1] == dim[1]);
+    REQUIRE(shapeof(a)[2] == dim[2]);
 #ifndef RA_SKIPINTERMEDIATE
-    CHECK(shapeof(a[0])[0] == dim[1]);
-    CHECK(shapeof(a[0][1])[0] == dim[2]);
+    REQUIRE(shapeof(a[0])[0] == dim[1]);
+    REQUIRE(shapeof(a[0][1])[0] == dim[2]);
 #endif
-    CHECK(dataof(b));
-    CHECK(countof(b)==7*21*13);
-    CHECK(extentof(b,0) == dim[0]);
-    CHECK(extentof(b,1) == dim[1]);
-    CHECK(extentof(b,2) == dim[2]);
-    CHECK(dataof(c));
-    CHECK(countof(c)==7*21*13);
-    CHECK(extentof(c,0) == dim[0]);
-    CHECK(extentof(c,1) == dim[1]);
-    CHECK(extentof(c,2) == dim[2]);
-    CHECK(dataof(c)==dataof(c));
+    REQUIRE(dataof(b));
+    REQUIRE(countof(b)==7*21*13);
+    REQUIRE(extentof(b,0) == dim[0]);
+    REQUIRE(extentof(b,1) == dim[1]);
+    REQUIRE(extentof(b,2) == dim[2]);
+    REQUIRE(dataof(c));
+    REQUIRE(countof(c)==7*21*13);
+    REQUIRE(extentof(c,0) == dim[0]);
+    REQUIRE(extentof(c,1) == dim[1]);
+    REQUIRE(extentof(c,2) == dim[2]);
+    REQUIRE(dataof(c)==dataof(c));
 #ifndef RA_SKIPINTERMEDIATE
-    CHECK(countof(b[2])==21*13);
-    CHECK(countof(b[2][10])==13);
-    CHECK(extentof(c[2],0) == dim[1]);
-    CHECK(extentof(c[2],1) == dim[2]);
+    REQUIRE(countof(b[2])==21*13);
+    REQUIRE(countof(b[2][10])==13);
+    REQUIRE(extentof(c[2],0) == dim[1]);
+    REQUIRE(extentof(c[2],1) == dim[2]);
 #endif
-    return ALL_CLEAR;
+    
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1908,7 +1898,7 @@ int testconstructors_with_functions()
 
 
 template<typename T> 
-int testcopy_with_functions(T value1, T value2) 
+void testcopy_with_functions(T value1, T value2) 
 {
     rarray<T,3> b(100,40,3);
     const int l = extentof(b,0);
@@ -1926,19 +1916,19 @@ int testcopy_with_functions(T value1, T value2)
 
     rarray<T,3> d(copy(b));
 
-    CHECK(dataof(d)!=dataof(b));
-    CHECK(extentof(d,0)==extentof(b,0));
-    CHECK(extentof(d,1)==extentof(b,1));
-    CHECK(extentof(d,2)==extentof(b,2));
+    REQUIRE(dataof(d)!=dataof(b));
+    REQUIRE(extentof(d,0)==extentof(b,0));
+    REQUIRE(extentof(d,1)==extentof(b,1));
+    REQUIRE(extentof(d,2)==extentof(b,2));
     for (int i=0; i<l; i++) {
         for (int j=0; j<m; j++) {
             for (int k=0; k<n; k++) {
-                CHECK(b[i][j][k]==d[i][j][k]);
+                REQUIRE(b[i][j][k]==d[i][j][k]);
             }
         }
     }
 
-    return ALL_CLEAR;
+    
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1963,7 +1953,7 @@ void print(std::ostream& o, const rarray<T,2>& m)
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testassignment)
+TEST_CASE("testassignment")
 {
     const int n=10;
     const int m=100;
@@ -1976,49 +1966,48 @@ UNIT_TEST(testassignment)
             for (int k=0;k<p;k++)
                 a[i][j][k] = float(l++);
     b = a;
-    CHECK(b.data()==a.data());
-    //CHECK(b.ptr_array()==a.ptr_array()); // not yet, b has its own ptr_array.
-    CHECK(b.extent(0)==a.extent(0));
-    CHECK(b.extent(1)==a.extent(1));
-    CHECK(b.extent(2)==a.extent(2));
+    REQUIRE(b.data()==a.data());
+    //REQUIRE(b.ptr_array()==a.ptr_array()); // not yet, b has its own ptr_array.
+    REQUIRE(b.extent(0)==a.extent(0));
+    REQUIRE(b.extent(1)==a.extent(1));
+    REQUIRE(b.extent(2)==a.extent(2));
 #ifndef RA_SKIPINTERMEDIATE
     rarray<float,2> e;
     e = a.at(2);
-    CHECK(e.data()==a.at(2).data());
-    CHECK(e.extent(0)==a.extent(1));
-    CHECK(e.extent(1)==a.extent(2));    
+    REQUIRE(e.data()==a.at(2).data());
+    REQUIRE(e.extent(0)==a.extent(1));
+    REQUIRE(e.extent(1)==a.extent(2));    
 #endif
     rarray<float,1> c(2048);
     rarray<float,1> d;
     d = c;
-    CHECK(d.data()==c.data());
-    CHECK(d.extent(0)==c.extent(0));
-    return ALL_CLEAR;
+    REQUIRE(d.data()==c.data());
+    REQUIRE(d.extent(0)==c.extent(0));
+    
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 #ifndef RA_SKIPINTERMEDIATE
-int testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
+void testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
 {
     const float* a1=a.at(1).data();
-    CHECK(a1==data1check); 
-    CHECK(a.at(1).ptr_array());
-    CHECK(a.at(1).noconst_ptr_array());
-    CHECK(a.at(1).const_ref().ptr_array());
-    CHECK(a.at(1).at(2).ptr_array());
-    CHECK(a.at(1).at(2).noconst_ptr_array());
-    CHECK(a.at(1).at(2).const_ref().ptr_array());
-    return ALL_CLEAR;
+    REQUIRE(a1==data1check); 
+    REQUIRE(a.at(1).ptr_array());
+    REQUIRE(a.at(1).noconst_ptr_array());
+    REQUIRE(a.at(1).const_ref().ptr_array());
+    REQUIRE(a.at(1).at(2).ptr_array());
+    REQUIRE(a.at(1).at(2).noconst_ptr_array());
+    REQUIRE(a.at(1).at(2).const_ref().ptr_array());
 }
 #endif
 
-UNIT_TEST(testconstintermediate)
+TEST_CASE("testconstintermediate")
 {
 #ifdef RA_SKIPINTERMEDIATE
-    return ALL_CLEAR;
+    
 #else
     rarray<float,3> a(7,8,9);
     int l=0;
@@ -2026,10 +2015,10 @@ UNIT_TEST(testconstintermediate)
         for (int j=0;j<8;j++)
             for (int k=0;k<9;k++)
                 a[i][j][k] = float(l++);
-    return testconstintermediatefunction(a,a.at(1).data());
+    testconstintermediatefunction(a,a.at(1).data());
 #endif
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -2040,22 +2029,22 @@ void fill_1d_rarray(rarray<float,1> a, float value)
         a[i] = value;
 }
 
-UNIT_TEST(testintermediateconversion)
+TEST_CASE("testintermediateconversion")
 {
     rarray<float,2> a(10,10);
     a[2][7]=14;
 #ifndef RA_SKIPINTERMEDIATE
     auto b = a.at(2);
     fill_1d_rarray(b, 13);
-    CHECK(a[2][7]==13);
+    REQUIRE(a[2][7]==13);
 #endif
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testreshape)
+TEST_CASE("testreshape")
 {
     ra::size_type dim[7] = {7,10,13,2,4,5,21};
     ra::size_type dimr[7] = {21,5,4,2,13,10,7};
@@ -2079,29 +2068,29 @@ UNIT_TEST(testreshape)
     novela.reshape(4, ra::RESIZE::ALLOWED);
     a.reshape(dim);
     a.reshape(*dim);
-    CHECK(novela.extent(0)==4);
-    CHECK(novela[3]==4);
-    CHECK(novela2.extent(0)==7);
+    REQUIRE(novela.extent(0)==4);
+    REQUIRE(novela[3]==4);
+    REQUIRE(novela2.extent(0)==7);
     novela2.reshape(4, ra::RESIZE::ALLOWED);
-    CHECK(novela2.extent(0)==4);
-    CHECK(novela2[3]==4);
+    REQUIRE(novela2.extent(0)==4);
+    REQUIRE(novela2[3]==4);
     b[5][6] = 5;
     rarray<float,2> novelb(b);
     rarray<float,2> novelb2(novelb);
     novelb.reshape(10,7);
     b.reshape(dim);
-    CHECK(novelb.extent(0)==10);
-    CHECK(novelb.extent(1)==7);
-    CHECK(novelb2.extent(0)==7);
-    CHECK(novelb2.extent(1)==10);
-    CHECK(novelb[8][0] == 5);
+    REQUIRE(novelb.extent(0)==10);
+    REQUIRE(novelb.extent(1)==7);
+    REQUIRE(novelb2.extent(0)==7);
+    REQUIRE(novelb2.extent(1)==10);
+    REQUIRE(novelb[8][0] == 5);
     c[4][8][3] = 6;
     rarray<float,3> novelc(c);
     novelc.reshape(10,7,13);
-    CHECK(novelc.extent(0)==10);
-    CHECK(novelc.extent(1)==7);
-    CHECK(novelc.extent(2)==13);
-    CHECK(novelc[6][6][3] == 6);
+    REQUIRE(novelc.extent(0)==10);
+    REQUIRE(novelc.extent(1)==7);
+    REQUIRE(novelc.extent(2)==13);
+    REQUIRE(novelc[6][6][3] == 6);
     rarray<float,4> noveld(d);
     rarray<float,5> novele(e);
     rarray<float,6> novelf(f);
@@ -2123,12 +2112,12 @@ UNIT_TEST(testreshape)
     novelk.reshape(4,3,2,3,4,3,2,3,2,3,4, ra::RESIZE::ALLOWED);  // TODO: check
     novell.reshape(dimr12);                 // TODO: check
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(test7dautoconversion)
+TEST_CASE("test7dautoconversion")
 {
     int seven[2][2][2][2][2][2][2] = {{{{{{{0}}}}}}}; 
     char expected_output[] =
@@ -2139,21 +2128,21 @@ UNIT_TEST(test7dautoconversion)
 
     std::stringstream s;
     s << RARRAY(seven);
-    CHECK(s.str()==expected_output);
-    CHECK(EXTENT(seven,0) == 2);
-    CHECK(EXTENT(seven,1) == 2);
-    CHECK(EXTENT(seven,2) == 2);
-    CHECK(EXTENT(seven,3) == 2);
-    CHECK(EXTENT(seven,4) == 2);
-    CHECK(EXTENT(seven,5) == 2);
-    CHECK(EXTENT(seven,6) == 2);
+    REQUIRE(s.str()==expected_output);
+    REQUIRE(EXTENT(seven,0) == 2);
+    REQUIRE(EXTENT(seven,1) == 2);
+    REQUIRE(EXTENT(seven,2) == 2);
+    REQUIRE(EXTENT(seven,3) == 2);
+    REQUIRE(EXTENT(seven,4) == 2);
+    REQUIRE(EXTENT(seven,5) == 2);
+    REQUIRE(EXTENT(seven,6) == 2);
 }
-END_UNIT_TEST
+
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(test8dautoconversion) 
+TEST_CASE("test8dautoconversion") 
 {
     int eight[2][2][2][2][2][2][2][2] = {{{{{{{{0}}}}}}}}; 
     char expected_output[] =
@@ -2168,22 +2157,22 @@ UNIT_TEST(test8dautoconversion)
 
     std::stringstream s;
     s << RARRAY(eight);
-    CHECK(s.str()==expected_output);
-    CHECK(EXTENT(eight,0) == 2);
-    CHECK(EXTENT(eight,1) == 2);
-    CHECK(EXTENT(eight,2) == 2);
-    CHECK(EXTENT(eight,3) == 2);
-    CHECK(EXTENT(eight,4) == 2);
-    CHECK(EXTENT(eight,5) == 2);
-    CHECK(EXTENT(eight,6) == 2);
-    CHECK(EXTENT(eight,7) == 2);
+    REQUIRE(s.str()==expected_output);
+    REQUIRE(EXTENT(eight,0) == 2);
+    REQUIRE(EXTENT(eight,1) == 2);
+    REQUIRE(EXTENT(eight,2) == 2);
+    REQUIRE(EXTENT(eight,3) == 2);
+    REQUIRE(EXTENT(eight,4) == 2);
+    REQUIRE(EXTENT(eight,5) == 2);
+    REQUIRE(EXTENT(eight,6) == 2);
+    REQUIRE(EXTENT(eight,7) == 2);
 }
-END_UNIT_TEST
+
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 
-UNIT_TEST(test9dautoconversion)
+TEST_CASE("test9dautoconversion")
 {
     int nine[2][2][2][2][2][2][2][2][2] = {{{{{{{{{0}}}}}}}}}; 
     char expected_output[] =
@@ -2205,23 +2194,23 @@ UNIT_TEST(test9dautoconversion)
              "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}\n}";
     std::stringstream s;
     s << RARRAY(nine);
-    CHECK(s.str()==expected_output);
-    CHECK(EXTENT(nine,0) == 2);
-    CHECK(EXTENT(nine,1) == 2);
-    CHECK(EXTENT(nine,2) == 2);
-    CHECK(EXTENT(nine,3) == 2);
-    CHECK(EXTENT(nine,4) == 2);
-    CHECK(EXTENT(nine,5) == 2);
-    CHECK(EXTENT(nine,6) == 2);
-    CHECK(EXTENT(nine,7) == 2);
-    CHECK(EXTENT(nine,8) == 2);
+    REQUIRE(s.str()==expected_output);
+    REQUIRE(EXTENT(nine,0) == 2);
+    REQUIRE(EXTENT(nine,1) == 2);
+    REQUIRE(EXTENT(nine,2) == 2);
+    REQUIRE(EXTENT(nine,3) == 2);
+    REQUIRE(EXTENT(nine,4) == 2);
+    REQUIRE(EXTENT(nine,5) == 2);
+    REQUIRE(EXTENT(nine,6) == 2);
+    REQUIRE(EXTENT(nine,7) == 2);
+    REQUIRE(EXTENT(nine,8) == 2);
 }
-END_UNIT_TEST
+
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
-UNIT_TEST(test10dautoconversion)
+TEST_CASE("test10dautoconversion")
 {
     int ten[2][2][2][2][2][2][2][2][2][2] = {{{{{{{{{{0}}}}}}}}}}; 
     char expected_output[] =
@@ -2259,24 +2248,24 @@ UNIT_TEST(test10dautoconversion)
              "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}\n}\n}";
     std::stringstream s;
     s << RARRAY(ten);
-    CHECK(s.str()==expected_output);
-    CHECK(EXTENT(ten,0) == 2);
-    CHECK(EXTENT(ten,1) == 2);
-    CHECK(EXTENT(ten,2) == 2);
-    CHECK(EXTENT(ten,3) == 2);
-    CHECK(EXTENT(ten,4) == 2);
-    CHECK(EXTENT(ten,5) == 2);
-    CHECK(EXTENT(ten,6) == 2);
-    CHECK(EXTENT(ten,7) == 2);
-    CHECK(EXTENT(ten,8) == 2);
-    CHECK(EXTENT(ten,9) == 2);
+    REQUIRE(s.str()==expected_output);
+    REQUIRE(EXTENT(ten,0) == 2);
+    REQUIRE(EXTENT(ten,1) == 2);
+    REQUIRE(EXTENT(ten,2) == 2);
+    REQUIRE(EXTENT(ten,3) == 2);
+    REQUIRE(EXTENT(ten,4) == 2);
+    REQUIRE(EXTENT(ten,5) == 2);
+    REQUIRE(EXTENT(ten,6) == 2);
+    REQUIRE(EXTENT(ten,7) == 2);
+    REQUIRE(EXTENT(ten,8) == 2);
+    REQUIRE(EXTENT(ten,9) == 2);
 }
-END_UNIT_TEST
+
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
-UNIT_TEST(test11dautoconversion)
+TEST_CASE("test11dautoconversion")
 {
     // can't resist: WHEEEEEEEEEEE!
     int eleven[2][2][2][2][2][2][2][2][2][2][2] =
@@ -2411,25 +2400,25 @@ UNIT_TEST(test11dautoconversion)
               "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}\n}\n}\n}";
     std::stringstream s;
     s << RARRAY(eleven);
-    CHECK(s.str()==expected_output);
-    CHECK(EXTENT(eleven,0) == 2);
-    CHECK(EXTENT(eleven,1) == 2);
-    CHECK(EXTENT(eleven,2) == 2);
-    CHECK(EXTENT(eleven,3) == 2);
-    CHECK(EXTENT(eleven,4) == 2);
-    CHECK(EXTENT(eleven,5) == 2);
-    CHECK(EXTENT(eleven,6) == 2);
-    CHECK(EXTENT(eleven,7) == 2);
-    CHECK(EXTENT(eleven,8) == 2);
-    CHECK(EXTENT(eleven,9) == 2);
-    CHECK(EXTENT(eleven,10) == 2);
+    REQUIRE(s.str()==expected_output);
+    REQUIRE(EXTENT(eleven,0) == 2);
+    REQUIRE(EXTENT(eleven,1) == 2);
+    REQUIRE(EXTENT(eleven,2) == 2);
+    REQUIRE(EXTENT(eleven,3) == 2);
+    REQUIRE(EXTENT(eleven,4) == 2);
+    REQUIRE(EXTENT(eleven,5) == 2);
+    REQUIRE(EXTENT(eleven,6) == 2);
+    REQUIRE(EXTENT(eleven,7) == 2);
+    REQUIRE(EXTENT(eleven,8) == 2);
+    REQUIRE(EXTENT(eleven,9) == 2);
+    REQUIRE(EXTENT(eleven,10) == 2);
 }
-END_UNIT_TEST
+
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testoutput)
+TEST_CASE("testoutput")
 {
     double a[5]={1,2,3,4,5};
     double b[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
@@ -2440,7 +2429,7 @@ UNIT_TEST(testoutput)
     std::stringstream out;
     out << q << r << s;
     std::string outstr1 = out.str();
-    CHECK(outstr1 == "{1,2,3,4,5}{\n{1,2,3,4},\n{5,6,7,8},\n{9,10,11,12},\n{13,14,15,16}\n}{\n{\n{1,2,3},\n{4,5,6},\n{7,8,9}\n},\n{\n{10,11,12},\n{13,14,15},\n{16,17,18}\n},\n{\n{19,20,21},\n{22,23,24},\n{25,26,27}\n}\n}");
+    REQUIRE(outstr1 == "{1,2,3,4,5}{\n{1,2,3,4},\n{5,6,7,8},\n{9,10,11,12},\n{13,14,15,16}\n}{\n{\n{1,2,3},\n{4,5,6},\n{7,8,9}\n},\n{\n{10,11,12},\n{13,14,15},\n{16,17,18}\n},\n{\n{19,20,21},\n{22,23,24},\n{25,26,27}\n}\n}");
 
     std::stringstream instr("  \t\n{{{#2:14,5},{2,#3:{}2},{#7:{1,2,3},1}},{{4},{5,5},{6,6}},{{7,7},{8,8},{9,9}}}");
     std::string outstr("{\n{\n{14,5},\n{2,0},\n{0,1}\n},\n{\n{4,0},\n{5,5},\n{6,6}\n},\n{\n{7,7},\n{8,8},\n{9,9}\n}\n}");
@@ -2453,7 +2442,7 @@ UNIT_TEST(testoutput)
 
     std::stringstream check;
     check << intarray;
-    CHECK(check.str()==outstr);
+    REQUIRE(check.str()==outstr);
 
     rarray<std::string,2> A(2,2);
     A[0][0] = "Hello, world";
@@ -2466,23 +2455,23 @@ UNIT_TEST(testoutput)
     std::stringstream sin("{{#12:Hello, world,#14:I like { and }},{#10:I prefer #,I'm easy.}}");
     sin >> B;
 
-    CHECK(A[0][0] == B[0][0]);
-    CHECK(A[0][1] == B[0][1]);
-    CHECK(A[1][0] == B[1][0]);
-    CHECK(A[1][1] == B[1][1]);
+    REQUIRE(A[0][0] == B[0][0]);
+    REQUIRE(A[0][1] == B[0][1]);
+    REQUIRE(A[1][0] == B[1][0]);
+    REQUIRE(A[1][1] == B[1][1]);
 
     float autoarr[2][2][2][2] = {{{{1,2},{3,4}},{{5,6},{7,8}}},{{{9,10},{11,12}},{{13,14},{15,16}}}};
     const std::string outcheck = "{\n{\n{\n{1,2},\n{3,4}\n},\n{\n{5,6},\n{7,8}\n}\n},\n{\n{\n{9,10},\n{11,12}\n},\n{\n{13,14},\n{15,16}\n}\n}\n}";
     std::stringstream sautoarr;
     sautoarr << RARRAY(autoarr);
-    CHECK(sautoarr.str()==outcheck);
+    REQUIRE(sautoarr.str()==outcheck);
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testiterators)
+TEST_CASE("testiterators")
 {
     double a[5]={1,2,3,4,5};
     double b[16]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
@@ -2507,13 +2496,13 @@ UNIT_TEST(testiterators)
 #else
     qout << "7,8,9,10,";
 #endif
-    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,");
+    REQUIRE(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,");
     const rarray<double,2> rview = r;
     for (rarray<double,2>::const_iterator i=rview.begin(); i!=rview.end(); i++)
     {
         qout << *i << ',';
     }
-    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
+    REQUIRE(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,");
     std::stringstream rout;
 #if __cplusplus <= 199711L
     for (auto ap = q.begin(); ap != q.end(); ++ap)
@@ -2530,7 +2519,7 @@ UNIT_TEST(testiterators)
     {
         qout << *i << ',';
     }
-    CHECK(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
+    REQUIRE(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,2,4,6,8,10,");
     const rarray<double,1> qconst = q;
 #if __cplusplus <= 199711L
     for (auto bp=qconst.begin(); bp != qconst.end(); ++bp)
@@ -2543,7 +2532,7 @@ UNIT_TEST(testiterators)
         rout << b << ',';
     }
 #endif
-    CHECK(rout.str() == "2,4,6,8,10,");
+    REQUIRE(rout.str() == "2,4,6,8,10,");
     #ifndef RA_SKIPINTERMEDIATE
     std::stringstream check;
 #if __cplusplus <= 199711L
@@ -2565,67 +2554,66 @@ UNIT_TEST(testiterators)
     {
         check << *i << ',';
     }
-    CHECK(check.str() == "20,22,24,26,28,30,42,44,46,19,20,21,22,23,24,25,26,27,");
+    REQUIRE(check.str() == "20,22,24,26,28,30,42,44,46,19,20,21,22,23,24,25,26,27,");
     #endif
     auto sb = s.begin();
     auto se = s.end();
-    CHECK(not (sb==se));
-    CHECK(sb < se);
-    CHECK(sb <= se);
-    CHECK(se > sb);
-    CHECK(se >= sb);
+    REQUIRE(not (sb==se));
+    REQUIRE(sb < se);
+    REQUIRE(sb <= se);
+    REQUIRE(se > sb);
+    REQUIRE(se >= sb);
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testfill)
+TEST_CASE("testfill")
 {
     rarray<float,2> a(3,3);
     a.fill(1.23f);
     for (int i=0;i<EXTENT(a,0);i++) {
         for (int j=0;j<EXTENT(a,1);j++) {
-            CHECK(a[i][j]==1.23f);
+            REQUIRE(a[i][j]==1.23f);
         }
     }    
     rarray<float,1> b(5);
     b.fill(1.24f);
     for (int i=0;i<EXTENT(a,0);i++) {
-        CHECK(b[i]==1.24f);
+        REQUIRE(b[i]==1.24f);
     }
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testindex)
+TEST_CASE("testindex")
 {
-
     rarray<float,1> a(6);
-    CHECK(a.index(a[0])[0]==0);
-    CHECK(a.index(a[1])[0]==1);
-    CHECK(a.index(a[2])[0]==2);
-    CHECK(a.index(a[3])[0]==3);
-    CHECK(a.index(a[4])[0]==4);
-    CHECK(a.index(a[5])[0]==5);
-    CHECK(a.index(a[0],0)==0);
-    CHECK(a.index(a[1],0)==1);
-    CHECK(a.index(a[2],0)==2);
-    CHECK(a.index(a[3],0)==3);
-    CHECK(a.index(a[4],0)==4);
-    CHECK(a.index(a[5],0)==5);
-    CHECK(INDEX(a,a[0],0)==0);
-    CHECK(INDEX(a,a[1],0)==1);
-    CHECK(INDEX(a,a[2],0)==2);
-    CHECK(INDEX(a,a[3],0)==3);
-    CHECK(INDEX(a,a[4],0)==4);
-    CHECK(INDEX(a,a[5],0)==5);
+    REQUIRE(a.index(a[0])[0]==0);
+    REQUIRE(a.index(a[1])[0]==1);
+    REQUIRE(a.index(a[2])[0]==2);
+    REQUIRE(a.index(a[3])[0]==3);
+    REQUIRE(a.index(a[4])[0]==4);
+    REQUIRE(a.index(a[5])[0]==5);
+    REQUIRE(a.index(a[0],0)==0);
+    REQUIRE(a.index(a[1],0)==1);
+    REQUIRE(a.index(a[2],0)==2);
+    REQUIRE(a.index(a[3],0)==3);
+    REQUIRE(a.index(a[4],0)==4);
+    REQUIRE(a.index(a[5],0)==5);
+    REQUIRE(INDEX(a,a[0],0)==0);
+    REQUIRE(INDEX(a,a[1],0)==1);
+    REQUIRE(INDEX(a,a[2],0)==2);
+    REQUIRE(INDEX(a,a[3],0)==3);
+    REQUIRE(INDEX(a,a[4],0)==4);
+    REQUIRE(INDEX(a,a[5],0)==5);
     for (auto i=a.begin(); i != a.end(); i++) {
         auto ind = a.index(i);
         unsigned int ind2=a.index(i,0);
-        CHECK(ind[0]==ind2);
+        REQUIRE(ind[0]==ind2);
         *i = ind[0]+1;
     }
 #if __cplusplus <= 199711L
@@ -2639,44 +2627,44 @@ UNIT_TEST(testindex)
     for (auto& element: a)
         element *= a.index(element,0);
 #endif
-    CHECK(a[0]==0);
-    CHECK(a[1]==2);
-    CHECK(a[2]==12)
-    CHECK(a[3]==36);
-    CHECK(a[4]==80);
-    CHECK(a[5]==150);
+    REQUIRE(a[0]==0);
+    REQUIRE(a[1]==2);
+    REQUIRE(a[2]==12);
+    REQUIRE(a[3]==36);
+    REQUIRE(a[4]==80);
+    REQUIRE(a[5]==150);
 
     rarray<float,3> z(2,3,4);
-    CHECK(z.index(z[1][2][3],0)==1);
-    CHECK(z.index(z[1][2][3],1)==2);
-    CHECK(z.index(z[1][2][3],2)==3);
+    REQUIRE(z.index(z[1][2][3],0)==1);
+    REQUIRE(z.index(z[1][2][3],1)==2);
+    REQUIRE(z.index(z[1][2][3],2)==3);
 
 
     rarray<float,3> b(2,2,2);
-    CHECK(b.index(b[0][0][0])[0]==0);
-    CHECK(b.index(b[0][0][1])[0]==0);
-    CHECK(b.index(b[0][1][0])[0]==0);
-    CHECK(b.index(b[0][1][1])[0]==0);
-    CHECK(b.index(b[1][0][0])[0]==1);
-    CHECK(b.index(b[1][0][1])[0]==1);
-    CHECK(b.index(b[1][1][0])[0]==1);
-    CHECK(b.index(b[1][1][1])[0]==1);
-    CHECK(b.index(b[0][0][0])[1]==0);
-    CHECK(b.index(b[0][0][1])[1]==0);
-    CHECK(b.index(b[0][1][0])[1]==1);
-    CHECK(b.index(b[0][1][1])[1]==1);
-    CHECK(b.index(b[1][0][0])[1]==0);
-    CHECK(b.index(b[1][0][1])[1]==0);
-    CHECK(b.index(b[1][1][0])[1]==1);
-    CHECK(b.index(b[1][1][1])[1]==1);
-    CHECK(b.index(b[0][0][0])[2]==0);
-    CHECK(b.index(b[0][0][1])[2]==1);
-    CHECK(b.index(b[0][1][0])[2]==0);
-    CHECK(b.index(b[0][1][1])[2]==1);
-    CHECK(b.index(b[1][0][0])[2]==0);
-    CHECK(b.index(b[1][0][1])[2]==1);
-    CHECK(b.index(b[1][1][0])[2]==0);
-    CHECK(b.index(b[1][1][1])[2]==1);
+    REQUIRE(b.index(b[0][0][0])[0]==0);
+    REQUIRE(b.index(b[0][0][1])[0]==0);
+    REQUIRE(b.index(b[0][1][0])[0]==0);
+    REQUIRE(b.index(b[0][1][1])[0]==0);
+    REQUIRE(b.index(b[1][0][0])[0]==1);
+    REQUIRE(b.index(b[1][0][1])[0]==1);
+    REQUIRE(b.index(b[1][1][0])[0]==1);
+    REQUIRE(b.index(b[1][1][1])[0]==1);
+    REQUIRE(b.index(b[0][0][0])[1]==0);
+    REQUIRE(b.index(b[0][0][1])[1]==0);
+    REQUIRE(b.index(b[0][1][0])[1]==1);
+    REQUIRE(b.index(b[0][1][1])[1]==1);
+    REQUIRE(b.index(b[1][0][0])[1]==0);
+    REQUIRE(b.index(b[1][0][1])[1]==0);
+    REQUIRE(b.index(b[1][1][0])[1]==1);
+    REQUIRE(b.index(b[1][1][1])[1]==1);
+    REQUIRE(b.index(b[0][0][0])[2]==0);
+    REQUIRE(b.index(b[0][0][1])[2]==1);
+    REQUIRE(b.index(b[0][1][0])[2]==0);
+    REQUIRE(b.index(b[0][1][1])[2]==1);
+    REQUIRE(b.index(b[1][0][0])[2]==0);
+    REQUIRE(b.index(b[1][0][1])[2]==1);
+    REQUIRE(b.index(b[1][1][0])[2]==0);
+    REQUIRE(b.index(b[1][1][1])[2]==1);
 
     float rbuf[3][3] = { {0,0,0}, 
                          {1,1,1}, 
@@ -2688,135 +2676,135 @@ UNIT_TEST(testindex)
     rarray<float,2> c = RARRAY(cbuf);
 
     for (auto i=r.begin(); i != r.end(); i++) {
-        CHECK(r.index(*i)[0]==*i);
+        REQUIRE(r.index(*i)[0]==*i);
     }
     
     for (auto i=c.begin(); i != c.end(); i++) {
-        CHECK(c.index(i)[1]==*i);
+        REQUIRE(c.index(i)[1]==*i);
     }
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testcomma_assignment)
+TEST_CASE("testcomma_assignment")
 {
     rarray<double,1> b(8);
     b.fill(0);
     b = 1,2,3,6,5,4;
-    CHECK(b[0]==1);
-    CHECK(b[1]==2);
-    CHECK(b[2]==3);
-    CHECK(b[3]==6);
-    CHECK(b[4]==5);
-    CHECK(b[5]==4);
-    CHECK(b[6]==0);
-    CHECK(b[7]==0);
+    REQUIRE(b[0]==1);
+    REQUIRE(b[1]==2);
+    REQUIRE(b[2]==3);
+    REQUIRE(b[3]==6);
+    REQUIRE(b[4]==5);
+    REQUIRE(b[5]==4);
+    REQUIRE(b[6]==0);
+    REQUIRE(b[7]==0);
 
     rarray<double,3> a(3,4,2);
 
     a =  1,2,    3,6,   5,4,   7,8, 
          9,12,  11,10, 21,22, 23,26, 
         25,24,  27,28, 29,32, 31,30;
-    CHECK(a[0][0][0]== 1);
-    CHECK(a[0][0][1]== 2);
-    CHECK(a[0][1][0]== 3);
-    CHECK(a[0][1][1]== 6);
-    CHECK(a[0][2][0]== 5);
-    CHECK(a[0][2][1]== 4);
-    CHECK(a[0][3][0]== 7);
-    CHECK(a[0][3][1]== 8);
-    CHECK(a[1][0][0]== 9);
-    CHECK(a[1][0][1]==12);
-    CHECK(a[1][1][0]==11);
-    CHECK(a[1][1][1]==10);
-    CHECK(a[1][2][0]==21);
-    CHECK(a[1][2][1]==22);
-    CHECK(a[1][3][0]==23);
-    CHECK(a[1][3][1]==26);
-    CHECK(a[2][0][0]==25);
-    CHECK(a[2][0][1]==24);
-    CHECK(a[2][1][0]==27);
-    CHECK(a[2][1][1]==28);
-    CHECK(a[2][2][0]==29);
-    CHECK(a[2][2][1]==32);
-    CHECK(a[2][3][0]==31);
-    CHECK(a[2][3][1]==30);
+    REQUIRE(a[0][0][0]== 1);
+    REQUIRE(a[0][0][1]== 2);
+    REQUIRE(a[0][1][0]== 3);
+    REQUIRE(a[0][1][1]== 6);
+    REQUIRE(a[0][2][0]== 5);
+    REQUIRE(a[0][2][1]== 4);
+    REQUIRE(a[0][3][0]== 7);
+    REQUIRE(a[0][3][1]== 8);
+    REQUIRE(a[1][0][0]== 9);
+    REQUIRE(a[1][0][1]==12);
+    REQUIRE(a[1][1][0]==11);
+    REQUIRE(a[1][1][1]==10);
+    REQUIRE(a[1][2][0]==21);
+    REQUIRE(a[1][2][1]==22);
+    REQUIRE(a[1][3][0]==23);
+    REQUIRE(a[1][3][1]==26);
+    REQUIRE(a[2][0][0]==25);
+    REQUIRE(a[2][0][1]==24);
+    REQUIRE(a[2][1][0]==27);
+    REQUIRE(a[2][1][1]==28);
+    REQUIRE(a[2][2][0]==29);
+    REQUIRE(a[2][2][1]==32);
+    REQUIRE(a[2][3][0]==31);
+    REQUIRE(a[2][3][1]==30);
 
     a.at(1)             = 100,101,102,103,104,105,106,107;
     a.at(2).at(1)       = 200,201;
     a.at(2).at(2).at(0) = 300,301; //  forgets the 301
     a.at(2).at(3).at(0) = (300,301); // forgets the 300
     a.at(2).at(3)[0] = (300,301); // on purpose using built-in comma operator which forgets the 300
-    CHECK(a[0][0][0]== 1);
-    CHECK(a[0][0][1]== 2);
-    CHECK(a[0][1][0]== 3);
-    CHECK(a[0][1][1]== 6);
-    CHECK(a[0][2][0]== 5);
-    CHECK(a[0][2][1]== 4);
-    CHECK(a[0][3][0]== 7);
-    CHECK(a[0][3][1]== 8);
-    CHECK(a[1][0][0]==100);
-    CHECK(a[1][0][1]==101);
-    CHECK(a[1][1][0]==102);
-    CHECK(a[1][1][1]==103);
-    CHECK(a[1][2][0]==104);
-    CHECK(a[1][2][1]==105);
-    CHECK(a[1][3][0]==106);
-    CHECK(a[1][3][1]==107);
-    CHECK(a[2][0][0]==25);
-    CHECK(a[2][0][1]==24);
-    CHECK(a[2][1][0]==200);
-    CHECK(a[2][1][1]==201);
-    CHECK(a[2][2][0]==300);
-    CHECK(a[2][2][1]==32);
-    CHECK(a[2][3][0]==301);
-    CHECK(a[2][3][1]==30);
+    REQUIRE(a[0][0][0]== 1);
+    REQUIRE(a[0][0][1]== 2);
+    REQUIRE(a[0][1][0]== 3);
+    REQUIRE(a[0][1][1]== 6);
+    REQUIRE(a[0][2][0]== 5);
+    REQUIRE(a[0][2][1]== 4);
+    REQUIRE(a[0][3][0]== 7);
+    REQUIRE(a[0][3][1]== 8);
+    REQUIRE(a[1][0][0]==100);
+    REQUIRE(a[1][0][1]==101);
+    REQUIRE(a[1][1][0]==102);
+    REQUIRE(a[1][1][1]==103);
+    REQUIRE(a[1][2][0]==104);
+    REQUIRE(a[1][2][1]==105);
+    REQUIRE(a[1][3][0]==106);
+    REQUIRE(a[1][3][1]==107);
+    REQUIRE(a[2][0][0]==25);
+    REQUIRE(a[2][0][1]==24);
+    REQUIRE(a[2][1][0]==200);
+    REQUIRE(a[2][1][1]==201);
+    REQUIRE(a[2][2][0]==300);
+    REQUIRE(a[2][2][1]==32);
+    REQUIRE(a[2][3][0]==301);
+    REQUIRE(a[2][3][1]==30);
 
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testlinspace)
+TEST_CASE("testlinspace")
 {
     int a = 1, b = 30;
     auto r = linspace(a,b);
     int i = a;
     for (auto x: r) {
-        CHECK(x==i);
+        REQUIRE(x==i);
         i++;
     }
     auto r2 = linspace(0,30,4);
     int check2[] = {0,10,20,30};
     int j = 0;
     for (auto y: r2) {
-        CHECK(y == check2[j]);
+        REQUIRE(y == check2[j]);
         j++;
     }
     auto r3 = linspace(0,30,3,false);
     int check3[] = {0,10,20};
     int k = 0;
     for (auto z: r3) {
-        CHECK(z == check3[k]);
+        REQUIRE(z == check3[k]);
         k++;
     }
     auto r4 = linspace(0.0, 30.0, 4);
     double check4[] = {0.0, 10.0, 20.0, 30.0};
     int l = 0;
     for (auto zz: r3) {
-        CHECK(zz == check4[l]);
+        REQUIRE(zz == check4[l]);
         l++;
     }
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testsort)
+TEST_CASE("testsort")
 {
     int n=10;
     rvector<double> s(n);
@@ -2827,100 +2815,99 @@ UNIT_TEST(testsort)
     rvector<double> e(n);
     e = -2.2, -1.1, 3.1, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0;
     for (int i=0;i<n;i++)
-        CHECK(s[i]==e[i]);
+        REQUIRE(s[i]==e[i]);
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testxrange)
+TEST_CASE("testxrange")
 {
     int i=0;
     for (auto z: xrange(10))
-        CHECK(z==i++);
-    CHECK(i==10);
+        REQUIRE(z==i++);
+    REQUIRE(i==10);
     i=2;
     for (auto z: xrange(2, 7))
-        CHECK(z==i++);
-    CHECK(i==7);
+        REQUIRE(z==i++);
+    REQUIRE(i==7);
     i=4;
     for (auto z: xrange(4, 1, -1))
-        CHECK(z==i--);
-    CHECK(i==1);
+        REQUIRE(z==i--);
+    REQUIRE(i==1);
     i=4;
     for (auto z: xrange(4.25, 1.25, -1))
-        CHECK(z==.25+(i--));
-    CHECK(i==1);
+        REQUIRE(z==.25+(i--));
+    REQUIRE(i==1);
     i=4;
     for (auto z: xrange(4.25, 1.20, -1))
-        CHECK(z==.25+(i--));
-    CHECK(i==0);
+        REQUIRE(z==.25+(i--));
+    REQUIRE(i==0);
     int sum=0;
     for (auto z: xrange(100))
         sum += z;
-    CHECK(sum==4950);
+    REQUIRE(sum==4950);
     ra::Xrange<int> r(1,11,3);
     sum = 0;
     for (int z: r) sum += z;
-    CHECK(sum==22)
+    REQUIRE(sum==22);
     ra::Xrange<double> rd(1,11,3.2);
     double dsum = 0;
     for (double z: rd) dsum += z;
-    std::cout << dsum << "\n"; 
-    CHECK(fabs(dsum-(4.0+6*3.2))<1e-6);
+    REQUIRE(fabs(dsum-(4.0+6*3.2))<1e-6);
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(testnarrowconversions)
+TEST_CASE("testnarrowconversions")
 {
     float f6[1][2]={{0.0,0.0}};
     rarray<float,2> g6 = RARRAY(f6);
-    CHECK(g6.extent(0)==1);
-    CHECK(g6.extent(1)==2);
-    CHECK(g6[0][0]==0.0);
-    CHECK(g6[0][1]==0.0);
+    REQUIRE(g6.extent(0)==1);
+    REQUIRE(g6.extent(1)==2);
+    REQUIRE(g6[0][0]==0.0);
+    REQUIRE(g6[0][1]==0.0);
     
     float f[1][1][1]={{{2}}};
     rarray<float,3> g = RARRAY(f);
-    CHECK(g.extent(0)==1);
-    CHECK(g.extent(1)==1);
-    CHECK(g.extent(2)==1);
-    CHECK(g[0][0][0]==2);
+    REQUIRE(g.extent(0)==1);
+    REQUIRE(g.extent(1)==1);
+    REQUIRE(g.extent(2)==1);
+    REQUIRE(g[0][0][0]==2);
 
     float f4[1][1][2]={{{10.0,20.0}}};
     rarray<float,3> g4 = RARRAY(f4);
-    CHECK(g4.extent(0)==1);
-    CHECK(g4.extent(1)==1);
-    CHECK(g4.extent(2)==2);
-    CHECK(g4[0][0][0]==10.0);
-    CHECK(g4[0][0][1]==20.0);
+    REQUIRE(g4.extent(0)==1);
+    REQUIRE(g4.extent(1)==1);
+    REQUIRE(g4.extent(2)==2);
+    REQUIRE(g4[0][0][0]==10.0);
+    REQUIRE(g4[0][0][1]==20.0);
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-UNIT_TEST(morerarrayio)
+TEST_CASE("morerarrayio")
 {
     std::stringstream s("{{1,2},{3,#1:47,4}}");
     rarray<double,2> Y;
     s >> Y;
-    CHECK(Y.extent(0) == 2);
-    CHECK(Y.extent(1) == 3);
-    CHECK(Y[1][1]==47);
+    REQUIRE(Y.extent(0) == 2);
+    REQUIRE(Y.extent(1) == 3);
+    REQUIRE(Y[1][1]==47);
 }
-END_UNIT_TEST
+
 
 rarray<int,2> func(rarray<int,2> A){
     rarray<int,2> B(10,10);
     return B;
 }
 
-UNIT_TEST(memoryleakofonepointtwo)
+TEST_CASE("memoryleakofonepointtwo")
 {
     rarray<int,2> A(10,10);
     rarray<int,2> B;
@@ -2929,7 +2916,7 @@ UNIT_TEST(memoryleakofonepointtwo)
     // present in rarray 1.2, but running it through valgrind will, or
     // rather, should show that it is no longer present in rarray 2.0.
 }
-END_UNIT_TEST
+
 
 //////////////////////////////////////////////////////////////////////
 
@@ -2943,26 +2930,20 @@ double get_element_1(double *x)
     return x[1];
 }
 
-UNIT_TEST(test_auto_conversion_to_const_ptr) {
+TEST_CASE("test_auto_conversion_to_const_ptr") {
     rtensor<double> t(10,10,10);
     double*const*const* z = t.ptr_array();
     double a = 5;
     t[1][1][1] = a;
     double b = get_element_111(t);
-    CHECK(a==b);    
+    REQUIRE(a==b);    
     rvector<double> y(10);
     double c = 6;
     y[1] = c;
     double d = get_element_1(y);
-    CHECK(c==d);
+    REQUIRE(c==d);
 }
-END_UNIT_TEST
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-END_TEST_SUITE
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////

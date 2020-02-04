@@ -5,7 +5,7 @@ rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
 compilers to generate fast code.
 
-The current version is 2.1.
+The latest release version is 2.2.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -75,6 +75,15 @@ Release History and Changes
 
    Streaming operators for rarrays moved to the ra namespace.
 
+ * Version 2.2, February 2020
+
+   Several bug fixed with running and installing rarray on MacOS.
+
+   The rarray unit test library 'rut' was dropped in favour of
+   'catch2', which does everything that 'rut' was intended to do, but
+   better. Since 'catch2' is header only, this makes running the tests
+   on different platforms much easier.
+
 
 Known issues
 ============
@@ -89,6 +98,9 @@ Known issues
   * Rarray objects automatically convert into T*const*... pointers.
 
   * Cannot force aligned of data yet.
+
+  * Using the RARRAY macro on const arrays fails in unexpected ways.
+
 
 Reporting Bugs
 ==============
@@ -155,7 +167,7 @@ hardinclude.cc         Code that creates generates the header files
 
 test_rarray.cc         Simple tests for rarray
 
-testsuite.cc           Rarray unit test/regression test suite (using 'rut')
+testsuite.cc           Rarray unit test/regression test suite (using catch2)
 
 test_offsets.cc        Tests for internal offsets.h header
 
@@ -193,21 +205,4 @@ compiler.xlC_r.mk
 compiler.xlc++.mk
 
 
-In the directory 'rutsrc'
--------------------------
-
-This contains code for the unit test library (only used for rarray unit tests).
-
-Makefile               Makefile to build the rut library
-  
-In subdirectory 'src':
-   
-  rut.h                Header file for the unit test library
-  rut.cc               Implementation file for the unit test library
-  rutexample1.cc       Example of using rut
-  ruttest.cc           Test of using rut (should fail)
-  rutmpitest.cc        Test of using rut with mpi (preliminary)
-
-
-
-- January 2020
+- February 2020
