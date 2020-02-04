@@ -75,6 +75,9 @@ Release History and Changes
 
    Streaming operators for rarrays moved to the ra namespace.
 
+   In version 2.1.1, the undocumented rlinear function was renamed
+   linspace and added to the documentation, as was xrange.
+
  * Version 2.2, February 2020
 
    Several bug fixed with running and installing rarray on MacOS.
@@ -93,13 +96,14 @@ Known issues
     capability got lost in the rewrite.
 
   * To get a sub-array, you need to use the rarray::at() member
-    function. 
+    function. instead of square brackets.
 
   * Rarray objects automatically convert into T*const*... pointers.
 
   * Cannot force aligned of data yet.
 
-  * Using the RARRAY macro on const arrays fails in unexpected ways.
+  * Using the RARRAY macro followed copy a copy constructor fails for
+    const types.
 
 
 Reporting Bugs

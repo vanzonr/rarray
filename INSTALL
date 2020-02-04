@@ -3,9 +3,11 @@ Installation
 
 To install without running tests or benchmarks, type the following commands:
 
-    make install PREFIX="[BASEDIR]"
+    make install PREFIX=[BASEDIR]
 
 This installs the header files 'rarray' and 'rarrayio' in the "[BASEDIR]/include" directory, and the documentation in "[BASEDIR]/share/doc".
+
++Alternatively, because rarray is a header-only library consisting of two header files, rarray and rarrayio (generated from partial headers, but are kept up-to-date in the github repo), installation can be also done by simply copying these header files to the correct location (e.g. "cp rarray rarrayio [BASEDIR]/include").
 
 If the include directory is not in the compiler's search path, you will need to pass an option to the compiler directing to that directory (i.e. -I[BASEDIR]/include) or, for gcc and intel compilers, you could set the CPATH environment variable.
 
@@ -13,7 +15,7 @@ If you have sudo permissions, you can also do
 
     sudo make install
 
-to install the header and documentation to /usr/include and /usr/share/doc, respectively. Note that this will fail on recent MacOS installations, where one should run "sudo make install PREFIX=/usr/local" instead.
+to install the header and documentation to /usr/include and /usr/share/doc, respectively. Note that this will fail on recent MacOS versions, where one should run "sudo make install PREFIX=/usr/local" instead.
 
 Testing
 =======
@@ -36,7 +38,7 @@ To use the rarray library, you must
  - Compile the code using a c++11 compiler    
    (e.g., use -std=c++11 for g++).
 
- - If rarray was not install in the compiler's search path,
+ - If rarray was not installed in the compiler's search path,
    you will need to pass an option to the compiler directing to that
    directory (i.e. -I[BASEDIR]/include).
 
