@@ -101,14 +101,12 @@ doc: rarraydoc.pdf
 valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite 
 
 hardinclude: ${SRC}/hardinclude.cc
-	${CXX} -o $@ $^
+	${CXX} -g -o $@ $^
 
-rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h
-	make hardinclude
+rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h hardinclude
 	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h | ../hardinclude - offsets.h > ../rarray
 
-rarrayio: ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h
-	make hardinclude
+rarrayio: ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h hardinclude
 	cd ${HS} ; ../hardinclude rarrayio.h rarraymacros.h rarraydelmacros.h > ../rarrayio
 	sed -i 's/"rarray.h"/<rarray>/' rarrayio
 

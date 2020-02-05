@@ -58,6 +58,16 @@ bool string_in_set(const char* str, char** strset, size_t nset)
     return false;
 }
 
+
+// check if a line is just a comment
+bool iscommentline(const std::string& line)
+{
+    int i = 0;
+    while (i < line.size() and line[i] == ' ')
+        i++;
+    return line.substr(i,2) == std::string("//");
+}
+
 // dump a file to console
 void dump(const char* s)
 {
@@ -65,7 +75,8 @@ void dump(const char* s)
     while (f.good() and !f.eof()) {
         string s;
         getline(f,s);
-        std::cout << s << '\n';
+        if (not iscommentline(s))
+            std::cout << s << '\n';
     }   
 }
 
@@ -102,11 +113,16 @@ int main(int argc, char** argv)
     // start processing:
     ifstream infile(inputfile);
     istream& in = (inputfile[0] == '-'  and inputfile[1] == '\0')?cin:infile;
-        
+
+    bool headercommentsdone = false;
     while (in.good() && !in.eof()) {
         // read in a line from the file
         string line;
         getline(in, line);
+        if (not headercommentsdone and not iscommentline(line))
+            headercommentsdone = true;
+        if (headercommentsdone and iscommentline(line))
+            continue;
         bool include = false;
         string includefilename;
         // find occurance of "#include"        

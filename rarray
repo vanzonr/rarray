@@ -3,7 +3,7 @@
 //          runtime dimensionalized, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2019  Ramses van Zon
+// Copyright (c) 2013-2020  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -34,35 +34,7 @@
 #include <utility>
 #include <string>
 #include <cmath>
-// 
-//#include "rarraymacros.h"
-//
-// rarraymacros.h - Checks and inlining macros used in runtime arrays
-//
-// Copyright (c) 2015-2019  Ramses van Zon
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-//
 
-// Compiling with -DRA_BOUNDSCHECK switches on the RA_CHECKORSAY macro to
-// check its first argument and throw an exception if it is not true.
-// checkOrSay is intended to be used for bound checks.
 #ifdef RA_BOUNDSCHECK
 #include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
@@ -70,12 +42,6 @@
 #define RA_CHECKORSAY(a, b) 
 #endif
 
-// For g++ and icpc, RA_INLINE forces inlining, even without optimization.
-// In all other cases, RA_INLINE=inline, and inlining may not occur.
-// Note for xlC: 
-//    In version 10, you need "-O4" to get full inlining.
-//    In version 11, "-O2 -qinline=level=6" suffices.
-//
 #if not defined(RA_INLINE)
 # if defined(__INTEL_COMPILER)
 #   define RA_INLINE  __forceinline
@@ -86,41 +52,9 @@
 # endif
 #endif
 
-// routines using INLINEF will be forced to inline
-// routines using INLINE_ will not: these were deemed to expensive to inline from a compilation point of view
 #define RA_INLINEF RA_INLINE
 #define RA_INLINE_ inline
 
-//end of #include "rarraymacros.h"
-// 
-//#include "shared_buffer.h"
-// shared_buffer.h
-//
-// Header that defines a buffer class with reference counting (a bit
-// like shared_array in boost, I suppose).  Can also hold a
-// non-reference counted buffer, if one is passed to the constructor.
-// Part of rarray 2.x. 
-//
-// Copyright (c) 2018-2020  Ramses van Zon
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-//
 
 
 #ifndef SHAREDBUFFERH
@@ -138,7 +72,6 @@ int test_shared_buffer_main(); // for testing
 /***************************************************************************/
 
 namespace ra {
-// for debugging purposes, every shape gets a one-character name.
 static char _buffername = 'A'; 
 
 /***************************************************************************/
@@ -150,39 +83,29 @@ class shared_buffer
 
     typedef ssize_t size_type;
 
-    // constructors 
     shared_buffer();
     explicit shared_buffer(size_type size);
     shared_buffer(size_type size, T* data);
     shared_buffer(const shared_buffer& other);
     shared_buffer(shared_buffer&& from);
     
-    // assignment
     shared_buffer& operator=(const shared_buffer& other);  // copy
     void operator=(shared_buffer&& from);                  // move
 
-    // destructor
     ~shared_buffer();
 
-    // element access without bounds checking
     const T& operator[](size_type index) const;
     T& operator[](size_type index);
     
-    // element access with bounds checking
     const T& at(size_type index) const;
     T& at(size_type index);
 
-    // slice a part
     shared_buffer<T> slice(size_type from, size_type to);
-    //shared_buffer<const T> slice(size_type from, size_type to) const;
 
-    // size
     size_type size() const;
 
-    // create deep copy
     shared_buffer<T> copy() const;
 
-    // iterators
     typedef T* iterator;
     typedef const T* const_iterator;
     iterator begin();
@@ -192,7 +115,6 @@ class shared_buffer
     const_iterator cbegin() const;
     const_iterator cend() const;
 
-    // reverse iterator
     typedef std::reverse_iterator<iterator> reverse_iterator;
     typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
     reverse_iterator rbegin();
@@ -202,10 +124,8 @@ class shared_buffer
     const_reverse_iterator crbegin() const;
     const_reverse_iterator crend() const;
 
-    // resize
     void resize(size_type newsize, bool keep_content = false);
     
-    // assign values
     void assign(const T& value);
     void assign(std::initializer_list<T> ilist);
     template<class InputIt>
@@ -251,7 +171,6 @@ void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
 template<class T>
 shared_buffer<T>::shared_buffer()
 {
-    // uninitialized buffer
     uninit();
 }
 
@@ -259,21 +178,18 @@ template<class T>
 shared_buffer<T>::shared_buffer(size_type size)
     : data_(new T[size]), orig_(data_), size_(size), refs_(new std::atomic<int>(1))
 {
-    // construct buffer
 }
 
 template<class T>
 shared_buffer<T>::shared_buffer(size_type size, T* data)
   : data_(data), orig_(nullptr), size_(size), refs_(nullptr)
 {
-    // construct buffer as a wrapper
 }
 
 template<class T>
 shared_buffer<T>::shared_buffer(const shared_buffer<T>& other)
   : data_(other.data_), orig_(other.orig_), size_(other.size_), refs_(other.refs_)
 {
-    // copy constructor
     incref();
 }
 
@@ -287,7 +203,6 @@ shared_buffer<T>::shared_buffer(shared_buffer<T>&& from)
 template<class T>
 shared_buffer<T>& shared_buffer<T>::operator=(const shared_buffer<T>& other)
 {
-    // copy assignment (shallow with ref counting)
     if (this != &other) {
         decref();
         data_ = other.data_;
@@ -325,7 +240,6 @@ T& shared_buffer<T>::operator[](size_type index)
 template<class T>
 const T& shared_buffer<T>::at(size_type index) const
 {
-    // element access with bounds checking
     if (index < 0 or index > size_)
         throw std::out_of_range("shared_buffer::at");
     return data_[index];
@@ -334,7 +248,6 @@ const T& shared_buffer<T>::at(size_type index) const
 template<class T>
 T& shared_buffer<T>::at(size_type index)
 {
-    // element access with bounds checking
     if (index < 0 or index > size_)
         throw std::out_of_range("shared_buffer::at");
     return data_[index];
@@ -343,7 +256,6 @@ T& shared_buffer<T>::at(size_type index)
 template<class T>
 shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to)
 {
-    // slice a part, checking bounds
     if (from < 0 or to < 0 or from > size_ or to > size_)
         throw std::out_of_range("shared_buffer::slice");
     shared_buffer<T> result(*this);
@@ -375,7 +287,6 @@ shared_buffer<T> shared_buffer<T>::copy() const
     return result;
 }
 
-// iterating
 
 template<class T>
 typename shared_buffer<T>::iterator shared_buffer<T>::begin()
@@ -413,7 +324,6 @@ typename shared_buffer<T>::const_iterator shared_buffer<T>::end() const
     return data_+size_;
 }
 
-// reverse iterating
 
 template<class T>
 typename shared_buffer<T>::reverse_iterator shared_buffer<T>::rbegin()
@@ -455,24 +365,17 @@ template<class T>
 void shared_buffer<T>::resize(size_type newsize, bool keep_content)
 {
     if ( (newsize<size_) and (refs_) and (*refs_)==1) {
-        // optimize if this is known (from refs_) to be the only
-        // instance of the buffer, and the new size is smaller:        
         size_ = newsize; // That's all? Yep!
-        // note: this always keeps the content.
     } else {
-        // create a new buffer
         T* newdata = new T[newsize];
         T* neworig = newdata;
         std::atomic<int>* newrefs = new std::atomic<int>(1);
-        // copy content if so requested
         if (keep_content) {
             size_t n = ((size_<newsize)?size_:newsize);
             for (size_t i=0; i<n; i++)
                 newdata[i] = data_[i];
         }
-        // delete if no references
         decref();
-        // move to the new one
         data_ = newdata;
         orig_ = neworig;
         size_ = newsize;
@@ -534,68 +437,12 @@ void shared_buffer<T>::decref() {
 }
 #endif
 
-//end of #include "shared_buffer.h"
-// 
-//#include "shared_shape.h"
-// shared_shape.h
-//
-// Header to define a 'shape', which is the pointer-to-pointer
-// interface to a multidimensional array, but one that remembers its
-// shape.  Uses reference counting for the pointer-to-pointer
-// structure, but the actual data is a simple pointer.  One of the
-// building blocks for rarray 2.x.
-//
-// Copyright (c) 2018-2020  Ramses van Zon
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-//
 
 #ifndef SHARED_SHAPEH
 #define SHARED_SHAPEH
 
 // 
 //#include "offsets.h"
-// offsets.h
-//
-// Header for the helper class for rarray 2.x to compute pointer
-// offsets in a multidimensional array.
-//
-// Copyright (c) 2018-2020  Ramses van Zon
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-//
 #ifndef OFFSETSH
 #define OFFSETSH
 
@@ -609,15 +456,10 @@ class Offsets
 {
   public:
 
-    // offsets are computed by the constructor
     Offsets(const std::vector<ssize_t>& dims);
 
-    // they can be applied to yield a pointer-to-pointer structure;
-    // for rank>1, this structure will be allocated; it should be deallocate elsewhere
-    // for rank==1, this structure is identical to data itself, so no allocation is done.
     template<class T>  void*** apply_offsets(T* data) const;
 
-    // the ptr-to-ptr structure 
     ssize_t get_num_data_offsets() const;
     ssize_t get_num_offsets() const;
     ssize_t get_rank() const;
@@ -628,7 +470,6 @@ class Offsets
     std::vector<unsigned long long> offsets_;
     ssize_t ndataoffsets_;
 
-    // for testing and debugging purposes
     friend int test_offsets_main(); 
 };
 
@@ -717,7 +558,6 @@ namespace ra {
 
 /***************************************************************************/
 
-// class to hold the shape but not the content of a multi-dimensional array.
 
 template<typename T,int R> 
 struct PointerArray {
@@ -744,36 +584,28 @@ class shared_shape
     typedef typename PointerArray<T,R>::type ptrs_type;
     typedef ssize_t size_type;
 
-    // constructors 
     shared_shape();                                         // non-functional shape
     shared_shape(const std::array<size_type,R>&extent, T*data);// construct shape 
     shared_shape(const shared_shape& other);                // copy constructor
     shared_shape(shared_shape&& other);                     // move constructor
 
-    // assignment
     shared_shape& operator=(const shared_shape& other);     // copy
     void operator=(shared_shape&& other);                   // move
 
-    // destructor
     ~shared_shape();
 
-    // create a deep copy of the shape (not the data)
     shared_shape copy() const; 
 
-    // change data or shape
     void relocate(T* newdata);                              // let shape point to other data block
     void reshape(const std::array<size_type,R>&extent);     // change shape (not the data)
 
-    // get out pointers
     ptrs_type ptrs() const;                                 // get pointer-to-pointer structure
     T* data() const;                                        // get pointer to the data
     size_type size() const;                                 // get total number of elements
     size_type extent(int i) const;                          // get extent in dimension i
     const std::array<size_type,R>& extent() const;          // get total extent array
     
-    // get subshape
     shared_shape<T,R-1> at(size_type r) const;
-    //shared_shape<const T,R-1> at(size_type r) const;
     
   private:
 
@@ -791,17 +623,14 @@ class shared_shape
 
     template<class U, int S> friend class shared_shape; // for "at"
 
-    // for testing and debugging:
     friend int ::test_shared_shape_main();
 };
 
-// stop at() recursion at R=0. This is a non-shape, but at() for R=1 sets its elements
 template<typename T> 
 class shared_shape<T,0> {
   public:
     typedef T ptrs_type;
     typedef ssize_t size_type;
-    //shared_shape() {}
   private:
     std::array<size_type,0> extent_;
     ptrs_type ptrs_;
@@ -818,7 +647,6 @@ class shared_shape<T,0> {
 template<class T, int R>
 shared_shape<T,R>::shared_shape()
 {
-    // uninitialized shape
     uninit();
 }
 
@@ -826,7 +654,6 @@ template<class T, int R>
 shared_shape<T,R>::shared_shape(const std::array<size_type,R>&extent, T*data)
   : extent_(extent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
 {
-    // construct shape 
     Offsets P({extent_.begin(),extent_.end()});
     orig_ = P.apply_offsets(data);
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
@@ -848,7 +675,6 @@ shared_shape<T,R>::shared_shape(const shared_shape& other)
     noffsets_(other.noffsets_),
     ndataoffsets_(other.ndataoffsets_)
 {
-    // copy constructor
     incref();
 }
 
@@ -861,14 +687,12 @@ shared_shape<T,R>::shared_shape(shared_shape&& other)
     noffsets_(other.noffsets_),
     ndataoffsets_(other.ndataoffsets_)
 {
-    // move constructor
     other.uninit();
 }
 
 template<class T, int R>
 shared_shape<T,R>& shared_shape<T,R>::operator=(const shared_shape& other)
 {
-    // copy assignment (shallow with ref counting)
     if (this != &other) {
         decref();
         extent_       = other.extent_;
@@ -885,7 +709,6 @@ shared_shape<T,R>& shared_shape<T,R>::operator=(const shared_shape& other)
 template<class T, int R>
 void shared_shape<T,R>::operator=(shared_shape&& other)
 {
-    // move assignment
     decref();
     extent_       = other.extent_;
     ptrs_         = other.ptrs_;
@@ -899,15 +722,12 @@ void shared_shape<T,R>::operator=(shared_shape&& other)
 template<class T, int R>
 shared_shape<T,R>::~shared_shape()
 {
-    // memory deallocation governed by reference counting
     decref();
 }
 
 template<class T, int R>
 void shared_shape<T,R>::copy_before_write()
 {
-    // Checks if other references to it exist and if so, copies itself.
-    // Intended to be called before changing ptrs_, like a copy-on-write.
     if (R > 1 and refs_ and *refs_ > 1) 
         *this = this->copy();
 }
@@ -936,15 +756,12 @@ struct _data_from_ptrs_noffsets_ndataoffsets<T,1> {
 template<class T, int R>
 T* shared_shape<T,R>::data() const
 {
-    // returns a pointer to the first element of the data
-    // return (T*)(ptrs_[noffsets_ - ndataoffsets_]);
     return _data_from_ptrs_noffsets_ndataoffsets<T,R>::call(ptrs_,noffsets_,ndataoffsets_);
 }
 
 template<class T, int R>
 typename shared_shape<T,R>::size_type shared_shape<T,R>::size() const
 {
-    // get total number of elements
     return ndataoffsets_ * extent_[R-1];
 }
 
@@ -952,25 +769,20 @@ typename shared_shape<T,R>::size_type shared_shape<T,R>::size() const
 template<class T, int R>
 typename shared_shape<T,R>::size_type shared_shape<T,R>::extent(int i) const
 {
-    // get extent in dimension i
     return extent_[i];
 }
 
 template<class T, int R> 
 const std::array<typename shared_shape<T,R>::size_type,R>& shared_shape<T,R>::extent() const {
-    // get total extent array
     return extent_;
 }
 
 template<class T, int R>
 void shared_shape<T,R>::relocate(T* newdata)
 {
-    // keep the shape, but have it point at a different block of data
     if (R==1) {
-        // cast never really needed, for R=1, typeof(ptrs_)==typeof(newdata)
         ptrs_ = reinterpret_cast<ptrs_type>(newdata);
     } else if (R>1) {
-        // let shape point to other datablock
         std::ptrdiff_t shift = newdata - data();
         if (shift != 0) {
             copy_before_write();
@@ -983,7 +795,6 @@ void shared_shape<T,R>::relocate(T* newdata)
 template<class T, int R>
 shared_shape<T,R> shared_shape<T,R>::copy() const
 {
-    // copy shape (not the data)
     shared_shape copy_of_this;
     copy_of_this.extent_ = extent_;
     copy_of_this.noffsets_ = noffsets_;
@@ -1005,7 +816,6 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
 template<class T, int R>
 shared_shape<T,R-1> shared_shape<T,R>::at(size_type index) const
 {
-    // element access with bounds checking
     if (R < 1 or index < 0 or index >= extent_[0])
         throw std::out_of_range("shared_shape::at");
     shared_shape<T,R-1> result;
@@ -1026,7 +836,6 @@ template<class T, int R>
 void shared_shape<T,R>::reshape(const std::array<size_type,R>&extent)
 {
     if (extent != extent_) {
-        // should perhaps check it new extent is even valid
         *this = shared_shape<T,R>(extent, data());
     }
 }
@@ -1034,14 +843,12 @@ void shared_shape<T,R>::reshape(const std::array<size_type,R>&extent)
 template<class T, int R>
 typename shared_shape<T,R>::ptrs_type shared_shape<T,R>::ptrs() const
 {
-    // get pointer-to-pointer structure
     return ptrs_;
 }
 
 template<class T, int R>
 void shared_shape<T,R>::uninit()
 {
-    // put this object into an uninitialized state
     ptrs_         = nullptr;
     orig_         = nullptr;
     refs_         = nullptr;
@@ -1053,7 +860,6 @@ void shared_shape<T,R>::uninit()
 template<class T, int R>
 void shared_shape<T,R>::incref() const
 {
-    // increase the reference counter
     if (refs_)
         (*refs_)++;
 }
@@ -1061,7 +867,6 @@ void shared_shape<T,R>::incref() const
 template<class T, int R>
 void shared_shape<T,R>::decref()
 {
-    // decrease the reference counter
     if (refs_) {
         if (--(*refs_) == 0) {
             if (R>1)
@@ -1078,7 +883,6 @@ void shared_shape<T,R>::decref()
 
 #endif
 
-//end of #include "shared_shape.h"
 
 namespace ra {
 
@@ -1087,29 +891,19 @@ enum class RESIZE { NO, ALLOWED };
 
 }
 
-// Forward definitions of ra::rarray<T,R> and ra::CommaOp
 
 namespace ra { template<typename T,int R> class rarray;    }
 namespace ra { template<typename T>       class CommaOp;   }
 
-// Forward definitions to support array expressions //
 
-// What type enumerates possible operators?
-//typedef int ExOp;
 #define ExOp class
 
-// Each operator creates a subexpression of the Expr<...>, which we forward-define first
 namespace ra { 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
 }
    
 namespace ra {
 
-//------------------------------------------------//
-//                                                //
-//               I N T E R F A C E                //
-//                                                //
-//------------------------------------------------//
     
 template<typename T,int R> 
 class rarray {
@@ -1152,7 +946,6 @@ class rarray {
     rarray<T,R>& operator=(rarray<T,R>&& x);                                      // move assignment operator
     RA_INLINE_ CommaOp<T> operator=(const T& e);                                  // Comma separated element assignment
     RA_INLINEF ~rarray();                                                         // destructor
-    // Need constructor and assignment for expressions
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator+=(const Expr<T,R,AOP,A1,A2,A3>& e);
@@ -1160,7 +953,6 @@ class rarray {
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator*=(const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator/=(const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator%=(const Expr<T,R,AOP,A1,A2,A3>& e);
-    //
     RA_INLINEF void clear();                                                      // clean up routine, make undefined
     RA_INLINE_ void reshape(size_type n0, RESIZE resize_allowed=RESIZE::NO);                                                                            // reshape shallow copy keeping the underlying data for R=1
     RA_INLINE_ void reshape(size_type n0, size_type n1, RESIZE resize_allowed=RESIZE::NO);                                                                                                                   // R=2
@@ -1174,7 +966,6 @@ class rarray {
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, RESIZE resize_allowed=RESIZE::NO);   // R=10
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO); // R=11
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);                                                                                                                      // R>11
-    //
     RA_INLINE_ bool                is_clear()           const;                       // check if undefined
     RA_INLINE_ rarray<T,R>         copy()               const;                       // return a copy
     RA_INLINE_ size_type           extent(int i)        const;                       // retrieve array size in dimension i
@@ -1186,7 +977,6 @@ class rarray {
     RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                       // return a T**.. acting similarly to this rarray when using []:    
     RA_INLINE_ rarray<const T,R>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
     RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
-    //
     RA_INLINE_ iterator            begin();                                          // start of the content
     RA_INLINE_ const_iterator      begin()              const;                       // start of the content, when *this is constant
     RA_INLINE_ const_iterator      cbegin()             const;                       // start of the content, when *this can be constant and you need to be explicit
@@ -1197,17 +987,13 @@ class rarray {
     RA_INLINE_ size_type           index(const iterator& iter, int i) const;         // if i points at an element in the array, get index i of that element
     RA_INLINE_ std::array<size_type,R> index(const T& a) const;           // if a an element in the array, get the indices of that element
     RA_INLINE_ std::array<size_type,R> index(const iterator& i) const;// if i points at an element in the array, get the indices of that element
-    // old form of index functions:
     RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
     RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
-    // access elements r
     RA_INLINEF rarray<T,R-1> at(size_type i);
     RA_INLINEF rarray<T,R-1> at(size_type i) const;
     RA_INLINEF operator typename PointerArray<T,R>::type ();  // makes a[..][..] work, as well as automatic conversion
     RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
-    // for expressions
     RA_INLINEF const T& leval(size_type i) const;
-    //
     rarray(shared_buffer<T>&& buffer, shared_shape<T,R>&& shape) :
         buffer_(std::forward<shared_buffer<T>>(buffer)),
         shape_(std::forward<shared_shape<T,R>>(shape))
@@ -1218,7 +1004,6 @@ class rarray {
         
 }; // end definition rarray<T,R>
 
-// stop recursion at R=0, a single scalar value
 template<typename T> 
 class rarray<T,0> {
     
@@ -1236,7 +1021,6 @@ class rarray<T,0> {
     RA_INLINE_ rarray<T,0>& operator=(const rarray<T,0> &a);                      // array assignment operator
     rarray(rarray<T,0>&& x);                                                      // move constructor
     rarray<T,0>& operator=(rarray<T,0>&& x);                                      // move assignment operator
-    // Need constructor and assignment for expressions
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,0,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,0,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator+=(const Expr<T,0,AOP,A1,A2,A3>& e);
@@ -1244,9 +1028,7 @@ class rarray<T,0> {
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator*=(const Expr<T,0,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator/=(const Expr<T,0,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator%=(const Expr<T,0,AOP,A1,A2,A3>& e);
-    //
     RA_INLINEF void clear();                                                      // clean up routine, make undefined
-    //
     RA_INLINE_ bool                is_clear()           const {  return buffer_.cbegin() == nullptr; }                      // check if undefined
     RA_INLINE_ rarray<T,0>         copy()               const;                       // return a copy
     RA_INLINE_ size_type           extent(int i)        const { return is_clear()?0:1; }   // retrieve array size in dimension i
@@ -1258,7 +1040,6 @@ class rarray<T,0> {
     RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                       // return a T**.. acting similarly to this rarray when using []:    
     RA_INLINE_ rarray<const T,0>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
     RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
-    //
     RA_INLINE_ iterator            begin();                                          // start of the content
     RA_INLINE_ const_iterator      begin()              const;                       // start of the content, when *this is constant
     RA_INLINE_ const_iterator      cbegin()             const;                       // start of the content, when *this can be constant and you need to be explicit
@@ -1271,10 +1052,7 @@ class rarray<T,0> {
     RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
     RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
     RA_INLINE_ size_type*          index(const const_iterator& i, size_type* ind) const;// if i points at an element in the array, get the indices of that element
-    // access elements r
-    // for expressions
     RA_INLINEF const T& leval(size_type i) const;
-    //
     rarray(shared_buffer<T>&& buffer, const shared_shape<T,0>& shape) :
         buffer_(std::forward<shared_buffer<T>>(buffer))
     {}
@@ -1294,7 +1072,6 @@ class rarray<T,0> {
     shared_buffer<T>  buffer_;
 }; // end definition rarray<T,0>
 
-// Class to facilitate assignment from a comma separated list
 template<typename T>
 class CommaOp {
   public:
@@ -1307,8 +1084,6 @@ class CommaOp {
     template<typename,int> friend class subrarray;
 };
 
-// Template functions to detemine the dimensions of automatic arrays, for use in the EXTENT macro
-// To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
 template<typename A>                                                              RA_INLINE_ int extent_given_byte_size(A a[], int i, int byte_size);                               //for 1d array
 template<typename A,int Z>                                                        RA_INLINE_ int extent_given_byte_size(A a[][Z], int i, int byte_size);                            //for 2d array
 template<typename A,int Y,int Z>                                                  RA_INLINE_ int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);                         //for 3d array
@@ -1321,8 +1096,6 @@ template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>            
 template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        RA_INLINE_ int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);    //for 10d array
 template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  RA_INLINE_ int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size); //for 11d array
 template<typename A,int R>                                                        RA_INLINE_ int extent_given_byte_size(const rarray<A,R>& a, int i, int byte_size); // use rarray's extent function
-// Template functions to convert automatic arrays, for conversion with RARRAY macro
-// To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
 template<typename A>                                                              RA_INLINE_ rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size);                              //for 1d array
 template<typename A,int Z>                                                        RA_INLINE_ rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size);                           //for 2d array
 template<typename A,int Y,int Z>                                                  RA_INLINE_ rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);                        //for 3d array
@@ -1410,18 +1183,11 @@ Xrange<T> xrange(S begin, T end, U step) {
 
 } // end namespace ra
 
-// include utility to provide the definition of std::move
 #include <utility>
 
-// needed for std::copy
 #include <algorithm>
 
     
-//------------------------------------------------//
-//                                                //
-//          I M P L E M E N T A T I O N           //
-//                                                //
-//------------------------------------------------//
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray()
@@ -1632,7 +1398,6 @@ ra::rarray<T,R>::rarray(const rarray<T,R> &a)
   : buffer_(a.buffer_),
     shape_(a.shape_)
 {
-    // copy constructor
 }
 
 template<typename T, int R> RA_INLINEF
@@ -1640,10 +1405,8 @@ ra::rarray<T,R>::rarray(rarray<T,R>&& x)
   : buffer_(std::move(x.buffer_)),
     shape_(std::move(x.shape_))
 {
-    // move constructor
 }
 
-//
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::clear()
@@ -1652,7 +1415,6 @@ void ra::rarray<T,R>::clear()
     buffer_ = shared_buffer<T>();
 }
 
-//
 
 template<typename T, int R> RA_INLINE_ 
 void ra::rarray<T,R>::reshape(size_type n0, RESIZE resize_allowed)
@@ -1858,17 +1620,14 @@ void ra::rarray<T,R>::reshape(const size_type* newshape, RESIZE resize_allowed)
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::~rarray()
 {}
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename T, int R> RA_INLINE_
 ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e)
 {
-    // Comma separated element assignment: puts the first one in and prepares for more
     RA_CHECKORSAY(parray_!=nullptr, "assignment to unsized array");
     RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
     T* first = &(buffer_[0]);
@@ -1880,20 +1639,16 @@ ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e)
     return co;
 }
 
-// comma operator constructor
 template<typename T> RA_INLINE_
 ra::CommaOp<T>::CommaOp(T* ptr, T* last)
 : ptr_(ptr), last_(last)
 { 
-    // fill remainder of array with zeros
     RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
 }
 
-// comma operator; set next element
 template<typename T> RA_INLINE_
 ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
 { 
-    // puts the next number into the array.
     RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
     RA_CHECKORSAY(ptr_<=last_, "assignment with more elements than in array");
     if (ptr_ and ptr_ <= last_)
@@ -1901,34 +1656,27 @@ ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
     return *this; 
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_
 bool ra::rarray<T,R>::is_clear() const
 {
-    // check if empty
     return buffer_.cbegin() == nullptr;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_
 ra::rarray<T,R> ra::rarray<T,R>::copy() const {
-    // return a copy
     rarray<T,R> clone;
     clone.buffer_ = buffer_.copy();
-    // clone.shape_ = ra::shared_shape<T,R>(shape_.extent(), clone.buffer_.begin());
     clone.shape_ = shape_.copy();
     clone.shape_.relocate(clone.buffer_.begin()); // something is wrong with relocate for some types
     return clone;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINEF
 ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i)
 {
-    // subarray access with bounds checking
     if (i < 0 or i >= extent(0))
         throw std::out_of_range("rarray<T,R>::at");
     size_type stride = size()/extent(0);
@@ -1956,7 +1704,6 @@ ra::rarray<T,R>::operator typename PointerArray<const T,R>::type () const
 template<typename T, int R> RA_INLINE_
 const ra::size_type* ra::rarray<T,R>::shape() const
 {
-    // retrieve array sizes in all dimensions
     return &(shape_.extent()[0]);
 }
 
@@ -1995,90 +1742,74 @@ ra::rarray<T,R>& ra::rarray<T,R>::operator=(rarray<T,R> &&a)
 
 template<typename T, int R> RA_INLINEF
 void ra::rarray<T,R>::fill(const T& value) {
-    // fill with uniform value
     buffer_.assign(value);
 }
 
 template<typename T, int R> RA_INLINEF
 ra::size_type ra::rarray<T,R>::size() const {
-    // retrieve the total number of elements
     return shape_.size(); 
 }
 
 template<typename T, int R> RA_INLINEF
 T* ra::rarray<T,R>::data()
 {
-    // return a T* to the internal data
     return buffer_.begin(); 
 }
 
 template<typename T, int R> RA_INLINEF
 const T* ra::rarray<T,R>::data() const
 {
-    // return a T* to the internal data
     return buffer_.begin(); 
 }
 
 template<typename T, int R> RA_INLINEF
 ra::size_type ra::rarray<T,R>::extent(int i) const
 {
-    // retrieve array size in dimension i
     return shape_.extent(i);
 }
 
 template<typename T, int R> RA_INLINEF
 typename ra::rarray<T,R>::iterator ra::rarray<T,R>::begin()
 {
-    // start of the content
     return buffer_.begin();
 }
 template<typename T, int R> RA_INLINEF
 typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::begin() const
 {
-    // start of the content, when *this is constant
     return buffer_.begin();
 }
 template<typename T, int R> RA_INLINEF
 typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::cbegin() const
 {
-    // start of the content, when *this can be constant and you need to be explicit
     return buffer_.cbegin();
 }
 template<typename T, int R> RA_INLINEF
 typename ra::rarray<T,R>::iterator ra::rarray<T,R>::end()
 {
-    // end of the content
     return buffer_.end();
 }
 template<typename T, int R> RA_INLINEF
 typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::end() const
 {
-    // end of the content, when *this is constant
     return buffer_.end();
 }
 template<typename T, int R> RA_INLINEF
 typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::cend() const
 {
-    // end of the content, when *this is constant and you need to be explicit about that
     return buffer_.cend();
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// retrieve indices of an element
 
 template<typename T,int R> RA_INLINE_
 ra::size_type* ra::rarray<T,R>::index(const iterator&i, size_type* ind) const
 {
-    // retrieve indexes within *this of the element pointed to by i
-    // Puts them in preexisting array and returns pointer
     return index(*i, ind);
 }
 
 template<typename T,int R> RA_INLINE_
 ra::size_type* ra::rarray<T,R>::index(const T& a, size_type* ind) const
 {
-    // retrieve indexes within *this of the element a. puts them in preexisting array and returns pointer
     ptrdiff_t linearindex = &a - &(buffer_[0]);
     RA_CHECKORSAY(linearindex >= 0 and linearindex < size(), "element not in array");
     int j = R;
@@ -2093,15 +1824,12 @@ ra::size_type* ra::rarray<T,R>::index(const T& a, size_type* ind) const
 template<typename T,int R> RA_INLINE_
 std::array<ra::size_type,R> ra::rarray<T,R>::index(const iterator&i) const
 {
-    // retrieve indexes within *this of the element pointed to by i
-    // Puts them in preexisting array and returns pointer
     return index(*i);
 }
 
 template<typename T,int R> RA_INLINE_
 std::array<ra::size_type,R> ra::rarray<T,R>::index(const T& a) const
 {
-    // retrieve indexes within *this of the element a. puts them in preexisting array and returns pointer
     std::array<size_type,R> ind;
     ptrdiff_t linearindex = &a - &(buffer_[0]);
     RA_CHECKORSAY(linearindex >=0 and linearindex < size(), "element not in array");
@@ -2117,14 +1845,12 @@ std::array<ra::size_type,R> ra::rarray<T,R>::index(const T& a) const
 template<typename T,int R> RA_INLINE_
 ra::size_type ra::rarray<T,R>::index(const iterator&iter, int i) const
 {
-    // retrieve index in dimension i within *this of the element pointed to by i
     return index(*iter, i);
 }
 
 template<typename T,int R> RA_INLINE_
 ra::size_type ra::rarray<T,R>::index(const T& a, int i) const
 {
-    // retrieve index in dimension i within *this of the element a
     ptrdiff_t linearindex = &a - &(buffer_[0]);
     if (linearindex < 0 or linearindex >= size())
         throw ("element not in array");
@@ -2134,12 +1860,10 @@ ra::size_type ra::rarray<T,R>::index(const T& a, int i) const
     return linearindex % extent_[i];
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename A> RA_INLINE_ 
 int ra::extent_given_byte_size(A a[], int i, int byte_size) 
 {
-    // find shape of automatic arrays, given the size of the array
     RA_CHECKORSAY(i>=0 and i<1, "wrong dimension");
     switch (i) {
         case 0:  return byte_size/sizeof(A);
@@ -2302,7 +2026,6 @@ int ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int b
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename A,int R> RA_INLINE_ 
 int ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size) 
@@ -2310,9 +2033,7 @@ int ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size)
     return a.extent(i);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// convert to rarray
 
 template<typename A> RA_INLINE_ 
 ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[], int byte_size) 
@@ -2391,7 +2112,6 @@ ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y
     return ra::rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
 ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size) 
@@ -2399,34 +2119,7 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
     return a;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Get rid of the macros
-// 
-//#include "rarraydelmacros.h"
-//
-// rarraydelmacros.h - Undefine checks and inlining macros used in runtime arrays
-//
-// Copyright (c) 2015-2019  Ramses van Zon
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-//
 
 #undef RA_CHECKORSAY
 #undef RA_INLINE
@@ -2434,22 +2127,17 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 #undef RA_INLINE_
 
 
-//end of #include "rarraydelmacros.h"
 
-// Global namespace stuff
-// (also in global namespace: operator<< and operator>> for rarray)
     
 #define EXTENT(A,I)  ra::extent_given_byte_size(A,I,sizeof(A))
 #define RARRAY(A)    ra::make_rarray_given_byte_size(A,sizeof(A))
 #define INDEX(A,X,I) RARRAY(A).index(X,I)
 #define as_rarray(A) ra::make_rarray_given_byte_size(A,sizeof(A)) 
 
-// for now:
 using ra::rarray;
 using ra::linspace;
 using ra::xrange; 
 
-// add rvector, rmatrix and rtensor shortcut types
 template<typename T> using rvector = rarray<T,1>;
 template<typename T> using rmatrix = rarray<T,2>;
 template<typename T> using rtensor = rarray<T,3>;

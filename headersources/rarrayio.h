@@ -1,7 +1,7 @@
 //
 // rarrayio.h - I/O routines for tuntime arrays. Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2019  Ramses van Zon
+// Copyright (c) 2013-2020  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -202,7 +202,7 @@ static char get_but_eat_newline(std::istream & in)
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).    
     char ch1='\n';
-    while (ch1=='\n') 
+    while (ch1=='\n' && ! in.eof())
         in >> ch1; // eats white space unless noskipws is set
     return ch1;
 }
@@ -311,7 +311,7 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
     }
     catch (std::istream::failure& e) {
         in.seekg(init_file_ptr, in.beg);// upon failure, try to undo characters read in
-        throw e;                        // and pass on the error
+        in.setstate(std::ios::failbit); // and set the fail bit
     }
 
     return result;
