@@ -42,8 +42,6 @@ int test_shared_buffer_main(); // for testing
 /***************************************************************************/
 
 namespace ra {
-// for debugging purposes, every shape gets a one-character name.
-static char _buffername = 'A'; 
 
 /***************************************************************************/
 
