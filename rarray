@@ -72,7 +72,6 @@ int test_shared_buffer_main(); // for testing
 /***************************************************************************/
 
 namespace ra {
-static char _buffername = 'A'; 
 
 /***************************************************************************/
 
@@ -898,6 +897,10 @@ namespace ra { template<typename T>       class CommaOp;   }
 
 #define ExOp class
 
+namespace ra {
+template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
+template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
+}
 namespace ra { 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
 }

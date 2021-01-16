@@ -56,6 +56,11 @@ namespace ra { template<typename T>       class CommaOp;   }
 //typedef int ExOp;
 #define ExOp class
 
+// Definitions of streaming operator; implementation is in rarrayio
+namespace ra {
+template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
+template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
+}
 // Each operator creates a subexpression of the Expr<...>, which we forward-define first
 namespace ra { 
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
@@ -1363,7 +1368,6 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 #include "rarraydelmacros.h"
 
 // Global namespace stuff
-// (also in global namespace: operator<< and operator>> for rarray)
     
 #define EXTENT(A,I)  ra::extent_given_byte_size(A,I,sizeof(A))
 #define RARRAY(A)    ra::make_rarray_given_byte_size(A,sizeof(A))

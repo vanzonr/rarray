@@ -40,9 +40,6 @@
 
 // add everything else 'ra' namespace
 namespace ra {
-    
-template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
-template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
 
 template<typename T,int R> RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
 template<typename T>       RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,1>& r);
