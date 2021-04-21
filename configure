@@ -56,7 +56,7 @@ function detect_library()
     if [ "$libdir" ]; then
         libdir="-L$libdir"
     elif pkg-config --exists ${modulename,,}; then
-        incdir=$(pkg-config --libs-only-L ${modulename,,})
+        libdir=$(pkg-config --libs-only-L ${modulename,,})
     fi
     local tmpdir=$(mktemp -d -t configure.XXXXX)
     local tmpfile=$tmpdir/temp.cc
@@ -77,9 +77,13 @@ EOF
         fi
         if [ -n "$incvar" ]; then 
             accincdir="$accincdir -IZ{$incvar}"
+        elif [ -n "$incdir" ]; then
+            accincdir="$accincdir $incdir"
         fi
         if [ -n "$libvar" ]; then 
             acclibdir="$acclibdir -LZ{$libvar}"
+        elif [ -n "$libdir" ]; then
+            acciibdir="$acclibdir $libdir"
         fi
     fi
     rm -f $tmpfile
