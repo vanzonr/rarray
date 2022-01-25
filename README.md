@@ -5,7 +5,7 @@ rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
 compilers to generate fast code.
 
-The latest release version is 2.2.0.
+The latest release version is 2.3.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -86,6 +86,11 @@ Release History and Changes
    'catch2', which does everything that 'rut' was intended to do, but
    better. Since 'catch2' is header only, this makes running the tests
    on different platforms much easier.
+
+ * Version 232, January 2022
+
+   Returned to a single-header implementation by incorporating the
+   rarrayio header into the rarray header.
 
 
 Known issues

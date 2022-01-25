@@ -1,7 +1,7 @@
 //
-// rarrayio.h - I/O routines for tuntime arrays. Documentation in rarraydoc.pdf
+// rarrayio.h - I/O routines for runtime reference counted arrays.
 //
-// Copyright (c) 2013-2020  Ramses van Zon
+// Copyright (c) 2013-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,6 @@
 // THE SOFTWARE.
 //
 
-#ifndef RARRAYIO_H
-#define RARRAYIO_H
-
-#if __cplusplus >= 201103L
-
-#ifndef RARRAY_H
-#include "rarray.h"
-#endif
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib>
-#include <list>
-#include "rarraymacros.h"
-
-// add everything else 'ra' namespace
 namespace ra {
 
 template<typename T,int R> RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
@@ -359,11 +342,3 @@ std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Get rid of the macros
-#include "rarraydelmacros.h"
-
-#else
-#error "This file requires C++11 or newer support."
-#endif
-
-#endif

@@ -103,12 +103,11 @@ valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} -g -o $@ $^
 
-rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h hardinclude
-	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h | ../hardinclude - offsets.h > ../rarray
+rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h hardinclude
+	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h | ../hardinclude - offsets.h > ../rarray
 
-rarrayio: ${HS}/rarrayio.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h hardinclude
-	cd ${HS} ; ../hardinclude rarrayio.h rarraymacros.h rarraydelmacros.h > ../rarrayio
-	sed -i 's/"rarray.h"/<rarray>/' rarrayio
+rarrayio: rarray
+	echo '#include <rarray>' > rarrayio
 
 install: rarray rarrayio rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
