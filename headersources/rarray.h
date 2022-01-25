@@ -1,9 +1,9 @@
 //
 // rarray - Runtime arrays: template classes for pointer-based,
-//          runtime dimensionalized, multi-dimensional
+//          runtime, reference counted, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2020  Ramses van Zon
+// Copyright (c) 2013-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,10 @@
 #include <utility>
 #include <string>
 #include <cmath>
+#include <algorithm>
+#include <sstream>
+#include <iostream>
+#include <list>
 #include "rarraymacros.h"
 #include "shared_buffer.h"
 #include "shared_shape.h"
@@ -369,17 +373,9 @@ template<class S, class T, class U>
 Xrange<T> xrange(S begin, T end, U step) {
     return Xrange<T>((T)begin, end, (T)step);
 }
-
-
+   
 } // end namespace ra
 
-// include utility to provide the definition of std::move
-#include <utility>
-
-// needed for std::copy
-#include <algorithm>
-
-    
 //------------------------------------------------//
 //                                                //
 //          I M P L E M E N T A T I O N           //
@@ -1363,6 +1359,9 @@ ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Include I/O always (from version 2.3 onwards)
+#include "rarrayio.h"
 
 // Get rid of the macros
 #include "rarraydelmacros.h"
