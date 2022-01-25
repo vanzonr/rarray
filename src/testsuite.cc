@@ -23,7 +23,6 @@
 //
 
 #include <rarray>
-#include <rarrayio>
 #include <iostream>
 #include <cassert>
 #include <iomanip>

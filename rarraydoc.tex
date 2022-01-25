@@ -9,7 +9,7 @@
 \fancyhead[RE]{\hfill\bfseries\rightmark \hfill}
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\footrulewidth}{0pt}
-\addtolength{\headheight}{2.5pt}
+\addtolength{\headheight}{15pt}
 \fancypagestyle{plain}{\fancyhead{}\renewcommand{\headrulewidth}{0pt}}
 \let\oldtt=\tt
 %\renewcommand{\texttt}[1]{\color{blue}\tt #1\color{black}}
@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{February 3, 2020 (version 2.2)\vspace{-7mm}}
+\date{January 25, 2022 (version 2.3)\vspace{-7mm}}
 
 \maketitle
 
@@ -52,7 +52,7 @@ libraries (CBLAS, LAPACKE).
 
 \noindent\textbf{How:}
 
-The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. For I/O, use the additional header file \texttt{rarrayio}.
+The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. Streaming I/O is also part of the \texttt{rarray} header.
 
 \
 
@@ -243,7 +243,7 @@ The guarrantee of contiguity means strided arrays are not supported.
   conversions to \texttt{T*const*} or \texttt{const T*const*}, and
   using the method \texttt{noconst\_ptr\_array()} for the conversion to a
   \texttt{T**}.
-\item Streaming input and output throught the header file \texttt{rarrayio}.
+\item Streaming input and output.
 \end{itemize}
 
 \section{Using rarrays}
@@ -600,7 +600,7 @@ This method creates deep copy of the rarray, i.e., an independent rarray with th
 
 \subsection{Streaming input and output}
 
-Although it is usually preferrable to store large arrays in binary, rarray does provide streaming operators \texttt{<<} and \texttt{>>} to read and write to standard C++ iostreams.  You need to include an additional header file called \texttt{rarrayio} for this.
+Although it is usually preferrable to store large arrays in binary, rarray does provide streaming operators \texttt{<<} and \texttt{>>} to read and write to standard C++ iostreams.  
 
 The output produced by the output streaming operator is like that of
 automatic arrays initializers: Each dimension is started and ended by
@@ -613,7 +613,6 @@ E.g.:\vspace{-9pt}
 \begin{verbatim}
   #include <iostream>
   #include <rarray>
-  #include <rarrayio>
   int main() {
     int buf[6] = {1,2,3,4,5,6};
     rarray<int,2> arr(buf,3,2);
@@ -845,7 +844,6 @@ from blas, using the cblas interface:
 \begin{verbatim}
   #include <iostream>
   #include <rarray>
-  #include <rarrayio>
   #include <cblas.h>
   int main() {
      int m=2, k=3, n=4;
@@ -882,7 +880,6 @@ rarray:
   #include <iostream>
   #include <complex>
   #include <rarray>
-  #include <rarrayio>
   #include <fftw3.h>
   int main() {
      int n = 4;
@@ -1140,13 +1137,12 @@ C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \t
 
 \section{Installation}
 
-Rarray is a header-only library, so you could just copy the headers \texttt{rarray} and
-\texttt{rarrayio} to the directory \texttt{/usr/include} or some other directory
+Rarray is a header-only library, so you could just copy the header \texttt{rarray} to the directory \texttt{/usr/include} or some other directory
 that your C++ compiler searches for header files.  Alternatively, you could use the command
 \begin{verbatim}
     make install PREFIX=[BASEDIR]
 \end{verbatim}
-This installs the header files in the \texttt{[BASEDIR]/include} directory,
+This installs the header file in the \texttt{[BASEDIR]/include} directory,
 and the documentation in\linebreak \texttt{[BASEDIR]/share/doc}.
 If you have sudo permissions, you can also do
 \begin{verbatim}
@@ -1156,10 +1152,9 @@ to install the header and documentation to /usr/include and /usr/share/doc,
 respectively. Note that this will fail on recent MacOS versions,
 in which case, try \texttt{sudo make install PREFIX=/usr/local}.
 
-To modify rarray or rarrayio, do not edit these file
-separately. Instead, you should edit the files in the
-\texttt{headersources} directory.  You can use the included Makefile
-to assemble the rarray headers with
+To modify rarray, do not edit these file separately. Instead, you
+should edit the files in the \texttt{headersources} directory.  You
+can use the included Makefile to assemble the rarray headers with
 \begin{verbatim}
     make headers
 \end{verbatim}
@@ -1238,5 +1233,10 @@ which does everything that 'rut' was intended to do, but better. Since
 'catch2' is header only, this makes running the tests on different
 platforms much easier.
 
+\noindent
+Jan 2022: Version 2.3
+
+Streaming I/O now part of the rarray header. rarrayio header is
+obsolete, but kept for backwards compatibility. 
 
 \end{document}
