@@ -87,7 +87,7 @@ Release History and Changes
    better. Since 'catch2' is header only, this makes running the tests
    on different platforms much easier.
 
- * Version 232, January 2022
+ * Version 2.3.0, January 2022
 
    Returned to a single-header implementation by incorporating the
    rarrayio header into the rarray header.
