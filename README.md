@@ -126,9 +126,11 @@ In the top directory
 ---------------------
 
 rarray                 Header file defining runtime arrays (produced from headersources)
+
 rarrayio               Header file defining I/O for rarrays (produced from headersources)
 
 rarraydoc.tex          LaTeX source of the documentation
+
 rarraydoc.pdf          Pdf format of the documentation
 
 configure              A non-autotools configure script for compiling 
@@ -161,10 +163,13 @@ rarray.h               Header source file defining runtime arrays
 rarrayio.h             Header source file for I/O routines
  
 rarraymacros.h         Internal macros and functions
+
 rarraydelmacros.h
 
 shared_buffer.h        Internal header that implements a reference-counted array
+
 shared_shape.h         Internal header that implements a reference-counted shape structure
+
 offsets.h              Internal header to compute pointer offsets within the shape structure
 
 
@@ -206,12 +211,20 @@ optbarrierf.f90        Fortran version of optbarrier.cc
 In the directory 'compilerconfigs'
 -----------------------------------
 
-compiler.clang++.mk    Compiler dependence flags for the Makefile. Used
-compiler.g++.mk        as input to create config.mk by configure
+Compiler dependence flags for the Makefile. Used as input to create config.mk by configure.
+
+compiler.clang++.mk    
+
+compiler.g++.mk        
+
 compiler.icpc.mk
+
 compiler.xlC.mk
+
 compiler.xlC_r.mk
+
 compiler.xlc++.mk
+
 
 
 - January 2022
