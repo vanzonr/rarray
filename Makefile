@@ -127,7 +127,8 @@ testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
 	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<  
 
 catch.hpp:
-	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp 
+	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
+	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
 	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
