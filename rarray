@@ -915,7 +915,8 @@ namespace ra {
 template<typename T,int R> 
 class rarray {
     
-  public: 
+  public:
+    typedef T                                         value_type;       
     typedef ssize_t                                   difference_type;  // difference type for indices
     typedef ssize_t                                   size_type;        // type of indices
     typedef T*                                        iterator;         // iterator type
@@ -953,6 +954,7 @@ class rarray {
     rarray<T,R>& operator=(rarray<T,R>&& x);                                      // move assignment operator
     RA_INLINE_ CommaOp<T> operator=(const T& e);                                  // Comma separated element assignment
     RA_INLINEF ~rarray();                                                         // destructor
+    constexpr int rank() { return R; } 
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator+=(const Expr<T,R,AOP,A1,A2,A3>& e);
