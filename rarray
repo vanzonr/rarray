@@ -104,6 +104,7 @@ class shared_buffer
     T& at(size_type index);
 
     shared_buffer<T> slice(size_type from, size_type to);
+    const shared_buffer<T> slice(size_type from, size_type to) const;
 
     size_type size() const;
 
@@ -258,6 +259,20 @@ T& shared_buffer<T>::at(size_type index)
 
 template<class T>
 shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to)
+{
+    if (from < 0 or to < 0 or from > size_ or to > size_)
+        throw std::out_of_range("shared_buffer::slice");
+    shared_buffer<T> result(*this);
+    result.data_ += from;
+    if (from <= to)
+        result.size_ = to - from;
+    else
+        result.size_ = 0;
+    return result;
+}
+
+template<class T>
+const shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to) const
 {
     if (from < 0 or to < 0 or from > size_ or to > size_)
         throw std::out_of_range("shared_buffer::slice");
@@ -999,12 +1014,18 @@ class rarray {
     RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
     RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
     RA_INLINEF rarray<T,R-1> at(size_type i);
-    RA_INLINEF rarray<T,R-1> at(size_type i) const;
+    RA_INLINEF const rarray<T,R-1> at(size_type i) const;
     RA_INLINEF operator typename PointerArray<T,R>::type ();  // makes a[..][..] work, as well as automatic conversion
     RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
     RA_INLINEF const T& leval(size_type i) const;
+  private:
+    friend class rarray<T,R+1>;
     rarray(shared_buffer<T>&& buffer, shared_shape<T,R>&& shape) :
         buffer_(std::forward<shared_buffer<T>>(buffer)),
+        shape_(std::forward<shared_shape<T,R>>(shape))
+    {}
+    rarray(const shared_buffer<T>&& buffer, shared_shape<T,R>&& shape) :
+        buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&& >(buffer))),
         shape_(std::forward<shared_shape<T,R>>(shape))
     {}
   private:
@@ -1026,7 +1047,6 @@ class rarray<T,0> {
     RA_INLINE_ rarray() {};                                                                                                                  // constructor leaving rarray undefined 
     RA_INLINE_ rarray(const size_type* extent);                                                                                                                                   // R>11
     RA_INLINE_ rarray(T* buffer, const size_type* extent);                                                                                                                        // R>11
-    RA_INLINEF rarray(const rarray<T,0> &a);                                      // copy constructor
     RA_INLINE_ rarray<T,0>& operator=(const rarray<T,0> &a);                      // array assignment operator
     rarray(rarray<T,0>&& x);                                                      // move constructor
     rarray<T,0>& operator=(rarray<T,0>&& x);                                      // move assignment operator
@@ -1041,7 +1061,7 @@ class rarray<T,0> {
     RA_INLINE_ bool                is_clear()           const {  return buffer_.cbegin() == nullptr; }                      // check if undefined
     RA_INLINE_ rarray<T,0>         copy()               const;                       // return a copy
     RA_INLINE_ size_type           extent(int i)        const { return is_clear()?0:1; }   // retrieve array size in dimension i
-    RA_INLINE_ const size_type*       shape()              const;                       // retrieve array sizes in all dimensions
+    RA_INLINE_ const size_type*    shape()              const;                       // retrieve array sizes in all dimensions
     RA_INLINE_ size_type           size()               const;                       // retrieve the total number of elements  
     RA_INLINE_ T*                  data();                                           // return a T* to the internal data
     RA_INLINE_ const T*            data()               const { return buffer_.begin(); }                   // return a T* to the internal data
@@ -1062,9 +1082,15 @@ class rarray<T,0> {
     RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
     RA_INLINE_ size_type*          index(const const_iterator& i, size_type* ind) const;// if i points at an element in the array, get the indices of that element
     RA_INLINEF const T& leval(size_type i) const;
+private:
+    friend class rarray<T,1>;
     rarray(shared_buffer<T>&& buffer, const shared_shape<T,0>& shape) :
         buffer_(std::forward<shared_buffer<T>>(buffer))
     {}
+    rarray(const shared_buffer<T>&& buffer, const shared_shape<T,0>& shape) :
+        buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&&>(buffer)))
+    {}
+public:
     ~rarray() {}
     RA_INLINEF operator T& () { return buffer_[0]; }
     RA_INLINEF operator const T& () const { return buffer_[0]; }
@@ -1687,9 +1713,12 @@ ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i)
 }
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i) const
+const ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i) const
 {
-    return const_cast<ra::rarray<T,R>*>(this)->at(i); // provisionary
+    if (i < 0 or i >= extent(0))
+        throw std::out_of_range("rarray<T,R>::at");
+    size_type stride = size()/extent(0);
+    return ra::rarray<T,R-1>(buffer_.slice(i*stride, (i+1)*stride), shape_.at(i));
 }
 
 template<typename T, int R> RA_INLINEF

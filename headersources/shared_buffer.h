@@ -76,7 +76,7 @@ class shared_buffer
 
     // slice a part
     shared_buffer<T> slice(size_type from, size_type to);
-    //shared_buffer<const T> slice(size_type from, size_type to) const;
+    const shared_buffer<T> slice(size_type from, size_type to) const;
 
     // size
     size_type size() const;
@@ -244,6 +244,21 @@ T& shared_buffer<T>::at(size_type index)
 
 template<class T>
 shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to)
+{
+    // slice a part, checking bounds
+    if (from < 0 or to < 0 or from > size_ or to > size_)
+        throw std::out_of_range("shared_buffer::slice");
+    shared_buffer<T> result(*this);
+    result.data_ += from;
+    if (from <= to)
+        result.size_ = to - from;
+    else
+        result.size_ = 0;
+    return result;
+}
+
+template<class T>
+const shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to) const
 {
     // slice a part, checking bounds
     if (from < 0 or to < 0 or from > size_ or to > size_)
