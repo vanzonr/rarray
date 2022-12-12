@@ -94,16 +94,19 @@ inline Offsets::Offsets(const std::vector<ssize_t>& dims)
 template<class T>
 inline void*** Offsets::apply_offsets(T* data) const
 {
+    static_assert(sizeof(T*) == sizeof(void*) &&
+                  sizeof(T*) == sizeof(void**),
+                  "rarray requires all pointers to have the same size");
     ssize_t noffsets = offsets_.size();
     if (ndataoffsets_ == 0 && noffsets == 0)
         return nullptr;
     else if (ndataoffsets_ == 1 && noffsets == 0) // that happens only for rank==1
-        return (void***)(data);
+        return reinterpret_cast<void***>(data);
     else {
         void*** offsets = new void**[noffsets];
         ssize_t i = 0;
         for (;i < noffsets - ndataoffsets_; i++)            
-            offsets[i] = (void**)offsets + offsets_[i];
+            offsets[i] = reinterpret_cast<void**>(offsets) + offsets_[i];
         for (;i < noffsets; i++)            
             offsets[i] = reinterpret_cast<void**>(
                               const_cast<typename std::remove_const<T>::type*>(data)

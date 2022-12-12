@@ -124,7 +124,7 @@ testsuite: testsuite.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
 
 testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
-	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<  
+	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
 
 catch.hpp:
 	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp

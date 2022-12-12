@@ -153,7 +153,7 @@ class rarray {
     RA_INLINE_ const T*            data()               const;                       // return a T* to the internal data
     RA_INLINE_ parray_t            ptr_array()          const;                       // return a T*const*.. acting similarly to this rarray when using []:
     RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                       // return a T**.. acting similarly to this rarray when using []:    
-    RA_INLINE_ rarray<const T,R>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
+    RA_INLINE_ const rarray<const T,R>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
     RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
     //
     RA_INLINE_ iterator            begin();                                          // start of the content
@@ -233,7 +233,7 @@ class rarray<T,0> {
     RA_INLINE_ const T*            data()               const { return buffer_.begin(); }                   // return a T* to the internal data
     RA_INLINE_ parray_t            ptr_array()          const;                       // return a T*const*.. acting similarly to this rarray when using []:
     RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                       // return a T**.. acting similarly to this rarray when using []:    
-    RA_INLINE_ rarray<const T,0>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
+    RA_INLINE_ const rarray<const T,0>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
     RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
     //
     RA_INLINE_ iterator            begin();                                          // start of the content
@@ -331,12 +331,13 @@ rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true)
     }
     rarray<S,1> x(n);
     for (int i = 0; i < n; i++)
-        x[i] = x1 + ((x2-x1)*(long long int)(i))/(n-end_incl);
+        x[i] = x1 + ((x2-x1)*static_cast<long long int>(i))/(n-end_incl);
     if (end_incl)
         x[n-1] = x2;
     return x;
 }
 
+// T should be an arithemetic type, i.e, an integer, float or double. 
 template<class T>
 class Xrange {
   private:
@@ -366,7 +367,7 @@ class Xrange {
     T a_, b_, d_;
   public:
     Xrange(T a, T b, T d)
-      : a_(a), b_(a + size_t(std::ceil((b-a)/double(d)))*d), d_(d) 
+        : a_(a), b_(a + static_cast<size_t>(std::ceil((b-a)/static_cast<double>(d)))*d), d_(d) 
     {}
     const_iterator begin() const {
         return const_iterator(a_, d_, b_);
@@ -378,17 +379,17 @@ class Xrange {
 
 template<class T>
 Xrange<T> xrange(T end) {
-    return Xrange<T>((T)0, end, (T)1);
+    return Xrange<T>(static_cast<T>(0), end, static_cast<T>(1));
 }
 
 template<class S, class T>
 Xrange<T> xrange(S begin, T end) {
-    return Xrange<T>((T)begin, end, (T)1);
+    return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(1));
 }
 
 template<class S, class T, class U>
 Xrange<T> xrange(S begin, T end, U step) {
-    return Xrange<T>((T)begin, end, (T)step);
+    return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(step));
 }
    
 } // end namespace ra
@@ -953,9 +954,9 @@ typename ra::rarray<T,R>::noconst_parray_t ra::rarray<T,R>::noconst_ptr_array() 
 }
 
 template<typename T, int R> RA_INLINE_
-typename ra::rarray<const T,R>& ra::rarray<T,R>::const_ref() const 
+const typename ra::rarray<const T,R>& ra::rarray<T,R>::const_ref() const 
 {
-    return (rarray<const T,R>&)(*this);
+    return reinterpret_cast<const rarray<const T,R>&>(*this);
 }
 
 template<typename T, int R> RA_INLINEF

@@ -245,7 +245,11 @@ struct _data_from_ptrs_noffsets_ndataoffsets {
             typename shared_shape<T,R>::size_type noffsets,
             typename shared_shape<T,R>::size_type ndataoffsets)
     {
-        return (T*)(ptrs[noffsets - ndataoffsets]);
+        return reinterpret_cast<T*>(
+                  const_cast<typename PointerArray<T,R-1>::noconst_type>(
+                    ptrs[noffsets - ndataoffsets]
+                  )
+               );
     }
 };
 
@@ -255,7 +259,7 @@ struct _data_from_ptrs_noffsets_ndataoffsets<T,1> {
                     typename shared_shape<T,1>::size_type noffsets,
                     typename shared_shape<T,1>::size_type ndataoffsets)
     {
-        return (T*)(ptrs);
+        return reinterpret_cast<T*>(ptrs);
     }
 };
 
@@ -293,7 +297,9 @@ void shared_shape<T,R>::relocate(T* newdata)
 {
     // keep the shape, but have it point at a different block of data
     if (R==1) {
-        // cast never really needed, for R=1, typeof(ptrs_)==typeof(newdata)
+        // no cast needed, as for R=1, typeof(ptrs_)==typeof(newdata);
+        // but because we need this to work for c++11, can't use if
+        // constexpr(), so the following must compile for all R:
         ptrs_ = reinterpret_cast<ptrs_type>(newdata);
     } else if (R>1) {
         // let shape point to other datablock
@@ -301,7 +307,7 @@ void shared_shape<T,R>::relocate(T* newdata)
         if (shift != 0) {
             copy_before_write();
             for (size_type i = noffsets_ - ndataoffsets_; i < noffsets_; i++)
-                orig_[i] = reinterpret_cast<void**>((T*)(orig_[i]) + shift);
+                orig_[i] = reinterpret_cast<void**>(reinterpret_cast<T*>(orig_[i]) + shift);
         }
     }
 }
@@ -317,8 +323,11 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
     if (R>1) {
         copy_of_this.refs_ = new std::atomic<int>(1);
         copy_of_this.orig_ = new void**[noffsets_];
-        std::copy((void***)ptrs_, (void***)(ptrs_) + noffsets_, copy_of_this.orig_);
-        std::ptrdiff_t shift = copy_of_this.orig_ - (void***)(ptrs_);
+        void*** old_eff_orig = reinterpret_cast<void***>(
+                                   const_cast<typename PointerArray<T,R>::noconst_type>(
+                                     ptrs_ ));
+        std::copy(old_eff_orig, old_eff_orig + noffsets_, copy_of_this.orig_);
+        std::ptrdiff_t shift = copy_of_this.orig_ - old_eff_orig;
         for (size_type i = 0; i < noffsets_ - ndataoffsets_; i++)
             copy_of_this.orig_[i] += shift;
         copy_of_this.ptrs_ = reinterpret_cast<ptrs_type>(copy_of_this.orig_);
