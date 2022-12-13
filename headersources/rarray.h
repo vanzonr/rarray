@@ -23,8 +23,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// This is version 2.3.0
-//
 
 #ifndef RARRAY_H
 #define RARRAY_H
@@ -40,6 +38,8 @@
 #include <sstream>
 #include <iostream>
 #include <list>
+
+#include "versionheader.h"
 #include "rarraymacros.h"
 #include "shared_buffer.h"
 #include "shared_shape.h"

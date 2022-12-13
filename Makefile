@@ -103,8 +103,18 @@ valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} -g -o $@ $^
 
-rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h hardinclude
-	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h | ../hardinclude - offsets.h > ../rarray
+VERSION:
+	git describe --abbrev=0 > $@
+
+${HS}/versionheader.h: VERSION
+	echo "// define rarray version (i.e. latest git tag)" > $@
+	echo -n "#define RA_VERSION " >> $@
+	cat VERSION >> $@	
+	echo -n "#define RA_VERSION_NUMBER " >> $@
+	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
+
+rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
+	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h versionheader.h | ../hardinclude - offsets.h > ../rarray
 
 rarrayio: rarray
 	echo '#include <rarray>' > rarrayio

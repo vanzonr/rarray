@@ -39,6 +39,10 @@
 #include <iostream>
 #include <list>
 
+#define RA_VERSION v2.3.0
+#define RA_VERSION_NUMBER 2003000
+
+
 #ifdef RA_BOUNDSCHECK
 #include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
@@ -938,6 +942,7 @@ void shared_shape<T,R>::decref()
 
 namespace ra {
 
+const char version[16] = "2.3.0";
 typedef ssize_t size_type;
 enum class RESIZE { NO, ALLOWED };
 
