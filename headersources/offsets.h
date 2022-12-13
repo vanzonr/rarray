@@ -42,28 +42,24 @@ class Offsets
     // they can be applied to yield a pointer-to-pointer structure;
     // for rank>1, this structure will be allocated; it should be deallocate elsewhere
     // for rank==1, this structure is identical to data itself, so no allocation is done.
-    template<class T>  void*** apply_offsets(T* data) const;
+    template<class T> void*** apply_offsets(T* data) const;
 
-    // the ptr-to-ptr structure 
-    ssize_t get_num_data_offsets() const;
-    ssize_t get_num_offsets() const;
-    ssize_t get_rank() const;
+    // information about the the ptr-to-ptr structure 
+    ssize_t get_num_data_offsets() const noexcept;
+    ssize_t get_num_offsets() const noexcept;
+    ssize_t get_rank() const noexcept;
     
   private:
 
     ssize_t rank_;
     std::vector<unsigned long long> offsets_;
     ssize_t ndataoffsets_;
-
-    // for testing and debugging purposes
-    friend int test_offsets_main(); 
 };
 
 /***************************************************************************/
 
-inline Offsets::Offsets(const std::vector<ssize_t>& dims)
+inline Offsets::Offsets(const std::vector<ssize_t>& extent)
 {
-    std::vector<ssize_t> extent(dims);
     rank_ = extent.size();
     ssize_t noffsets = 0;
     ndataoffsets_ = 0;
@@ -96,11 +92,11 @@ inline void*** Offsets::apply_offsets(T* data) const
 {
     static_assert(sizeof(T*) == sizeof(void*) &&
                   sizeof(T*) == sizeof(void**),
-                  "rarray requires all pointers to have the same size");
+                  "rarray's Offsets requires all pointers to have the same size");
     ssize_t noffsets = offsets_.size();
     if (ndataoffsets_ == 0 && noffsets == 0)
         return nullptr;
-    else if (ndataoffsets_ == 1 && noffsets == 0) // that happens only for rank==1
+    else if (ndataoffsets_ == 1 && noffsets == 0) // happens only for rank==1
         return reinterpret_cast<void***>(data);
     else {
         void*** offsets = new void**[noffsets];
@@ -115,17 +111,17 @@ inline void*** Offsets::apply_offsets(T* data) const
     }
 }
 
-inline ssize_t Offsets::get_num_data_offsets() const
+inline ssize_t Offsets::get_num_data_offsets() const noexcept
 {
     return ndataoffsets_;
 }
 
-inline ssize_t Offsets::get_num_offsets() const
+inline ssize_t Offsets::get_num_offsets() const noexcept
 {
     return offsets_.size();
 }
 
-inline ssize_t Offsets::get_rank() const
+inline ssize_t Offsets::get_rank() const noexcept
 {
     return rank_;
 }

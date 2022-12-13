@@ -32,16 +32,14 @@ int test_offsets_main()
     {
         std::cerr << "Test 0\n";
         Offsets P{{}};
-        assert(P.offsets_.size() == 0);
-        assert(P.ndataoffsets_ == 0);
+        assert(P.get_num_data_offsets() == 0);
         assert(P.get_num_offsets() == 0);
         assert(P.get_num_data_offsets() == 0);
     }
     {
         std::cerr << "Test 1\n";
         Offsets P{{N}};
-        assert(P.offsets_.size() == 0);
-        assert(P.ndataoffsets_ == 1);
+        assert(P.get_num_data_offsets() == 1);
         assert(P.get_num_offsets() == 0);
         assert(P.get_num_data_offsets() == 1);
         int a[N];
@@ -56,8 +54,7 @@ int test_offsets_main()
     {
         std::cerr << "Test 2\n";
         Offsets P{{N,N/2}};  // 16 x 8 
-        assert(P.offsets_.size() == N);
-        assert(P.ndataoffsets_ == N);
+        assert(P.get_num_data_offsets() == N);
         assert(P.get_num_offsets() == N);
         assert(P.get_num_data_offsets() == N);
         int a[N][N/2];
@@ -74,8 +71,7 @@ int test_offsets_main()
     {
         std::cerr << "Test 3\n";        
         Offsets P{{N,N/2,N/4}};  // 16 x 8 x 4
-        assert(P.offsets_.size() == N*(N/2+1) );
-        assert(P.ndataoffsets_ == N*(N/2) );
+        assert(P.get_num_data_offsets() == N*(N/2) );
         assert(P.get_num_offsets() == N*(N/2+1) );
         assert(P.get_num_data_offsets() == N*(N/2) );
         int a[N][N/2][N/4];
@@ -93,8 +89,8 @@ int test_offsets_main()
     {
         std::cerr << "Test 4\n";        
         Offsets P{{N,N/2,N/4,N/8}}; // 16 x 8 x 4 x 2
-        assert(P.offsets_.size() == N*(N/2*(N/4+1)+1));
-        assert(P.ndataoffsets_ == N*(N/2)*(N/4));
+        assert(P.get_num_offsets() == N*(N/2*(N/4+1)+1));
+        assert(P.get_num_data_offsets() == N*(N/2)*(N/4));
         int a[N][N/2][N/4][N/8];
         int* aptr = &a[0][0][0][0];
         for ( int i=0;i<N*(N/2)*(N/4)*(N/8);i++)
@@ -112,8 +108,8 @@ int test_offsets_main()
     {
         std::cerr << "Test 5\n";        
         Offsets P{{N,N/2,N/4,N/8,N/16}}; // 16 x 8 x 4 x 2 x 1
-        assert(P.offsets_.size() == N*(N/2*(N/4*(N/8+1)+1)+1));
-        assert(P.ndataoffsets_ == N*(N/2)*(N/4)*(N/8));
+        assert(P.get_num_offsets() == N*(N/2*(N/4*(N/8+1)+1)+1));
+        assert(P.get_num_data_offsets() == N*(N/2)*(N/4)*(N/8));
         int a[N][N/2][N/4][N/8][N/16];
         int* aptr = &a[0][0][0][0][0];
         for ( int i=0;i<N*(N/2)*(N/4)*(N/8)*(N/16);i++)
