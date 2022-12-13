@@ -1,7 +1,7 @@
 # 
 # Makefile - make file for rarray
 #
-# Copyright (c) 2013-2019  Ramses van Zon
+# Copyright (c) 2013-2022  Ramses van Zon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,7 @@ help:
 	@echo "This is the only required action.  If (optionally) you want to run tests and benchmarks, first run './configure' to detect the compiler and certain libraries and create config.mk with the results, then you can do the following:"
 	@echo ""
 	@echo "  To build and run tests:                 make test"
-	@echo "  To build and run benchmars:             make benchmarks"
+	@echo "  To build and run benchmarks:            make benchmarks"
 	@echo "  To rebuild the headers:                 make headers"
 	@echo "  To rebuild the documentation:           make doc"
 	@echo ""

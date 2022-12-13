@@ -5,7 +5,7 @@
 // non-reference counted buffer, if one is passed to the constructor.
 // Part of rarray 2.x. 
 //
-// Copyright (c) 2018-2020  Ramses van Zon
+// Copyright (c) 2018-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
