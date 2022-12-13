@@ -23,6 +23,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+// This is version 2.3.0
+//
 
 #ifndef RARRAY_H
 #define RARRAY_H
@@ -44,6 +46,7 @@
 
 namespace ra {
 
+const char version[16] = "2.3.0";
 typedef ssize_t size_type;
 enum class RESIZE { NO, ALLOWED };
 
