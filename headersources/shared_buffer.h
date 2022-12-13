@@ -53,22 +53,22 @@ class shared_buffer
     typedef ssize_t size_type;
 
     // constructors 
-    shared_buffer();
+    shared_buffer() noexcept;
     explicit shared_buffer(size_type size);
-    shared_buffer(size_type size, T* data);
-    shared_buffer(const shared_buffer& other);
-    shared_buffer(shared_buffer&& from);
+    shared_buffer(size_type size, T* data) noexcept;
+    shared_buffer(const shared_buffer& other) noexcept;
+    shared_buffer(shared_buffer&& from) noexcept;
     
     // assignment
-    shared_buffer& operator=(const shared_buffer& other);  // copy
-    void operator=(shared_buffer&& from);                  // move
+    shared_buffer& operator=(const shared_buffer& other) noexcept;  // copy
+    void operator=(shared_buffer&& from) noexcept;                  // move
 
     // destructor
-    ~shared_buffer();
+    ~shared_buffer() noexcept;
 
     // element access without bounds checking
-    const T& operator[](size_type index) const;
-    T& operator[](size_type index);
+    const T& operator[](size_type index) const noexcept;
+    T& operator[](size_type index) noexcept;
     
     // element access with bounds checking
     const T& at(size_type index) const;
@@ -79,7 +79,7 @@ class shared_buffer
     const shared_buffer<T> slice(size_type from, size_type to) const;
 
     // size
-    size_type size() const;
+    size_type size() const noexcept;
 
     // create deep copy
     shared_buffer<T> copy() const;
@@ -87,12 +87,12 @@ class shared_buffer
     // iterators
     typedef T* iterator;
     typedef const T* const_iterator;
-    iterator begin();
-    iterator end();
-    const_iterator begin() const;
-    const_iterator end() const;
-    const_iterator cbegin() const;
-    const_iterator cend() const;
+    iterator begin() noexcept;
+    iterator end() noexcept;
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
+    const_iterator cbegin() const noexcept;
+    const_iterator cend() const noexcept;
 
     // reverse iterator
     typedef std::reverse_iterator<iterator> reverse_iterator;
@@ -122,9 +122,9 @@ class shared_buffer
 
     friend int ::test_shared_buffer_main(); // for testing
 
-    void uninit();
-    void incref();
-    void decref();
+    void uninit() noexcept;
+    void incref() noexcept;
+    void decref() noexcept;
 };
 
 /***************************************************************************/
@@ -144,35 +144,49 @@ void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
             orig = some_orig;
             place = some_place;
         } else {
-            orig = nullptr;
-            place = nullptr;
+            free(some_orig);
+            throw std::bad_alloc();
         }
+    } else {
+        throw std::bad_alloc();
     }
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer()
+shared_buffer<T>::shared_buffer() noexcept
 {
     // uninitialized buffer
     uninit();
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type size)
-    : data_(new T[size]), orig_(data_), size_(size), refs_(new std::atomic<int>(1))
+shared_buffer<T>::shared_buffer(size_type size) noexcept(false)
+  : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
-    // construct buffer
+    // construct buffer, exception safe
+    T* data;
+    refs_ = new std::atomic<int>(1); // if this throws, let it
+    try {
+        data = new T[size];
+    }
+    catch (...) {
+        delete refs_; 
+        throw;
+    }
+    data_ = data;
+    orig_ = data_;
+    size_ = size;
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type size, T* data)
+shared_buffer<T>::shared_buffer(size_type size, T* data) noexcept
   : data_(data), orig_(nullptr), size_(size), refs_(nullptr)
 {
     // construct buffer as a wrapper
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(const shared_buffer<T>& other)
+shared_buffer<T>::shared_buffer(const shared_buffer<T>& other) noexcept
   : data_(other.data_), orig_(other.orig_), size_(other.size_), refs_(other.refs_)
 {
     // copy constructor
@@ -180,14 +194,14 @@ shared_buffer<T>::shared_buffer(const shared_buffer<T>& other)
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(shared_buffer<T>&& from)
+shared_buffer<T>::shared_buffer(shared_buffer<T>&& from) noexcept
   : data_(from.data_), orig_(from.orig_), size_(from.size_), refs_(from.refs_)
 {
     from.uninit();
 }
 
 template<class T>
-shared_buffer<T>& shared_buffer<T>::operator=(const shared_buffer<T>& other)
+shared_buffer<T>& shared_buffer<T>::operator=(const shared_buffer<T>& other) noexcept
 {
     // copy assignment (shallow with ref counting)
     if (this != &other) {
@@ -202,7 +216,7 @@ shared_buffer<T>& shared_buffer<T>::operator=(const shared_buffer<T>& other)
 }
 
 template<class T>
-void shared_buffer<T>::operator=(shared_buffer<T>&& from)
+void shared_buffer<T>::operator=(shared_buffer<T>&& from) noexcept
 {
     decref();
     data_ = from.data_;
@@ -213,13 +227,13 @@ void shared_buffer<T>::operator=(shared_buffer<T>&& from)
 }
 
 template<class T>
-const T& shared_buffer<T>::operator[](size_type index) const
+const T& shared_buffer<T>::operator[](size_type index) const noexcept
 {
     return data_[index];
 }
 
 template<class T>
-T& shared_buffer<T>::operator[](size_type index)
+T& shared_buffer<T>::operator[](size_type index) noexcept
 {
     return data_[index];
 }
@@ -273,13 +287,13 @@ const shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to) con
 }
 
 template<class T>
-shared_buffer<T>::~shared_buffer()
+shared_buffer<T>::~shared_buffer() noexcept
 {
     decref();
 }
 
 template<class T>
-typename shared_buffer<T>::size_type shared_buffer<T>::size() const
+typename shared_buffer<T>::size_type shared_buffer<T>::size() const noexcept
 {
     return size_;
 }
@@ -295,37 +309,37 @@ shared_buffer<T> shared_buffer<T>::copy() const
 // iterating
 
 template<class T>
-typename shared_buffer<T>::iterator shared_buffer<T>::begin()
+typename shared_buffer<T>::iterator shared_buffer<T>::begin() noexcept
 {
     return data_;
 }
 
 template<class T>
-typename shared_buffer<T>::iterator shared_buffer<T>::end()    
+typename shared_buffer<T>::iterator shared_buffer<T>::end() noexcept
 {
     return data_+size_;
 }
 
 template<class T>
-typename shared_buffer<T>::const_iterator shared_buffer<T>::cbegin() const
+typename shared_buffer<T>::const_iterator shared_buffer<T>::cbegin() const noexcept
 {
     return data_;
 }
 
 template<class T>
-typename shared_buffer<T>::const_iterator shared_buffer<T>::cend() const
+typename shared_buffer<T>::const_iterator shared_buffer<T>::cend() const noexcept
 {
     return data_+size_;
 }
 
 template<class T>
-typename shared_buffer<T>::const_iterator shared_buffer<T>::begin() const
+typename shared_buffer<T>::const_iterator shared_buffer<T>::begin() const noexcept
 {
     return data_;
 }
 
 template<class T>
-typename shared_buffer<T>::const_iterator shared_buffer<T>::end() const
+typename shared_buffer<T>::const_iterator shared_buffer<T>::end() const noexcept
 {
     return data_+size_;
 }
@@ -378,27 +392,40 @@ void shared_buffer<T>::resize(size_type newsize, bool keep_content)
         // note: this always keeps the content.
     } else {
         // create a new buffer
-        T* newdata = new T[newsize];
-        T* neworig = newdata;
         std::atomic<int>* newrefs = new std::atomic<int>(1);
-        // copy content if so requested
+        T* newdata;
+        try {
+             newdata = new T[newsize];
+        }
+        catch (...) {
+            delete newrefs;
+            throw;
+        }
+        // copy content if so requested       
         if (keep_content) {
-            size_t n = ((size_<newsize)?size_:newsize);
-            for (size_t i=0; i<n; i++)
-                newdata[i] = data_[i];
+            try { // in case a copy assignment throws an exception
+                size_t n = ((size_<newsize)?size_:newsize);
+                for (size_t i=0; i<n; i++)
+                    newdata[i] = data_[i];
+            }
+            catch (...) {// in case a copy assignment throws an exception
+                delete newrefs;
+                delete[] newdata;
+                throw;
+            }
         }
         // delete if no references
         decref();
         // move to the new one
         data_ = newdata;
-        orig_ = neworig;
+        orig_ = newdata;
         size_ = newsize;
         refs_ = newrefs;
     }
 }
 
 template<class T>
-void shared_buffer<T>::assign(const T& value)
+void shared_buffer<T>::assign(const T& value) // could throw if copy assignment throws
 {
     for (int i=0;i<size_;i++)
         data_[i] = value;
@@ -423,7 +450,7 @@ void shared_buffer<T>::assign(std::initializer_list<T> ilist)
 /***************************************************************************/
 
 template<class T>
-void shared_buffer<T>::uninit() {
+void shared_buffer<T>::uninit() noexcept {
     data_ = nullptr;
     orig_ = nullptr;
     size_ = 0;
@@ -431,13 +458,16 @@ void shared_buffer<T>::uninit() {
 }
 
 template<class T>
-void shared_buffer<T>::incref() {
+void shared_buffer<T>::incref() noexcept {
     if (refs_)
         (*refs_)++;
 }
 
 template<class T>
-void shared_buffer<T>::decref() {
+void shared_buffer<T>::decref() noexcept { // noexcept assumes
+                                           // destructors of T do not
+                                           // throw exceptions (as no
+                                           // destructor should)
     if (refs_) {
         if (--(*refs_) == 0) {
             delete[] orig_;
