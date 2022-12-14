@@ -45,11 +45,8 @@
 #include "shared_shape.h"
 
 namespace ra {
-
-const char version[16] = "2.3.0";
 typedef ssize_t size_type;
 enum class RESIZE { NO, ALLOWED };
-
 }
 
 // Forward definitions of ra::rarray<T,R> and ra::CommaOp

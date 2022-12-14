@@ -64,7 +64,7 @@ FFLAGS?=-O2
 
 RM=rm -f
 VALGRIND?=valgrind --leak-check=full
-CPPFLAGS=-I. -I${HS}
+CPPFLAGS+=-I. -I${HS}
 
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
@@ -108,8 +108,9 @@ VERSION:
 
 ${HS}/versionheader.h: VERSION
 	echo "// define rarray version (i.e. latest git tag)" > $@
-	echo -n "#define RA_VERSION " >> $@
-	cat VERSION >> $@	
+	echo -n "#define RA_VERSION \"" >> $@
+	cat VERSION | tr -d '\n' >> $@
+	echo "\"" >> $@
 	echo -n "#define RA_VERSION_NUMBER " >> $@
 	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
 
@@ -134,7 +135,7 @@ testsuite: testsuite.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
 
 testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
-	${CXX} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
+	${CXX} ${CPPFLAGS} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
 
 catch.hpp:
 	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp

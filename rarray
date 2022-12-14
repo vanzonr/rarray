@@ -39,7 +39,7 @@
 #include <iostream>
 #include <list>
 
-#define RA_VERSION v2.3.0
+#define RA_VERSION "v2.3.0"
 #define RA_VERSION_NUMBER 2003000
 
 
@@ -941,11 +941,8 @@ void shared_shape<T,R>::decref()
 
 
 namespace ra {
-
-const char version[16] = "2.3.0";
 typedef ssize_t size_type;
 enum class RESIZE { NO, ALLOWED };
-
 }
 
 
