@@ -222,7 +222,7 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                     if (word=="") {
                         lastchar = get_but_eat_newline(in);
                     } else {
-                        lastchar = in.get();
+                        in.get(lastchar);
                     }
                     if (lastchar != ',' and lastchar != '}') {
                         word += lastchar;
@@ -233,11 +233,15 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                         word="";
                         std::string skipstr;
                         do {
-                            skipstr += (lastchar = in.get());
+                            in.get(lastchar);
+                            skipstr += lastchar;
                         } while (lastchar!=':');
                         int skip = atoi(skipstr.c_str());////
-                        for (int i=0; i<skip; i++) ////
-                            word += in.get();
+                        for (int i=0; i<skip; i++) { ////
+                            char nextchar;
+                            in.get(nextchar);
+                            word += nextchar;
+                        }
                     } else if (word == "(") {
                         // another special encoding for output that
                         // starts with a opening parenthesis (, and
@@ -246,10 +250,11 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                         const int safeguardcount=1024*1024; ////
                         int count=0; ////
                         while (lastchar!=')' and count<safeguardcount) {
-                            word += (lastchar = in.get());
+                            in.get(lastchar);
+                            word += lastchar;
                             count++;
                         }
-                        lastchar = in.get();
+                        in.get(lastchar);
                     }
                     if (lastchar == ',') {
                         result.push_back({ra::token::DATASTRING,word});
