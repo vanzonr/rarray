@@ -48,7 +48,7 @@ class Compound
 {
   public:
     Compound(): x(0), y(0) {}
-    Compound(int x, int y): x(x), y(y) {}
+    Compound(int anx, int any): x(anx), y(any) {}
     int GetX() { return x; }
     int GetY() { return y; }
     bool operator==(const Compound&other) const {
@@ -848,24 +848,24 @@ void testaccessors(T value1, T value2)
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
     rarray<T,3> c(b);
-    const int l=a.extent(0);
-    const int m=a.extent(1);
-    const int n=a.extent(2);
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
+    const ra::size_type l=a.extent(0);
+    const ra::size_type m=a.extent(1);
+    const ra::size_type n=a.extent(2);
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
                 a[i][j][k] = value1;
                 b[i][j][k] = value2;
             }
         }
     }
-    for (int i=0; i<l; i++)
-        for (int j=0; j<m; j++)
-            for (int k=0; k<n; k++)
+    for (ra::size_type i=0; i<l; i++)
+        for (ra::size_type j=0; j<m; j++)
+            for (ra::size_type k=0; k<n; k++)
                 REQUIRE(a[i][j][k] == value1);   
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
                 REQUIRE(b[i][j][k] == value2);   
             }
         }
@@ -947,11 +947,11 @@ void testcopy2d(T value1, T value2)
     // Tests following methods:
     //   rarray<T,2> copy() const;
     rarray<T,2> b(4,3);
-    const int l=b.extent(0);
-    const int m=b.extent(1);
+    const ra::size_type l=b.extent(0);
+    const ra::size_type m=b.extent(1);
     T value3 = value1;
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
             b[i][j] = value3;
             value3 = value3+value2;
         }
@@ -960,8 +960,8 @@ void testcopy2d(T value1, T value2)
     REQUIRE(d.data()!=b.data());
     REQUIRE(d.extent(0)==b.extent(0));
     REQUIRE(d.extent(1)==b.extent(1));
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
             REQUIRE(b[i][j]==d[i][j]);
         }
     }    
@@ -997,13 +997,13 @@ void testcopy3d(T value1, T value2)
     //   rarray<T,3> copy() const;
     rarray<T,3> b(100,40,3);
     //rarray<T,3> b(1,1,2);
-    const int l=b.extent(0);
-    const int m=b.extent(1);
-    const int n=b.extent(2);
+    const ra::size_type l=b.extent(0);
+    const ra::size_type m=b.extent(1);
+    const ra::size_type n=b.extent(2);
     T value3 = value1;
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
                 b[i][j][k] = value3;
                 value3 = value3+value2;
             }
@@ -1014,9 +1014,9 @@ void testcopy3d(T value1, T value2)
     REQUIRE(d.extent(0)==b.extent(0));
     REQUIRE(d.extent(1)==b.extent(1));
     REQUIRE(d.extent(2)==b.extent(2));
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
                 REQUIRE(b[i][j][k]==d[i][j][k]);
             }
         }
@@ -1050,16 +1050,16 @@ void testcopy1d(T value1, T value2)
     // Tests following methods:
     //   rarray<T,1> copy() const;
     rarray<T,1> b(100);
-    const int n=b.extent(0);
+    const ra::size_type n=b.extent(0);
     T value3 = value1;
-    for (int i=0; i<n; i++) {
+    for (ra::size_type i=0; i<n; i++) {
         b[i] = value3;
         value3 = value3+value2;
     }
     rarray<T,1> d(b.copy());
     REQUIRE(d.data()!=b.data());
     REQUIRE(d.extent(0)==b.extent(0));
-    for (int i=0; i<n; i++) {
+    for (ra::size_type i=0; i<n; i++) {
         REQUIRE(b[i]==d[i]);
     }
     
@@ -1093,13 +1093,13 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
     assert(A.extent(0)==B.extent(0));
     assert(B.extent(1)==C.extent(0));
     assert(C.extent(1)==A.extent(1));
-    const int l=B.extent(0);
-    const int m=C.extent(1);
-    const int n=B.extent(1);
-    for (int i=0;i<l;i++) {
-        for (int j=0;j<m;j++) {
+    const ra::size_type l=B.extent(0);
+    const ra::size_type m=C.extent(1);
+    const ra::size_type n=B.extent(1);
+    for (ra::size_type i=0;i<l;i++) {
+        for (ra::size_type j=0;j<m;j++) {
             A[i][j] = 0;
-            for (int k=0;k<n;k++) {
+            for (ra::size_type k=0;k<n;k++) {
                 A[i][j] += B[i][k]*C[k][j];
             }
         }
@@ -1157,30 +1157,30 @@ TEST_CASE("test1dautoconversions")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-void print1d_1(float* a, int n, std::ostream &out) 
+void print1d_1(float* a, ra::size_type n, std::ostream &out) 
 {
-    for (int i=0;i<n;i++) 
+    for (ra::size_type i=0;i<n;i++) 
         out << a[i] << ' ';
     out << std::endl;
 }
 
-void print1d_2(const float* a, int n, std::ostream &out) 
+void print1d_2(const float* a, ra::size_type n, std::ostream &out) 
 {
-    for (int i=0;i<n;i++) 
+    for (ra::size_type i=0;i<n;i++) 
         out << a[i] << ' ';
     out << std::endl;
 }
 
 void print1d_3(const rarray<float,1> &a, std::ostream &out) 
 {
-    for (unsigned int i=0;i<a.extent(0);i++) 
+    for (ra::size_type i=0;i<a.extent(0);i++) 
         out << a[i] << ' ';
     out << std::endl;
 }
 
 void print1d_4(const rarray<const float,1>& a, std::ostream &out)
 {
-    for (unsigned int i=0;i<a.extent(0);i++) 
+    for (ra::size_type i=0;i<a.extent(0);i++) 
         out << a[i] << ' ';
     out << std::endl;
 }
@@ -1190,7 +1190,7 @@ TEST_CASE("test1dconversions")
     const int n=9;
     rarray<float,1> a(n);
     for (int i=0;i<n;i++)
-        a[i] = i+1;
+        a[i] = static_cast<float>(i)+1;
     const rarray<float,1>& c=a;
     std::stringstream s1,s2,s3,s4,s5,s6,s7;
     print1d_1(c.ptr_array(), c.extent(0), s1);
@@ -1217,10 +1217,10 @@ TEST_CASE("test1dconversions")
 // pointers could be changed. Dangerous.
 // - Not const-correct, but common in non-const (often C) libraries.  
 // - Will require a call to ptr_array_no_const
-void print2d_1(float**a, int n, int m, std::ostream& cout)
+void print2d_1(float**a, ra::size_type n, ra::size_type m, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) 
             cout << a[i][j] << ' ';
         cout << '\n';
     }
@@ -1228,42 +1228,42 @@ void print2d_1(float**a, int n, int m, std::ostream& cout)
 }
 
 // print2d_2 takes a matrix with const elements, but whose row
-// pointers could in principle be changed. Dangerous, but not
+// pora::size_typeers could in principle be changed. Dangerous, but not
 // uncommon!
 // - Not const-correct.
 // - Requires a ptr_array_no_mid_const of a shapeal 2d array
-void print2d_2(const float**a, int n, int m, std::ostream& cout)
+void print2d_2(const float**a, ra::size_type n, ra::size_type m, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) 
             cout << a[i][j] << ' ';
         cout << '\n';
     }
     cout << '\n';
 }
 
-// print2d_3 takes a matrix, which is a pointer to a set of pointers. The
-// row pointers are constant, but the elements would be changable.
+// print2d_3 takes a matrix, which is a pora::size_typeer to a set of pora::size_typeers. The
+// row pora::size_typeers are constant, but the elements would be changable.
 // - Not (logically) const-correct.
 // - A non-const shapeal 2d array can be passed right in.
-void print2d_3(float *const* a, int n, int m, std::ostream& cout)
+void print2d_3(float *const* a, ra::size_type n, ra::size_type m, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) 
             cout << a[i][j] << ' ';
         cout << '\n';
     }
     cout << '\n';
 }
 
-// print2d_4 takes a constant matrix, as a set of pointers to rows. Both
-// the row pointers and the elements are const, and can't be changed.
+// print2d_4 takes a constant matrix, as a set of pora::size_typeers to rows. Both
+// the row pora::size_typeers and the elements are const, and can't be changed.
 // - Const-correct.
 // - A const shapeal 2d array can be passed right in.
-void print2d_4(const float*const*a, int n, int m, std::ostream& cout)
+void print2d_4(const float*const*a, ra::size_type n, ra::size_type m, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) 
             cout << a[i][j] << ' ';
         cout << '\n';
     }
@@ -1275,10 +1275,10 @@ void print2d_4(const float*const*a, int n, int m, std::ostream& cout)
 // Dangerous, and very common.
 // - Not (logically) const-correct
 // - Requires a const-cast.
-void print2d_5(float *a, int n, int m, std::ostream& cout)
+void print2d_5(float *a, ra::size_type n, ra::size_type m, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) 
             cout << a[i*m+j] << ' ';
         cout << '\n';
     }
@@ -1289,10 +1289,10 @@ void print2d_5(float *a, int n, int m, std::ostream& cout)
 // because of const, print2d_6 cannot change the elements of a. 
 // - Const-correct
 // - A const shapeal 2d array can be passed right in.
-void print2d_6(const float *a, int n, int m, std::ostream& cout)
+void print2d_6(const float *a, ra::size_type n, ra::size_type m, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) 
             cout << a[i*m+j] << ' ';
         cout << '\n';
     }
@@ -1305,8 +1305,8 @@ void print2d_6(const float *a, int n, int m, std::ostream& cout)
 // - A non-const shapeal 2d array can, of course, be passed right in.
 void print2d_7(const rarray<float,2> &a, std::ostream& cout)
 {
-    for (unsigned int i=0;i<a.extent(0);i++) {
-        for (unsigned int j=0;j<a.extent(1);j++) 
+    for (ra::size_type i=0;i<a.extent(0);i++) {
+        for (ra::size_type j=0;j<a.extent(1);j++) 
             cout << a[i][j] << ' ';
         cout << '\n';
     }
@@ -1319,8 +1319,8 @@ void print2d_7(const rarray<float,2> &a, std::ostream& cout)
 // - A non-const shapeal 2d array can, of course, be passed right in.
 void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
 {
-  for (unsigned int i=0;i<a.extent(0);i++) {
-    for (unsigned int j=0;j<a.extent(1);j++) 
+  for (ra::size_type i=0;i<a.extent(0);i++) {
+    for (ra::size_type j=0;j<a.extent(1);j++) 
       cout << a[i][j] << ' ';
     cout << '\n';
   }
@@ -1334,10 +1334,10 @@ TEST_CASE("test2dconversions")
     rarray<float,2> a(n,m);
     for (int i=0;i<n;i++)
       for (int j=0;j<m;j++)
-        a[i][j]=(i+1)*10+j+1;
+        a[i][j]=float(i+1)*10+float(j+1);
 #ifndef RA_SKIPINTERMEDIATE
-    rarray<float,1> a1 = a.at(1);
-    a1=a.at(1); // not really testing runtime
+    rarray<float,1> atoo = a.at(1);
+    atoo=a.at(1); // not really testing runtime
 #endif
     const rarray<float,2>& c=a; // note the const
     std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
@@ -1378,11 +1378,11 @@ TEST_CASE("test2dconversions")
 // pointers could be changed. Dangerous.
 // - Not const-correct, but common in non-const (often C) libraries.  
 // - Will require a call to no_const
-void print3d_1(float***a, int n, int m, int l, std::ostream& cout)
+void print3d_1(float***a, ra::size_type n, ra::size_type m, ra::size_type l, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
-            for (int k=0;k<l;k++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
+            for (ra::size_type k=0;k<l;k++) 
                 cout << a[i][j][k] << ' ';
             cout << "      \t";
         }
@@ -1392,14 +1392,14 @@ void print3d_1(float***a, int n, int m, int l, std::ostream& cout)
 }
 
 // print3d_2 takes a tensor whose elements are constant, but whose row
-// pointers could in principle be changed. Dangerous, but common!
+// pora::size_typeers could in principle be changed. Dangerous, but common!
 // - Not const-correct.
 // - Requires a mid_const_cast of a shapeal 3d array
-void print3d_2(const float***a, int n, int m, int l, std::ostream& cout)
+void print3d_2(const float***a, ra::size_type n, ra::size_type m, ra::size_type l, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++)  {
-            for (int k=0;k<l;k++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++)  {
+            for (ra::size_type k=0;k<l;k++) 
                 cout << a[i][j][k] << ' ';
             cout << "      \t";
         }
@@ -1408,15 +1408,15 @@ void print3d_2(const float***a, int n, int m, int l, std::ostream& cout)
     cout << '\n';
 }
 
-// print3d_3 takes a tensor, which is a pointer to a set of pointers. The
-// row pointers are constant, but the elements would be changable.
+// print3d_3 takes a tensor, which is a pora::size_typeer to a set of pora::size_typeers. The
+// row pora::size_typeers are constant, but the elements would be changable.
 // - Not (logically) const-correct.
 // - A non-const shaped 3d array can be passed right in.
-void print3d_3(float *const*const* a, int n, int m, int l, std::ostream& cout)
+void print3d_3(float *const*const* a, ra::size_type n, ra::size_type m, ra::size_type l, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++)  {
-            for (int k=0;k<l;k++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++)  {
+            for (ra::size_type k=0;k<l;k++) 
                 cout << a[i][j][k] << ' ';
             cout << "      \t";
         }
@@ -1425,15 +1425,15 @@ void print3d_3(float *const*const* a, int n, int m, int l, std::ostream& cout)
     cout << '\n';
 }
 
-// print3d_4 takes a constant tensor, as a set of pointers to rows. Both
-// the row pointers and the elements are const, and can't be changed.
+// print3d_4 takes a constant tensor, as a set of pora::size_typeers to rows. Both
+// the row pora::size_typeers and the elements are const, and can't be changed.
 // - Const-correct.
 // - A const shaped 3d array can be passed right in.
-void print3d_4(const float*const*const*a, int n, int m, int l, std::ostream& cout)
+void print3d_4(const float*const*const*a, ra::size_type n, ra::size_type m, ra::size_type l, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
-            for (int k=0;k<l;k++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
+            for (ra::size_type k=0;k<l;k++) 
                 cout << a[i][j][k] << ' ';
             cout << "      \t";
         }
@@ -1447,11 +1447,11 @@ void print3d_4(const float*const*const*a, int n, int m, int l, std::ostream& cou
 // Dangerous, and very common.
 // - Not (logically) const-correct
 // - Requires a const-cast.
-void print3d_5(float *a, int n, int m, int l, std::ostream& cout)
+void print3d_5(float *a, ra::size_type n, ra::size_type m, ra::size_type l, std::ostream& cout)
 {    
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
-            for (int k=0;k<l;k++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
+            for (ra::size_type k=0;k<l;k++) 
                 cout << a[(i*m+j)*l+k] << ' ';
             cout << "      \t";
         }
@@ -1464,11 +1464,11 @@ void print3d_5(float *a, int n, int m, int l, std::ostream& cout)
 // because of const, print3d_6 cannot change the elements of a. 
 // - Const-correct
 // - A const shapeal 3d array can be passed right in.
-void print3d_6(const float *a, int n, int m, int l, std::ostream& cout)
+void print3d_6(const float *a, ra::size_type n, ra::size_type m, ra::size_type l, std::ostream& cout)
 {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
-            for (int k=0;k<l;k++) 
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
+            for (ra::size_type k=0;k<l;k++) 
                 cout << a[(i*m+j)*l+k] << ' ';
             cout << "      \t";
         }
@@ -1483,9 +1483,9 @@ void print3d_6(const float *a, int n, int m, int l, std::ostream& cout)
 // - A non-const shaped 3d array can, of course, be passed right in.
 void print3d_7(const rarray<float,3> &a, std::ostream& cout)
 {
-    for (unsigned int i=0;i<a.extent(0);i++) {
-        for (unsigned int j=0;j<a.extent(1);j++) {
-            for (unsigned int k=0;k<a.extent(2);k++) 
+    for (ra::size_type i=0;i<a.extent(0);i++) {
+        for (ra::size_type j=0;j<a.extent(1);j++) {
+            for (ra::size_type k=0;k<a.extent(2);k++) 
                 cout << a[i][j][k] << ' ';
             cout << "      \t";
         }
@@ -1505,7 +1505,7 @@ TEST_CASE("test3dconversions")
     for (int i=0;i<n;i++)
       for (int j=0;j<m;j++)
         for (int k=0;k<l;k++)
-          a[i][j][k]=((i+1)*10+j+1)*10+k+1;
+          a[i][j][k]=float(((i+1)*10+j+1)*10+k+1);
     
     const rarray<float,3>& c=a; // note the const: not enough
 
@@ -1679,15 +1679,15 @@ std::string print5d(const rarray<float,5> &a)
                 s << '[';
                 for (int l=0;l<q-1;l++) {
                     s << '(';
-                    for (int m=0;m<r-1;m++) {
-                        s << a[i][j][k][l][m] << ',';
+                    for (int h=0;h<r-1;h++) {
+                        s << a[i][j][k][l][h] << ',';
                     }
                     s << a[i][j][k][l][r-1];
                     s << ')';
                 }
                 s << '(';
-                for (int m=0;m<r-1;m++) {
-                    s << a[i][j][k][q-1][m] << ',';
+                for (int h=0;h<r-1;h++) {
+                    s << a[i][j][k][q-1][h] << ',';
                 }
                 s << a[i][j][k][q-1][r-1] << ')';
                 s << ']';
@@ -1756,15 +1756,15 @@ std::string print6d(const rarray<float,6> &a)
                 s << '[';
                 for (int l=0;l<q-1;l++) {
                     s << '(';
-                    for (int m=0;m<r-1;m++) {
-                        s << a[b][i][j][k][l][m] << ',';
+                    for (int h=0;h<r-1;h++) {
+                        s << a[b][i][j][k][l][h] << ',';
                     }
                     s << a[b][i][j][k][l][r-1];
                     s << ')';
                 }
                 s << '(';
-                for (int m=0;m<r-1;m++) {
-                    s << a[b][i][j][k][q-1][m] << ',';
+                for (int h=0;h<r-1;h++) {
+                    s << a[b][i][j][k][q-1][h] << ',';
                 }
                 s << a[b][i][j][k][q-1][r-1] << ')';
                 s << ']';
@@ -1992,8 +1992,8 @@ TEST_CASE("testassignment")
 #ifndef RA_SKIPINTERMEDIATE
 void testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
 {
-    const float* a1=a.at(1).data();
-    REQUIRE(a1==data1check); 
+    const float* atoo=a.at(1).data();
+    REQUIRE(atoo==data1check); 
     REQUIRE(a.at(1).ptr_array());
     REQUIRE(a.at(1).noconst_ptr_array());
     REQUIRE(a.at(1).const_ref().ptr_array());
@@ -2049,9 +2049,9 @@ TEST_CASE("testreshape")
     ra::size_type dimr[7] = {21,5,4,2,13,10,7};
     ra::size_type dim12[12] = {2,3,4,3,2,3,4,3,2,3,4,3};
     ra::size_type dimr12[12] = {4,3,2,3,4,3,2,3,2,3,4,3};//first 7 in reversed order
-    rarray<float,1> a(dim), a2(a.data(),a.shape());
+    rarray<float,1> a(dim), atoo(a.data(),a.shape());
     rarray<float,2> b(dim), b2(b);
-    rarray<float,3> c(dim), c2(c);
+    rarray<float,3> c(dim), ctoo(c);
     rarray<float,4> d(dim);
     rarray<float,5> e(dim);
     rarray<float,6> f(dim);
@@ -2062,7 +2062,7 @@ TEST_CASE("testreshape")
     rarray<float,11> k(dim12);
     rarray<float,12> l(dim12);
     rarray<float,1> novela(a);
-    rarray<float,1> novela2(a2);
+    rarray<float,1> novela2(atoo);
     novela[3] = 4;
     novela.reshape(4, ra::RESIZE::ALLOWED);
     a.reshape(dim);
@@ -2509,9 +2509,9 @@ TEST_CASE("testiterators")
         *ap *= 2;
     }
 #else
-    for (auto& a: q)
+    for (auto& aa: q)
     {
-        a *= 2;
+        aa *= 2;
     }
 #endif
     for (rarray<double,2>::const_iterator i=q.cbegin(); i!=q.cend(); i++)
@@ -2526,9 +2526,9 @@ TEST_CASE("testiterators")
         rout << (*bp) << ',';
     }
 #else
-    for (const auto& b: qconst)
+    for (const auto& bb: qconst)
     {
-        rout << b << ',';
+        rout << bb << ',';
     }
 #endif
     REQUIRE(rout.str() == "2,4,6,8,10,");
@@ -2542,12 +2542,12 @@ TEST_CASE("testiterators")
     for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
         check << (*cp) << ',';
 #else
-    for (auto& c: s.at(1))
-        c *= 2;
-    for (auto& d: s.at(1).at(2))
-        d += 10;
-    for (const auto& c: s.at(1))
-        check << c << ',';
+    for (auto& cc: s.at(1))
+        cc *= 2;
+    for (auto& dd: s.at(1).at(2))
+        dd += 10;
+    for (const auto& cc: s.at(1))
+        check << cc << ',';
 #endif
     for (rarray<double,2>::const_iterator i=s.at(2).cbegin(); i!=s.at(2).cend(); i++)
     {
@@ -2611,9 +2611,9 @@ TEST_CASE("testindex")
     REQUIRE(INDEX(a,a[5],0)==5);
     for (auto i=a.begin(); i != a.end(); i++) {
         auto ind = a.index(i);
-        unsigned int ind2=a.index(i,0);
+        ra::size_type ind2=a.index(i,0);
         REQUIRE(ind[0]==ind2);
-        *i = ind[0]+1;
+        *i =float(ind[0]+1);
     }
 #if __cplusplus <= 199711L
     for (auto element = a.begin(); element != a.end(); ++element)
@@ -2622,9 +2622,9 @@ TEST_CASE("testindex")
         *element *= a.index(*element,0);
 #else
     for (auto& element: a)
-        element *= a.index(element)[0];
+        element *= float(a.index(element)[0]);
     for (auto& element: a)
-        element *= a.index(element,0);
+        element *= float(a.index(element,0));
 #endif
     REQUIRE(a[0]==0);
     REQUIRE(a[1]==2);
@@ -2932,6 +2932,7 @@ double get_element_1(double *x)
 TEST_CASE("test_auto_conversion_to_const_ptr") {
     rtensor<double> t(10,10,10);
     double*const*const* z = t.ptr_array();
+    REQUIRE(z!=nullptr);
     double a = 5;
     t[1][1][1] = a;
     double b = get_element_111(t);

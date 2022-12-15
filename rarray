@@ -1185,13 +1185,13 @@ rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true)
 {
     if (n==0) {
         if (x2>x1)
-            n = x2 - x1 + end_incl;
+            n = static_cast<int>(x2 - x1 + end_incl);
         else
-            n = x1 - x2 + end_incl;
+            n = static_cast<int>(x1 - x2 + end_incl);
     }
     rarray<S,1> x(n);
     for (int i = 0; i < n; i++)
-        x[i] = x1 + ((x2-x1)*static_cast<long long int>(i))/(n-end_incl);
+        x[i] = x1 + static_cast<S>(((x2-x1)*static_cast<long long int>(i))/(n-end_incl));
     if (end_incl)
         x[n-1] = x2;
     return x;
@@ -1226,7 +1226,7 @@ class Xrange {
     T a_, b_, d_;
   public:
     Xrange(T a, T b, T d)
-        : a_(a), b_(a + static_cast<size_t>(std::ceil((b-a)/static_cast<double>(d)))*d), d_(d) 
+        : a_(a), b_(a + static_cast<T>(static_cast<size_t>(std::ceil((b-a)/static_cast<double>(d)))*d)), d_(d) 
     {}
     const_iterator begin() const {
         return const_iterator(a_, d_, b_);
@@ -2369,7 +2369,7 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                     if (word=="") {
                         lastchar = get_but_eat_newline(in);
                     } else {
-                        lastchar = in.get();
+                        in.get(lastchar);
                     }
                     if (lastchar != ',' and lastchar != '}') {
                         word += lastchar;
@@ -2378,19 +2378,24 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                         word="";
                         std::string skipstr;
                         do {
-                            skipstr += (lastchar = in.get());
+                            in.get(lastchar);
+                            skipstr += lastchar;
                         } while (lastchar!=':');
                         int skip = atoi(skipstr.c_str());////
-                        for (int i=0; i<skip; i++) ////
-                            word += in.get();
+                        for (int i=0; i<skip; i++) { ////
+                            char nextchar;
+                            in.get(nextchar);
+                            word += nextchar;
+                        }
                     } else if (word == "(") {
                         const int safeguardcount=1024*1024; ////
                         int count=0; ////
                         while (lastchar!=')' and count<safeguardcount) {
-                            word += (lastchar = in.get());
+                            in.get(lastchar);
+                            word += lastchar;
                             count++;
                         }
-                        lastchar = in.get();
+                        in.get(lastchar);
                     }
                     if (lastchar == ',') {
                         result.push_back({ra::token::DATASTRING,word});
