@@ -1,7 +1,7 @@
 //
 // testsuite.cc - testsuite for rarray
 //
-// Copyright (c) 2013-2020  Ramses van Zon
+// Copyright (c) 2013-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -843,7 +843,7 @@ void testaccessors(T value1, T value2)
     //   ~rarray()
     //   T* data()
     //   int extent(int)
-    assert(value1!=value2);  // required for the test to work
+    REQUIRE(value1!=value2);  // required for the test to work
     ra::size_type dim[3] = {7,21,13};
     rarray<T,3> a(7,21,13);
     rarray<T,3> b(dim);
@@ -1136,8 +1136,8 @@ TEMPLATE_TEST_CASE("testmmm", "", int, double)
 std::string print1d(const rarray<float,1> &a) 
 {
     std::stringstream s;
-    const int n = EXTENT(a,0);
-    for (int i=0;i<n-1;i++)
+    const ra::size_type n = EXTENT(a,0);
+    for (ra::size_type i=0;i<n-1;i++)
         s << a[i] << ' ';
     s << a[n-1];
     return s.str();
@@ -1545,10 +1545,10 @@ TEST_CASE("test3dconversions")
 std::string print2d(const rarray<float,2> &a) 
 {
     std::stringstream s;
-    const int n = EXTENT(a,0);
-    const int m = EXTENT(a,1);
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m-1;j++)
+    const ra::size_type n = EXTENT(a,0);
+    const ra::size_type m = EXTENT(a,1);
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m-1;j++)
             s << a[i][j] << ' ';
         s << a[i][m-1];
         s << '\n';
@@ -1577,13 +1577,13 @@ TEST_CASE("test2dautoconversion")
 std::string print3d(const rarray<float,3> &a) 
 {
     std::stringstream s;
-    const int n = EXTENT(a,0);
-    const int m = EXTENT(a,1);
-    const int l = EXTENT(a,2);
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
+    const ra::size_type n = EXTENT(a,0);
+    const ra::size_type m = EXTENT(a,1);
+    const ra::size_type l = EXTENT(a,2);
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
             s << '{';
-            for (int k=0;k<l-1;k++)
+            for (ra::size_type k=0;k<l-1;k++)
                 s << a[i][j][k] << ',';
             s << a[i][j][l-1] << '}';
         }
@@ -1615,16 +1615,16 @@ TEST_CASE("test3dautoconversion")
 std::string print4d(const rarray<float,4> &a) 
 {
     std::stringstream s;
-    const int n = EXTENT(a,0);
-    const int m = EXTENT(a,1);
-    const int p = EXTENT(a,2);
-    const int q = EXTENT(a,3);
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
+    const ra::size_type n = EXTENT(a,0);
+    const ra::size_type m = EXTENT(a,1);
+    const ra::size_type p = EXTENT(a,2);
+    const ra::size_type q = EXTENT(a,3);
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
             s << '{';
-            for (int k=0;k<p;k++) {
+            for (ra::size_type k=0;k<p;k++) {
                 s << '[';
-                for (int l=0;l<q-1;l++) {
+                for (ra::size_type l=0;l<q-1;l++) {
                     s << a[i][j][k][l] << ' ';
                 }
                 s << a[i][j][k][q-1] << ']';
@@ -1667,26 +1667,26 @@ TEST_CASE("test4dautoconversion")
 std::string print5d(const rarray<float,5> &a) 
 {
     std::stringstream s;
-    const int n = EXTENT(a,0);
-    const int m = EXTENT(a,1);
-    const int p = EXTENT(a,2);
-    const int q = EXTENT(a,3);
-    const int r = EXTENT(a,4);
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
+    const ra::size_type n = EXTENT(a,0);
+    const ra::size_type m = EXTENT(a,1);
+    const ra::size_type p = EXTENT(a,2);
+    const ra::size_type q = EXTENT(a,3);
+    const ra::size_type r = EXTENT(a,4);
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
             s << '{';
-            for (int k=0;k<p;k++) {
+            for (ra::size_type k=0;k<p;k++) {
                 s << '[';
-                for (int l=0;l<q-1;l++) {
+                for (ra::size_type l=0;l<q-1;l++) {
                     s << '(';
-                    for (int h=0;h<r-1;h++) {
+                    for (ra::size_type h=0;h<r-1;h++) {
                         s << a[i][j][k][l][h] << ',';
                     }
                     s << a[i][j][k][l][r-1];
                     s << ')';
                 }
                 s << '(';
-                for (int h=0;h<r-1;h++) {
+                for (ra::size_type h=0;h<r-1;h++) {
                     s << a[i][j][k][q-1][h] << ',';
                 }
                 s << a[i][j][k][q-1][r-1] << ')';
@@ -1742,28 +1742,28 @@ TEST_CASE("test5dautoconversion")
 std::string print6d(const rarray<float,6> &a) 
 {
     std::stringstream s;
-    const int t = EXTENT(a,0);
-    const int n = EXTENT(a,1);
-    const int m = EXTENT(a,2);
-    const int p = EXTENT(a,3);
-    const int q = EXTENT(a,4);
-    const int r = EXTENT(a,5);
-    for (int b=0; b<t; b++) {
-    for (int i=0;i<n;i++) {
-        for (int j=0;j<m;j++) {
+    const ra::size_type t = EXTENT(a,0);
+    const ra::size_type n = EXTENT(a,1);
+    const ra::size_type m = EXTENT(a,2);
+    const ra::size_type p = EXTENT(a,3);
+    const ra::size_type q = EXTENT(a,4);
+    const ra::size_type r = EXTENT(a,5);
+    for (ra::size_type b=0; b<t; b++) {
+    for (ra::size_type i=0;i<n;i++) {
+        for (ra::size_type j=0;j<m;j++) {
             s << '{';
-            for (int k=0;k<p;k++) {
+            for (ra::size_type k=0;k<p;k++) {
                 s << '[';
-                for (int l=0;l<q-1;l++) {
+                for (ra::size_type l=0;l<q-1;l++) {
                     s << '(';
-                    for (int h=0;h<r-1;h++) {
+                    for (ra::size_type h=0;h<r-1;h++) {
                         s << a[b][i][j][k][l][h] << ',';
                     }
                     s << a[b][i][j][k][l][r-1];
                     s << ')';
                 }
                 s << '(';
-                for (int h=0;h<r-1;h++) {
+                for (ra::size_type h=0;h<r-1;h++) {
                     s << a[b][i][j][k][q-1][h] << ',';
                 }
                 s << a[b][i][j][k][q-1][r-1] << ')';
@@ -1843,111 +1843,6 @@ TEST_CASE("test6dautoconversion")
 "{[(1,-2,-3)(2,-3,-4)(3,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-3)(4,-3,-2)]}{[(1,-2,-3)(2,-3,-6)(3,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-3)(6,-3,-2)]}\n"
 "{[(1,-2,-7)(2,-7,-4)(7,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-7)(4,-7,-2)]}{[(1,-2,-7)(2,-7,-6)(7,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-7)(6,-7,-2)]}\n\n");
 }
-
-
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-
-template<typename T> 
-void testconstructors_with_functions() 
-{
-    ra::size_type dim[3] = {7,21,13};
-    rarray<T,3> a(7,21,13);
-    rarray<T,3> b(dim);
-    rarray<T,3> c(b);
-    const int* asize = shapeof(a);
-    REQUIRE(dataof(a));
-    REQUIRE(countof(a)==7*21*13);
-    REQUIRE(asize);
-    REQUIRE(asize[0] == dim[0]);
-    REQUIRE(asize[1] == dim[1]);
-    REQUIRE(asize[2] == dim[2]);
-    REQUIRE(extentof(a,0) == dim[0]);
-    REQUIRE(extentof(a,1) == dim[1]);
-    REQUIRE(extentof(a,2) == dim[2]);
-    REQUIRE(shapeof(a)[0] == dim[0]);
-    REQUIRE(shapeof(a)[1] == dim[1]);
-    REQUIRE(shapeof(a)[2] == dim[2]);
-#ifndef RA_SKIPINTERMEDIATE
-    REQUIRE(shapeof(a[0])[0] == dim[1]);
-    REQUIRE(shapeof(a[0][1])[0] == dim[2]);
-#endif
-    REQUIRE(dataof(b));
-    REQUIRE(countof(b)==7*21*13);
-    REQUIRE(extentof(b,0) == dim[0]);
-    REQUIRE(extentof(b,1) == dim[1]);
-    REQUIRE(extentof(b,2) == dim[2]);
-    REQUIRE(dataof(c));
-    REQUIRE(countof(c)==7*21*13);
-    REQUIRE(extentof(c,0) == dim[0]);
-    REQUIRE(extentof(c,1) == dim[1]);
-    REQUIRE(extentof(c,2) == dim[2]);
-    REQUIRE(dataof(c)==dataof(c));
-#ifndef RA_SKIPINTERMEDIATE
-    REQUIRE(countof(b[2])==21*13);
-    REQUIRE(countof(b[2][10])==13);
-    REQUIRE(extentof(c[2],0) == dim[1]);
-    REQUIRE(extentof(c[2],1) == dim[2]);
-#endif
-    
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-
-template<typename T> 
-void testcopy_with_functions(T value1, T value2) 
-{
-    rarray<T,3> b(100,40,3);
-    const int l = extentof(b,0);
-    const int m = extentof(b,1);
-    const int n = extentof(b,2);
-    T value3 = value1;
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
-                b[i][j][k] = value3;
-                value3 = value3+value2;
-            }
-        }
-    }
-
-    rarray<T,3> d(copy(b));
-
-    REQUIRE(dataof(d)!=dataof(b));
-    REQUIRE(extentof(d,0)==extentof(b,0));
-    REQUIRE(extentof(d,1)==extentof(b,1));
-    REQUIRE(extentof(d,2)==extentof(b,2));
-    for (int i=0; i<l; i++) {
-        for (int j=0; j<m; j++) {
-            for (int k=0; k<n; k++) {
-                REQUIRE(b[i][j][k]==d[i][j][k]);
-            }
-        }
-    }
-
-    
-}
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-template<typename T>
-void print(std::ostream& o, const rarray<T,2>& m)
-{
-    const int r=m.extent(0);
-    const int c=m.extent(1);
-    for (int i=0;i<r;i++) {
-        for (int j=0;j<c;j++) {
-            o << std::setw(15) << m[i][j] << ' ';
-        }
-        o << '\n';
-    }
-}
-
-
-
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -2572,14 +2467,14 @@ TEST_CASE("testfill")
 {
     rarray<float,2> a(3,3);
     a.fill(1.23f);
-    for (int i=0;i<EXTENT(a,0);i++) {
-        for (int j=0;j<EXTENT(a,1);j++) {
+    for (ra::size_type i=0;i<EXTENT(a,0);i++) {
+        for (ra::size_type j=0;j<EXTENT(a,1);j++) {
             REQUIRE(a[i][j]==1.23f);
         }
     }    
     rarray<float,1> b(5);
     b.fill(1.24f);
-    for (int i=0;i<EXTENT(a,0);i++) {
+    for (ra::size_type i=0;i<EXTENT(a,0);i++) {
         REQUIRE(b[i]==1.24f);
     }
 }
