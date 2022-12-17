@@ -195,65 +195,11 @@ class rarray {
         
 }; // end definition rarray<T,R>
 
-// stop recursion at R=0, a single scalar value
+// stop "at(...)" recursion at R=0, a single scalar value
 template<typename T> 
 class rarray<T,0> {
-    
-  public: 
-    typedef ssize_t                                   difference_type;  // difference type for indices
-    typedef ssize_t                                   size_type;        // type of indices
-    typedef T*                                        iterator;         // iterator type
-    typedef const T*                                  const_iterator;   // iterator type for constant access
-    typedef typename PointerArray<T,0>::type          parray_t;         // shorthand for T*const*const*...
-    typedef typename PointerArray<T,0>::noconst_type  noconst_parray_t; // shorthand for T***...
-    RA_INLINE_ rarray() {};                                                                                                                  // constructor leaving rarray undefined 
-    RA_INLINE_ rarray(const size_type* extent);                                                                                                                                   // R>11
-    RA_INLINE_ rarray(T* buffer, const size_type* extent);                                                                                                                        // R>11
-    ////////RA_INLINEF rarray(const rarray<T,0> &a);                                      // copy constructor
-    RA_INLINE_ rarray<T,0>& operator=(const rarray<T,0> &a);                      // array assignment operator
-    rarray(rarray<T,0>&& x);                                                      // move constructor
-    rarray<T,0>& operator=(rarray<T,0>&& x);                                      // move assignment operator
-    // Need constructor and assignment for expressions
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,0,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,0,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator+=(const Expr<T,0,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator-=(const Expr<T,0,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator*=(const Expr<T,0,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator/=(const Expr<T,0,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator%=(const Expr<T,0,AOP,A1,A2,A3>& e);
-    //
-    RA_INLINEF void clear();                                                      // clean up routine, make undefined
-    //
-    RA_INLINE_ bool                is_clear()           const {  return buffer_.cbegin() == nullptr; }                      // check if undefined
-    RA_INLINE_ rarray<T,0>         copy()               const;                       // return a copy
-    RA_INLINE_ size_type           extent(int i)        const { return is_clear()?0:1; }   // retrieve array size in dimension i
-    RA_INLINE_ const size_type*    shape()              const;                       // retrieve array sizes in all dimensions
-    RA_INLINE_ size_type           size()               const;                       // retrieve the total number of elements  
-    RA_INLINE_ T*                  data();                                           // return a T* to the internal data
-    RA_INLINE_ const T*            data()               const { return buffer_.begin(); }                   // return a T* to the internal data
-    RA_INLINE_ parray_t            ptr_array()          const;                       // return a T*const*.. acting similarly to this rarray when using []:
-    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                       // return a T**.. acting similarly to this rarray when using []:    
-    RA_INLINE_ const rarray<const T,0>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
-    RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
-    //
-    RA_INLINE_ iterator            begin();                                          // start of the content
-    RA_INLINE_ const_iterator      begin()              const;                       // start of the content, when *this is constant
-    RA_INLINE_ const_iterator      cbegin()             const;                       // start of the content, when *this can be constant and you need to be explicit
-    RA_INLINE_ iterator            end();                                            // end of the content
-    RA_INLINE_ const_iterator      end()                const;                       // end of the content, when *this is constant
-    RA_INLINE_ const_iterator      cend()               const;                       // end of the content, when *this is constant and you need to be explicit about that
-    RA_INLINE_ size_type           index(const T& a, size_type i) const;             // if a an element in the array, get index i of that element
-    RA_INLINE_ size_type           index(const iterator& iter, size_type i);         // if i points at an element in the array, get index i of that element
-    RA_INLINE_ size_type           index(const const_iterator& iter, size_type i) const;// if i points at an element in the array, get index i of that element
-    RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
-    RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
-    RA_INLINE_ size_type*          index(const const_iterator& i, size_type* ind) const;// if i points at an element in the array, get the indices of that element
-    // access elements r
-    // for expressions
-    RA_INLINEF const T& leval(size_type i) const;
-    //
-private:
-    // see above for why these are needed
+  private:
+    // for rarray<T,1>::at
     friend class rarray<T,1>;
     rarray(shared_buffer<T>&& buffer, const shared_shape<T,0>& shape) :
         buffer_(std::forward<shared_buffer<T>>(buffer))
@@ -261,23 +207,16 @@ private:
     rarray(const shared_buffer<T>&& buffer, const shared_shape<T,0>& shape) :
         buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&&>(buffer)))
     {}
-public:
+    shared_buffer<T>  buffer_;
+  public:
     ~rarray() {}
     RA_INLINEF operator T& () { return buffer_[0]; }
     RA_INLINEF operator const T& () const { return buffer_[0]; }
-    RA_INLINEF T& at(size_type i) { return buffer_[0]; }
-    RA_INLINEF const T& at(size_type i) const { return buffer_[0]; }
-    RA_INLINE_ CommaOp<T> operator=(const T& e)                                 // Comma separated element assignment
-    {
-        T* first = &(buffer_[0]);
-        *first = e;
-        ra::CommaOp<T> co(first+1, first); 
-        return co;
-    }
-  private:
-    shared_buffer<T>  buffer_;
+    RA_INLINE_ T& operator=(const T& e) { return buffer_[0] = e; }
+    // for expressions
+    RA_INLINEF const T& leval(size_type i) const;
 }; // end definition rarray<T,0>
-
+    
 // Class to facilitate assignment from a comma separated list
 template<typename T>
 class CommaOp {

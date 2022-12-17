@@ -55,11 +55,7 @@ struct PointerArray<T,1> { // We end the recursion by specifically defining the 
     typedef T* type;     // no const as this would express that the elements are constant
     typedef T* noconst_type; 
 };
-template<typename T> 
-struct PointerArray<T,0> { // We end the recursion also by specifically defining the R=0 case
-    typedef T& type;     // no const as this would express that the elements are constant
-    typedef T& noconst_type; 
-};
+
 /***************************************************************************/
 
 template<class T, int R>

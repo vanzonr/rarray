@@ -132,7 +132,8 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
             if (i) o << ',';
             std::stringstream strstr;
             std::string result;
-            strstr << r.at(i);
+            const T& val = r.at(i); // at() returns a rarray<T,0>, whose streaming operator is not refined. But we need the value only.
+            strstr << val;
             result = strstr.str();
             if (result.find_first_of("{,}#") != std::string::npos
                 and not
