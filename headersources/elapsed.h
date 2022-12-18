@@ -1,7 +1,7 @@
 //
 // elapsed.h - header file for elapsed time functions in c/c++
 //
-// Copyright (c) 2013-2014  Ramses van Zon
+// Copyright (c) 2013-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ inline double elapsed_etime()
 {
    struct timeval t;
    gettimeofday(&t, 0);
-   return t.tv_sec + 0.000001 * t.tv_usec;
+   return static_cast<double>(t.tv_sec) + 0.000001 * static_cast<double>(t.tv_usec);
 }
 
 inline void elapsed_write(double time) 

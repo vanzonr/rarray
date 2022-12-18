@@ -1,7 +1,7 @@
 //
 // benchmark4Daccess.cc - speed test for rarray
 //
-// Copyright (c) 2013-2015  Ramses van Zon
+// Copyright (c) 2013-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
-const int repeat = 3;
+const int nrepeats = 3;
 const int n = 100; 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -84,8 +84,8 @@ double case_rarray(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a[i][j][k][l] = l+i+repeat;
-                        b[i][j][k][l] = k+j+repeat/2;
+                        a[i][j][k][l] = static_cast<float>(l+i+repeat);
+                        b[i][j][k][l] = static_cast<float>(k+j+repeat/2);
                     }
         pass(&a[0][0][0][0],&b[0][0][0][0],repeat);
         for (int i=0;i<n;i++)
@@ -115,8 +115,8 @@ double case_auto(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a[i][j][k][l] = l+i+repeat;
-                        b[i][j][k][l] = k+j+repeat/2;
+                        a[i][j][k][l] = static_cast<float>(l+i+repeat);
+                        b[i][j][k][l] = static_cast<float>(k+j+repeat/2);
                     }
         pass(&a[0][0][0][0],&b[0][0][0][0],repeat);
         for (int i=0;i<n;i++)
@@ -152,8 +152,8 @@ double case_dyn(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a[i][j][k][l] = l+i+repeat;
-                        b[i][j][k][l] = k+j+repeat/2;
+                        a[i][j][k][l] = static_cast<float>(l+i+repeat);
+                        b[i][j][k][l] = static_cast<float>(k+j+repeat/2);
                     }
         pass(&a[0][0][0][0],&b[0][0][0][0],repeat);
         for (int i=0;i<n;i++)
@@ -181,7 +181,6 @@ double case_boost(int repeat)
 {
 #ifndef NOBOOST
     typedef boost::multi_array<float,4> array_type;
-    typedef array_type::index index;
     double d = 0.0;
     array_type a(boost::extents[n][n][n][n]);
     array_type b(boost::extents[n][n][n][n]);
@@ -191,8 +190,8 @@ double case_boost(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a[i][j][k][l] = l+i+repeat;
-                        b[i][j][k][l] = k+j+repeat/2;
+                        a[i][j][k][l] = static_cast<float>(l+i+repeat);
+                        b[i][j][k][l] = static_cast<float>(k+j+repeat/2);
                     }
         pass(&a[0][0][0][0],&b[0][0][0][0],repeat);
         for (int i=0;i<n;i++)
@@ -244,8 +243,8 @@ double case_vector(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a[i][j][k][l] = l+i+repeat;
-                        b[i][j][k][l] = k+j+repeat/2;
+                        a[i][j][k][l] = static_cast<float>(l+i+repeat);
+                        b[i][j][k][l] = static_cast<float>(k+j+repeat/2);
                     }
         pass(&a[0][0][0][0],&b[0][0][0][0],repeat);
         for (int i=0;i<n;i++)
@@ -286,8 +285,8 @@ double case_eigen(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a(j,i)(l,k) = l+i+repeat;
-                        b(j,i)(l,k) = k+j+repeat/2;
+                        a(j,i)(l,k) = static_cast<float>(l+i+repeat);
+                        b(j,i)(l,k) = static_cast<float>(k+j+repeat/2);
                     }
         pass(&(a(0,0)(0,0)),&(b(0,0)(0,0)),repeat);
         for (int i=0;i<n;i++)
@@ -321,8 +320,8 @@ double case_blitz_1(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a(i,j,k,l) = l+i+repeat;
-                        b(i,j,k,l) = k+j+repeat/2;
+                        a(i,j,k,l) = static_cast<float>(l+i+repeat);
+                        b(i,j,k,l) = static_cast<float>(k+j+repeat/2);
                     }
         pass(&a(0,0,0,0),&b(0,0,0,0),repeat);
         for (int i=0;i<n;i++)
@@ -364,11 +363,11 @@ double case_blitz_2(int repeat)
         pass(&a(0,0,0,0),&b(0,0,0,0),repeat);
         c = a + b;
         pass(&c(0,0,0,0),&c(0,0,0,0),repeat);
-        for (int i=0;i<n;i++)
-            for (int j=0;j<n;j++) 
-                for (int k=0;k<n;k++) 
-                     for (int l=0;l<n;l++) 
-                         d += c(i,j,k,l);
+        for (int ai=0;ai<n;ai++)
+            for (int aj=0;aj<n;aj++) 
+                for (int ak=0;ak<n;ak++) 
+                     for (int al=0;al<n;al++) 
+                         d += c(ai,aj,ak,al);
         pass(&c(0,0,0,0),(float*)&d,repeat);
     }
     return d;
@@ -394,8 +393,8 @@ double case_armadillo(int repeat)
             for (int j=0;j<n;j++) 
                 for (int k=0;k<n;k++) 
                     for (int l=0;l<n;l++) {
-                        a[i](l,k,j) = l+i+repeat;
-                        b[i](l,k,j) = k+j+repeat/2;
+                        a[i](l,k,j) = static_cast<float>(l+i+repeat);
+                        b[i](l,k,j) = static_cast<float>(k+j+repeat/2);
                     }
         pass(&(a[0](0,0,0)),&(b[0](0,0,0)),repeat);
         for (int i=0;i<n;i++)
@@ -424,58 +423,58 @@ int main(int argc,char**argv)
 {
     double answer = 0.0;
     int thiscase = (argc==1)?1:atoi(argv[1]);
-    double check = case_exact(repeat);
+    double check = case_exact(nrepeats);
     Stopwatch s = START;
     switch (thiscase) {
     case 0: 
         printf("exact:     ");
         fflush(stdout);
-        answer = case_exact(repeat);
+        answer = case_exact(nrepeats);
         break;
     case 1: 
         printf("rarray:    ");
         fflush(stdout);
-        answer = case_rarray(repeat);
+        answer = case_rarray(nrepeats);
         break;
     case 2: 
         printf("automatic: ");
         fflush(stdout);
-        answer = case_auto(repeat);
+        answer = case_auto(nrepeats);
         break;
     case 3: 
         printf("dynamic:   ");
         fflush(stdout);
-        answer = case_dyn(repeat);
+        answer = case_dyn(nrepeats);
         break;
     case 4: 
         printf("boost:     ");
         fflush(stdout);
-        answer = case_boost(repeat);
+        answer = case_boost(nrepeats);
         break;
     case 5: 
         printf("armadillo: ");
         fflush(stdout);
-        answer = case_armadillo(repeat);
+        answer = case_armadillo(nrepeats);
         break;
     case 6: 
         printf("vector:    ");
         fflush(stdout);
-        answer = case_vector(repeat);
+        answer = case_vector(nrepeats);
         break;
     case 7: 
         printf("blitz1:    ");
         fflush(stdout);
-        answer = case_blitz_1(repeat);
+        answer = case_blitz_1(nrepeats);
         break;
     case 8: 
         printf("blitz2:    ");
         fflush(stdout);
-        answer = case_blitz_2(repeat);
+        answer = case_blitz_2(nrepeats);
         break;
     case 9: 
         printf("eigen:     ");
         fflush(stdout);
-        answer = case_eigen(repeat);
+        answer = case_eigen(nrepeats);
         break;
     }
     double eps = 1e-6;
