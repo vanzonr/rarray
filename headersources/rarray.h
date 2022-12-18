@@ -230,37 +230,39 @@ class CommaOp {
     template<typename,int> friend class subrarray;
 };
 
+#define CINT ::size_t
+
 // Template functions to detemine the dimensions of automatic arrays, for use in the EXTENT macro
 // To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
-template<typename A>                                                              RA_INLINE_ int extent_given_byte_size(A a[], int i, int byte_size);                               //for 1d array
-template<typename A,int Z>                                                        RA_INLINE_ int extent_given_byte_size(A a[][Z], int i, int byte_size);                            //for 2d array
-template<typename A,int Y,int Z>                                                  RA_INLINE_ int extent_given_byte_size(A a[][Y][Z], int i, int byte_size);                         //for 3d array
-template<typename A,int X,int Y,int Z>                                            RA_INLINE_ int extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size);                      //for 4d array
-template<typename A,int W,int X,int Y,int Z>                                      RA_INLINE_ int extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size);                   //for 5d array
-template<typename A,int V,int W,int X,int Y,int Z>                                RA_INLINE_ int extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size);                //for 6d array
-template<typename A,int U,int V,int W,int X,int Y,int Z>                          RA_INLINE_ int extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size);             //for 7d array
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    RA_INLINE_ int extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size);          //for 8d array
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              RA_INLINE_ int extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size);       //for 9d array
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        RA_INLINE_ int extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size);    //for 10d array
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  RA_INLINE_ int extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size); //for 11d array
-template<typename A,int R>                                                        RA_INLINE_ int extent_given_byte_size(const rarray<A,R>& a, int i, int byte_size); // use rarray's extent function
+template<typename A>                                                              RA_INLINE_ ra::size_type extent_given_byte_size(A a[], int i, CINT byte_size);                               //for 1d array
+template<typename A,CINT Z>                                                        RA_INLINE_ ra::size_type extent_given_byte_size(A a[][Z], int i, CINT byte_size);                            //for 2d array
+template<typename A,CINT Y,CINT Z>                                                  RA_INLINE_ ra::size_type extent_given_byte_size(A a[][Y][Z], int i, CINT byte_size);                         //for 3d array
+template<typename A,CINT X,CINT Y,CINT Z>                                            RA_INLINE_ ra::size_type extent_given_byte_size(A a[][X][Y][Z], int i, CINT byte_size);                      //for 4d array
+template<typename A,CINT W,CINT X,CINT Y,CINT Z>                                      RA_INLINE_ ra::size_type extent_given_byte_size(A a[][W][X][Y][Z], int i, CINT byte_size);                   //for 5d array
+template<typename A,CINT V,CINT W,CINT X,CINT Y,CINT Z>                                RA_INLINE_ ra::size_type extent_given_byte_size(A a[][V][W][X][Y][Z], int i, CINT byte_size);                //for 6d array
+template<typename A,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>                          RA_INLINE_ ra::size_type extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, CINT byte_size);             //for 7d array
+template<typename A,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>                    RA_INLINE_ ra::size_type extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, CINT byte_size);          //for 8d array
+template<typename A,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>              RA_INLINE_ ra::size_type extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, CINT byte_size);       //for 9d array
+template<typename A,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>        RA_INLINE_ ra::size_type extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, CINT byte_size);    //for 10d array
+template<typename A,CINT Q,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>  RA_INLINE_ ra::size_type extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, CINT byte_size); //for 11d array
+template<typename A,int R>                                                        RA_INLINE_ ra::size_type extent_given_byte_size(const rarray<A,R>& a, int i, CINT byte_size); // use rarray's extent function
 // Template functions to convert automatic arrays, for conversion with RARRAY macro
 // To be able to determine the first dimension, these need to get pass the total size in bytes (byte_size) of such an automatic array
-template<typename A>                                                              RA_INLINE_ rarray<A,1>  make_rarray_given_byte_size(A a[], int byte_size);                              //for 1d array
-template<typename A,int Z>                                                        RA_INLINE_ rarray<A,2>  make_rarray_given_byte_size(A a[][Z], int byte_size);                           //for 2d array
-template<typename A,int Y,int Z>                                                  RA_INLINE_ rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], int byte_size);                        //for 3d array
-template<typename A,int X,int Y,int Z>                                            RA_INLINE_ rarray<A,4>  make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size);                     //for 4d array
-template<typename A,int W,int X,int Y,int Z>                                      RA_INLINE_ rarray<A,5>  make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size);                  //for 5d array
-template<typename A,int V,int W,int X,int Y,int Z>                                RA_INLINE_ rarray<A,6>  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size);               //for 6d array
-template<typename A,int U,int V,int W,int X,int Y,int Z>                          RA_INLINE_ rarray<A,7>  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size);            //for 7d array
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z>                    RA_INLINE_ rarray<A,8>  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size);         //for 8d array
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z>              RA_INLINE_ rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size);      //for 9d array
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>        RA_INLINE_ rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size);   //for 10d array
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z>  RA_INLINE_ rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size);//for 11d array
-template<typename A,int R>                                                        RA_INLINE_ rarray<A,R> make_rarray_given_byte_size(rarray<A,R> a, int byte_size); // trivial action for rarray
+template<typename A>                                                              RA_INLINE_ rarray<A,1>  make_rarray_given_byte_size(A a[], CINT byte_size);                              //for 1d array
+template<typename A,CINT Z>                                                        RA_INLINE_ rarray<A,2>  make_rarray_given_byte_size(A a[][Z], CINT byte_size);                           //for 2d array
+template<typename A,CINT Y,CINT Z>                                                  RA_INLINE_ rarray<A,3>  make_rarray_given_byte_size(A a[][Y][Z], CINT byte_size);                        //for 3d array
+template<typename A,CINT X,CINT Y,CINT Z>                                            RA_INLINE_ rarray<A,4>  make_rarray_given_byte_size(A a[][X][Y][Z], CINT byte_size);                     //for 4d array
+template<typename A,CINT W,CINT X,CINT Y,CINT Z>                                      RA_INLINE_ rarray<A,5>  make_rarray_given_byte_size(A a[][W][X][Y][Z], CINT byte_size);                  //for 5d array
+template<typename A,CINT V,CINT W,CINT X,CINT Y,CINT Z>                                RA_INLINE_ rarray<A,6>  make_rarray_given_byte_size(A a[][V][W][X][Y][Z], CINT byte_size);               //for 6d array
+template<typename A,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>                          RA_INLINE_ rarray<A,7>  make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], CINT byte_size);            //for 7d array
+template<typename A,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>                    RA_INLINE_ rarray<A,8>  make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], CINT byte_size);         //for 8d array
+template<typename A,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>              RA_INLINE_ rarray<A,9>  make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], CINT byte_size);      //for 9d array
+template<typename A,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>        RA_INLINE_ rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], CINT byte_size);   //for 10d array
+template<typename A,CINT Q,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z>  RA_INLINE_ rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], CINT byte_size);//for 11d array
+template<typename A,int R>                                                        RA_INLINE_ rarray<A,R> make_rarray_given_byte_size(rarray<A,R> a, CINT byte_size); // trivial action for rarray
 
 template<typename S>
-rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true)
+rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true) //// TODO: Choose better integer type for n
 {
     if (n==0) {
         if (x2>x1)
@@ -523,7 +525,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
 }
 
 namespace ra {
-RA_INLINE_ size_type mul(const size_type * x, int n) {
+RA_INLINE_ size_type mul(const size_type * x, int n) { ////// TODO: better integer type
     size_type result = 1;
     for (int i=0;i<n;i++)
         result *= x[i];
@@ -1057,7 +1059,7 @@ ra::size_type ra::rarray<T,R>::index(const T& a, int i) const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename A> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[], int i, int byte_size) 
+ra::size_type ra::extent_given_byte_size(A a[], int i, CINT byte_size) 
 {
     // find shape of automatic arrays, given the size of the array
     RA_CHECKORSAY(i>=0 and i<1, "wrong dimension");
@@ -1067,8 +1069,8 @@ int ra::extent_given_byte_size(A a[], int i, int byte_size)
     }
 }
 
-template<typename A,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][Z], int i, int byte_size) 
+template<typename A,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<2, "wrong dimension");
     switch (i) {
@@ -1078,8 +1080,8 @@ int ra::extent_given_byte_size(A a[][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][Y][Z], int i, int byte_size) 
+template<typename A,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<3, "wrong dimension");
     switch (i) {
@@ -1090,8 +1092,8 @@ int ra::extent_given_byte_size(A a[][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<4, "wrong dimension");
     switch (i) {
@@ -1103,8 +1105,8 @@ int ra::extent_given_byte_size(A a[][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<5, "wrong dimension");
     switch (i) {
@@ -1117,8 +1119,8 @@ int ra::extent_given_byte_size(A a[][W][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][V][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<6, "wrong dimension");
     switch (i) {
@@ -1132,8 +1134,8 @@ int ra::extent_given_byte_size(A a[][V][W][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<7, "wrong dimension");
     switch (i) {
@@ -1148,8 +1150,8 @@ int ra::extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<8, "wrong dimension");
     switch (i) {
@@ -1165,8 +1167,8 @@ int ra::extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i, int byte_size)
     }
 }
 
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<9, "wrong dimension");
     switch (i) {
@@ -1183,8 +1185,8 @@ int ra::extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i, int byte_si
     }
 }
 
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<10, "wrong dimension");
     switch (i) {
@@ -1202,8 +1204,8 @@ int ra::extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i, int byte
     }
 }
 
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-int ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int byte_size) 
+template<typename A,CINT Q,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::size_type ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, CINT byte_size) 
 {
     RA_CHECKORSAY(i>=0 and i<11, "wrong dimension");
     switch (i) {
@@ -1225,7 +1227,7 @@ int ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i, int b
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename A,int R> RA_INLINE_ 
-int ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size) 
+ra::size_type ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, CINT byte_size) 
 {
     return a.extent(i);
 }
@@ -1235,86 +1237,86 @@ int ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i, int byte_size)
 // convert to rarray
 
 template<typename A> RA_INLINE_ 
-ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[], int byte_size) 
+ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[], CINT byte_size) 
 {
-    const int z = byte_size/sizeof(A);
+    const CINT z = byte_size/sizeof(A);
     return ra::rarray<A,1>(a,z);
 }
 
-template<typename A,int Z> RA_INLINE_ 
-ra::rarray<A,2> ra::make_rarray_given_byte_size(A a[][Z], int byte_size) 
+template<typename A,CINT Z> RA_INLINE_ 
+ra::rarray<A,2> ra::make_rarray_given_byte_size(A a[][Z], CINT byte_size) 
 {
-    const int y = byte_size/sizeof(A)/Z;
+    const CINT y = byte_size/sizeof(A)/Z;
     return ra::rarray<A,2>(*a,y,Z);
 }
 
-template<typename A,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,3> ra::make_rarray_given_byte_size(A a[][Y][Z], int byte_size) 
+template<typename A,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,3> ra::make_rarray_given_byte_size(A a[][Y][Z], CINT byte_size) 
 {
-    const int x = byte_size/sizeof(A)/Z/Y;
+    const CINT x = byte_size/sizeof(A)/Z/Y;
     return ra::rarray<A,3>(**a,x,Y,Z);
 }
 
-template<typename A,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,4> ra::make_rarray_given_byte_size(A a[][X][Y][Z], int byte_size) 
+template<typename A,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,4> ra::make_rarray_given_byte_size(A a[][X][Y][Z], CINT byte_size) 
 {
-    const int w = byte_size/sizeof(A)/X/Z/Y;
+    const CINT w = byte_size/sizeof(A)/X/Z/Y;
     return ra::rarray<A,4>(***a,w,X,Y,Z);
 }
 
-template<typename A,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,5> ra::make_rarray_given_byte_size(A a[][W][X][Y][Z], int byte_size) 
+template<typename A,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,5> ra::make_rarray_given_byte_size(A a[][W][X][Y][Z], CINT byte_size) 
 {
-    const int v = byte_size/sizeof(A)/W/X/Z/Y;
+    const CINT v = byte_size/sizeof(A)/W/X/Z/Y;
     return ra::rarray<A,5>(****a,v,W,X,Y,Z);
 }
 
-template<typename A,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,6> ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], int byte_size) 
+template<typename A,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,6> ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z], CINT byte_size) 
 {
-    const int u = byte_size/sizeof(A)/V/W/X/Z/Y;
+    const CINT u = byte_size/sizeof(A)/V/W/X/Z/Y;
     return ra::rarray<A,6>(*****a,u,V,W,X,Y,Z);
 }
 
-template<typename A,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,7> ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], int byte_size) 
+template<typename A,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,7> ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z], CINT byte_size) 
 {
-    const int t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
+    const CINT t = byte_size/sizeof(A)/U/V/W/X/Z/Y;
     return ra::rarray<A,7>(******a,t,U,V,W,X,Y,Z);
 }
 
-template<typename A,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,8> ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], int byte_size) 
+template<typename A,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,8> ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z], CINT byte_size) 
 {
-    const int s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
+    const CINT s = byte_size/sizeof(A)/T/U/V/W/X/Z/Y;
     return ra::rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z);
 }
 
-template<typename A,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,9> ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int byte_size) 
+template<typename A,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,9> ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], CINT byte_size) 
 {
-    const int r = byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
+    const CINT r = byte_size/sizeof(A)/S/T/U/V/W/X/Z/Y;
     return ra::rarray<A,9>(********a,r,S,T,U,V,W,X,Y,Z);
 }
 
-template<typename A,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,10> ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int byte_size) 
+template<typename A,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,10> ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], CINT byte_size) 
 {
-    const int q = byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
+    const CINT q = byte_size/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
     return ra::rarray<A,10>(*********a,q,R,S,T,U,V,W,X,Y,Z);
 }
 
-template<typename A,int Q,int R,int S,int T,int U,int V,int W,int X,int Y,int Z> RA_INLINE_ 
-ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int byte_size) 
+template<typename A,CINT Q,CINT R,CINT S,CINT T,CINT U,CINT V,CINT W,CINT X,CINT Y,CINT Z> RA_INLINE_ 
+ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], CINT byte_size) 
 {
-    const int p = byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
+    const CINT p = byte_size/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
     return ra::rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T,int R> RA_INLINE_ 
-ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, int byte_size) 
+ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a, CINT byte_size) 
 {
     return a;
 }
