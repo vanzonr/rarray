@@ -68,7 +68,7 @@ class shared_shape
 
     // constructors 
     shared_shape();                                         // non-functional shape
-    shared_shape(const std::array<size_type,R>&extent, T*data);// construct shape 
+    shared_shape(const std::array<size_type,R>&anextent, T*adata);// construct shape 
     shared_shape(const shared_shape& other);                // copy constructor
     shared_shape(shared_shape&& other);                     // move constructor
 
@@ -84,7 +84,7 @@ class shared_shape
 
     // change data or shape
     void relocate(T* newdata);                              // let shape point to other data block
-    void reshape(const std::array<size_type,R>&extent);     // change shape (not the data)
+    void reshape(const std::array<size_type,R>&newextent);  // change shape (not the data)
 
     // get out pointers
     ptrs_type ptrs() const;                                 // get pointer-to-pointer structure
@@ -145,12 +145,12 @@ shared_shape<T,R>::shared_shape()
 }
 
 template<class T, int R>
-shared_shape<T,R>::shared_shape(const std::array<size_type,R>&extent, T*data)
-  : extent_(extent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
+shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
+  : extent_(anextent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
 {
     // construct shape 
     Offsets P({extent_.begin(),extent_.end()});
-    orig_ = P.apply_offsets(data);
+    orig_ = P.apply_offsets(adata);
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
     noffsets_ = P.get_num_offsets();
     ndataoffsets_ = P.get_num_data_offsets();
@@ -354,11 +354,11 @@ shared_shape<T,R-1> shared_shape<T,R>::at(size_type index) const
 }
 
 template<class T, int R>
-void shared_shape<T,R>::reshape(const std::array<size_type,R>&extent)
+void shared_shape<T,R>::reshape(const std::array<size_type,R>&newextent)
 {
-    if (extent != extent_) {
+    if (newextent != extent_) {
         // should perhaps check it new extent is even valid
-        *this = shared_shape<T,R>(extent, data());
+        *this = shared_shape<T,R>(newextent, data());
     }
 }
 

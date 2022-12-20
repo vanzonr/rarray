@@ -54,8 +54,8 @@ class shared_buffer
 
     // constructors 
     shared_buffer() noexcept;
-    explicit shared_buffer(size_type size);
-    shared_buffer(size_type size, T* data) noexcept;
+    explicit shared_buffer(size_type asize);
+    shared_buffer(size_type asize, T* adata) noexcept;
     shared_buffer(const shared_buffer& other) noexcept;
     shared_buffer(shared_buffer&& from) noexcept;
     
@@ -128,6 +128,7 @@ class shared_buffer
 };
 
 /***************************************************************************/
+/* FUTURE FEATURE :
 #define RA_ALIGNMENT_IN_BYTES 64
 
 template<class T>
@@ -151,7 +152,8 @@ void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
         throw std::bad_alloc();
     }
 }
-
+*/
+    
 template<class T>
 shared_buffer<T>::shared_buffer() noexcept
 {
@@ -160,14 +162,14 @@ shared_buffer<T>::shared_buffer() noexcept
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type size) noexcept(false)
+shared_buffer<T>::shared_buffer(size_type asize) noexcept(false)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
     // construct buffer, exception safe
     T* data;
     refs_ = new std::atomic<int>(1); // if this throws, let it
     try {
-        data = new T[size];
+        data = new T[asize];
     }
     catch (...) {
         delete refs_; 
@@ -175,12 +177,12 @@ shared_buffer<T>::shared_buffer(size_type size) noexcept(false)
     }
     data_ = data;
     orig_ = data_;
-    size_ = size;
+    size_ = asize;
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type size, T* data) noexcept
-  : data_(data), orig_(nullptr), size_(size), refs_(nullptr)
+shared_buffer<T>::shared_buffer(size_type asize, T* adata) noexcept
+  : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr)
 {
     // construct buffer as a wrapper
 }

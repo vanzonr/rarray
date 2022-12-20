@@ -1,7 +1,7 @@
 //
 // rarraymacros.h - Checks and inlining macros used in runtime arrays
 //
-// Copyright (c) 2015-2020  Ramses van Zon
+// Copyright (c) 2015-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+#ifndef _RARRAYMACROSH_
+#define _RARRAYMACROSH_
 
 // Compiling with -DRA_BOUNDSCHECK switches on the RA_CHECKORSAY macro to
 // check its first argument and throw an exception if it is not true.
@@ -52,3 +54,5 @@
 // routines using INLINE_ will not: these were deemed to expensive to inline from a compilation point of view
 #define RA_INLINEF RA_INLINE
 #define RA_INLINE_ inline
+
+#endif

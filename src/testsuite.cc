@@ -823,10 +823,14 @@ TEMPLATE_TEST_CASE("test constructors 12dim buf", "",
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+namespace global {
+    
 double d1 = -2.2, d2 = 7.1;
 Compound c1(1,2), c2(-7,13);
 array<Compound,3> a1 = {{Compound(1,2),Compound(3,4),Compound(5,6)}};
 array<Compound,3> a2 = {{Compound(-1,-2),Compound(3,-4),Compound(5,-6)}};
+
+}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -876,19 +880,19 @@ void testaccessors(T value1, T value2)
 
 TEST_CASE("testaccessors_double")
 {
-    testaccessors<double>(d1,d2);
+    testaccessors<double>(global::d1,global::d2);
 }
 
 
 TEST_CASE("testaccessors_Compound")
 {
-    testaccessors<Compound>(c1,c2);
+    testaccessors<Compound>(global::c1,global::c2);
 }
 
 
 TEST_CASE("testaccessors_array_Compound_3")
 {
-    testaccessors<array<Compound,3> >(a1,a2);
+    testaccessors<array<Compound,3> >(global::a1,global::a2);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -969,19 +973,19 @@ void testcopy2d(T value1, T value2)
 
 TEST_CASE("testcopy2d_double")
 {
-    testcopy2d<double>(d1,d2);
+    testcopy2d<double>(global::d1,global::d2);
 }
 
 
 TEST_CASE("testcopy2d_Compound")
 {
-    testcopy2d<Compound>(c1,c2);
+    testcopy2d<Compound>(global::c1,global::c2);
 }
 
 
 TEST_CASE("testcopy2d_array_Compound_3")
 {
-    testcopy2d<array<Compound,3> >(a1,a2);
+    testcopy2d<array<Compound,3> >(global::a1,global::a2);
 }
 
 
@@ -1025,19 +1029,19 @@ void testcopy3d(T value1, T value2)
 
 TEST_CASE("testcopy3d_double")
 {
-    testcopy3d<double>(d1,d2);
+    testcopy3d<double>(global::d1,global::d2);
 }
 
 
 TEST_CASE("testcopy3d_Compound")
 {
-    testcopy3d<Compound>(c1,c2);
+    testcopy3d<Compound>(global::c1,global::c2);
 }
 
 
 TEST_CASE("testcopy3d_array_Compound_3")
 {
-    testcopy3d<array<Compound,3> >(a1,a2);
+    testcopy3d<array<Compound,3> >(global::a1,global::a2);
 }
 
 
@@ -1067,19 +1071,19 @@ void testcopy1d(T value1, T value2)
 
 TEST_CASE("testcopy1d_double")
 {
-    testcopy1d<double>(d1,d2);
+    testcopy1d<double>(global::d1,global::d2);
 }
 
 
 TEST_CASE("testcopy1d_Compound")
 {
-    testcopy1d<Compound>(c1,c2);
+    testcopy1d<Compound>(global::c1,global::c2);
 }
 
 
 TEST_CASE("testcopy1d_array_Compound_3")
 {
-    testcopy1d<array<Compound,3> >(a1,a2);
+    testcopy1d<array<Compound,3> >(global::a1,global::a2);
 }
 
 
