@@ -47,7 +47,7 @@ LDFLAGSOPT?=
 LDLIBSOPT?=
 CXXFLAGS?=-std=c++11 -O2
 CXXFLAGSDBG?=-O0 -g
-CXXFLAGS+=-I. -I${HS} -std=c++11 
+CXXFLAGS+=-I. -std=c++11 
 CXXFLAGSDBG+=-I. -I${HS} -std=c++11 
 CXXFLAGSOPT?=-O2
 #MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG -DNOARMADILLO
@@ -64,7 +64,8 @@ FFLAGS?=-O2
 
 RM=rm -f
 VALGRIND?=valgrind --leak-check=full
-CPPFLAGS+=-I. -I${HS}
+#CPPFLAGS+=-I. -I${HS}
+CPPFLAGS+=-I.
 
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
@@ -101,7 +102,7 @@ doc: rarraydoc.pdf
 valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite 
 
 hardinclude: ${SRC}/hardinclude.cc
-	${CXX} -g -o $@ $^
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} -O0 -g -o $@ $^
 
 VERSION:
 	git describe --abbrev=0 > $@
@@ -115,7 +116,7 @@ ${HS}/versionheader.h: VERSION
 	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
 
 rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
-	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h versionheader.h | ../hardinclude - offsets.h > ../rarray
+	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > ../rarray
 
 rarrayio: rarray
 	echo '#include <rarray>' > rarrayio

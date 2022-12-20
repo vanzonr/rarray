@@ -1,13 +1,15 @@
 // hardinclude.cc
 //
 // Replaces #include's in a file with those files, if they are in the
-// file set specified on the command lines.  Writes result to standard
-// out.
+// file set specified on the command lines. Works recursively, i.e.,
+// #include's in the included files are resolved as well. But each
+// of the specificed header file is only included once.
+// Writes result to standard out.
 //
 // Usage:
 //   hardinclude INPUTFILE INCLUDEFILE1 [INCLUDEFILE2 ...]
 //
-// Copyright (c) 2017  Ramses van Zon
+// Copyright (c) 2017-2022  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,61 +33,48 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <cassert>
-#include <cstring>
+#include <vector>
 
 using namespace std;
 
 // check if a file exists
-bool file_exists(const char* file_name)
+bool file_exists(const string& file_name)
 {
-    assert(file_name);
     return ifstream(file_name).is_open();
 }
 
 // check if string is one of a set of strings
-bool string_in_set(const char* str, char** strset, size_t nset)
+const size_t NOTFOUND = -1;
+size_t string_in_set(const string& str, const vector<string>& strset)
 {
-    assert(str);
-    assert(strset);
-    const size_t n = strlen(str);
-    for (size_t i = 0; i < nset; i++) {
-        assert(strset[i]);
-        if (strcmp(str,strset[i]) == 0) {
-            return true;
-        }
-    }
-    return false;
+    for (size_t i = 0; i < strset.size(); i++)
+        if (strset[i] == str)
+            return i;
+    return NOTFOUND;
 }
 
 
 // check if a line is just a comment
 bool iscommentline(const std::string& line)
 {
-    int i = 0;
+    size_t i = 0;
     while (i < line.size() and line[i] == ' ')
         i++;
     return line.substr(i,2) == std::string("//");
 }
 
-// dump a file to console
-void dump(const char* s)
-{
-    ifstream f(s);
-    while (f.good() and !f.eof()) {
-        string s;
-        getline(f,s);
-        if (not iscommentline(s))
-            std::cout << s << '\n';
-    }   
-}
+// to process one file (allowing for recursive application)
+void process_one_file(const string& inputfile, const vector<string>& includefiles,
+                 vector<bool>& alreadyincluded, bool& headercommentsdone);
 
 // start 
 int main(int argc, char** argv)
 {
-    char*  inputfile;
-    char** includefiles;
-    
+    string         inputfile;
+    vector<string> includefiles;
+    vector<bool>   alreadyincluded(argc-2, false); 
+    bool           headercommentsdone = false;
+   
     // check command line arguments:
     if (argc<3) {
         cerr << "ERROR: Not enough arguments\n"
@@ -107,14 +96,21 @@ int main(int argc, char** argv)
             }
         }
         inputfile = argv[1];
-        includefiles = argv+2;
+        for (auto filenameptr=argv+2; filenameptr < argv+argc; filenameptr++)
+            includefiles.push_back(*filenameptr);
     }
 
     // start processing:
-    ifstream infile(inputfile);
-    istream& in = (inputfile[0] == '-'  and inputfile[1] == '\0')?cin:infile;
+    process_one_file(inputfile, includefiles, alreadyincluded, headercommentsdone);
+}
+    
+void process_one_file(const string& inputfile, const vector<string>& includefiles,
+                 vector<bool>& alreadyincluded, bool& headercommentsdone)
+{
+    static const string INCLUDETAG("#include");
+    ifstream infile(inputfile); // note: doesn't throw on failuer e.g with inputfile=="-"
+    istream& in = (inputfile == "-")?cin:infile;
 
-    bool headercommentsdone = false;
     while (in.good() && !in.eof()) {
         // read in a line from the file
         string line;
@@ -123,45 +119,49 @@ int main(int argc, char** argv)
             headercommentsdone = true;
         if (headercommentsdone and iscommentline(line))
             continue;
-        bool include = false;
+        auto include = NOTFOUND;
         string includefilename;
-        // find occurance of "#include"        
-        size_t pos = line.find("#include");
-        size_t endpos = 0;
+        // find occurance of "#include"
+        size_t pos = line.find(INCLUDETAG);
+        size_t continueat = 0;
         if (pos != string::npos) {
             // check if there are only spaces before it
             bool only_leading_space = true;
-            for (size_t i = 0; i < pos; i++) {
+            for (size_t i = 0; i < pos; i++) 
                 if (line[i]!=' ' && line[i]!='\t') {
                     only_leading_space = false;
                     break;
                 }
-            }
             if (only_leading_space) {
-                size_t posend = line.length();
-                pos += strlen("#include");
-                while (pos < posend && (line[pos] == ' ' || line[pos] == '\t'))
+                pos += INCLUDETAG.size();
+                while (pos < line.length() && (line[pos] == ' ' || line[pos] == '\t'))
                     pos++;
                 if (line[pos] == '"') { // || line[pos] == '<') {
                     char endchar = (line[pos] == '"')?'"':'>';
                     pos ++;
-                    endpos = line.find(endchar, pos+2);
-                    if (endpos != string::npos) {
-                        includefilename = string(&line[pos],&line[endpos]);
-                        include = string_in_set(includefilename.c_str(),includefiles,argc-2);
-                        if (line[endpos]=='"') endpos++;
+                    continueat = line.find(endchar, pos+2);
+                    if (continueat != string::npos) {
+                        includefilename = string(&line[pos],&line[continueat]);
+                        include = string_in_set(includefilename,includefiles);
+                        if (line[continueat]=='"') continueat++;
                     }
                 }
             }
         }
-        if (include) {
-            cout << "// " << line.c_str()+endpos << "\n";
-            cout << "//#include \"" << includefilename << "\"\n";
-            dump(includefilename.c_str());
-            cout << "//end of #include \"" << includefilename << "\"\n";
+        if (include != NOTFOUND) {
+          if (not alreadyincluded[include]) {
+            cout << "// " << line.c_str()+continueat << "\n";
+            cout << "//" << INCLUDETAG << " \"" << includefilename << "\"\n";
+            process_one_file(includefilename, includefiles, alreadyincluded, headercommentsdone);
+            cout << "//end of " << INCLUDETAG << " \"" << includefilename << "\"\n\n";
+            alreadyincluded[include] = true;
+          } else {
+            cout << "// " << line.c_str()+continueat << "\n";
+            cout << "//" << INCLUDETAG << " \"" << includefilename << "\" was already done above\n";
+          }
         } else {
             cout << line << '\n';
         }
     }
-    return 0;
+
 }
