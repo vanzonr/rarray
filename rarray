@@ -41,8 +41,8 @@
 
 // 
 //#include "versionheader.h"
-#define RA_VERSION "v2.3.0"
-#define RA_VERSION_NUMBER 2003000
+#define RA_VERSION "v2.4.0"
+#define RA_VERSION_NUMBER 2004000
 
 //end of #include "versionheader.h"
 
