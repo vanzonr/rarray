@@ -1,8 +1,10 @@
 #
-# clang++ 3.5
+# clang++ 3.5+
+# (tested upto v9)
 #
 CXX=clang++
-CXXFLAGS=-g -std=c++11 
+CXXFLAGS=-std=c++11
+DBGFLAGS=-g
 CPPFLAGS=-Wall -D__extern_always_inline=inline 
 CPPFLAGSOPT=-DNDEBUG -D__extern_always_inline=inline 
 CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native 

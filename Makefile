@@ -41,21 +41,19 @@ HS=headersources
 
 PREFIX?=/usr
 
-LDFLAGS?=-g
+LDFLAGS?=
 LDLIBS?= 
 LDFLAGSOPT?=
 LDLIBSOPT?=
-CXXFLAGS?=-std=c++11 -O2
-CXXFLAGSDBG?=-O0 -g
-CXXFLAGS+=-I. -std=c++11 
-CXXFLAGSDBG+=-I. -I${HS} -std=c++11 
-CXXFLAGSOPT?=-O2
-#MORECPPFLAGSOPT=-DBOOST_DISABLE_ASSERTS -DNDEBUG -DEIGEN_NO_DEBUG -DNOARMADILLO
-#-DNOBLITZ -DNOEIGEN3 -DNOARMADILLO -DNOBOOST
+CXXFLAGS?=-std=c++11 -Og
+DBGFLAGS?=-g
+CXXFLAGSOPT?=-O3
 MORECPPFLAGSOPT?=-DNOBLITZ -DNOBOOST -DNOEIGEN3 -DNOARMADILLO -DNOOPENBLAS
 MORELDFLAGSOPT?=
 FC?=gfortran
 FFLAGS?=-O2
+
+CPPFLAGS+= -I. -I${HS}
 
 # want to add coverage test later:
 #LDFLAGSCOV=-fprofile-arcs -ftest-coverage
@@ -64,8 +62,6 @@ FFLAGS?=-O2
 
 RM=rm -f
 VALGRIND?=valgrind --leak-check=full
-#CPPFLAGS+=-I. -I${HS}
-CPPFLAGS+=-I.
 
 BENCHMARK2DNAME=benchmark2Daccess
 BENCHMARK4DNAME=benchmark4Daccess
@@ -102,7 +98,7 @@ doc: rarraydoc.pdf
 valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite 
 
 hardinclude: ${SRC}/hardinclude.cc
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} -O0 -g -o $@ $^
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} -o $@ $^
 
 VERSION:
 	git describe --abbrev=0 > $@
@@ -136,32 +132,32 @@ testsuite: testsuite.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
 
 testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
-	${CXX} ${CPPFLAGS} -std=c++11 -g -O0 -I. ${CXXFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -g -O0 -c -o $@ $<
 
 catch.hpp:
 	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
 	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
-	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${DBGFLAGS} -c -o $@ $<
 
 test_shared_buffer: test_shared_buffer.o
 	${CXX} ${LDFLAGS} -o $@ $^
 
 test_offsets.o: ${SRC}/test_offsets.cc ${HS}/offsets.h
-	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
 
 test_offsets: test_offsets.o
-	${CXX} ${LDFLAGS} -o $@ $^
+	${CXX} ${LDFLAGS} ${DBGFLAGS} -o $@ $^
 
 test_shared_shape.o: ${SRC}/test_shared_shape.cc ${HS}/shared_shape.h ${HS}/offsets.h
-	${CXX} ${CXXFLAGSDBG} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
 
 test_shared_shape: test_shared_shape.o
-	${CXX} ${LDFLAGS} -o $@ $^
+	${CXX} ${LDFLAGS} ${DBGFLAGS} -o $@ $^
 
 test_rarray.o: ${SRC}/test_rarray.cc rarray
-	${CXX} -std=c++11 -I. -O2 -g -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
 
 test_rarray: test_rarray.o
 	${CXX} ${LDFLAGS} -o $@ $^
@@ -231,19 +227,19 @@ $(BENCHMARK4DNAME): $(BENCHMARK4DNAME).o $(PASS).o config.mk
 	$(CXX) $(LDFLAGSOPT) -o $@ $(BENCHMARK4DNAME).o $(PASS).o $(LDLIBS)
 
 $(BENCHMARK2DNAMEF): ${SRC}/$(BENCHMARK2DNAMEF).f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ ${SRC}/$(BENCHMARK2DNAMEF).f90 $(PASS)f.o 
+	$(FC) $(FFLAGSOPT) -o $@ ${SRC}/$(BENCHMARK2DNAMEF).f90 $(PASS)f.o 
 
 $(BENCHMARK4DNAMEF): ${SRC}/$(BENCHMARK4DNAMEF).f90 $(PASS)f.o config.mk
-	$(FC) $(FFLAGS) -o $@ ${SRC}/$(BENCHMARK4DNAMEF).f90 $(PASS)f.o 
+	$(FC) $(FFLAGSOPT) -o $@ ${SRC}/$(BENCHMARK4DNAMEF).f90 $(PASS)f.o 
 
 $(PASS)f.o: ${SRC}/$(PASS)f.f90 config.mk
-	$(FC) -c -O0 -g -o $@ $<
+	$(FC) -c ${DBGFLAGS} -o $@ $<
 
 $(BENCHMARK2DNAME).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(MORECPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: ${SRC}/$(PASS).cc config.mk
 	$(CXX) -c -o $@ $<

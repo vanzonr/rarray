@@ -2,7 +2,8 @@
 # g++ 4.8+ settings
 #
 CXX=g++
-CXXFLAGS=-g -std=c++11 
+CXXFLAGS=-std=c++11 
+DBGFLAGS=-g
 CPPFLAGS=-Wall -Wshadow -Wconversion
 CPPFLAGSOPT=-DNDEBUG
 CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native
