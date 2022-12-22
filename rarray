@@ -884,9 +884,10 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
                                    const_cast<typename PointerArray<T,R>::noconst_type>(
                                      ptrs_ ));
         std::copy(old_eff_orig, old_eff_orig + noffsets_, copy_of_this.orig_);
-        std::ptrdiff_t shift = copy_of_this.orig_ - old_eff_orig; //// potential BUG: assumes pointers are aligned!
+        std::ptrdiff_t shift = reinterpret_cast<char*>(copy_of_this.orig_)
+                               - reinterpret_cast<char*>(old_eff_orig); 
         for (size_type i = 0; i < noffsets_ - ndataoffsets_; i++)
-            copy_of_this.orig_[i] += shift;
+            copy_of_this.orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(copy_of_this.orig_[i]) + shift);        
         copy_of_this.ptrs_ = reinterpret_cast<ptrs_type>(copy_of_this.orig_);
     } else {        
         copy_of_this.ptrs_ = ptrs_;
