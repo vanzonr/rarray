@@ -28,6 +28,8 @@ To compile and run the unit tests and benchmarks:
 
 The configure command should work if you have a recent gnu, intel, ibm or clang compiler.
 
+The tests require the valgrind utility.
+
 Usage
 =====
 

@@ -5,8 +5,8 @@
 CXX=icpc
 CXXFLAGS=-O0 -std=c++11
 DBGFLAGS=-g
-CPPFLAGS=-Wall -std=c++11
-CPPFLAGSOPT=-DNDEBUG -std=c++11 
+CPPFLAGS=-Wall
+CPPFLAGSOPT=-DNDEBUG 
 CXXFLAGSOPT=-O3 -xhost -ansi-alias -no-prec-div -funroll-loops
 FC=ifort
 FFLAGS=-O3 -xhost -ansi-alias -no-prec-div -funroll-loops

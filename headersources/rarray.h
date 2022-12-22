@@ -114,13 +114,13 @@ class rarray {
     RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);     // R=10
     RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10);// R=11
     RA_INLINE_ rarray(T* buffer, const size_type* anextent);                                                                                                                      // R>11
-    RA_INLINEF rarray(const rarray<T,R> &a);                                      // copy constructor
-    RA_INLINE_ rarray<T,R>& operator=(const rarray<T,R> &a);                      // array assignment operator
-    rarray(rarray<T,R>&& x);                                                      // move constructor
-    rarray<T,R>& operator=(rarray<T,R>&& x);                                      // move assignment operator
+    RA_INLINEF rarray(const rarray<T,R> &a) noexcept;                             // copy constructor
+    RA_INLINE_ rarray<T,R>& operator=(const rarray<T,R> &a) noexcept;             // array assignment operator
+    rarray(rarray<T,R>&& x) noexcept;                                             // move constructor
+    rarray<T,R>& operator=(rarray<T,R>&& x) noexcept;                             // move assignment operator
     RA_INLINE_ CommaOp<T> operator=(const T& e);                                  // Comma separated element assignment
     RA_INLINEF ~rarray();                                                         // destructor
-    constexpr int rank() const { return R; } 
+    constexpr int rank() const noexcept { return R; } 
     // Need constructor and assignment for expressions
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,R,AOP,A1,A2,A3>& e);
@@ -130,7 +130,7 @@ class rarray {
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator/=(const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator%=(const Expr<T,R,AOP,A1,A2,A3>& e);
     //
-    RA_INLINEF void clear();                                                      // clean up routine, make undefined
+    RA_INLINEF void clear() noexcept;                                              // clean up routine, make undefined
     RA_INLINE_ void reshape(size_type n0, RESIZE resize_allowed=RESIZE::NO);                                                                            // reshape shallow copy keeping the underlying data for R=1
     RA_INLINE_ void reshape(size_type n0, size_type n1, RESIZE resize_allowed=RESIZE::NO);                                                                                                                   // R=2
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, RESIZE resize_allowed=RESIZE::NO);                                                                                                     // R=3
@@ -144,24 +144,24 @@ class rarray {
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO); // R=11
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);                                                                                                                      // R>11
     //
-    RA_INLINE_ bool                is_clear()           const;                       // check if undefined
+    RA_INLINE_ bool                is_clear()           const noexcept;              // check if undefined
     RA_INLINE_ rarray<T,R>         copy()               const;                       // return a copy
     RA_INLINE_ size_type           extent(int i)        const;                       // retrieve array size in dimension i
-    RA_INLINE_ const size_type*    shape()              const;                       // retrieve array sizes in all dimensions
-    RA_INLINE_ size_type           size()               const;                       // retrieve the total number of elements  
-    RA_INLINE_ T*                  data();                                           // return a T* to the internal data
-    RA_INLINE_ const T*            data()               const;                       // return a T* to the internal data
-    RA_INLINE_ parray_t            ptr_array()          const;                       // return a T*const*.. acting similarly to this rarray when using []:
-    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const;                       // return a T**.. acting similarly to this rarray when using []:    
-    RA_INLINE_ const rarray<const T,R>&  const_ref()          const;                       // create a reference to this that treats elements as constant:
+    RA_INLINE_ const size_type*    shape()              const noexcept;              // retrieve array sizes in all dimensions
+    RA_INLINE_ size_type           size()               const noexcept;              // retrieve the total number of elements  
+    RA_INLINE_ T*                  data()               noexcept;                    // return a T* to the internal data
+    RA_INLINE_ const T*            data()               const noexcept;              // return a T* to the internal data
+    RA_INLINE_ parray_t            ptr_array()          const noexcept;              // return a T*const*.. acting similarly to this rarray when using []:
+    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const noexcept;              // return a T**.. acting similarly to this rarray when using []:    
+    RA_INLINE_ const rarray<const T,R>&  const_ref()    const noexcept;              // create a reference to this that treats elements as constant:
     RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
     //
-    RA_INLINE_ iterator            begin();                                          // start of the content
-    RA_INLINE_ const_iterator      begin()              const;                       // start of the content, when *this is constant
-    RA_INLINE_ const_iterator      cbegin()             const;                       // start of the content, when *this can be constant and you need to be explicit
-    RA_INLINE_ iterator            end();                                            // end of the content
-    RA_INLINE_ const_iterator      end()                const;                       // end of the content, when *this is constant
-    RA_INLINE_ const_iterator      cend()               const;                       // end of the content, when *this is constant and you need to be explicit about that
+    RA_INLINE_ iterator            begin()              noexcept;                    // start of the content
+    RA_INLINE_ const_iterator      begin()              const noexcept;              // start of the content, when *this is constant
+    RA_INLINE_ const_iterator      cbegin()             const noexcept;              // start of the content, when *this can be constant and you need to be explicit
+    RA_INLINE_ iterator            end()                noexcept;                    // end of the content
+    RA_INLINE_ const_iterator      end()                const noexcept;              // end of the content, when *this is constant
+    RA_INLINE_ const_iterator      cend()               const noexcept;              // end of the content, when *this is constant and you need to be explicit about that
     RA_INLINE_ size_type           index(const T& a, int i) const;                   // if a an element in the array, get index i of that element
     RA_INLINE_ size_type           index(const iterator& iter, int i) const;         // if i points at an element in the array, get index i of that element
     RA_INLINE_ std::array<size_type,R> index(const T& a) const;           // if a an element in the array, get the indices of that element
@@ -172,8 +172,8 @@ class rarray {
     // access elements r
     RA_INLINEF rarray<T,R-1> at(size_type i);
     RA_INLINEF const rarray<T,R-1> at(size_type i) const;
-    RA_INLINEF operator typename PointerArray<T,R>::type ();  // makes a[..][..] work, as well as automatic conversion
-    RA_INLINEF operator typename PointerArray<const T,R>::type () const; 
+    RA_INLINEF operator typename PointerArray<T,R>::type () noexcept;  // makes a[..][..] work, as well as automatic conversion
+    RA_INLINEF operator typename PointerArray<const T,R>::type () const noexcept ; 
     // for expressions
     RA_INLINEF const T& leval(size_type i) const;
   private:
@@ -211,7 +211,7 @@ class rarray<T,0> {
   public:
     ~rarray() {}
     RA_INLINEF operator T& () { return buffer_[0]; }
-    RA_INLINEF operator const T& () const { return buffer_[0]; }
+    RA_INLINEF operator const T& () const noexcept { return buffer_[0]; }
     RA_INLINE_ T& operator=(const T& e) { return buffer_[0] = e; }
     // for expressions
     RA_INLINEF const T& leval(size_type i) const;
@@ -525,9 +525,9 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
 }
 
 namespace ra {
-RA_INLINE_ size_type mul(const size_type * x, int n) { ////// TODO: better integer type
+RA_INLINE_ size_type mul(const size_type * x, size_t n) noexcept {
     size_type result = 1;
-    for (int i=0;i<n;i++)
+    for (size_t i=0;i<n;i++)
         result *= x[i];
     return result;
 }
@@ -536,17 +536,17 @@ RA_INLINE_ size_type mul(const size_type * x, int n) { ////// TODO: better integ
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(const size_type* anextent)
   : buffer_(mul(anextent,R)),
-    shape_((const std::array<size_type,R>&)(*anextent), buffer_.begin())
+    shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer_.begin())
 {}
 
 template<typename T, int R> RA_INLINE_ 
 ra::rarray<T,R>::rarray(T* buffer, const size_type* anextent)
   : buffer_(mul(anextent,R), buffer),
-    shape_((const std::array<size_type,R>&)(*anextent), buffer)
+    shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer)
 {}
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::rarray(const rarray<T,R> &a)
+ra::rarray<T,R>::rarray(const rarray<T,R> &a) noexcept
   : buffer_(a.buffer_),
     shape_(a.shape_)
 {
@@ -554,7 +554,7 @@ ra::rarray<T,R>::rarray(const rarray<T,R> &a)
 }
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::rarray(rarray<T,R>&& x)
+ra::rarray<T,R>::rarray(rarray<T,R>&& x) noexcept
   : buffer_(std::move(x.buffer_)),
     shape_(std::move(x.shape_))
 {
@@ -564,7 +564,7 @@ ra::rarray<T,R>::rarray(rarray<T,R>&& x)
 //
 
 template<typename T, int R> RA_INLINE_ 
-void ra::rarray<T,R>::clear()
+void ra::rarray<T,R>::clear() noexcept
 {
     shape_ = shared_shape<T,R>();
     buffer_ = shared_buffer<T>();
@@ -822,7 +822,7 @@ ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_
-bool ra::rarray<T,R>::is_clear() const
+bool ra::rarray<T,R>::is_clear() const noexcept
 {
     // check if empty
     return buffer_.cbegin() == nullptr;
@@ -864,51 +864,51 @@ const ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i) const
 }
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::operator typename PointerArray<T,R>::type () 
+ra::rarray<T,R>::operator typename PointerArray<T,R>::type () noexcept 
 {
     return shape_.ptrs(); // makes a[..][..] = ... work.
 }
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::operator typename PointerArray<const T,R>::type () const 
+ra::rarray<T,R>::operator typename PointerArray<const T,R>::type () const noexcept
 {
     return shape_.ptrs(); // makes a[..][..] work.
 }
 
 template<typename T, int R> RA_INLINE_
-const ra::size_type* ra::rarray<T,R>::shape() const
+const ra::size_type* ra::rarray<T,R>::shape() const noexcept
 {
     // retrieve array sizes in all dimensions
-    return &(shape_.extent()[0]);
+    return &(shape_.extent()[0]); 
 }
 
 template<typename T, int R> RA_INLINE_
-typename ra::rarray<T,R>::parray_t ra::rarray<T,R>::ptr_array() const 
+typename ra::rarray<T,R>::parray_t ra::rarray<T,R>::ptr_array() const noexcept
 {
     return shape_.ptrs();
 }
 
 template<typename T, int R> RA_INLINE_
-typename ra::rarray<T,R>::noconst_parray_t ra::rarray<T,R>::noconst_ptr_array() const 
+typename ra::rarray<T,R>::noconst_parray_t ra::rarray<T,R>::noconst_ptr_array() const noexcept
 {
     return const_cast<noconst_parray_t>(shape_.ptrs());
 }
 
 template<typename T, int R> RA_INLINE_
-const typename ra::rarray<const T,R>& ra::rarray<T,R>::const_ref() const 
+const typename ra::rarray<const T,R>& ra::rarray<T,R>::const_ref() const noexcept
 {
     return reinterpret_cast<const rarray<const T,R>&>(*this);
 }
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>& ra::rarray<T,R>::operator=(const rarray<T,R> &a) 
+ra::rarray<T,R>& ra::rarray<T,R>::operator=(const rarray<T,R> &a) noexcept
 {
     buffer_ = a.buffer_;
     shape_ = a.shape_;
     return *this;
 }
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>& ra::rarray<T,R>::operator=(rarray<T,R> &&a) 
+ra::rarray<T,R>& ra::rarray<T,R>::operator=(rarray<T,R> &&a) noexcept
 {
     buffer_ = std::move(a.buffer_);
     shape_ = std::move(a.shape_);
@@ -922,20 +922,20 @@ void ra::rarray<T,R>::fill(const T& value) {
 }
 
 template<typename T, int R> RA_INLINEF
-ra::size_type ra::rarray<T,R>::size() const {
+ra::size_type ra::rarray<T,R>::size() const noexcept {
     // retrieve the total number of elements
     return shape_.size(); 
 }
 
 template<typename T, int R> RA_INLINEF
-T* ra::rarray<T,R>::data()
+T* ra::rarray<T,R>::data() noexcept
 {
     // return a T* to the internal data
     return buffer_.begin(); 
 }
 
 template<typename T, int R> RA_INLINEF
-const T* ra::rarray<T,R>::data() const
+const T* ra::rarray<T,R>::data() const noexcept
 {
     // return a T* to the internal data
     return buffer_.begin(); 
@@ -949,37 +949,37 @@ ra::size_type ra::rarray<T,R>::extent(int i) const
 }
 
 template<typename T, int R> RA_INLINEF
-typename ra::rarray<T,R>::iterator ra::rarray<T,R>::begin()
+typename ra::rarray<T,R>::iterator ra::rarray<T,R>::begin() noexcept
 {
     // start of the content
     return buffer_.begin();
 }
 template<typename T, int R> RA_INLINEF
-typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::begin() const
+typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::begin() const noexcept
 {
     // start of the content, when *this is constant
     return buffer_.begin();
 }
 template<typename T, int R> RA_INLINEF
-typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::cbegin() const
+typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::cbegin() const noexcept
 {
     // start of the content, when *this can be constant and you need to be explicit
     return buffer_.cbegin();
 }
 template<typename T, int R> RA_INLINEF
-typename ra::rarray<T,R>::iterator ra::rarray<T,R>::end()
+typename ra::rarray<T,R>::iterator ra::rarray<T,R>::end() noexcept
 {
     // end of the content
     return buffer_.end();
 }
 template<typename T, int R> RA_INLINEF
-typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::end() const
+typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::end() const noexcept
 {
     // end of the content, when *this is constant
     return buffer_.end();
 }
 template<typename T, int R> RA_INLINEF
-typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::cend() const
+typename ra::rarray<T,R>::const_iterator ra::rarray<T,R>::cend() const noexcept
 {
     // end of the content, when *this is constant and you need to be explicit about that
     return buffer_.cend();

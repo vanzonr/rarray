@@ -5,7 +5,7 @@ rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
 compilers to generate fast code.
 
-The latest release version is 2.3.0.
+The latest release version is 2.4.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -92,24 +92,35 @@ Release History and Changes
    Returned to a single-header implementation by incorporating the
    rarrayio header into the rarray header.
 
+ * Version 2.4.0, December 2022
+
+   Internal refactoring focussed on eliminating warnings, dead code,
+   version tracking in code, and exception safety.
+
+   Fixed bug for compound data types.
+   
+   Support added for Intel OneAPI's icpx C++ compiler.
 
 Known issues
 ============
 
   * Defining RA_BOUNDSCHECK only activates partial bounds checking
     because some the optional but expensive index-range chekcing
-    capability got lost in the rewrite.
+    capability got lost in the rewrite from v1.2 to v2.0+
 
-  * To get a sub-array, you need to use the rarray::at() member
-    function. instead of square brackets.
+  * To get a subarray, you need to use the rarray::at() member
+    function, instead of square brackets.
 
-  * Rarray objects automatically convert into T*const*... pointers.
+  * Rarray objects automatically convert into T*const*... pointers to
+    make square brackets work.
 
-  * Cannot force aligned of data yet.
+  * Cannot force alignment of data yet.
 
-  * Using the RARRAY macro followed copy a copy constructor fails for
-    const types.
+  * Using the RARRAY macro may fails for const types.
 
+  * The behavior of rarrays of types whose destructor throws an
+    exception is undefined (but really, destructors should not throw
+    exceptions).
 
 Reporting Bugs
 ==============
@@ -128,7 +139,8 @@ In the top directory
 rarray                 Header file defining runtime arrays (produced from headersources)
 
 rarrayio               Header file defining I/O for rarrays (produced from headersources)
-
+                       Note: Unnecessary since version 2.3.0.
+                       
 rarraydoc.tex          LaTeX source of the documentation
 
 rarraydoc.pdf          Pdf format of the documentation
@@ -137,7 +149,14 @@ configure              A non-autotools configure script for compiling
                        benchmarks; Creates config.mk
 
 Makefile               Makefile to build unit tests, benchmarks, and
-                       documentation pdf; Uses config.mk 
+                       documentation pdf; Uses config.mk if it exists
+
+VERSION                Contains the tag of most recently release version.
+                       Note: If cloned from the github repository, the
+                             code may differ due to subsequent
+                             commits. Do a "git checkout TAG",
+                             e.g. "git checkout v2.4.0" to get the
+                             exact release.
 
 WARRANTY               File that expresses that there is no warranty
 
@@ -171,6 +190,8 @@ shared_buffer.h        Internal header that implements a reference-counted array
 shared_shape.h         Internal header that implements a reference-counted shape structure
 
 offsets.h              Internal header to compute pointer offsets within the shape structure
+
+versionheader.h        To include the rarray version in the header (since v2.4.0)
 
 
 In the directory 'src'
@@ -218,6 +239,8 @@ compiler.clang++.mk
 compiler.g++.mk        
 
 compiler.icpc.mk
+
+compiler.icpx.mk
 
 compiler.xlC.mk
 

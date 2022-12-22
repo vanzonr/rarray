@@ -67,14 +67,14 @@ class shared_shape
     typedef ssize_t size_type;
 
     // constructors 
-    shared_shape();                                         // non-functional shape
+    shared_shape() noexcept;                                      // non-functional shape
     shared_shape(const std::array<size_type,R>&anextent, T*adata);// construct shape 
-    shared_shape(const shared_shape& other);                // copy constructor
-    shared_shape(shared_shape&& other);                     // move constructor
+    shared_shape(const shared_shape& other) noexcept;             // copy constructor
+    shared_shape(shared_shape&& other) noexcept;                  // move constructor
 
     // assignment
-    shared_shape& operator=(const shared_shape& other);     // copy
-    void operator=(shared_shape&& other);                   // move
+    shared_shape& operator=(const shared_shape& other) noexcept; // copy
+    void operator=(shared_shape&& other) noexcept;               // move
 
     // destructor
     ~shared_shape();
@@ -87,11 +87,11 @@ class shared_shape
     void reshape(const std::array<size_type,R>&newextent);  // change shape (not the data)
 
     // get out pointers
-    ptrs_type ptrs() const;                                 // get pointer-to-pointer structure
-    T* data() const;                                        // get pointer to the data
-    size_type size() const;                                 // get total number of elements
+    ptrs_type ptrs() const noexcept;                        // get pointer-to-pointer structure
+    T* data() const noexcept;                               // get pointer to the data
+    size_type size() const noexcept;                        // get total number of elements
     size_type extent(int i) const;                          // get extent in dimension i
-    const std::array<size_type,R>& extent() const;          // get total extent array
+    const std::array<size_type,R>& extent() const noexcept; // get total extent array
     
     // get subshape
     shared_shape<T,R-1> at(size_type r) const;
@@ -106,9 +106,9 @@ class shared_shape
     size_type noffsets_;
     size_type ndataoffsets_;
 
-    void uninit();
-    void incref() const;
-    void decref();
+    void uninit() noexcept;
+    void incref() const noexcept;
+    void decref() noexcept;
     void copy_before_write();
 
     template<class U, int S> friend class shared_shape; // for "at"
@@ -123,7 +123,6 @@ class shared_shape<T,0> {
   public:
     typedef T ptrs_type;
     typedef ssize_t size_type;
-    //shared_shape() {}
   private:
     std::array<size_type,0> extent_;
     ptrs_type ptrs_;
@@ -131,14 +130,14 @@ class shared_shape<T,0> {
     void***   orig_;
     size_type noffsets_;
     size_type ndataoffsets_;
-    void incref() {}
+    void incref() const noexcept {}
     template<class U, int S> friend class shared_shape; // for "at"
 };
     
 /***************************************************************************/
 
 template<class T, int R>
-shared_shape<T,R>::shared_shape()
+shared_shape<T,R>::shared_shape() noexcept
 {
     // uninitialized shape
     uninit();
@@ -150,19 +149,25 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
 {
     // construct shape 
     Offsets P({extent_.begin(),extent_.end()});
-    orig_ = P.apply_offsets(adata);
+    orig_ = P.apply_offsets(adata); // this could throw, but only if it's allocation fails, so no resource leak
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
     noffsets_ = P.get_num_offsets();
     ndataoffsets_ = P.get_num_data_offsets();
     if (R>1) {
+      try {
         refs_ = new std::atomic<int>(1);
+      }
+      catch(...) {
+        delete[] orig_;
+        throw;
+      }
     } else {
         orig_ = nullptr;
     }
 }
 
 template<class T, int R>
-shared_shape<T,R>::shared_shape(const shared_shape& other)
+shared_shape<T,R>::shared_shape(const shared_shape& other) noexcept
   : extent_(other.extent_),
     ptrs_(other.ptrs_),
     refs_(other.refs_),
@@ -175,7 +180,7 @@ shared_shape<T,R>::shared_shape(const shared_shape& other)
 }
 
 template<class T, int R>
-shared_shape<T,R>::shared_shape(shared_shape&& other)
+shared_shape<T,R>::shared_shape(shared_shape&& other) noexcept
   : extent_(other.extent_),
     ptrs_(other.ptrs_),
     refs_(other.refs_),
@@ -188,7 +193,7 @@ shared_shape<T,R>::shared_shape(shared_shape&& other)
 }
 
 template<class T, int R>
-shared_shape<T,R>& shared_shape<T,R>::operator=(const shared_shape& other)
+shared_shape<T,R>& shared_shape<T,R>::operator=(const shared_shape& other) noexcept
 {
     // copy assignment (shallow with ref counting)
     if (this != &other) {
@@ -205,7 +210,7 @@ shared_shape<T,R>& shared_shape<T,R>::operator=(const shared_shape& other)
 }
 
 template<class T, int R>
-void shared_shape<T,R>::operator=(shared_shape&& other)
+void shared_shape<T,R>::operator=(shared_shape&& other) noexcept
 {
     // move assignment
     decref();
@@ -239,7 +244,7 @@ struct _data_from_ptrs_noffsets_ndataoffsets {
     static
     T* call(typename PointerArray<T,R>::type ptrs,
             typename shared_shape<T,R>::size_type noffsets,
-            typename shared_shape<T,R>::size_type ndataoffsets)
+            typename shared_shape<T,R>::size_type ndataoffsets) noexcept
     {
         return reinterpret_cast<T*>(
                   const_cast<typename PointerArray<T,R-1>::noconst_type>(
@@ -253,14 +258,14 @@ template<class T>
 struct _data_from_ptrs_noffsets_ndataoffsets<T,1> {
     static T* call (typename PointerArray<T,1>::type ptrs,
                     typename shared_shape<T,1>::size_type noffsets,
-                    typename shared_shape<T,1>::size_type ndataoffsets)
+                    typename shared_shape<T,1>::size_type ndataoffsets) noexcept
     {
         return reinterpret_cast<T*>(ptrs);
     }
 };
 
 template<class T, int R>
-T* shared_shape<T,R>::data() const
+T* shared_shape<T,R>::data() const noexcept
 {
     // returns a pointer to the first element of the data
     // return (T*)(ptrs_[noffsets_ - ndataoffsets_]);
@@ -268,7 +273,7 @@ T* shared_shape<T,R>::data() const
 }
 
 template<class T, int R>
-typename shared_shape<T,R>::size_type shared_shape<T,R>::size() const
+typename shared_shape<T,R>::size_type shared_shape<T,R>::size() const noexcept
 {
     // get total number of elements
     return ndataoffsets_ * extent_[R-1];
@@ -279,11 +284,13 @@ template<class T, int R>
 typename shared_shape<T,R>::size_type shared_shape<T,R>::extent(int i) const
 {
     // get extent in dimension i
+    if (i < 0 or i >= R)
+        throw std::out_of_range("shared_shape::extent(int)");
     return extent_[i];
 }
 
 template<class T, int R> 
-const std::array<typename shared_shape<T,R>::size_type,R>& shared_shape<T,R>::extent() const {
+const std::array<typename shared_shape<T,R>::size_type,R>& shared_shape<T,R>::extent() const noexcept {
     // get total extent array
     return extent_;
 }
@@ -323,7 +330,7 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
                                    const_cast<typename PointerArray<T,R>::noconst_type>(
                                      ptrs_ ));
         std::copy(old_eff_orig, old_eff_orig + noffsets_, copy_of_this.orig_);
-        std::ptrdiff_t shift = copy_of_this.orig_ - old_eff_orig;
+        std::ptrdiff_t shift = copy_of_this.orig_ - old_eff_orig; //// potential BUG: assumes pointers are aligned!
         for (size_type i = 0; i < noffsets_ - ndataoffsets_; i++)
             copy_of_this.orig_[i] += shift;
         copy_of_this.ptrs_ = reinterpret_cast<ptrs_type>(copy_of_this.orig_);
@@ -357,20 +364,20 @@ template<class T, int R>
 void shared_shape<T,R>::reshape(const std::array<size_type,R>&newextent)
 {
     if (newextent != extent_) {
-        // should perhaps check it new extent is even valid
+        // should check if new extent is even valid
         *this = shared_shape<T,R>(newextent, data());
     }
 }
 
 template<class T, int R>
-typename shared_shape<T,R>::ptrs_type shared_shape<T,R>::ptrs() const
+typename shared_shape<T,R>::ptrs_type shared_shape<T,R>::ptrs() const noexcept
 {
     // get pointer-to-pointer structure
     return ptrs_;
 }
 
 template<class T, int R>
-void shared_shape<T,R>::uninit()
+void shared_shape<T,R>::uninit() noexcept
 {
     // put this object into an uninitialized state
     ptrs_         = nullptr;
@@ -382,7 +389,7 @@ void shared_shape<T,R>::uninit()
 }
 
 template<class T, int R>
-void shared_shape<T,R>::incref() const
+void shared_shape<T,R>::incref() const noexcept
 {
     // increase the reference counter
     if (refs_)
@@ -390,7 +397,7 @@ void shared_shape<T,R>::incref() const
 }
 
 template<class T, int R>
-void shared_shape<T,R>::decref()
+void shared_shape<T,R>::decref() noexcept // assuming the T::~T() does not throw   
 {
     // decrease the reference counter
     if (refs_) {
