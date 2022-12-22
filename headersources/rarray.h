@@ -837,7 +837,7 @@ ra::rarray<T,R> ra::rarray<T,R>::copy() const {
     clone.buffer_ = buffer_.copy();
     // clone.shape_ = ra::shared_shape<T,R>(shape_.extent(), clone.buffer_.begin());
     clone.shape_ = shape_.copy();
-    clone.shape_.relocate(clone.buffer_.begin()); // something is wrong with relocate for some types
+    clone.shape_.relocate(clone.buffer_.begin());
     return clone;
 }
 

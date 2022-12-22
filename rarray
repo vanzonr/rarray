@@ -853,11 +853,11 @@ void shared_shape<T,R>::relocate(T* newdata)
     if (R==1) {
         ptrs_ = reinterpret_cast<ptrs_type>(newdata);
     } else if (R>1) {
-        std::ptrdiff_t shift = newdata - data();
+        std::ptrdiff_t shift = reinterpret_cast<char*>(newdata) - reinterpret_cast<char*>(data());
         if (shift != 0) {
             copy_before_write();
             for (size_type i = noffsets_ - ndataoffsets_; i < noffsets_; i++)
-                orig_[i] = reinterpret_cast<void**>(reinterpret_cast<T*>(orig_[i]) + shift);
+                orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(orig_[i]) + shift);
         }
     }
 }
@@ -1701,7 +1701,7 @@ ra::rarray<T,R> ra::rarray<T,R>::copy() const {
     rarray<T,R> clone;
     clone.buffer_ = buffer_.copy();
     clone.shape_ = shape_.copy();
-    clone.shape_.relocate(clone.buffer_.begin()); // something is wrong with relocate for some types
+    clone.shape_.relocate(clone.buffer_.begin());
     return clone;
 }
 

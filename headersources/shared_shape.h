@@ -299,11 +299,11 @@ void shared_shape<T,R>::relocate(T* newdata)
         ptrs_ = reinterpret_cast<ptrs_type>(newdata);
     } else if (R>1) {
         // let shape point to other datablock
-        std::ptrdiff_t shift = newdata - data();
+        std::ptrdiff_t shift = reinterpret_cast<char*>(newdata) - reinterpret_cast<char*>(data());
         if (shift != 0) {
             copy_before_write();
             for (size_type i = noffsets_ - ndataoffsets_; i < noffsets_; i++)
-                orig_[i] = reinterpret_cast<void**>(reinterpret_cast<T*>(orig_[i]) + shift);
+                orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(orig_[i]) + shift);
         }
     }
 }
