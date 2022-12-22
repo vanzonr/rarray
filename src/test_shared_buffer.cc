@@ -133,7 +133,6 @@ int test_shared_buffer_main()
         assert(a.refs_ != nullptr);
         assert(*(a.refs_) == 1);
         assert(a.size_ == N);
-        int i = 0;
         for (int j=0; j<N; j++) {
             a[j] = j;
             assert(a[j] == j);

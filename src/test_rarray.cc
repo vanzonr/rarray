@@ -29,6 +29,9 @@ int main()
     rarray<double,2> a(100,100);
     double *const*z = a;
     a[2][3] = 4.4;
-    return !(int(a[2][3])==4);
+    if (z[2][3]==4.4)
+        return !(int(a[2][3])==4);
+    else
+        return 1;
 }
 

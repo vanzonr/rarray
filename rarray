@@ -1193,7 +1193,7 @@ class Xrange {
     T a_, b_, d_;
   public:
     Xrange(T a, T b, T d)
-        : a_(a), b_(a + static_cast<T>(static_cast<size_t>(std::ceil((b-a)/static_cast<double>(d)))*d)), d_(d) 
+        : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d) 
     {}
     const_iterator begin() const {
         return const_iterator(a_, d_, b_);
