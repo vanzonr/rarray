@@ -7,7 +7,7 @@
 // Writes result to standard out.
 //
 // Usage:
-//   hardinclude INPUTFILE INCLUDEFILE1 [INCLUDEFILE2 ...]
+//   hardinclude [-c] INPUTFILE INCLUDEFILE1 [INCLUDEFILE2 ...]
 //
 // Copyright (c) 2017-2022  Ramses van Zon
 //
@@ -61,6 +61,28 @@ bool iscommentline(const std::string& line)
     while (i < line.size() and line[i] == ' ')
         i++;
     return line.substr(i,2) == std::string("//");
+}
+
+// find the end of the code line, not counting trailing comments or spaces
+// note: not prepared for quoted strings
+size_t endofcodeline(const std::string& line)
+{
+    size_t end;
+    if (iscommentline(line)) {
+        end = 0;
+    } else {
+        size_t lastslashi = line.size()-1;
+        while (lastslashi > 0 and line[lastslashi] != '/')
+            lastslashi--;
+        if (lastslashi==0 or line[lastslashi] != '/' or line[lastslashi-1] != '/') {
+            end = line.size();
+        } else {
+            end = lastslashi-1;
+        }
+    }
+    // discard trailing spaces
+    while (end > 0 and (line[end-1]==' ' or line[end-1]=='\t')) end--;
+    return end;
 }
 
 // to process one file (allowing for recursive application)
@@ -150,17 +172,24 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         }
         if (include != NOTFOUND) {
           if (not alreadyincluded[include]) {
+            if (continueat != line.size())
             cout << "// " << line.c_str()+continueat << "\n";
-            cout << "//" << INCLUDETAG << " \"" << includefilename << "\"\n";
+            cout << "//begin " << INCLUDETAG << " \"" << includefilename << "\"\n";
             process_one_file(includefilename, includefiles, alreadyincluded, headercommentsdone);
-            cout << "//end of " << INCLUDETAG << " \"" << includefilename << "\"\n\n";
+            cout << "//end " << INCLUDETAG << " \"" << includefilename << "\"\n\n";
             alreadyincluded[include] = true;
           } else {
+            if (continueat != line.size())
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//" << INCLUDETAG << " \"" << includefilename << "\" was already done above\n";
           }
         } else {
-            cout << line << '\n';
+            auto tohere=endofcodeline(line);
+            if (not iscommentline(line)) {
+                cout << line.substr(0,tohere) << '\n';
+            } else {
+                cout << line << '\n';
+            }
         }
     }
 

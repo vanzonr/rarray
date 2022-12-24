@@ -83,13 +83,13 @@ help:
 	@echo "  To rebuild the documentation:           make doc"
 	@echo ""
 
-.PHONY: headers test benchmarks doc valgrindtest install clean distclean run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite list benchmark2d benchmark4d 
+.PHONY: headers test benchmarks doc valgrindtest install clean distclean run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite list benchmark2d benchmark4d run_testsuite run_testsuite_bc
 
 headers: rarray rarrayio
 
 all: headers test_shared_buffer test_offsets test_shared_shape test_rarray testsuite
 
-test: run_testsuite run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite
+test: run_testsuite run_testsuite_bc run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite
 
 benchmarks: benchmark2d benchmark4d
 
@@ -133,6 +133,12 @@ testsuite: testsuite.o
 
 testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -g -O0 -c -o $@ $<
+
+testsuite_bc: testsuite_bc.o
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
+
+testsuite_bc.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -DRA_BOUNDSCHECK -g -O0 -c -o $@ $<
 
 catch.hpp:
 	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
@@ -185,6 +191,9 @@ run_test_rarray: test_rarray
 
 run_testsuite: testsuite
 	./testsuite
+
+run_testsuite_bc: testsuite_bc
+	./testsuite_bc
 
 run_valgrind_testsuite: testsuite
 	${VALGRIND} ./testsuite

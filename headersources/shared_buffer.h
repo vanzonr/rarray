@@ -30,6 +30,7 @@
 #ifndef SHAREDBUFFERH
 #define SHAREDBUFFERH
 
+#include "rarraymacros.h"
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
@@ -55,7 +56,7 @@ class shared_buffer
     // constructors 
     shared_buffer() noexcept;
     explicit shared_buffer(size_type asize);
-    shared_buffer(size_type asize, T* adata) noexcept;
+    shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true);
     shared_buffer(const shared_buffer& other) noexcept;
     shared_buffer(shared_buffer&& from) noexcept;
     
@@ -67,8 +68,8 @@ class shared_buffer
     ~shared_buffer() noexcept;
 
     // element access without bounds checking
-    const T& operator[](size_type index) const noexcept;
-    T& operator[](size_type index) noexcept;
+    const T& operator[](size_type index) const RA_NOEXCEPT(true);
+    T& operator[](size_type index) RA_NOEXCEPT(true);
     
     // element access with bounds checking
     const T& at(size_type index) const;
@@ -162,7 +163,7 @@ shared_buffer<T>::shared_buffer() noexcept
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type asize) noexcept(false)
+shared_buffer<T>::shared_buffer(size_type asize) 
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
     // construct buffer, exception safe
@@ -181,10 +182,11 @@ shared_buffer<T>::shared_buffer(size_type asize) noexcept(false)
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type asize, T* adata) noexcept
+shared_buffer<T>::shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
   : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr)
 {
     // construct buffer as a wrapper
+    RA_CHECKORSAY(adata, "nullptr given as data");
 }
 
 template<class T>
@@ -229,14 +231,16 @@ void shared_buffer<T>::operator=(shared_buffer<T>&& from) noexcept
 }
 
 template<class T>
-const T& shared_buffer<T>::operator[](size_type index) const noexcept
+const T& shared_buffer<T>::operator[](size_type index) const RA_NOEXCEPT(true)
 {
+    RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
     return data_[index];
 }
 
 template<class T>
-T& shared_buffer<T>::operator[](size_type index) noexcept
+T& shared_buffer<T>::operator[](size_type index) RA_NOEXCEPT(true)
 {
+    RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
     return data_[index];
 }
 

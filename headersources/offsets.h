@@ -26,6 +26,7 @@
 #ifndef OFFSETSH
 #define OFFSETSH
 
+#include "rarraymacros.h"
 #include <cstdlib>
 #include <vector>
 #include <type_traits>

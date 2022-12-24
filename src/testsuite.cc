@@ -1151,9 +1151,9 @@ TEST_CASE("test1dautoconversions")
 {
     const int n=9;
     float b[n] = {1,2,3,4,5,6,7,8,9};
-    const rarray<float,1> a = RARRAY(b);
+    const rarray<float,1> a(b);
     REQUIRE(EXTENT(a,0)==EXTENT(b,0));
-    std::string s = print1d(RARRAY(b));
+    std::string s = print1d(rarray<float,1>(b));
     REQUIRE(s=="1 2 3 4 5 6 7 8 9");
 }
 
@@ -1566,10 +1566,10 @@ TEST_CASE("test2dautoconversion")
     const int m=7;
     float b[n][m] = {{1,2,3,4,5,6,7},
                      {8,9,8,7,6,5,4}};
-    const rarray<float,2> a = RARRAY(b);
+    const rarray<float,2> a(b);
     REQUIRE(EXTENT(a,0)==EXTENT(b,0));
     REQUIRE(EXTENT(a,1)==EXTENT(b,1));
-    std::string s = print2d(RARRAY(b));
+    std::string s = print2d(rarray<float,2>(b));
     REQUIRE(s=="1 2 3 4 5 6 7\n8 9 8 7 6 5 4\n");
     
 }
@@ -1603,11 +1603,11 @@ TEST_CASE("test3dautoconversion")
     const int l=3;
     float b[n][m][l] = {{{1,2,3},{2,3,4},{3,4,5},{4,5,6},{5,6,7},{6,7,8},{7,8,9}},
                         {{8,7,6},{9,8,7},{8,7,6},{7,6,5},{6,5,4},{5,4,3},{4,3,2}}};
-    const rarray<float,3> a = RARRAY(b);
+    const rarray<float,3> a(b);
     REQUIRE(EXTENT(a,0)==EXTENT(b,0));
     REQUIRE(EXTENT(a,1)==EXTENT(b,1));
     REQUIRE(EXTENT(a,2)==EXTENT(b,2));
-    std::string s = print3d(RARRAY(b));
+    std::string s = print3d(rarray<float,3>(b));
     REQUIRE(s=="{1,2,3}{2,3,4}{3,4,5}{4,5,6}{5,6,7}{6,7,8}{7,8,9}\n"
              "{8,7,6}{9,8,7}{8,7,6}{7,6,5}{6,5,4}{5,4,3}{4,3,2}\n");
 }
@@ -1653,12 +1653,12 @@ TEST_CASE("test4dautoconversion")
         {{{1,2,3},{2,3,6},{3,6,5},{6,5,9},{5,9,7},{9,7,8},{7,8,9}},
          {{8,7,9},{9,8,7},{8,7,9},{7,9,5},{9,5,6},{5,6,3},{6,3,2}}}
     };
-    const rarray<float,4> a = RARRAY(b);
+    const rarray<float,4> a(b);
     REQUIRE(EXTENT(a,0)==EXTENT(b,0));
     REQUIRE(EXTENT(a,1)==EXTENT(b,1));
     REQUIRE(EXTENT(a,2)==EXTENT(b,2));
     REQUIRE(EXTENT(a,3)==EXTENT(b,3));
-    std::string s = print4d(RARRAY(b));
+    std::string s = print4d(rarray<float,4>(b));
     REQUIRE(s==
           "{[1 2 3][2 3 4][3 4 5][4 5 6][5 6 7][6 7 8][7 8 9]}{[8 7 6][9 8 7][8 7 6][7 6 5][6 5 4][5 4 3][4 3 2]}\n"
           "{[1 2 3][2 3 6][3 6 5][6 5 9][5 9 7][9 7 8][7 8 9]}{[8 7 9][9 8 7][8 7 9][7 9 5][9 5 6][5 6 3][6 3 2]}\n");
@@ -1727,13 +1727,13 @@ TEST_CASE("test5dautoconversion")
              {{8,7,9},{9,8,7},{8,7,9},{7,9,5},{9,5,6},{5,6,7},{6,7,2}}}
         }
     };
-    const rarray<float,5> a = RARRAY(b);
+    const rarray<float,5> a(b);
     REQUIRE(EXTENT(a,0)==EXTENT(b,0));
     REQUIRE(EXTENT(a,1)==EXTENT(b,1));
     REQUIRE(EXTENT(a,2)==EXTENT(b,2));
     REQUIRE(EXTENT(a,3)==EXTENT(b,3));
     REQUIRE(EXTENT(a,4)==EXTENT(b,4));
-    std::string s = print5d(RARRAY(b));
+    std::string s = print5d(rarray<float,5>(b));
     REQUIRE(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
           "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n");
@@ -1826,21 +1826,21 @@ TEST_CASE("test6dautoconversion")
         }
         }
     };    
-    const rarray<float,6> a = RARRAY(b);
-    const rarray<float,6> c = RARRAY(a);
+    const rarray<float,6> a(b);
+    const rarray<float,6> c(a);
     REQUIRE(EXTENT(a,0)==EXTENT(b,0));
     REQUIRE(EXTENT(a,1)==EXTENT(b,1));
     REQUIRE(EXTENT(a,2)==EXTENT(b,2));
     REQUIRE(EXTENT(a,3)==EXTENT(b,3));
     REQUIRE(EXTENT(a,4)==EXTENT(b,4));
     REQUIRE(EXTENT(a,5)==EXTENT(b,5));
-    std::string s = print6d(RARRAY(b));
+    std::string s = print6d(rarray<float,6>(b));
     REQUIRE(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
 "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n\n"
 "{[(1,-2,-3)(2,-3,-4)(3,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-3)(4,-3,-2)]}{[(1,-2,-3)(2,-3,-6)(3,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-3)(6,-3,-2)]}\n"
 "{[(1,-2,-7)(2,-7,-4)(7,-4,-5)(4,-5,-6)(5,-6,-7)(6,-7,-8)(7,-8,-9)][(8,-7,-6)(9,-8,-7)(8,-7,-6)(7,-6,-5)(6,-5,-4)(5,-4,-7)(4,-7,-2)]}{[(1,-2,-7)(2,-7,-6)(7,-6,-5)(6,-5,-9)(5,-9,-7)(9,-7,-8)(7,-8,-9)][(8,-7,-9)(9,-8,-7)(8,-7,-9)(7,-9,-5)(9,-5,-6)(5,-6,-7)(6,-7,-2)]}\n\n");
-    s = print6d(RARRAY(c));
+    s = print6d(rarray<float,6>(c));
     REQUIRE(s==
           "{[(1,2,3)(2,3,4)(3,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,3)(4,3,2)]}{[(1,2,3)(2,3,6)(3,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,3)(6,3,2)]}\n"
 "{[(1,2,7)(2,7,4)(7,4,5)(4,5,6)(5,6,7)(6,7,8)(7,8,9)][(8,7,6)(9,8,7)(8,7,6)(7,6,5)(6,5,4)(5,4,7)(4,7,2)]}{[(1,2,7)(2,7,6)(7,6,5)(6,5,9)(5,9,7)(9,7,8)(7,8,9)][(8,7,9)(9,8,7)(8,7,9)(7,9,5)(9,5,6)(5,6,7)(6,7,2)]}\n\n"
@@ -2025,7 +2025,7 @@ TEST_CASE("test7dautoconversion")
              "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}";
 
     std::stringstream s;
-    s << RARRAY(seven);
+    s << rarray<int,7>(seven);
     REQUIRE(s.str()==expected_output);
     REQUIRE(EXTENT(seven,0) == 2);
     REQUIRE(EXTENT(seven,1) == 2);
@@ -2054,7 +2054,7 @@ TEST_CASE("test8dautoconversion")
             "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}";
 
     std::stringstream s;
-    s << RARRAY(eight);
+    s << rarray<int,8>(eight);
     REQUIRE(s.str()==expected_output);
     REQUIRE(EXTENT(eight,0) == 2);
     REQUIRE(EXTENT(eight,1) == 2);
@@ -2091,7 +2091,7 @@ TEST_CASE("test9dautoconversion")
             "{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
              "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}\n}";
     std::stringstream s;
-    s << RARRAY(nine);
+    s << rarray<int,9>(nine);
     REQUIRE(s.str()==expected_output);
     REQUIRE(EXTENT(nine,0) == 2);
     REQUIRE(EXTENT(nine,1) == 2);
@@ -2145,7 +2145,7 @@ TEST_CASE("test10dautoconversion")
             "{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
              "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}\n}\n}";
     std::stringstream s;
-    s << RARRAY(ten);
+    s << rarray<int,10>(ten);
     REQUIRE(s.str()==expected_output);
     REQUIRE(EXTENT(ten,0) == 2);
     REQUIRE(EXTENT(ten,1) == 2);
@@ -2297,7 +2297,7 @@ TEST_CASE("test11dautoconversion")
              "{\n{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n},\n"
               "{\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n},\n{\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n},\n{\n{\n{0,0},\n{0,0}\n},\n{\n{0,0},\n{0,0}\n}\n}\n}\n}\n}\n}\n}\n}\n}\n}";
     std::stringstream s;
-    s << RARRAY(eleven);
+    s << rarray<int,11>(eleven);
     REQUIRE(s.str()==expected_output);
     REQUIRE(EXTENT(eleven,0) == 2);
     REQUIRE(EXTENT(eleven,1) == 2);

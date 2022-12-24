@@ -23,7 +23,9 @@
 //
 
 #undef RA_CHECKORSAY
+#undef RA_NOEXCEPT
 #undef RA_INLINE
 #undef RA_INLINEF
 #undef RA_INLINE_
+
 

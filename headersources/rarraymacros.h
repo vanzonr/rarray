@@ -30,8 +30,10 @@
 #ifdef RA_BOUNDSCHECK
 #include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
+#define RA_NOEXCEPT(x)
 #else
 #define RA_CHECKORSAY(a, b) 
+#define RA_NOEXCEPT(x) noexcept(x)
 #endif
 
 // For g++ and icpc, RA_INLINE forces inlining, even without optimization.

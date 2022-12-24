@@ -39,23 +39,23 @@
 #include <iostream>
 #include <list>
 
-// 
-//#include "versionheader.h"
+//begin #include "versionheader.h"
 #define RA_VERSION "v2.4.0"
 #define RA_VERSION_NUMBER 2004000
 
-//end of #include "versionheader.h"
+//end #include "versionheader.h"
 
-// 
-//#include "rarraymacros.h"
+//begin #include "rarraymacros.h"
 #ifndef _RARRAYMACROSH_
 #define _RARRAYMACROSH_
 
 #ifdef RA_BOUNDSCHECK
 #include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
+#define RA_NOEXCEPT(x)
 #else
-#define RA_CHECKORSAY(a, b) 
+#define RA_CHECKORSAY(a, b)
+#define RA_NOEXCEPT(x) noexcept(x)
 #endif
 
 #if not defined(RA_INLINE)
@@ -73,15 +73,15 @@
 
 #endif
 
-//end of #include "rarraymacros.h"
+//end #include "rarraymacros.h"
 
-// 
-//#include "shared_buffer.h"
+//begin #include "shared_buffer.h"
 
 
 #ifndef SHAREDBUFFERH
 #define SHAREDBUFFERH
 
+//#include "rarraymacros.h" was already done above
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
@@ -89,7 +89,7 @@
 #include <cstring>
 #include <atomic>
 
-int test_shared_buffer_main(); // for testing
+int test_shared_buffer_main();
 
 /***************************************************************************/
 
@@ -106,18 +106,18 @@ class shared_buffer
 
     shared_buffer() noexcept;
     explicit shared_buffer(size_type asize);
-    shared_buffer(size_type asize, T* adata) noexcept;
+    shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true);
     shared_buffer(const shared_buffer& other) noexcept;
     shared_buffer(shared_buffer&& from) noexcept;
-    
-    shared_buffer& operator=(const shared_buffer& other) noexcept;  // copy
-    void operator=(shared_buffer&& from) noexcept;                  // move
+
+    shared_buffer& operator=(const shared_buffer& other) noexcept;
+    void operator=(shared_buffer&& from) noexcept;
 
     ~shared_buffer() noexcept;
 
-    const T& operator[](size_type index) const noexcept;
-    T& operator[](size_type index) noexcept;
-    
+    const T& operator[](size_type index) const RA_NOEXCEPT(true);
+    T& operator[](size_type index) RA_NOEXCEPT(true);
+
     const T& at(size_type index) const;
     T& at(size_type index);
 
@@ -147,20 +147,20 @@ class shared_buffer
     const_reverse_iterator crend() const;
 
     void resize(size_type newsize, bool keep_content = false);
-    
+
     void assign(const T& value);
     void assign(std::initializer_list<T> ilist);
     template<class InputIt>
     void assign_iter(InputIt first, InputIt last);
-   
+
   private:
-    
+
     T*        data_;
     T*        orig_;
     size_type size_;
     std::atomic<int>* refs_;
 
-    friend int ::test_shared_buffer_main(); // for testing
+    friend int ::test_shared_buffer_main();
 
     void uninit() noexcept;
     void incref() noexcept;
@@ -176,7 +176,7 @@ void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
 {
     size_t paddedsizeinbytes = size*sizeof(T) + bytealignment - 1;
     void* some_orig = malloc(paddedsizeinbytes);
-    if (some_orig) {        
+    if (some_orig) {
         void* some_place = some_orig;
         if (std::align(bytealignment,
                        size*sizeof(T),
@@ -193,7 +193,7 @@ void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
     }
 }
 */
-    
+
 template<class T>
 shared_buffer<T>::shared_buffer() noexcept
 {
@@ -201,16 +201,16 @@ shared_buffer<T>::shared_buffer() noexcept
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type asize) noexcept(false)
+shared_buffer<T>::shared_buffer(size_type asize)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
     T* data;
-    refs_ = new std::atomic<int>(1); // if this throws, let it
+    refs_ = new std::atomic<int>(1);
     try {
         data = new T[asize];
     }
     catch (...) {
-        delete refs_; 
+        delete refs_;
         throw;
     }
     data_ = data;
@@ -219,9 +219,10 @@ shared_buffer<T>::shared_buffer(size_type asize) noexcept(false)
 }
 
 template<class T>
-shared_buffer<T>::shared_buffer(size_type asize, T* adata) noexcept
+shared_buffer<T>::shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
   : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr)
 {
+    RA_CHECKORSAY(adata, "nullptr given as data");
 }
 
 template<class T>
@@ -264,14 +265,16 @@ void shared_buffer<T>::operator=(shared_buffer<T>&& from) noexcept
 }
 
 template<class T>
-const T& shared_buffer<T>::operator[](size_type index) const noexcept
+const T& shared_buffer<T>::operator[](size_type index) const RA_NOEXCEPT(true)
 {
+    RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
     return data_[index];
 }
 
 template<class T>
-T& shared_buffer<T>::operator[](size_type index) noexcept
+T& shared_buffer<T>::operator[](size_type index) RA_NOEXCEPT(true)
 {
+    RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
     return data_[index];
 }
 
@@ -332,7 +335,7 @@ typename shared_buffer<T>::size_type shared_buffer<T>::size() const noexcept
 }
 
 template<class T>
-shared_buffer<T> shared_buffer<T>::copy() const    
+shared_buffer<T> shared_buffer<T>::copy() const
 {
     shared_buffer<T> result(size_);
     std::copy(cbegin(), cend(), result.begin());
@@ -417,7 +420,7 @@ template<class T>
 void shared_buffer<T>::resize(size_type newsize, bool keep_content)
 {
     if ( (newsize<size_) and (refs_) and (*refs_)==1) {
-        size_ = newsize; // That's all? Yep!
+        size_ = newsize;
     } else {
         std::atomic<int>* newrefs = new std::atomic<int>(1);
         T* newdata;
@@ -429,12 +432,12 @@ void shared_buffer<T>::resize(size_type newsize, bool keep_content)
             throw;
         }
         if (keep_content) {
-            try { // in case a copy assignment throws an exception
+            try {
                 size_t n = ((size_<newsize)?size_:newsize);
                 for (size_t i=0; i<n; i++)
                     newdata[i] = data_[i];
             }
-            catch (...) {// in case a copy assignment throws an exception
+            catch (...) {
                 delete newrefs;
                 delete[] newdata;
                 throw;
@@ -449,7 +452,7 @@ void shared_buffer<T>::resize(size_type newsize, bool keep_content)
 }
 
 template<class T>
-void shared_buffer<T>::assign(const T& value) // could throw if copy assignment throws
+void shared_buffer<T>::assign(const T& value)
 {
     for (int i=0;i<size_;i++)
         data_[i] = value;
@@ -488,7 +491,7 @@ void shared_buffer<T>::incref() noexcept {
 }
 
 template<class T>
-void shared_buffer<T>::decref() noexcept { // noexcept assumes
+void shared_buffer<T>::decref() noexcept {
     if (refs_) {
         if (--(*refs_) == 0) {
             delete[] orig_;
@@ -502,19 +505,19 @@ void shared_buffer<T>::decref() noexcept { // noexcept assumes
 }
 #endif
 
-//end of #include "shared_buffer.h"
+//end #include "shared_buffer.h"
 
-// 
-//#include "shared_shape.h"
+//begin #include "shared_shape.h"
 
 #ifndef SHARED_SHAPEH
 #define SHARED_SHAPEH
 
-// 
-//#include "offsets.h"
+//#include "rarraymacros.h" was already done above
+//begin #include "offsets.h"
 #ifndef OFFSETSH
 #define OFFSETSH
 
+//#include "rarraymacros.h" was already done above
 #include <cstdlib>
 #include <vector>
 #include <type_traits>
@@ -532,7 +535,7 @@ class Offsets
     ssize_t get_num_data_offsets() const noexcept;
     ssize_t get_num_offsets() const noexcept;
     ssize_t get_rank() const noexcept;
-    
+
   private:
 
     ssize_t rank_;
@@ -551,21 +554,21 @@ inline Offsets::Offsets(const std::vector<ssize_t>& extent)
         ndataoffsets_ = 1;
         for (ssize_t i = rank_ - 1; i--; )
             noffsets = extent[i]*(1 + noffsets);
-        for (ssize_t i = 0 ; i < rank_-1; i++ ) 
+        for (ssize_t i = 0 ; i < rank_-1; i++ )
             ndataoffsets_ *= extent[i];
         offsets_.reserve(noffsets);
         offsets_.resize(noffsets);
-        if (noffsets > 1) { // catches rank_ == 1 and zero-dimensioned arrays
+        if (noffsets > 1) {
             ssize_t offsetnum = 0;
             ssize_t extenttot = extent[0];
             for (ssize_t i = 1; i < rank_ - 1; i++) {
-                for (ssize_t j = 0; j < extenttot; j++) 
+                for (ssize_t j = 0; j < extenttot; j++)
                     offsets_[offsetnum+j] = offsetnum + extenttot + j*extent[i];
                 offsetnum += extenttot;
                 extenttot *= extent[i];
             }
             ndataoffsets_ = extenttot;
-            for (ssize_t j = 0; j < ndataoffsets_; j++) 
+            for (ssize_t j = 0; j < ndataoffsets_; j++)
                offsets_[offsetnum + j] = j*extent[rank_ - 1];
         }
     }
@@ -580,14 +583,14 @@ inline void*** Offsets::apply_offsets(T* data) const
     ssize_t noffsets = offsets_.size();
     if (ndataoffsets_ == 0 && noffsets == 0)
         return nullptr;
-    else if (ndataoffsets_ == 1 && noffsets == 0) // happens only for rank==1
+    else if (ndataoffsets_ == 1 && noffsets == 0)
         return reinterpret_cast<void***>(data);
     else {
         void*** offsets = new void**[noffsets];
         ssize_t i = 0;
-        for (;i < noffsets - ndataoffsets_; i++)            
+        for (;i < noffsets - ndataoffsets_; i++)
             offsets[i] = reinterpret_cast<void**>(offsets) + offsets_[i];
-        for (;i < noffsets; i++)            
+        for (;i < noffsets; i++)
             offsets[i] = reinterpret_cast<void**>(
                               const_cast<typename std::remove_const<T>::type*>(data)
                               + offsets_[i]);
@@ -614,7 +617,7 @@ inline ssize_t Offsets::get_rank() const noexcept
 
 #endif
 
-//end of #include "offsets.h"
+//end #include "offsets.h"
 
 #include <array>
 #include <stdexcept>
@@ -629,15 +632,15 @@ namespace ra {
 /***************************************************************************/
 
 
-template<typename T,int R> 
+template<typename T,int R>
 struct PointerArray {
-    typedef typename PointerArray<T,R-1>::type const*    type;         // const shape, recursive
-    typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type; // non-const variant
+    typedef typename PointerArray<T,R-1>::type const*    type;
+    typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type;
 };
-template<typename T> 
-struct PointerArray<T,1> { // We end the recursion by specifically defining the R=1 case
-    typedef T* type;     // no const as this would express that the elements are constant
-    typedef T* noconst_type; 
+template<typename T>
+struct PointerArray<T,1> {
+    typedef T* type;
+    typedef T* noconst_type;
 };
 
 /***************************************************************************/
@@ -650,29 +653,29 @@ class shared_shape
     typedef typename PointerArray<T,R>::type ptrs_type;
     typedef ssize_t size_type;
 
-    shared_shape() noexcept;                                      // non-functional shape
-    shared_shape(const std::array<size_type,R>&anextent, T*adata);// construct shape 
-    shared_shape(const shared_shape& other) noexcept;             // copy constructor
-    shared_shape(shared_shape&& other) noexcept;                  // move constructor
+    shared_shape() noexcept;
+    shared_shape(const std::array<size_type,R>&anextent, T*adata);
+    shared_shape(const shared_shape& other) noexcept;
+    shared_shape(shared_shape&& other) noexcept;
 
-    shared_shape& operator=(const shared_shape& other) noexcept; // copy
-    void operator=(shared_shape&& other) noexcept;               // move
+    shared_shape& operator=(const shared_shape& other) noexcept;
+    void operator=(shared_shape&& other) noexcept;
 
     ~shared_shape();
 
-    shared_shape copy() const; 
+    shared_shape copy() const;
 
-    void relocate(T* newdata);                              // let shape point to other data block
-    void reshape(const std::array<size_type,R>&newextent);  // change shape (not the data)
+    void relocate(T* newdata);
+    void reshape(const std::array<size_type,R>&newextent);
 
-    ptrs_type ptrs() const noexcept;                        // get pointer-to-pointer structure
-    T* data() const noexcept;                               // get pointer to the data
-    size_type size() const noexcept;                        // get total number of elements
-    size_type extent(int i) const;                          // get extent in dimension i
-    const std::array<size_type,R>& extent() const noexcept; // get total extent array
-    
+    ptrs_type ptrs() const noexcept;
+    T* data() const noexcept;
+    size_type size() const noexcept;
+    size_type extent(int i) const;
+    const std::array<size_type,R>& extent() const noexcept;
+
     shared_shape<T,R-1> at(size_type r) const;
-    
+
   private:
 
     std::array<size_type,R> extent_;
@@ -687,12 +690,12 @@ class shared_shape
     void decref() noexcept;
     void copy_before_write();
 
-    template<class U, int S> friend class shared_shape; // for "at"
+    template<class U, int S> friend class shared_shape;
 
     friend int ::test_shared_shape_main();
 };
 
-template<typename T> 
+template<typename T>
 class shared_shape<T,0> {
   public:
     typedef T ptrs_type;
@@ -705,9 +708,9 @@ class shared_shape<T,0> {
     size_type noffsets_;
     size_type ndataoffsets_;
     void incref() const noexcept {}
-    template<class U, int S> friend class shared_shape; // for "at"
+    template<class U, int S> friend class shared_shape;
 };
-    
+
 /***************************************************************************/
 
 template<class T, int R>
@@ -721,7 +724,7 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
   : extent_(anextent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
 {
     Offsets P({extent_.begin(),extent_.end()});
-    orig_ = P.apply_offsets(adata); // this could throw, but only if it's allocation fails, so no resource leak
+    orig_ = P.apply_offsets(adata);
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
     noffsets_ = P.get_num_offsets();
     ndataoffsets_ = P.get_num_data_offsets();
@@ -800,7 +803,7 @@ shared_shape<T,R>::~shared_shape()
 template<class T, int R>
 void shared_shape<T,R>::copy_before_write()
 {
-    if (R > 1 and refs_ and *refs_ > 1) 
+    if (R > 1 and refs_ and *refs_ > 1)
         *this = this->copy();
 }
 
@@ -850,7 +853,7 @@ typename shared_shape<T,R>::size_type shared_shape<T,R>::extent(int i) const
     return extent_[i];
 }
 
-template<class T, int R> 
+template<class T, int R>
 const std::array<typename shared_shape<T,R>::size_type,R>& shared_shape<T,R>::extent() const noexcept {
     return extent_;
 }
@@ -885,11 +888,11 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
                                      ptrs_ ));
         std::copy(old_eff_orig, old_eff_orig + noffsets_, copy_of_this.orig_);
         std::ptrdiff_t shift = reinterpret_cast<char*>(copy_of_this.orig_)
-                               - reinterpret_cast<char*>(old_eff_orig); 
+                               - reinterpret_cast<char*>(old_eff_orig);
         for (size_type i = 0; i < noffsets_ - ndataoffsets_; i++)
-            copy_of_this.orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(copy_of_this.orig_[i]) + shift);        
+            copy_of_this.orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(copy_of_this.orig_[i]) + shift);
         copy_of_this.ptrs_ = reinterpret_cast<ptrs_type>(copy_of_this.orig_);
-    } else {        
+    } else {
         copy_of_this.ptrs_ = ptrs_;
     }
     return copy_of_this;
@@ -947,7 +950,7 @@ void shared_shape<T,R>::incref() const noexcept
 }
 
 template<class T, int R>
-void shared_shape<T,R>::decref() noexcept // assuming the T::~T() does not throw   
+void shared_shape<T,R>::decref() noexcept
 {
     if (refs_) {
         if (--(*refs_) == 0) {
@@ -965,7 +968,7 @@ void shared_shape<T,R>::decref() noexcept // assuming the T::~T() does not throw
 
 #endif
 
-//end of #include "shared_shape.h"
+//end #include "shared_shape.h"
 
 
 namespace ra {
@@ -984,56 +987,89 @@ namespace ra {
 template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, ra::rarray<T,R>& r);
 template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const ra::rarray<T,R>& r);
 }
-namespace ra { 
+namespace ra {
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
 }
-   
+
 namespace ra {
 
-    
-template<typename T,int R> 
+
+template<typename T,int R>
 class rarray {
-    
+
   public:
-    typedef T                                         value_type;       
-    typedef ssize_t                                   difference_type;  // difference type for indices
-    typedef ssize_t                                   size_type;        // type of indices
-    typedef T*                                        iterator;         // iterator type
-    typedef const T*                                  const_iterator;   // iterator type for constant access
-    typedef typename PointerArray<T,R>::type          parray_t;         // shorthand for T*const*const*...
-    typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t; // shorthand for T***...
-    RA_INLINE_ rarray();                                                                                                                  // constructor leaving rarray undefined 
-    RA_INLINE_ explicit rarray(size_type n0);                                                                                             // constructor creating its own buffer for R=1
-    RA_INLINE_ rarray(size_type n0, size_type n1);                                                                                        // constructor creating its own buffer for R=2
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2);                                                                                                                  // R=3
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3);                                                                                                    // R=4
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4);                                                                                      // R=5
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5);                                                                        // R=6
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6);                                                          // R=7
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7);                                            // R=8
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8);                              // R=9 
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);                // R=10
-    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10); // R=11
-    RA_INLINE_ rarray(const size_type* anextent);                                                                                                                                 // R>11
-    RA_INLINE_ rarray(T* buffer, size_type n0);                                                                                           // constructor from an existing buffer for R=1
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1);                                                                                                                     // R=2
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2);                                                                                                       // R=3
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3);                                                                                         // R=4
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4);                                                                           // R=5
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5);                                                             // R=6
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6);                                               // R=7 
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7);                                 // R=8
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8);                   // R=9
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);     // R=10
-    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10);// R=11
-    RA_INLINE_ rarray(T* buffer, const size_type* anextent);                                                                                                                      // R>11
-    RA_INLINEF rarray(const rarray<T,R> &a) noexcept;                             // copy constructor
-    RA_INLINE_ rarray<T,R>& operator=(const rarray<T,R> &a) noexcept;             // array assignment operator
-    rarray(rarray<T,R>&& x) noexcept;                                             // move constructor
-    rarray<T,R>& operator=(rarray<T,R>&& x) noexcept;                             // move assignment operator
-    RA_INLINE_ CommaOp<T> operator=(const T& e);                                  // Comma separated element assignment
-    RA_INLINEF ~rarray();                                                         // destructor
-    constexpr int rank() const noexcept { return R; } 
+    typedef T                                         value_type;
+    typedef ssize_t                                   difference_type;
+    typedef ssize_t                                   size_type;
+    typedef T*                                        iterator;
+    typedef const T*                                  const_iterator;
+    typedef typename PointerArray<T,R>::type          parray_t;
+    typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t;
+    RA_INLINE_ rarray();
+    RA_INLINE_ explicit rarray(size_type n0);
+    RA_INLINE_ rarray(size_type n0, size_type n1);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);
+    RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10);
+    RA_INLINE_ rarray(const size_type* anextent);
+    RA_INLINE_ rarray(T* buffer, size_type n0);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);
+    RA_INLINE_ rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10);
+    RA_INLINE_ rarray(T* buffer, const size_type* anextent);
+    template<std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==1>::type>
+    RA_INLINE_ explicit rarray(T (&a)[Z]);
+    template<std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==2>::type>
+    RA_INLINE_ explicit rarray(T (&a)[Y][Z]);
+    template<std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==3>::type>
+    RA_INLINE_ explicit rarray(T (&a)[X][Y][Z]);
+    template<std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==4>::type>
+    RA_INLINE_ explicit rarray(T (&a)[W][X][Y][Z]);
+    template<std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==5>::type>
+    RA_INLINE_ explicit rarray(T (&a)[V][W][X][Y][Z]);
+    template<std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==6>::type>
+    RA_INLINE_ explicit rarray(T (&a)[U][V][W][X][Y][Z]);
+    template<std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==7>::type>
+    RA_INLINE_ explicit rarray(T (&a)[T_][U][V][W][X][Y][Z]);
+    template<std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==8>::type>
+    RA_INLINE_ explicit rarray(T (&a)[S][T_][U][V][W][X][Y][Z]);
+    template<std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==9>::type>
+    RA_INLINE_ explicit rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z]);
+    template<std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==10>::type>
+    RA_INLINE_ explicit rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z]);
+    template<std::size_t P,std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
+             int R__=R,typename=typename std::enable_if<R__==11>::type>
+    RA_INLINE_ explicit rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z]);
+    RA_INLINEF rarray(const rarray<T,R> &a) noexcept;
+    RA_INLINE_ rarray<T,R>& operator=(const rarray<T,R> &a) noexcept;
+    rarray(rarray<T,R>&& x) noexcept;
+    rarray<T,R>& operator=(rarray<T,R>&& x) noexcept;
+    RA_INLINE_ CommaOp<T> operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>());
+    RA_INLINEF ~rarray();
+    constexpr int rank() const noexcept { return R; }
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF explicit   rarray (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator= (const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator+=(const Expr<T,R,AOP,A1,A2,A3>& e);
@@ -1041,46 +1077,46 @@ class rarray {
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator*=(const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator/=(const Expr<T,R,AOP,A1,A2,A3>& e);
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_INLINEF rarray& operator%=(const Expr<T,R,AOP,A1,A2,A3>& e);
-    RA_INLINEF void clear() noexcept;                                              // clean up routine, make undefined
-    RA_INLINE_ void reshape(size_type n0, RESIZE resize_allowed=RESIZE::NO);                                                                            // reshape shallow copy keeping the underlying data for R=1
-    RA_INLINE_ void reshape(size_type n0, size_type n1, RESIZE resize_allowed=RESIZE::NO);                                                                                                                   // R=2
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, RESIZE resize_allowed=RESIZE::NO);                                                                                                     // R=3
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, RESIZE resize_allowed=RESIZE::NO);                                                                                       // R=4
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, RESIZE resize_allowed=RESIZE::NO);                                                                         // R=5
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, RESIZE resize_allowed=RESIZE::NO);                                                           // R=6
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, RESIZE resize_allowed=RESIZE::NO);                                             // R=7
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, RESIZE resize_allowed=RESIZE::NO);                               // R=8
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, RESIZE resize_allowed=RESIZE::NO);                 // R=9
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, RESIZE resize_allowed=RESIZE::NO);   // R=10
-    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO); // R=11
-    RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);                                                                                                                      // R>11
-    RA_INLINE_ bool                is_clear()           const noexcept;              // check if undefined
-    RA_INLINE_ rarray<T,R>         copy()               const;                       // return a copy
-    RA_INLINE_ size_type           extent(int i)        const;                       // retrieve array size in dimension i
-    RA_INLINE_ const size_type*    shape()              const noexcept;              // retrieve array sizes in all dimensions
-    RA_INLINE_ size_type           size()               const noexcept;              // retrieve the total number of elements  
-    RA_INLINE_ T*                  data()               noexcept;                    // return a T* to the internal data
-    RA_INLINE_ const T*            data()               const noexcept;              // return a T* to the internal data
-    RA_INLINE_ parray_t            ptr_array()          const noexcept;              // return a T*const*.. acting similarly to this rarray when using []:
-    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const noexcept;              // return a T**.. acting similarly to this rarray when using []:    
-    RA_INLINE_ const rarray<const T,R>&  const_ref()    const noexcept;              // create a reference to this that treats elements as constant:
-    RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
-    RA_INLINE_ iterator            begin()              noexcept;                    // start of the content
-    RA_INLINE_ const_iterator      begin()              const noexcept;              // start of the content, when *this is constant
-    RA_INLINE_ const_iterator      cbegin()             const noexcept;              // start of the content, when *this can be constant and you need to be explicit
-    RA_INLINE_ iterator            end()                noexcept;                    // end of the content
-    RA_INLINE_ const_iterator      end()                const noexcept;              // end of the content, when *this is constant
-    RA_INLINE_ const_iterator      cend()               const noexcept;              // end of the content, when *this is constant and you need to be explicit about that
-    RA_INLINE_ size_type           index(const T& a, int i) const;                   // if a an element in the array, get index i of that element
-    RA_INLINE_ size_type           index(const iterator& iter, int i) const;         // if i points at an element in the array, get index i of that element
-    RA_INLINE_ std::array<size_type,R> index(const T& a) const;           // if a an element in the array, get the indices of that element
-    RA_INLINE_ std::array<size_type,R> index(const iterator& i) const;// if i points at an element in the array, get the indices of that element
-    RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
-    RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
+    RA_INLINEF void clear() noexcept;
+    RA_INLINE_ void reshape(size_type n0, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);
+    RA_INLINE_ bool                is_clear()           const noexcept;
+    RA_INLINE_ rarray<T,R>         copy()               const;
+    RA_INLINE_ size_type           extent(int i)        const;
+    RA_INLINE_ const size_type*    shape()              const noexcept;
+    RA_INLINE_ size_type           size()               const noexcept;
+    RA_INLINE_ T*                  data()               noexcept;
+    RA_INLINE_ const T*            data()               const noexcept;
+    RA_INLINE_ parray_t            ptr_array()          const noexcept;
+    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const noexcept;
+    RA_INLINE_ const rarray<const T,R>&  const_ref()    const noexcept;
+    RA_INLINE_ void                fill(const T& value);
+    RA_INLINE_ iterator            begin()              noexcept;
+    RA_INLINE_ const_iterator      begin()              const noexcept;
+    RA_INLINE_ const_iterator      cbegin()             const noexcept;
+    RA_INLINE_ iterator            end()                noexcept;
+    RA_INLINE_ const_iterator      end()                const noexcept;
+    RA_INLINE_ const_iterator      cend()               const noexcept;
+    RA_INLINE_ size_type           index(const T& a, int i) const;
+    RA_INLINE_ size_type           index(const iterator& iter, int i) const;
+    RA_INLINE_ std::array<size_type,R> index(const T& a) const;
+    RA_INLINE_ std::array<size_type,R> index(const iterator& i) const;
+    RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;
+    RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;
     RA_INLINEF rarray<T,R-1> at(size_type i);
     RA_INLINEF const rarray<T,R-1> at(size_type i) const;
-    RA_INLINEF operator typename PointerArray<T,R>::type () noexcept;  // makes a[..][..] work, as well as automatic conversion
-    RA_INLINEF operator typename PointerArray<const T,R>::type () const noexcept ; 
+    RA_INLINEF operator typename PointerArray<T,R>::type () noexcept;
+    RA_INLINEF operator typename PointerArray<const T,R>::type () const noexcept ;
     RA_INLINEF const T& leval(size_type i) const;
   private:
     friend class rarray<T,R+1>;
@@ -1095,10 +1131,10 @@ class rarray {
   private:
     shared_buffer<T>  buffer_;
     shared_shape<T,R> shape_;
-        
-}; // end definition rarray<T,R>
 
-template<typename T> 
+};
+
+template<typename T>
 class rarray<T,0> {
   private:
     friend class rarray<T,1>;
@@ -1116,48 +1152,22 @@ class rarray<T,0> {
     RA_INLINE_ T& operator=(const T& e) { return buffer_[0] = e; }
     RA_INLINEF const T& leval(size_type i) const;
     constexpr int rank() const { return 0; }
-}; // end definition rarray<T,0>
-    
+};
+
 template<typename T>
 class CommaOp {
   public:
-    RA_INLINEF CommaOp& operator,(const T& e);                         // puts the next number into the array.
+    RA_INLINEF CommaOp& operator,(const T& e);
   private:
-    RA_INLINEF CommaOp(T* ptr, T* last); 
-    T *ptr_;                                                           // points to next element to be filled
-    T * const last_;                                                   // points to last element
+    RA_INLINEF CommaOp(T* ptr, T* last) RA_NOEXCEPT(true);
+    T *ptr_;
+    T * const last_;
     template<typename,int> friend class rarray;
     template<typename,int> friend class subrarray;
 };
 
-template<std::size_t BYTESIZE, typename A> RA_INLINE_ ra::size_type extent_given_byte_size(A a[], int i); //for 1d array
-template<std::size_t BYTESIZE, typename A,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][Z], int i); //for 2d array
-template<std::size_t BYTESIZE, typename A,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][Y][Z], int i); //for 3d array
-template<std::size_t BYTESIZE, typename A,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][X][Y][Z], int i); //for 4d array
-template<std::size_t BYTESIZE, typename A,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][W][X][Y][Z], int i); //for 5d array
-template<std::size_t BYTESIZE, typename A,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][V][W][X][Y][Z], int i); //for 6d array
-template<std::size_t BYTESIZE, typename A,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i); //for 7d array
-template<std::size_t BYTESIZE, typename A,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i); //for 8d array
-template<std::size_t BYTESIZE, typename A,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i); //for 9d array
-template<std::size_t BYTESIZE, typename A,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i); //for 10d array
-template<std::size_t BYTESIZE, typename A,std::size_t Q,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ ra::size_type extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i); //for 11d array
-template<std::size_t BYTESIZE, typename A,int R> RA_INLINE_ ra::size_type extent_given_byte_size(const rarray<A,R>& a, int i); // use rarray's extent function
-    
-template<std::size_t BYTESIZE, typename A> RA_INLINE_ rarray<A,1> make_rarray_given_byte_size(A a[]); //for 1d array
-template<std::size_t BYTESIZE, typename A,std::size_t Z> RA_INLINE_ rarray<A,2> make_rarray_given_byte_size(A a[][Z]); //for 2d array
-template<std::size_t BYTESIZE, typename A,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,3> make_rarray_given_byte_size(A a[][Y][Z]); //for 3d array
-template<std::size_t BYTESIZE, typename A,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,4> make_rarray_given_byte_size(A a[][X][Y][Z]); //for 4d array
-template<std::size_t BYTESIZE, typename A,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,5> make_rarray_given_byte_size(A a[][W][X][Y][Z]); //for 5d array
-template<std::size_t BYTESIZE, typename A,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,6> make_rarray_given_byte_size(A a[][V][W][X][Y][Z]); //for 6d array
-template<std::size_t BYTESIZE, typename A,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,7> make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z]); //for 7d array
-template<std::size_t BYTESIZE, typename A,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,8> make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z]); //for 8d array
-template<std::size_t BYTESIZE, typename A,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,9> make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z]); //for 9d array
-template<std::size_t BYTESIZE, typename A,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ rarray<A,10> make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z]); //for 10d array
-template<std::size_t BYTESIZE, typename A,std::size_t Q,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z>  RA_INLINE_ rarray<A,11> make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z]); //for 11d array
-template<std::size_t BYTESIZE, typename A,int R> RA_INLINE_ rarray<A,R> make_rarray_given_byte_size(rarray<A,R> a); // trivial action for rarray
-
 template<typename S>
-rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true) //// TODO: Choose better integer type for n
+rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true) //
 {
     if (n==0) {
         if (x2>x1)
@@ -1202,7 +1212,7 @@ class Xrange {
     T a_, b_, d_;
   public:
     Xrange(T a, T b, T d)
-        : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d) 
+        : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d)
     {}
     const_iterator begin() const {
         return const_iterator(a_, d_, b_);
@@ -1226,17 +1236,17 @@ template<class S, class T, class U>
 Xrange<T> xrange(S begin, T end, U step) {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(step));
 }
-   
-} // end namespace ra
+
+}
 
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray()
   : buffer_(),
     shape_()
 {}
-    
-template<typename T, int R> RA_INLINE_ 
+
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(ra::size_type n0)
   : buffer_(n0),
     shape_({n0}, buffer_.begin())
@@ -1244,7 +1254,7 @@ ra::rarray<T,R>::rarray(ra::size_type n0)
     static_assert( R==1, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1)
   : buffer_(n0*n1),
     shape_({n0,n1}, buffer_.begin())
@@ -1252,7 +1262,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1)
     static_assert( R==2, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2)
   : buffer_(n0*n1*n2),
     shape_({n0,n1,n2}, buffer_.begin())
@@ -1260,7 +1270,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2)
     static_assert( R==3, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3)
   : buffer_(n0*n1*n2*n3),
     shape_({n0,n1,n2,n3}, buffer_.begin())
@@ -1268,7 +1278,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3)
     static_assert( R==4, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4)
   : buffer_(n0*n1*n2*n3*n4),
     shape_({n0,n1,n2,n3,n4}, buffer_.begin())
@@ -1276,7 +1286,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==5, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5)
   : buffer_(n0*n1*n2*n3*n4*n5),
     shape_({n0,n1,n2,n3,n4,n5}, buffer_.begin())
@@ -1284,7 +1294,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==6, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6)
   : buffer_(n0*n1*n2*n3*n4*n5*n6),
     shape_({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin())
@@ -1292,7 +1302,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==7, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin())
@@ -1300,7 +1310,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==8, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin())
@@ -1308,7 +1318,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==9, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin())
@@ -1316,7 +1326,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==10, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin())
@@ -1324,7 +1334,7 @@ ra::rarray<T,R>::rarray(size_type n0,size_type n1,size_type n2,size_type n3,size
     static_assert( R==11, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0)
   : buffer_(n0,  buffer),
     shape_({n0}, buffer)
@@ -1332,7 +1342,84 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0)
     static_assert( R==1, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R>
+template<std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[Z])
+  : buffer_(Z,  a),
+    shape_({Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[Y][Z])
+   : buffer_(Y*Z,  *a),
+     shape_({Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[X][Y][Z])
+   : buffer_(X*Y*Z,  **a),
+     shape_({X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t W, std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[W][X][Y][Z])
+   : buffer_(W*X*Y*Z,  ***a),
+     shape_({W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[V][W][X][Y][Z])
+   : buffer_(V*W*X*Y*Z,  ****a),
+     shape_({V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[U][V][W][X][Y][Z])
+   : buffer_(U*V*W*X*Y*Z,  *****a),
+     shape_({U,V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[T_][U][V][W][X][Y][Z])
+   : buffer_(T_*U*V*W*X*Y*Z,  ******a),
+     shape_({T_,U,V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[S][T_][U][V][W][X][Y][Z])
+   : buffer_(S*T_*U*V*W*X*Y*Z,  *******a),
+     shape_({S,T_,U,V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z])
+   : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********a),
+     shape_({R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
+   : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********a),
+     shape_({Q,R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R>
+template<std::size_t P,std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,int R__,typename> RA_INLINE_
+ra::rarray<T,R>::rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
+   : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
+     shape_({P,Q,R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
+{}
+
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1)
   : buffer_(n0*n1,  buffer),
     shape_({n0,n1}, buffer)
@@ -1340,7 +1427,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1)
     static_assert( R==2, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2)
   : buffer_(n0*n1*n2,  buffer),
     shape_({n0,n1,n2}, buffer)
@@ -1348,8 +1435,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2)
     static_assert( R==3, "Incorrect number of dimensions in rarray constructor.");
 }
 
-
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3)
   : buffer_(n0*n1*n2*n3,  buffer),
     shape_({n0,n1,n2,n3}, buffer)
@@ -1357,7 +1443,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==4, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4)
   : buffer_(n0*n1*n2*n3*n4,  buffer),
     shape_({n0,n1,n2,n3,n4}, buffer)
@@ -1365,7 +1451,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==5, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5)
   : buffer_(n0*n1*n2*n3*n4*n5,  buffer),
     shape_({n0,n1,n2,n3,n4,n5}, buffer)
@@ -1373,7 +1459,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==6, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6)
   : buffer_(n0*n1*n2*n3*n4*n5*n6,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6}, buffer)
@@ -1381,7 +1467,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==7, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7}, buffer)
@@ -1389,7 +1475,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==8, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer)
@@ -1397,7 +1483,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==9, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer)
@@ -1405,7 +1491,7 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
     static_assert( R==10, "Incorrect number of dimensions in rarray constructor.");
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10)
   : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10,  buffer),
     shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer)
@@ -1414,21 +1500,21 @@ ra::rarray<T,R>::rarray(T* buffer, size_type n0,size_type n1,size_type n2,size_t
 }
 
 namespace ra {
-RA_INLINE_ size_type mul(const size_type * x, size_t n) noexcept {
+RA_INLINE_ size_type mul(const size_type * x, std::size_t n) noexcept {
     size_type result = 1;
-    for (size_t i=0;i<n;i++)
+    for (std::size_t i=0;i<n;i++)
         result *= x[i];
     return result;
 }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(const size_type* anextent)
   : buffer_(mul(anextent,R)),
     shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer_.begin())
 {}
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::rarray(T* buffer, const size_type* anextent)
   : buffer_(mul(anextent,R), buffer),
     shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer)
@@ -1449,7 +1535,7 @@ ra::rarray<T,R>::rarray(rarray<T,R>&& x) noexcept
 }
 
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::clear() noexcept
 {
     shape_ = shared_shape<T,R>();
@@ -1457,217 +1543,217 @@ void ra::rarray<T,R>::clear() noexcept
 }
 
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0, RESIZE resize_allowed)
 {
     static_assert( R==1, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0)) {
-        
+
         shape_ = shared_shape<T,R>({n0}, buffer_.begin());
 
     } else {
 
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0, size_type n1, RESIZE resize_allowed)
 {
     static_assert( R==2, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0*n1
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0, size_type n1, size_type n2, RESIZE resize_allowed)
 {
     static_assert( R==3, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0*n1*n2
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2}, buffer_.begin());
-        
+
     } else {
-            
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3, RESIZE resize_allowed)
 {
     static_assert( R==4, "Incorrect number of dimensions in rarray::reshape method.");
 
     if (size() == n0*n1*n2*n3
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4, RESIZE resize_allowed)
 {
     static_assert( R==5, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0*n1*n2*n3*n4
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5, RESIZE resize_allowed)
 {
     static_assert( R==6, "Incorrect number of dimensions in rarray::reshape method.");
 
     if (size() == n0*n1*n2*n3*n4*n5
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6, RESIZE resize_allowed)
 {
     static_assert( R==7, "Incorrect number of dimensions in rarray::reshape method.");
-        
+
     if (size() == n0*n1*n2*n3*n4*n5*n6
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7, RESIZE resize_allowed)
 {
     static_assert( R==8, "Incorrect number of dimensions in rarray::reshape method.");
-        
+
     if (size() == n0*n1*n2*n3*n4*n5*n6*n7
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8, RESIZE resize_allowed)
 {
     static_assert( R==9, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9, RESIZE resize_allowed)
 {
     static_assert( R==10, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10, RESIZE resize_allowed)
 {
     static_assert( R==11, "Incorrect number of dimensions in rarray::reshape method.");
-    
+
     if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10
         or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10)) {
-        
+
         shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin());
 
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
 
     }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::rarray<T,R>::reshape(const size_type* newshape, RESIZE resize_allowed)
 {
     if (size() == mul(newshape,R)
         or (resize_allowed == RESIZE::ALLOWED and size() >= mul(newshape,R))) {
-        
+
         shape_ = shared_shape<T,R>((const std::array<size_type,R>&)(*newshape), buffer_.begin());
-        
+
     } else {
-        
+
         throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
-        
+
     }
 }
 
 
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 ra::rarray<T,R>::~rarray()
 {}
 
 template<typename T, int R> RA_INLINE_
-ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e)
+ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>())
 {
     RA_CHECKORSAY(not is_clear(), "assignment to unsized array");
     RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
@@ -1676,25 +1762,25 @@ ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e)
         *first = e;
     else
         return ra::CommaOp<T>(nullptr, nullptr);
-    ra::CommaOp<T> co(first+1, first+size()-1); 
+    ra::CommaOp<T> co(first+1, first+size()-1);
     return co;
 }
 
 template<typename T> RA_INLINE_
-ra::CommaOp<T>::CommaOp(T* ptr, T* last)
+ra::CommaOp<T>::CommaOp(T* ptr, T* last) RA_NOEXCEPT(true)
 : ptr_(ptr), last_(last)
-{ 
+{
     RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
 }
 
 template<typename T> RA_INLINE_
 ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
-{ 
+{
     RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
     RA_CHECKORSAY(ptr_<=last_, "assignment with more elements than in array");
     if (ptr_ and ptr_ <= last_)
         *ptr_++ = e;
-    return *this; 
+    return *this;
 }
 
 
@@ -1734,21 +1820,21 @@ const ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i) const
 }
 
 template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::operator typename PointerArray<T,R>::type () noexcept 
+ra::rarray<T,R>::operator typename PointerArray<T,R>::type () noexcept
 {
-    return shape_.ptrs(); // makes a[..][..] = ... work.
+    return shape_.ptrs();
 }
 
 template<typename T, int R> RA_INLINEF
 ra::rarray<T,R>::operator typename PointerArray<const T,R>::type () const noexcept
 {
-    return shape_.ptrs(); // makes a[..][..] work.
+    return shape_.ptrs();
 }
 
 template<typename T, int R> RA_INLINE_
 const ra::size_type* ra::rarray<T,R>::shape() const noexcept
 {
-    return &(shape_.extent()[0]); 
+    return &(shape_.extent()[0]);
 }
 
 template<typename T, int R> RA_INLINE_
@@ -1791,19 +1877,19 @@ void ra::rarray<T,R>::fill(const T& value) {
 
 template<typename T, int R> RA_INLINEF
 ra::size_type ra::rarray<T,R>::size() const noexcept {
-    return shape_.size(); 
+    return shape_.size();
 }
 
 template<typename T, int R> RA_INLINEF
 T* ra::rarray<T,R>::data() noexcept
 {
-    return buffer_.begin(); 
+    return buffer_.begin();
 }
 
 template<typename T, int R> RA_INLINEF
 const T* ra::rarray<T,R>::data() const noexcept
 {
-    return buffer_.begin(); 
+    return buffer_.begin();
 }
 
 template<typename T, int R> RA_INLINEF
@@ -1899,273 +1985,41 @@ ra::size_type ra::rarray<T,R>::index(const T& a, int i) const
     if (linearindex < 0 or linearindex >= size())
         throw ("element not in array");
     const size_type* extent_ = shape();
-    for (int j = R-1; j > i; j--) 
+    for (int j = R-1; j > i; j--)
         linearindex /= extent_[j];
     return linearindex % extent_[i];
 }
 
 
-template<std::size_t BYTESIZE, typename A> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[], int i) 
+namespace ra {
+template<typename A>
+size_type extent(const A &a, int i)
 {
-    RA_CHECKORSAY(i>=0 and i<1, "wrong dimension");
     switch (i) {
-        case 0:  return BYTESIZE/sizeof(A);
-        default: return 1;
+    case 0: return std::extent<A,0>();
+    case 1: return std::extent<A,1>();
+    case 2: return std::extent<A,2>();
+    case 3: return std::extent<A,3>();
+    case 4: return std::extent<A,4>();
+    case 5: return std::extent<A,5>();
+    case 6: return std::extent<A,6>();
+    case 7: return std::extent<A,7>();
+    case 8: return std::extent<A,8>();
+    case 9: return std::extent<A,9>();
+    case 10: return std::extent<A,10>();
+    default: return 0;
     }
 }
 
-template<std::size_t BYTESIZE, typename A,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<2, "wrong dimension");
-    switch (i) {
-        case 0:  return BYTESIZE/sizeof(A)/Z;
-        case 1:  return Z;
-        default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<3, "wrong dimension");
-    switch (i) {
-        case 0:  return BYTESIZE/sizeof(A)/Z/Y;
-        case 1:  return Y;
-        case 2:  return Z;
-        default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<4, "wrong dimension");
-    switch (i) {
-        case 0:  return BYTESIZE/sizeof(A)/X/Z/Y;
-        case 1:  return X;
-        case 2:  return Y;
-        case 3:  return Z;
-        default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<5, "wrong dimension");
-    switch (i) {
-        case 0:  return BYTESIZE/sizeof(A)/W/X/Z/Y;
-        case 1:  return W;
-        case 2:  return X;
-        case 3:  return Y;
-        case 4:  return Z;
-        default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][V][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<6, "wrong dimension");
-    switch (i) {
-       case 0:  return BYTESIZE/sizeof(A)/V/W/X/Z/Y;
-       case 1:  return V;
-       case 2:  return W;
-       case 3:  return X;
-       case 4:  return Y;
-       case 5:  return Z;
-       default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][U][V][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<7, "wrong dimension");
-    switch (i) {
-       case 0:  return BYTESIZE/sizeof(A)/U/V/W/X/Z/Y;
-       case 1:  return U;
-       case 2:  return V;
-       case 3:  return W;
-       case 4:  return X;
-       case 5:  return Y;
-       case 6:  return Z;
-       default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][T][U][V][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<8, "wrong dimension");
-    switch (i) {
-       case 0:  return BYTESIZE/sizeof(A)/T/U/V/W/X/Z/Y;
-       case 1:  return T;
-       case 2:  return U;
-       case 3:  return V;
-       case 4:  return W;
-       case 5:  return X;
-       case 6:  return Y;
-       case 7:  return Z;
-       default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][S][T][U][V][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<9, "wrong dimension");
-    switch (i) {
-       case 0:  return BYTESIZE/sizeof(A)/S/T/U/V/W/X/Z/Y;
-       case 1:  return S;
-       case 2:  return T;
-       case 3:  return U;
-       case 4:  return V;
-       case 5:  return W;
-       case 6:  return X;
-       case 7:  return Y;
-       case 8:  return Z;
-       default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<10, "wrong dimension");
-    switch (i) {
-       case 0:  return BYTESIZE/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
-       case 1:  return R;
-       case 2:  return S;
-       case 3:  return T;
-       case 4:  return U;
-       case 5:  return V;
-       case 6:  return W;
-       case 7:  return X;
-       case 8:  return Y;
-       case 9:  return Z;
-       default: return 1;
-    }
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t Q,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z], int i) 
-{
-    RA_CHECKORSAY(i>=0 and i<11, "wrong dimension");
-    switch (i) {
-       case 0:  return BYTESIZE/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
-       case 1:  return Q;
-       case 2:  return R;
-       case 3:  return S;
-       case 4:  return T;
-       case 5:  return U;
-       case 6:  return V;
-       case 7:  return W;
-       case 8:  return X;
-       case 9:  return Y;
-       case 10: return Z;
-       default: return 1;
-    }
-}
-
-
-template<std::size_t BYTESIZE, typename A,int R> RA_INLINE_ 
-ra::size_type ra::extent_given_byte_size(const ra::rarray<A,R>& a, int i) 
+template<typename T, int R>
+size_type extent(const rarray<T,R> &a, int i)
 {
     return a.extent(i);
 }
-
-
-
-template<std::size_t BYTESIZE, typename A> RA_INLINE_ 
-ra::rarray<A,1> ra::make_rarray_given_byte_size(A a[]) 
-{
-    constexpr std::size_t z = BYTESIZE/sizeof(A);
-    return ra::rarray<A,1>(a,z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,2> ra::make_rarray_given_byte_size(A a[][Z]) 
-{
-    constexpr std::size_t y = BYTESIZE/sizeof(A)/Z;
-    return ra::rarray<A,2>(*a,y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,3> ra::make_rarray_given_byte_size(A a[][Y][Z]) 
-{
-    constexpr std::size_t x = BYTESIZE/sizeof(A)/Z/Y;
-    return ra::rarray<A,3>(**a,x,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,4> ra::make_rarray_given_byte_size(A a[][X][Y][Z]) 
-{
-    constexpr std::size_t w = BYTESIZE/sizeof(A)/X/Z/Y;
-    return ra::rarray<A,4>(***a,w,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,5> ra::make_rarray_given_byte_size(A a[][W][X][Y][Z]) 
-{
-    constexpr std::size_t v = BYTESIZE/sizeof(A)/W/X/Z/Y;
-    return ra::rarray<A,5>(****a,v,W,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,6> ra::make_rarray_given_byte_size(A a[][V][W][X][Y][Z]) 
-{
-    constexpr std::size_t u = BYTESIZE/sizeof(A)/V/W/X/Z/Y;
-    return ra::rarray<A,6>(*****a,u,V,W,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,7> ra::make_rarray_given_byte_size(A a[][U][V][W][X][Y][Z]) 
-{
-    constexpr std::size_t t = BYTESIZE/sizeof(A)/U/V/W/X/Z/Y;
-    return ra::rarray<A,7>(******a,t,U,V,W,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,8> ra::make_rarray_given_byte_size(A a[][T][U][V][W][X][Y][Z]) 
-{
-    constexpr std::size_t s = BYTESIZE/sizeof(A)/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,8>(*******a,s,T,U,V,W,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,9> ra::make_rarray_given_byte_size(A a[][S][T][U][V][W][X][Y][Z]) 
-{
-    constexpr std::size_t r = BYTESIZE/sizeof(A)/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,9>(********a,r,S,T,U,V,W,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,10> ra::make_rarray_given_byte_size(A a[][R][S][T][U][V][W][X][Y][Z]) 
-{
-    constexpr std::size_t q = BYTESIZE/sizeof(A)/R/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,10>(*********a,q,R,S,T,U,V,W,X,Y,Z);
-}
-
-template<std::size_t BYTESIZE, typename A,std::size_t Q,std::size_t R,std::size_t S,std::size_t T,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z> RA_INLINE_ 
-ra::rarray<A,11> ra::make_rarray_given_byte_size(A a[][Q][R][S][T][U][V][W][X][Y][Z]) 
-{
-    constexpr std::size_t p = BYTESIZE/sizeof(A)/Q/R/S/T/U/V/W/X/Z/Y;
-    return ra::rarray<A,11>(**********a,p,Q,R,S,T,U,V,W,X,Y,Z);
 }
 
 
-template<std::size_t BYTESIZE, typename T,int R> RA_INLINE_ 
-ra::rarray<T,R> ra::make_rarray_given_byte_size(ra::rarray<T,R> a) 
-{
-    return a;
-}
-
-
-// 
-//#include "rarrayio.h"
+//begin #include "rarrayio.h"
 
 namespace ra {
 
@@ -2177,7 +2031,7 @@ struct Deref {
     static RA_INLINEF T& access(typename PointerArray<T,R>::type p, const size_type* indices);
 };
 template<typename T>
-struct Deref<T,1>  // R=1 is special
+struct Deref<T,1>
 {
     static RA_INLINEF T& access(typename PointerArray<T,1>::type p, const size_type* indices);
 };
@@ -2203,14 +2057,14 @@ enum class token { UNKNOWN=0, BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
      default:                    return '?';
      }
  }
- 
-RA_INLINE_ 
+
+RA_INLINE_
 std::list<std::pair<token,std::string>> parse_shape(std::istream & in, int R, size_type* shape);
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void parse_strings(const std::list<std::pair<token,std::string>> & tokens, const size_type* shape, typename PointerArray<T,R>::type p);
 
-} // end namespace ra
+}
 
 
 
@@ -2220,41 +2074,41 @@ template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream
         return ra::text_output(o,r);
     } else if (R==1) {
         if (not r.is_clear()) {
-            o << "{"; 
+            o << "{";
             for (ra::size_type i=0; i<r.extent(0); i++)  {
                 if (i>0)
                     o << ",";
                 o << r.data()[i];
             }
-            o << "}"; 
+            o << "}";
         }
     }
     return o;
 }
 
 
-template<typename T,int R> RA_INLINE_ 
+template<typename T,int R> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
     if (not r.is_clear()) {
-        o << "{\n"; // new newline
+        o << "{\n";
         for (size_type i=0; i<r.extent(0); i++)  {
             if (i>0)
-                o << ",\n"; // new newline
+                o << ",\n";
             o << r.at(i);
         }
-        o << "\n}"; // new newline
+        o << "\n}";
     } else {
-        for (int i=0; i<R; i++) 
+        for (int i=0; i<R; i++)
             o << '{';
-        for (int i=0; i<R; i++) 
+        for (int i=0; i<R; i++)
             o << '}';
-        o << "\n"; // new newline
+        o << "\n";
     }
     return o;
 }
 
-template<typename T> RA_INLINE_ 
+template<typename T> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
     if (not r.is_clear()) {
@@ -2263,7 +2117,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
             if (i) o << ',';
             std::stringstream strstr;
             std::string result;
-            const T& val = r.at(i); // at() returns a rarray<T,0>, whose streaming operator is not refined. But we need the value only.
+            const T& val = r.at(i);
             strstr << val;
             result = strstr.str();
             if (result.find_first_of("{,}#") != std::string::npos
@@ -2273,7 +2127,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
             o << result;
         }
         o << '}';
-    } else 
+    } else
         o << "{}";
     return o;
 }
@@ -2281,10 +2135,10 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 
 
 template<typename T> RA_INLINE_
-void ra::StringToValue<T>::get(const std::string& input, T& output) 
+void ra::StringToValue<T>::get(const std::string& input, T& output)
 {
-    std::stringstream str(input); // use streaming operators by default
-    str >> output; // won't work with strings as they get truncated at first whitespace
+    std::stringstream str(input);
+    str >> output;
 }
 
 RA_INLINE_ void ra::StringToValue<std::string>::get(const std::string& input, std::string& output)
@@ -2293,14 +2147,14 @@ RA_INLINE_ void ra::StringToValue<std::string>::get(const std::string& input, st
 }
 
 
-template<typename T, int R> RA_INLINEF 
-T& ra::Deref<T,R>::access(typename PointerArray<T,R>::type p, const size_type* indices) 
+template<typename T, int R> RA_INLINEF
+T& ra::Deref<T,R>::access(typename PointerArray<T,R>::type p, const size_type* indices)
 {
     return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
 }
 
-template<typename T> RA_INLINEF 
-T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const size_type* indices) 
+template<typename T> RA_INLINEF
+T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const size_type* indices)
 {
     return p[indices[0]-1];
 }
@@ -2310,7 +2164,7 @@ static char get_but_eat_newline(std::istream & in)
 {
     char ch1='\n';
     while (ch1=='\n' && ! in.eof())
-        in >> ch1; // eats white space unless noskipws is set
+        in >> ch1;
     return ch1;
 }
 
@@ -2321,7 +2175,7 @@ static char get_but_eat_whitespace(std::istream & in)
     return ch1;
 }
 
-RA_INLINE_ 
+RA_INLINE_
 std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, int R, ra::size_type* shape)
 {
     if (shape == nullptr) {
@@ -2334,12 +2188,12 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
         for (int i=0; i<R; i++) {
             current_shape[i] = 1;
             shape[i] = 0;
-            if (get_but_eat_newline(in) != '{')  // eat
+            if (get_but_eat_newline(in) != '{')
                 throw std::istream::failure("Format error");
             else
                 result.push_back({ra::token::BRACEOPEN,""});
         }
-        int current_depth = R-1; // start scanning the deepest level
+        int current_depth = R-1;
         while (current_depth>=0) {
             if (current_depth==R-1) {
                 char         lastchar;
@@ -2360,15 +2214,15 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                             in.get(lastchar);
                             skipstr += lastchar;
                         } while (lastchar!=':');
-                        int skip = atoi(skipstr.c_str());////
-                        for (int i=0; i<skip; i++) { ////
+                        int skip = atoi(skipstr.c_str());//
+                        for (int i=0; i<skip; i++) { //
                             char nextchar;
                             in.get(nextchar);
                             word += nextchar;
                         }
                     } else if (word == "(") {
-                        const int safeguardcount=1024*1024; ////
-                        int count=0; ////
+                        const int safeguardcount=1024*1024; //
+                        int count=0; //
                         while (lastchar!=')' and count<safeguardcount) {
                             in.get(lastchar);
                             word += lastchar;
@@ -2382,7 +2236,7 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                         word="";
                         current_shape[current_depth]++;
                     }
-                } while (lastchar != '}');                
+                } while (lastchar != '}');
                 result.push_back({ra::token::DATASTRING,word});
                 result.push_back({ra::token::BRACECLOSE,""});
                 if (shape)
@@ -2390,7 +2244,7 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                         shape[current_depth] = current_shape[current_depth];
                 current_depth--;
             } else {
-                switch (get_but_eat_whitespace(in)) { 
+                switch (get_but_eat_whitespace(in)) {
                    case ',':
                     result.push_back({ra::token::COMMA,""});
                     current_shape[current_depth]++;
@@ -2411,18 +2265,18 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
                     throw std::istream::failure("Format error");
                 }
             }
-        }       
+        }
         result.push_back({ra::token::END,""});
     }
     catch (std::istream::failure& e) {
-        in.seekg(init_file_ptr, in.beg);// upon failure, try to undo characters read in
-        in.setstate(std::ios::failbit); // and set the fail bit
+        in.seekg(init_file_ptr, in.beg);
+        in.setstate(std::ios::failbit);
     }
 
     return result;
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> RA_INLINE_
 void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, const ra::size_type* shape, typename ra::PointerArray<T,R>::type p)
 {
     size_type index[R];
@@ -2454,7 +2308,7 @@ void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, c
 
 template<typename T,int R> RA_INLINE_
 std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
-{    
+{
     ra::size_type extent[R] = {0};
     auto X = ra::parse_shape(in, R, extent);
     if (ra::mul(extent,R) <= r.size())
@@ -2466,29 +2320,41 @@ std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
 }
 
 
-//end of #include "rarrayio.h"
+//end #include "rarrayio.h"
 
 
-// 
-//#include "rarraydelmacros.h"
+//begin #include "rarraydelmacros.h"
 
 #undef RA_CHECKORSAY
+#undef RA_NOEXCEPT
 #undef RA_INLINE
 #undef RA_INLINEF
 #undef RA_INLINE_
 
 
-//end of #include "rarraydelmacros.h"
+
+//end #include "rarraydelmacros.h"
 
 
-    
-#define EXTENT(A,I)  ra::extent_given_byte_size<sizeof(A)>(A,I)
-#define RARRAY(A)    ra::make_rarray_given_byte_size<sizeof(A)>(A)
+
+#define EXTENT(A,I)  ra::extent(A,I)
+#define RARRAY(A)    rarray<std::remove_all_extents<decltype(A)>::type,std::rank<decltype(A)>::value>(A)
 #define INDEX(A,X,I) RARRAY(A).index(X,I)
+
+namespace std {
+    template<class T, int R >
+    struct remove_all_extents<ra::rarray<T,R>> {
+        typedef T type;
+    };
+    template<class T, int R >
+    struct rank<ra::rarray<T,R>> {
+        static const size_t value = R;
+    };
+}
 
 using ra::rarray;
 using ra::linspace;
-using ra::xrange; 
+using ra::xrange;
 
 template<typename T> using rvector = rarray<T,1>;
 template<typename T> using rmatrix = rarray<T,2>;

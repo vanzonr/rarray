@@ -30,6 +30,7 @@
 #ifndef SHARED_SHAPEH
 #define SHARED_SHAPEH
 
+#include "rarraymacros.h"
 #include "offsets.h"
 #include <array>
 #include <stdexcept>
