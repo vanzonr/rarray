@@ -28,7 +28,7 @@
 # compiler and certain libraries and create config.mk with the
 # results, then you can do the following:
 #
-# To build and run tests:                 make test
+# To build and run tests:                 make test valgrindtest
 # To build and run the benchmarks:        make benchmarks
 # To rebuild the headers:                 make headers
 # To rebuild the documentation:           make doc
@@ -55,12 +55,12 @@ FFLAGS?=-O2
 
 CPPFLAGS+= -I. -I${HS}
 
-# want to add coverage test later:
-#LDFLAGSCOV=-fprofile-arcs -ftest-coverage
-#CXXFLAGSCOV=-fprofile-arcs -ftest-coverage
-#LIBSCOV=
+# allow coverage of tests
+LDFLAGSCOV?=-fprofile-arcs -ftest-coverage
+CXXFLAGSCOV?=-fprofile-arcs -ftest-coverage
+LIBSCOV?=
+GCOV?=gcov -trkm
 
-RM=rm -f
 VALGRIND?=valgrind --leak-check=full
 
 BENCHMARK2DNAME=benchmark2Daccess
@@ -77,25 +77,33 @@ help:
 	@echo ""
 	@echo "This is the only required action.  If (optionally) you want to run tests and benchmarks, first run './configure' to detect the compiler and certain libraries and create config.mk with the results, then you can do the following:"
 	@echo ""
-	@echo "  To build and run tests:                 make test"
+	@echo "  To build and run tests:                 make test valgrindtest"
 	@echo "  To build and run benchmarks:            make benchmarks"
 	@echo "  To rebuild the headers:                 make headers"
 	@echo "  To rebuild the documentation:           make doc"
 	@echo ""
 
-.PHONY: headers test benchmarks doc valgrindtest install clean distclean run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite list benchmark2d benchmark4d run_testsuite run_testsuite_bc
+.PHONY: headers test benchmarks doc valgrindtest install \
+        clean distclean list all \
+        run_test_shared_buffer  run_test_offsets  run_test_shared_shape \
+        run_test_rarray  run_testsuite  run_testsuite_bc \
+        run_valgrind_test_shared_buffer  run_valgrind_testsuite \
+        run_benchmark2d  run_benchmark4d 
 
 headers: rarray rarrayio
 
-all: headers test_shared_buffer test_offsets test_shared_shape test_rarray testsuite
+all: headers test valgrindtest benchmarks
 
-test: run_testsuite run_testsuite_bc run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite
+test: run_testsuite  run_testsuite_bc  run_test_shared_buffer  run_test_offsets \
+      run_test_shared_shape  run_test_rarray 
 
-benchmarks: benchmark2d benchmark4d
+valgrindtest: run_valgrind_testsuite  run_valgrind_testsuite_bc \
+              run_valgrind_test_shared_buffer  run_valgrind_test_offsets \
+              run_valgrind_test_shared_shape  run_valgrind_test_rarray 
+
+benchmarks: run_benchmark2d  run_benchmark4d
 
 doc: rarraydoc.pdf
-
-valgrindtest: run_test_shared_buffer run_test_offsets run_test_shared_shape run_test_rarray run_valgrind_testsuite 
 
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} -o $@ $^
@@ -145,22 +153,22 @@ catch.hpp:
 	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
-	${CXX} ${CPPFLAGS} ${DBGFLAGS} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${DBGFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
 
 test_shared_buffer: test_shared_buffer.o
-	${CXX} ${LDFLAGS} -o $@ $^
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $^ ${LIBSCOV}
 
 test_offsets.o: ${SRC}/test_offsets.cc ${HS}/offsets.h
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} ${DBGFLAGS} -c -o $@ $<
 
 test_offsets: test_offsets.o
-	${CXX} ${LDFLAGS} ${DBGFLAGS} -o $@ $^
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} ${DBGFLAGS} -o $@ $^ ${LIBSCOV}
 
 test_shared_shape.o: ${SRC}/test_shared_shape.cc ${HS}/shared_shape.h ${HS}/offsets.h
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} ${DBGFLAGS} -c -o $@ $<
 
 test_shared_shape: test_shared_shape.o
-	${CXX} ${LDFLAGS} ${DBGFLAGS} -o $@ $^
+	${CXX} ${LDFLAGS} ${LDFLAGSCOV} ${DBGFLAGS} -o $@ $^ ${LIBSCOV}
 
 test_rarray.o: ${SRC}/test_rarray.cc rarray
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
@@ -169,39 +177,63 @@ test_rarray: test_rarray.o
 	${CXX} ${LDFLAGS} -o $@ $^
 
 clean:
-	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp
+	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o testsuite.o testsuite_bc.o benchmark2Daccess.o benchmark4Daccess.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp *.gcno *.gcda *.gcov
 
 distclean:
 	make clean
 	make rarray rarrayio doc	
 	make clean
-	${RM} test_shared_buffer test_offsets test_shared_shape test_rarray testsuite hardinclude benchmark2Daccess benchmark4Daccess benchmark2Dfrtrn benchmark4Dfrtrn config.mk
+	${RM} test_shared_buffer test_offsets test_shared_shape test_rarray testsuite testsuite_bc hardinclude benchmark2Daccess benchmark4Daccess benchmark2Dfrtrn benchmark4Dfrtrn config.mk coverage/*
+	rmdir coverage
 
-run_test_shared_buffer: test_shared_buffer
+coverage:
+	mkdir -p coverage
+
+run_test_shared_buffer: test_shared_buffer coverage
+	./test_shared_buffer
+	${GCOV} ./test_shared_buffer.o > coverage/$@
+
+run_valgrind_test_shared_buffer: test_shared_buffer
 	${VALGRIND} ./test_shared_buffer
 
-run_test_offsets: test_offsets
+run_test_offsets: test_offsets coverage
+	./test_offsets
+	${GCOV} ./test_offsets.o > coverage/$@
+
+run_valgrind_test_offsets: test_offsets
 	${VALGRIND} ./test_offsets
 
-run_test_shared_shape: test_shared_shape
+run_test_shared_shape: test_shared_shape coverage
+	./test_shared_shape
+	${GCOV} ./test_shared_shape.o > coverage/$@
+
+run_valgrind_test_shared_shape: test_shared_shape
 	${VALGRIND} ./test_shared_shape
 
-run_test_rarray: test_rarray
+run_test_rarray: test_rarray 
+	./test_rarray
+
+run_valgrind_test_rarray: test_rarray
 	${VALGRIND} ./test_rarray
 
-run_testsuite: testsuite
+run_testsuite: testsuite coverage
 	./testsuite
-
-run_testsuite_bc: testsuite_bc
-	./testsuite_bc
+	${GCOV} ./testsuite.o > coverage/$@
 
 run_valgrind_testsuite: testsuite
 	${VALGRIND} ./testsuite
 
+run_testsuite_bc: testsuite_bc coverage
+	./testsuite_bc
+	${GCOV} ./testsuite_bc.o > coverage/$@
+
+run_valgrind_testsuite_bc: testsuite_bc
+	${VALGRIND} ./testsuite_bc
+
 list:
 	@grep '^[^#[:space:]].*:' Makefile
 
-benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
+run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo Comparison benchmark on a 2d array example
 	@./$(BENCHMARK2DNAME) 1 
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 2) 
@@ -215,7 +247,7 @@ benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@./$(BENCHMARK2DNAMEF)
 	@./$(BENCHMARK2DNAME) 1
 
-benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
+run_benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@echo Comparison benchmark on a 4d array example
 	@./$(BENCHMARK4DNAME) 1 
 	@(ulimit -s 4000000; ./$(BENCHMARK4DNAME) 2) 

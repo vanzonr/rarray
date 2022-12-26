@@ -9,3 +9,7 @@ CPPFLAGSOPT=-DNDEBUG
 CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native
 FC=gfortran
 FFLAGS=-O3 -fstrict-aliasing -march=native
+LDFLAGSCOV=
+CXXFLAGSCOV=-fprofile-arcs -ftest-coverage
+LIBSCOV=-lgcov
+GCOV=gcov -trkm

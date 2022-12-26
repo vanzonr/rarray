@@ -176,7 +176,16 @@ else
         fi
         if [ "$acclibdir" ]; then 
             echo "MORELDFLAGS+=${acclibdir:1}"  | sed 's/-LZ/-L$/g' >> config.mk
-        fi       
+        fi
+        # check if valgrind is available
+        echo -ne "Detecting VALGRIND... "
+        if which valgrind > /dev/null ; then
+            echo "found"
+            echo "VALGRIND=$(which valgrind) --leak-check=full" >> config.mk
+        else
+            echo "not found"
+            echo "VALGRIND=:" >> config.mk
+        fi
         # add prefix to the makefile include file
         echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
         # print what to do next
