@@ -204,8 +204,14 @@ class rarray {
     RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
     RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
     // access elements r
-    RA_INLINEF rarray<T,R-1> at(size_type i);
-    RA_INLINEF const rarray<T,R-1> at(size_type i) const;
+    template<class U=rarray<T,R-1>>
+    RA_INLINEF typename std::enable_if<R!=1,U>::type at(size_type i);
+    template<class U=T&>
+    RA_INLINEF typename std::enable_if<R==1,U>::type at(size_type i);
+    template<class U=const rarray<T,R-1>>
+    RA_INLINEF typename std::enable_if<R!=1,U>::type at(size_type i) const;
+    template<class U=const T&>
+    RA_INLINEF typename std::enable_if<R==1,U>::type at(size_type i) const;
     RA_INLINEF operator typename PointerArray<T,R>::type () noexcept;  // makes a[..][..] work, as well as automatic conversion
     RA_INLINEF operator typename PointerArray<const T,R>::type () const noexcept ; 
     // for expressions
@@ -228,29 +234,6 @@ class rarray {
     shared_shape<T,R> shape_;
         
 }; // end definition rarray<T,R>
-
-// stop "at(...)" recursion at R=0, a single scalar value
-template<typename T> 
-class rarray<T,0> {
-  private:
-    // for rarray<T,1>::at
-    friend class rarray<T,1>;
-    rarray(shared_buffer<T>&& abuffer, const shared_shape<T,0>& ashape) :
-        buffer_(std::forward<shared_buffer<T>>(abuffer))
-    {}
-    rarray(const shared_buffer<T>&& abuffer, const shared_shape<T,0>& ashape) :
-        buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&&>(abuffer)))
-    {}
-    shared_buffer<T>  buffer_;
-  public:
-    ~rarray() {}
-    RA_INLINEF operator T& () { return buffer_[0]; }
-    RA_INLINEF operator const T& () const noexcept { return buffer_[0]; }
-    RA_INLINE_ T& operator=(const T& e) { return buffer_[0] = e; }
-    // for expressions
-    RA_INLINEF const T& leval(size_type i) const;
-    constexpr int rank() const { return 0; }
-}; // end definition rarray<T,0>
     
 // Class to facilitate assignment from a comma separated list
 template<typename T>
@@ -923,8 +906,11 @@ ra::rarray<T,R> ra::rarray<T,R>::copy() const {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, int R> RA_INLINEF
-ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i)
+template<typename T, int R>
+template<class U> // = rarray<T,R-1>
+RA_INLINEF
+typename std::enable_if<R!=1,U>::type 
+ra::rarray<T,R>::at(size_type i)
 {
     // subarray access with bounds checking
     if (i < 0 or i >= extent(0))
@@ -933,14 +919,41 @@ ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i)
     return ra::rarray<T,R-1>(buffer_.slice(i*stride, (i+1)*stride), shape_.at(i));
 }
 
-template<typename T, int R> RA_INLINEF
-const ra::rarray<T,R-1> ra::rarray<T,R>::at(size_type i) const
+template<typename T, int R>
+template<class U> // = const rarray<T,R-1>
+RA_INLINEF
+typename std::enable_if<R!=1,U>::type 
+ra::rarray<T,R>::at(size_type i) const
 {
     // const subarray access with bounds checking
     if (i < 0 or i >= extent(0))
         throw std::out_of_range("rarray<T,R>::at");
     size_type stride = size()/extent(0);
     return ra::rarray<T,R-1>(buffer_.slice(i*stride, (i+1)*stride), shape_.at(i));
+}
+
+template<typename T, int R>
+template<class U> // = T&
+RA_INLINEF
+typename std::enable_if<R==1,U>::type 
+ra::rarray<T,R>::at(size_type i)
+{
+    // subarray access with bounds checking
+    if (i < 0 or i >= extent(0))
+        throw std::out_of_range("rarray<T,R>::at");
+    return shape_.ptrs()[i];
+}
+
+template<typename T, int R>
+template<class U> // = const T&
+RA_INLINEF
+typename std::enable_if<R==1,U>::type 
+ra::rarray<T,R>::at(size_type i) const
+{
+    // const subarray access with bounds checking
+    if (i < 0 or i >= extent(0))
+        throw std::out_of_range("rarray<T,R>::at");
+    return shape_.ptrs()[i];
 }
 
 template<typename T, int R> RA_INLINEF

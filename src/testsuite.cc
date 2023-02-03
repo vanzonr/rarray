@@ -38,6 +38,11 @@
 // AUXILIARY STUFF
 //////////////////////////////////////////////////////////////////////
 
+// bool operator==(const std::string&a, const std::string& b)
+// {
+//     return std::operator==(a,b);
+// }
+
 template<typename T,int R> 
 const T* getconstdata(const rarray<T,R>& a)
 {
@@ -829,7 +834,19 @@ double d1 = -2.2, d2 = 7.1;
 Compound c1(1,2), c2(-7,13);
 array<Compound,3> a1 = {{Compound(1,2),Compound(3,4),Compound(5,6)}};
 array<Compound,3> a2 = {{Compound(-1,-2),Compound(3,-4),Compound(5,-6)}};
-
+std::complex<float> x1(1.f,2.f);
+std::complex<float> x2(-1.f,2.f);
+template<class T> const T& get_value_1();
+template<class T> const T& get_value_2();
+template<> const double& get_value_1<double>() {return d1;}
+template<> const double& get_value_2<double>() {return d2;}
+template<> const Compound& get_value_1<Compound>() {return c1;}
+template<> const Compound& get_value_2<Compound>() {return c2;}
+template<> const array<Compound,3>& get_value_1<array<Compound,3>>() {return a1;}
+template<> const array<Compound,3>& get_value_2<array<Compound,3>>() {return a2;}
+template<> const std::complex<float>& get_value_1<std::complex<float>>() {return x1;}
+template<> const std::complex<float>& get_value_2<std::complex<float>>() {return x2;}
+    
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1934,7 +1951,7 @@ TEST_CASE("testintermediateconversion")
 #ifndef RA_SKIPINTERMEDIATE
     auto b = a.at(2);
     fill_1d_rarray(b, 13);
-    REQUIRE(a[2][7]==13);
+    REQUIRE(a[2][7]==13.f);
 #endif
 }
 
@@ -1967,28 +1984,28 @@ TEST_CASE("testreshape")
     a.reshape(dim);
     a.reshape(*dim);
     REQUIRE(novela.extent(0)==4);
-    REQUIRE(novela[3]==4);
+    REQUIRE(novela[3]==4.f);
     REQUIRE(novela2.extent(0)==7);
     novela2.reshape(4, ra::RESIZE::ALLOWED);
     REQUIRE(novela2.extent(0)==4);
-    REQUIRE(novela2[3]==4);
+    REQUIRE(novela2[3]==4.f);
     b[5][6] = 5;
     rarray<float,2> novelb(b);
     rarray<float,2> novelb2(novelb);
     novelb.reshape(10,7);
     b.reshape(dim);
-    REQUIRE(novelb.extent(0)==10);
-    REQUIRE(novelb.extent(1)==7);
-    REQUIRE(novelb2.extent(0)==7);
-    REQUIRE(novelb2.extent(1)==10);
-    REQUIRE(novelb[8][0] == 5);
+    REQUIRE(novelb.extent(0)==10.f);
+    REQUIRE(novelb.extent(1)==7.f);
+    REQUIRE(novelb2.extent(0)==7.f);
+    REQUIRE(novelb2.extent(1)==10.f);
+    REQUIRE(novelb[8][0] == 5.f);
     c[4][8][3] = 6;
     rarray<float,3> novelc(c);
     novelc.reshape(10,7,13);
-    REQUIRE(novelc.extent(0)==10);
-    REQUIRE(novelc.extent(1)==7);
-    REQUIRE(novelc.extent(2)==13);
-    REQUIRE(novelc[6][6][3] == 6);
+    REQUIRE(novelc.extent(0)==10.f);
+    REQUIRE(novelc.extent(1)==7.f);
+    REQUIRE(novelc.extent(2)==13.f);
+    REQUIRE(novelc[6][6][3] == 6.f);
     rarray<float,4> noveld(d);
     rarray<float,5> novele(e);
     rarray<float,6> novelf(f);
@@ -2525,44 +2542,44 @@ TEST_CASE("testindex")
     for (auto& element: a)
         element *= float(a.index(element,0));
 #endif
-    REQUIRE(a[0]==0);
-    REQUIRE(a[1]==2);
-    REQUIRE(a[2]==12);
-    REQUIRE(a[3]==36);
-    REQUIRE(a[4]==80);
-    REQUIRE(a[5]==150);
+    REQUIRE(a[0]==0.f);
+    REQUIRE(a[1]==2.f);
+    REQUIRE(a[2]==12.f);
+    REQUIRE(a[3]==36.f);
+    REQUIRE(a[4]==80.f);
+    REQUIRE(a[5]==150.f);
 
-    rarray<float,3> z(2,3,4);
-    REQUIRE(z.index(z[1][2][3],0)==1);
-    REQUIRE(z.index(z[1][2][3],1)==2);
-    REQUIRE(z.index(z[1][2][3],2)==3);
+    rarray<float,3> z(2,3,4.f);
+    REQUIRE(z.index(z[1][2][3],0)==1.f);
+    REQUIRE(z.index(z[1][2][3],1)==2.f);
+    REQUIRE(z.index(z[1][2][3],2)==3.f);
 
 
     rarray<float,3> b(2,2,2);
-    REQUIRE(b.index(b[0][0][0])[0]==0);
-    REQUIRE(b.index(b[0][0][1])[0]==0);
-    REQUIRE(b.index(b[0][1][0])[0]==0);
-    REQUIRE(b.index(b[0][1][1])[0]==0);
-    REQUIRE(b.index(b[1][0][0])[0]==1);
-    REQUIRE(b.index(b[1][0][1])[0]==1);
-    REQUIRE(b.index(b[1][1][0])[0]==1);
-    REQUIRE(b.index(b[1][1][1])[0]==1);
-    REQUIRE(b.index(b[0][0][0])[1]==0);
-    REQUIRE(b.index(b[0][0][1])[1]==0);
-    REQUIRE(b.index(b[0][1][0])[1]==1);
-    REQUIRE(b.index(b[0][1][1])[1]==1);
-    REQUIRE(b.index(b[1][0][0])[1]==0);
-    REQUIRE(b.index(b[1][0][1])[1]==0);
-    REQUIRE(b.index(b[1][1][0])[1]==1);
-    REQUIRE(b.index(b[1][1][1])[1]==1);
-    REQUIRE(b.index(b[0][0][0])[2]==0);
-    REQUIRE(b.index(b[0][0][1])[2]==1);
-    REQUIRE(b.index(b[0][1][0])[2]==0);
-    REQUIRE(b.index(b[0][1][1])[2]==1);
-    REQUIRE(b.index(b[1][0][0])[2]==0);
-    REQUIRE(b.index(b[1][0][1])[2]==1);
-    REQUIRE(b.index(b[1][1][0])[2]==0);
-    REQUIRE(b.index(b[1][1][1])[2]==1);
+    REQUIRE(b.index(b[0][0][0])[0]==0.f);
+    REQUIRE(b.index(b[0][0][1])[0]==0.f);
+    REQUIRE(b.index(b[0][1][0])[0]==0.f);
+    REQUIRE(b.index(b[0][1][1])[0]==0.f);
+    REQUIRE(b.index(b[1][0][0])[0]==1.f);
+    REQUIRE(b.index(b[1][0][1])[0]==1.f);
+    REQUIRE(b.index(b[1][1][0])[0]==1.f);
+    REQUIRE(b.index(b[1][1][1])[0]==1.f);
+    REQUIRE(b.index(b[0][0][0])[1]==0.f);
+    REQUIRE(b.index(b[0][0][1])[1]==0.f);
+    REQUIRE(b.index(b[0][1][0])[1]==1.f);
+    REQUIRE(b.index(b[0][1][1])[1]==1.f);
+    REQUIRE(b.index(b[1][0][0])[1]==0.f);
+    REQUIRE(b.index(b[1][0][1])[1]==0.f);
+    REQUIRE(b.index(b[1][1][0])[1]==1.f);
+    REQUIRE(b.index(b[1][1][1])[1]==1.f);
+    REQUIRE(b.index(b[0][0][0])[2]==0.f);
+    REQUIRE(b.index(b[0][0][1])[2]==1.f);
+    REQUIRE(b.index(b[0][1][0])[2]==0.f);
+    REQUIRE(b.index(b[0][1][1])[2]==1.f);
+    REQUIRE(b.index(b[1][0][0])[2]==0.f);
+    REQUIRE(b.index(b[1][0][1])[2]==1.f);
+    REQUIRE(b.index(b[1][1][0])[2]==0.f);
+    REQUIRE(b.index(b[1][1][1])[2]==1.f);
 
     float rbuf[3][3] = { {0,0,0}, 
                          {1,1,1}, 
@@ -2572,6 +2589,7 @@ TEST_CASE("testindex")
                          {0,1,2} }; 
     rarray<float,2> r = RARRAY(rbuf);
     rarray<float,2> c = RARRAY(cbuf);
+    //rarray<float,2> c(cbuf);
 
     for (auto i=r.begin(); i != r.end(); i++) {
         REQUIRE(r.index(*i)[0]==*i);
@@ -2591,74 +2609,74 @@ TEST_CASE("testcomma_assignment")
     rarray<double,1> b(8);
     b.fill(0);
     b = 1,2,3,6,5,4;
-    REQUIRE(b[0]==1);
-    REQUIRE(b[1]==2);
-    REQUIRE(b[2]==3);
-    REQUIRE(b[3]==6);
-    REQUIRE(b[4]==5);
-    REQUIRE(b[5]==4);
-    REQUIRE(b[6]==0);
-    REQUIRE(b[7]==0);
+    REQUIRE(b[0]==1.);
+    REQUIRE(b[1]==2.);
+    REQUIRE(b[2]==3.);
+    REQUIRE(b[3]==6.);
+    REQUIRE(b[4]==5.);
+    REQUIRE(b[5]==4.);
+    REQUIRE(b[6]==0.);
+    REQUIRE(b[7]==0.);
 
     rarray<double,3> a(3,4,2);
 
     a =  1,2,    3,6,   5,4,   7,8, 
          9,12,  11,10, 21,22, 23,26, 
         25,24,  27,28, 29,32, 31,30;
-    REQUIRE(a[0][0][0]== 1);
-    REQUIRE(a[0][0][1]== 2);
-    REQUIRE(a[0][1][0]== 3);
-    REQUIRE(a[0][1][1]== 6);
-    REQUIRE(a[0][2][0]== 5);
-    REQUIRE(a[0][2][1]== 4);
-    REQUIRE(a[0][3][0]== 7);
-    REQUIRE(a[0][3][1]== 8);
-    REQUIRE(a[1][0][0]== 9);
-    REQUIRE(a[1][0][1]==12);
-    REQUIRE(a[1][1][0]==11);
-    REQUIRE(a[1][1][1]==10);
-    REQUIRE(a[1][2][0]==21);
-    REQUIRE(a[1][2][1]==22);
-    REQUIRE(a[1][3][0]==23);
-    REQUIRE(a[1][3][1]==26);
-    REQUIRE(a[2][0][0]==25);
-    REQUIRE(a[2][0][1]==24);
-    REQUIRE(a[2][1][0]==27);
-    REQUIRE(a[2][1][1]==28);
-    REQUIRE(a[2][2][0]==29);
-    REQUIRE(a[2][2][1]==32);
-    REQUIRE(a[2][3][0]==31);
-    REQUIRE(a[2][3][1]==30);
+    REQUIRE(a[0][0][0]== 1.);
+    REQUIRE(a[0][0][1]== 2.);
+    REQUIRE(a[0][1][0]== 3.);
+    REQUIRE(a[0][1][1]== 6.);
+    REQUIRE(a[0][2][0]== 5.);
+    REQUIRE(a[0][2][1]== 4.);
+    REQUIRE(a[0][3][0]== 7.);
+    REQUIRE(a[0][3][1]== 8.);
+    REQUIRE(a[1][0][0]== 9.);
+    REQUIRE(a[1][0][1]==12.);
+    REQUIRE(a[1][1][0]==11.);
+    REQUIRE(a[1][1][1]==10.);
+    REQUIRE(a[1][2][0]==21.);
+    REQUIRE(a[1][2][1]==22.);
+    REQUIRE(a[1][3][0]==23.);
+    REQUIRE(a[1][3][1]==26.);
+    REQUIRE(a[2][0][0]==25.);
+    REQUIRE(a[2][0][1]==24.);
+    REQUIRE(a[2][1][0]==27.);
+    REQUIRE(a[2][1][1]==28.);
+    REQUIRE(a[2][2][0]==29.);
+    REQUIRE(a[2][2][1]==32.);
+    REQUIRE(a[2][3][0]==31.);
+    REQUIRE(a[2][3][1]==30.);
 
     a.at(1)             = 100,101,102,103,104,105,106,107;
     a.at(2).at(1)       = 200,201;
     a.at(2).at(2).at(0) = 300,301; //  forgets the 301
     a.at(2).at(3).at(0) = (300,301); // forgets the 300
     a.at(2).at(3)[0] = (300,301); // on purpose using built-in comma operator which forgets the 300
-    REQUIRE(a[0][0][0]== 1);
-    REQUIRE(a[0][0][1]== 2);
-    REQUIRE(a[0][1][0]== 3);
-    REQUIRE(a[0][1][1]== 6);
-    REQUIRE(a[0][2][0]== 5);
-    REQUIRE(a[0][2][1]== 4);
-    REQUIRE(a[0][3][0]== 7);
-    REQUIRE(a[0][3][1]== 8);
-    REQUIRE(a[1][0][0]==100);
-    REQUIRE(a[1][0][1]==101);
-    REQUIRE(a[1][1][0]==102);
-    REQUIRE(a[1][1][1]==103);
-    REQUIRE(a[1][2][0]==104);
-    REQUIRE(a[1][2][1]==105);
-    REQUIRE(a[1][3][0]==106);
-    REQUIRE(a[1][3][1]==107);
-    REQUIRE(a[2][0][0]==25);
-    REQUIRE(a[2][0][1]==24);
-    REQUIRE(a[2][1][0]==200);
-    REQUIRE(a[2][1][1]==201);
-    REQUIRE(a[2][2][0]==300);
-    REQUIRE(a[2][2][1]==32);
-    REQUIRE(a[2][3][0]==301);
-    REQUIRE(a[2][3][1]==30);
+    REQUIRE(a[0][0][0]== 1.);
+    REQUIRE(a[0][0][1]== 2.);
+    REQUIRE(a[0][1][0]== 3.);
+    REQUIRE(a[0][1][1]== 6.);
+    REQUIRE(a[0][2][0]== 5.);
+    REQUIRE(a[0][2][1]== 4.);
+    REQUIRE(a[0][3][0]== 7.);
+    REQUIRE(a[0][3][1]== 8.);
+    REQUIRE(a[1][0][0]==100.);
+    REQUIRE(a[1][0][1]==101.);
+    REQUIRE(a[1][1][0]==102.);
+    REQUIRE(a[1][1][1]==103.);
+    REQUIRE(a[1][2][0]==104.);
+    REQUIRE(a[1][2][1]==105.);
+    REQUIRE(a[1][3][0]==106.);
+    REQUIRE(a[1][3][1]==107.);
+    REQUIRE(a[2][0][0]==25.);
+    REQUIRE(a[2][0][1]==24.);
+    REQUIRE(a[2][1][0]==200.);
+    REQUIRE(a[2][1][1]==201.);
+    REQUIRE(a[2][2][0]==300.);
+    REQUIRE(a[2][2][1]==32.);
+    REQUIRE(a[2][3][0]==301.);
+    REQUIRE(a[2][3][1]==30.);
 
 }
 
@@ -2766,23 +2784,23 @@ TEST_CASE("testnarrowconversions")
     rarray<float,2> g6 = RARRAY(f6);
     REQUIRE(g6.extent(0)==1);
     REQUIRE(g6.extent(1)==2);
-    REQUIRE(g6[0][0]==0.0);
-    REQUIRE(g6[0][1]==0.0);
+    REQUIRE(g6[0][0]==0.0f);
+    REQUIRE(g6[0][1]==0.0f);
     
     float f[1][1][1]={{{2}}};
     rarray<float,3> g = RARRAY(f);
     REQUIRE(g.extent(0)==1);
     REQUIRE(g.extent(1)==1);
     REQUIRE(g.extent(2)==1);
-    REQUIRE(g[0][0][0]==2);
+    REQUIRE(g[0][0][0]==2.f);
 
     float f4[1][1][2]={{{10.0,20.0}}};
     rarray<float,3> g4 = RARRAY(f4);
     REQUIRE(g4.extent(0)==1);
     REQUIRE(g4.extent(1)==1);
     REQUIRE(g4.extent(2)==2);
-    REQUIRE(g4[0][0][0]==10.0);
-    REQUIRE(g4[0][0][1]==20.0);
+    REQUIRE(g4[0][0][0]==10.0f);
+    REQUIRE(g4[0][0][1]==20.0f);
 }
 
 
@@ -2796,7 +2814,7 @@ TEST_CASE("morerarrayio")
     s >> Y;
     REQUIRE(Y.extent(0) == 2);
     REQUIRE(Y.extent(1) == 3);
-    REQUIRE(Y[1][1]==47);
+    REQUIRE(Y[1][1]==47.);
 }
 
 
@@ -2828,21 +2846,33 @@ double get_element_1(double *x)
     return x[1];
 }
 
-TEST_CASE("test_auto_conversion_to_const_ptr") {
+TEST_CASE("test_explicit_conversion_to_const_ptr") {
     rtensor<double> t(10,10,10);
     double*const*const* z = t.ptr_array();
     REQUIRE(z!=nullptr);
     double a = 5;
     t[1][1][1] = a;
-    double b = get_element_111(t);
+    double b = get_element_111(t.ptr_array());
     REQUIRE(a==b);    
     rvector<double> y(10);
     double c = 6;
     y[1] = c;
-    double d = get_element_1(y);
+    double d = get_element_1(y.ptr_array());
     REQUIRE(c==d);
 }
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+TEMPLATE_TEST_CASE("testat", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+ {
+     using T = TestType;
+     rarray<T,1> a(7);
+     T x1 = global::get_value_1<T>();
+     a.fill(x1);
+     REQUIRE(a.at(2) == x1);
+ }
