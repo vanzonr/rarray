@@ -171,7 +171,7 @@ test_shared_shape: test_shared_shape.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} ${DBGFLAGS} -o $@ $^ ${LIBSCOV}
 
 test_rarray.o: ${SRC}/test_rarray.cc rarray
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} -DRA_BOUNDSCHECK ${DBGFLAGS} -c -o $@ $<
 
 test_rarray: test_rarray.o
 	${CXX} ${LDFLAGS} -o $@ $^

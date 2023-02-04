@@ -27,5 +27,5 @@
 #undef RA_INLINE
 #undef RA_INLINEF
 #undef RA_INLINE_
-
+#undef noboundscheck
 

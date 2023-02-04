@@ -56,6 +56,11 @@ struct PointerArray<T,1> { // We end the recursion by specifically defining the 
     typedef T* type;     // no const as this would express that the elements are constant
     typedef T* noconst_type; 
 };
+template<typename T> 
+struct PointerArray<T,0> { // We also end the recursion by specifically defining the R=0 case, this is needed for the _Bracket classes
+    typedef T& type;     
+    typedef T& noconst_type; 
+};
 
 /***************************************************************************/
 

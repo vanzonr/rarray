@@ -29,11 +29,13 @@
 // checkOrSay is intended to be used for bound checks.
 #ifdef RA_BOUNDSCHECK
 #include <string>
-#define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__))
+#define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__) + " (rarray:" + std::to_string(__LINE__) + ")")
 #define RA_NOEXCEPT(x)
+#define noboundscheck false
 #else
 #define RA_CHECKORSAY(a, b) 
 #define RA_NOEXCEPT(x) noexcept(x)
+#define noboundscheck true
 #endif
 
 // For g++ and icpc, RA_INLINE forces inlining, even without optimization.

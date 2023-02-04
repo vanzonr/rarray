@@ -27,8 +27,27 @@
 int main()
 {
     rarray<double,2> a(100,100);
-    double *const*z = a;
+    double *const*z = a.ptr_array();
     a[2][3] = 4.4;
+    int faultscaught=0;
+    try {
+        a[2][300] = 4.4;
+    }
+    catch (...)
+    {
+        std::cout << "Caught out of bounds\n";
+        faultscaught++;
+    }
+    try {
+        a[200][3] = 4.4;
+    }
+    catch (...)
+    {
+        std::cout << "Caught out of bounds\n";
+        faultscaught++;
+    }
+    if (faultscaught<2)
+        return 2;
     if (z[2][3]==4.4)
         return !(int(a[2][3])==4);
     else
