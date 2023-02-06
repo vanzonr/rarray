@@ -152,13 +152,13 @@ catch.hpp:
 	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
 	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
-test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h
+test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h catch.hpp
 	${CXX} ${CPPFLAGS} ${DBGFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
 
 test_shared_buffer: test_shared_buffer.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $^ ${LIBSCOV}
 
-test_offsets.o: ${SRC}/test_offsets.cc ${HS}/offsets.h
+test_offsets.o: ${SRC}/test_offsets.cc ${HS}/offsets.h catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} ${DBGFLAGS} -c -o $@ $<
 
 test_offsets: test_offsets.o
@@ -191,21 +191,27 @@ coverage:
 
 run_test_shared_buffer: test_shared_buffer coverage
 	./test_shared_buffer
-	${GCOV} ./test_shared_buffer.o > coverage/$@
+	${GCOV} ./test_shared_buffer.o | \
+	awk '/0:Source:headersources\/shared_buffer.h/{f=1}/0:Colorization:/{f=0}f' \
+	> coverage/$@
 
 run_valgrind_test_shared_buffer: test_shared_buffer
 	${VALGRIND} ./test_shared_buffer
 
 run_test_offsets: test_offsets coverage
 	./test_offsets
-	${GCOV} ./test_offsets.o > coverage/$@
+	${GCOV} ./test_offsets.o | \
+	awk '/0:Source:headersources\/offsets.h/{f=1}/0:Colorization:/{f=0}f' \
+	> coverage/$@
 
 run_valgrind_test_offsets: test_offsets
 	${VALGRIND} ./test_offsets
 
 run_test_shared_shape: test_shared_shape coverage
 	./test_shared_shape
-	${GCOV} ./test_shared_shape.o > coverage/$@
+	${GCOV} ./test_shared_shape.o | \
+	awk '/0:Source:headersources\/shared_shape.h/{f=1}/0:Colorization:/{f=0}f' \
+	> coverage/$@
 
 run_valgrind_test_shared_shape: test_shared_shape
 	${VALGRIND} ./test_shared_shape
@@ -218,14 +224,17 @@ run_valgrind_test_rarray: test_rarray
 
 run_testsuite: testsuite coverage
 	./testsuite
-	${GCOV} ./testsuite.o > coverage/$@
+	${GCOV} ./testsuite.o | \
+	awk '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' \
+	> coverage/$@
 
 run_valgrind_testsuite: testsuite
 	${VALGRIND} ./testsuite
 
 run_testsuite_bc: testsuite_bc coverage
 	./testsuite_bc
-	${GCOV} ./testsuite_bc.o > coverage/$@
+	${GCOV} ./testsuite_bc.o | \
+	awk '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' > coverage/$@
 
 run_valgrind_testsuite_bc: testsuite_bc
 	${VALGRIND} ./testsuite_bc

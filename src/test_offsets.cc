@@ -23,111 +23,123 @@
 //
 
 #include "offsets.h"
-#include <cassert>
-#include <iostream>
 
-int test_offsets_main()
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+const int N = 16;
+
+TEST_CASE("0")
 {
-    const int N = 16;
-    {
-        std::cerr << "Test 0\n";
-        Offsets P{{}};
-        assert(P.get_num_data_offsets() == 0);
-        assert(P.get_num_offsets() == 0);
-        assert(P.get_num_data_offsets() == 0);
-    }
-    {
-        std::cerr << "Test 1\n";
-        Offsets P{{N}};
-        assert(P.get_num_data_offsets() == 1);
-        assert(P.get_num_offsets() == 0);
-        assert(P.get_num_data_offsets() == 1);
-        int a[N];
-        int* aptr = &(a[0]);
-        for (int i=0;i<N;i++)
-            aptr[i] = i;
-        int* p = reinterpret_cast<int*>(P.apply_offsets(a));
-        for (int i1 = 0; i1 < N; i1++) {
-            assert(p[i1]==i1);
-        }
-    }
-    {
-        std::cerr << "Test 2\n";
-        Offsets P{{N,N/2}};  // 16 x 8 
-        assert(P.get_num_data_offsets() == N);
-        assert(P.get_num_offsets() == N);
-        assert(P.get_num_data_offsets() == N);
-        int a[N][N/2];
-        int* aptr = &(a[0][0]);
-        for ( int i=0;i<N*(N/2);i++)
-            aptr[i] = i;
-        int*const* p = reinterpret_cast<int*const*>(P.apply_offsets(aptr));
-        for (int i1 = 0; i1 < N; i1++)
-            for (int i2 = 0; i2 < N/2; i2++) {
-                assert(p[i1][i2] == i1*(N/2) +i2);
-            }
-        delete[] p;
-    }
-    {
-        std::cerr << "Test 3\n";        
-        Offsets P{{N,N/2,N/4}};  // 16 x 8 x 4
-        assert(P.get_num_data_offsets() == N*(N/2) );
-        assert(P.get_num_offsets() == N*(N/2+1) );
-        assert(P.get_num_data_offsets() == N*(N/2) );
-        int a[N][N/2][N/4];
-        int* aptr = &(a[0][0][0]);
-        for (int i=0;i<N*(N/2)*(N/4);i++)
-            aptr[i] = i;
-        int*const*const* p = reinterpret_cast<int*const*const*>(P.apply_offsets(aptr));
-        for (int i1 = 0; i1 < N; i1++)
-            for (int i2 = 0; i2 < N/2; i2++)
-                for (int i3 = 0; i3 < N/4; i3++) {
-                    assert(p[i1][i2][i3] == (i1*(N/2)  +i2)*(N/4)+i3);
-                }       
-        delete[] p;
-    }
-    {
-        std::cerr << "Test 4\n";        
-        Offsets P{{N,N/2,N/4,N/8}}; // 16 x 8 x 4 x 2
-        assert(P.get_num_offsets() == N*(N/2*(N/4+1)+1));
-        assert(P.get_num_data_offsets() == N*(N/2)*(N/4));
-        int a[N][N/2][N/4][N/8];
-        int* aptr = &a[0][0][0][0];
-        for ( int i=0;i<N*(N/2)*(N/4)*(N/8);i++)
-            aptr[i] = i;
-        int*const*const*const* p = reinterpret_cast<int*const*const*const*>(P.apply_offsets(aptr));
-        for (int i1 = 0; i1 < N; i1++)
-            for (int i2 = 0; i2 < N/2; i2++)
-                for (int i3 = 0; i3 < N/4; i3++)
-                    for (int i4 = 0; i4 < N/8; i4++) {
-                        assert(p[i1][i2][i3][i4]
-                               == ((i1*(N/2)+i2)*(N/4)+i3)*(N/8)+i4);
-                    }
-        delete [] p;
-    }
-    {
-        std::cerr << "Test 5\n";        
-        Offsets P{{N,N/2,N/4,N/8,N/16}}; // 16 x 8 x 4 x 2 x 1
-        assert(P.get_num_offsets() == N*(N/2*(N/4*(N/8+1)+1)+1));
-        assert(P.get_num_data_offsets() == N*(N/2)*(N/4)*(N/8));
-        int a[N][N/2][N/4][N/8][N/16];
-        int* aptr = &a[0][0][0][0][0];
-        for ( int i=0;i<N*(N/2)*(N/4)*(N/8)*(N/16);i++)
-            aptr[i] = i;
-        int*const*const*const*const* p = reinterpret_cast<int*const*const*const*const*>(P.apply_offsets(aptr));
-        for (int i1 = 0; i1 < N; i1++)
-            for (int i2 = 0; i2 < N/2; i2++)
-                for (int i3 = 0; i3 < N/4; i3++)
-                    for (int i4 = 0; i4 < N/8; i4++)
-                        for (int i5 = 0; i5 < N/16; i5++) {
-                            assert(p[i1][i2][i3][i4][i5]
-                                   == (((i1*(N/2)+i2)*(N/4)+i3)*(N/8)+i4)*(N/16)+i5);
-                        }
-        delete [] p;
-    }
-    return 0;
+    Offsets P{{}};
+    REQUIRE(P.get_num_data_offsets() == 0);
+    REQUIRE(P.get_num_offsets() == 0);
+    REQUIRE(P.get_num_data_offsets() == 0);
 }
 
-int main() {
-    return test_offsets_main();
+TEST_CASE("1")
+{
+    Offsets P{{N}};
+    REQUIRE(P.get_num_data_offsets() == 1);
+    REQUIRE(P.get_num_offsets() == 0);
+    REQUIRE(P.get_num_data_offsets() == 1);
+    int a[N];
+    int* aptr = &(a[0]);
+    for (int i=0;i<N;i++)
+        aptr[i] = i;
+    int* p = reinterpret_cast<int*>(P.apply_offsets(a));
+    for (int i1 = 0; i1 < N; i1++) {
+        REQUIRE(p[i1]==i1);
+    }
 }
+
+TEST_CASE("2")
+{
+    Offsets P{{N,N/2}};  // 16 x 8 
+    REQUIRE(P.get_num_data_offsets() == N);
+    REQUIRE(P.get_num_offsets() == N);
+    REQUIRE(P.get_num_data_offsets() == N);
+    int a[N][N/2];
+    int* aptr = &(a[0][0]);
+    for ( int i=0;i<N*(N/2);i++)
+        aptr[i] = i;
+    int*const* p = reinterpret_cast<int*const*>(P.apply_offsets(aptr));
+    for (int i1 = 0; i1 < N; i1++)
+        for (int i2 = 0; i2 < N/2; i2++) {
+            REQUIRE(p[i1][i2] == i1*(N/2) +i2);
+        }
+    delete[] p;
+}
+
+TEST_CASE("3")
+{
+    Offsets P{{N,N/2,N/4}};  // 16 x 8 x 4
+    REQUIRE(P.get_num_data_offsets() == N*(N/2) );
+    REQUIRE(P.get_num_offsets() == N*(N/2+1) );
+    REQUIRE(P.get_num_data_offsets() == N*(N/2) );
+    int a[N][N/2][N/4];
+    int* aptr = &(a[0][0][0]);
+    for (int i=0;i<N*(N/2)*(N/4);i++)
+        aptr[i] = i;
+    int*const*const* p = reinterpret_cast<int*const*const*>(P.apply_offsets(aptr));
+    for (int i1 = 0; i1 < N; i1++)
+        for (int i2 = 0; i2 < N/2; i2++)
+            for (int i3 = 0; i3 < N/4; i3++) {
+                REQUIRE(p[i1][i2][i3] == (i1*(N/2)  +i2)*(N/4)+i3);
+            }       
+    delete[] p;
+}
+
+TEST_CASE("4")
+{
+    Offsets P{{N,N/2,N/4,N/8}}; // 16 x 8 x 4 x 2
+    REQUIRE(P.get_num_offsets() == N*(N/2*(N/4+1)+1));
+    REQUIRE(P.get_num_data_offsets() == N*(N/2)*(N/4));
+    int a[N][N/2][N/4][N/8];
+    int* aptr = &a[0][0][0][0];
+    for ( int i=0;i<N*(N/2)*(N/4)*(N/8);i++)
+        aptr[i] = i;
+    int*const*const*const* p = reinterpret_cast<int*const*const*const*>(P.apply_offsets(aptr));
+    for (int i1 = 0; i1 < N; i1++)
+        for (int i2 = 0; i2 < N/2; i2++)
+            for (int i3 = 0; i3 < N/4; i3++)
+                for (int i4 = 0; i4 < N/8; i4++) {
+                    REQUIRE(p[i1][i2][i3][i4]
+                            == ((i1*(N/2)+i2)*(N/4)+i3)*(N/8)+i4);
+                }
+    delete [] p;
+}
+
+TEST_CASE("5")
+{
+    Offsets P{{N,N/2,N/4,N/8,N/16}}; // 16 x 8 x 4 x 2 x 1
+    REQUIRE(P.get_num_offsets() == N*(N/2*(N/4*(N/8+1)+1)+1));
+    REQUIRE(P.get_num_data_offsets() == N*(N/2)*(N/4)*(N/8));
+    int a[N][N/2][N/4][N/8][N/16];
+    int* aptr = &a[0][0][0][0][0];
+    for ( int i=0;i<N*(N/2)*(N/4)*(N/8)*(N/16);i++)
+        aptr[i] = i;
+    int*const*const*const*const* p = reinterpret_cast<int*const*const*const*const*>(P.apply_offsets(aptr));
+    for (int i1 = 0; i1 < N; i1++)
+        for (int i2 = 0; i2 < N/2; i2++)
+            for (int i3 = 0; i3 < N/4; i3++)
+                for (int i4 = 0; i4 < N/8; i4++)
+                    for (int i5 = 0; i5 < N/16; i5++) {
+                        REQUIRE(p[i1][i2][i3][i4][i5]
+                                == (((i1*(N/2)+i2)*(N/4)+i3)*(N/8)+i4)*(N/16)+i5);
+                    }
+    delete [] p;
+}
+
+TEST_CASE("6")
+{
+    Offsets P{{}};
+    REQUIRE(P.get_num_data_offsets() == 0);
+    REQUIRE(P.get_num_offsets() == 0);
+    REQUIRE(P.get_num_data_offsets() == 0);
+    int* aptr = nullptr;
+    void*** p = P.apply_offsets(aptr);
+    REQUIRE(p == nullptr);
+}
+
+
