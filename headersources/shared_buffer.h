@@ -38,7 +38,15 @@
 #include <cstring>
 #include <atomic>
 
-int test_shared_buffer_main(); // for testing
+// declaration for unit testing:
+namespace ra { template<class T> class shared_buffer; }
+template<typename V> 
+int internal_check(const ra::shared_buffer<V>& a,
+                   bool datavalue_shouldbe, V* datavalue,
+                   bool origvalue_shouldbe, V* origvalue,
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
+                   bool refscount_shouldbe, int refscount,
+                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue);
 
 /***************************************************************************/
 
@@ -121,8 +129,14 @@ class shared_buffer
     size_type size_;
     std::atomic<int>* refs_;
 
-    friend int ::test_shared_buffer_main(); // for testing
-
+    // for testing:
+    template<typename V> 
+    friend int ::internal_check(const ra::shared_buffer<V>& a,
+                   bool datavalue_shouldbe, V* datavalue,
+                   bool origvalue_shouldbe, V* origvalue,
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
+                   bool refscount_shouldbe, int refscount,
+                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue);
     void uninit() noexcept;
     void incref() noexcept;
     void decref() noexcept;
@@ -248,7 +262,7 @@ template<class T>
 const T& shared_buffer<T>::at(size_type index) const
 {
     // element access with bounds checking
-    if (index < 0 or index > size_)
+    if (index < 0 or index >= size_)
         throw std::out_of_range("shared_buffer::at");
     return data_[index];
 }
@@ -257,7 +271,7 @@ template<class T>
 T& shared_buffer<T>::at(size_type index)
 {
     // element access with bounds checking
-    if (index < 0 or index > size_)
+    if (index < 0 or index >= size_)
         throw std::out_of_range("shared_buffer::at");
     return data_[index];
 }
