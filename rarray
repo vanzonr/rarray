@@ -1254,9 +1254,10 @@ class _Bracket {
   private:
     RA_INLINEF _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
-    RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray;
     template<typename T2,int R2,typename P2> friend class ra::_Bracket;
+  public:
+    RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_)[nextindex]);
 };
 
 template<typename T,typename P>
@@ -1275,48 +1276,55 @@ class _Bracket<T,1,P> {
   private:
     RA_INLINEF _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
-    RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray;
     template<typename T2,int R2,typename P2> friend class ra::_Bracket;
+  public:
+    RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_)[nextindex]);
 };
-
 
 template<typename T,int R,typename P>
 class _ConstBracket {
+  private:
+    const P&       parent_;
+    ssize_t        index_;
   public:
     RA_INLINEF _ConstBracket<T,R-1,_ConstBracket> operator[](ssize_t nextindex) const noexcept(noboundscheck);
+    RA_INLINEF operator decltype(parent_.at(index_)) ();
     _ConstBracket(const _ConstBracket&) = delete;
     _ConstBracket(const _ConstBracket&&) = delete;
     _ConstBracket& operator=(const _ConstBracket&) = delete;
     _ConstBracket& operator=(const _ConstBracket&&) = delete;
   private:
-    const P&       parent_;
-    ssize_t        index_;
     const ssize_t* shape_;
     RA_INLINEF _ConstBracket(const P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) const noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray;
     template<typename T2,int R2,typename P2> friend class ra::_ConstBracket;
+  public:
+    RA_INLINEF auto at(ssize_t nextindex) const -> decltype(parent_.at(index_)[nextindex]);
 };
 
 template<typename T,typename P>
 class _ConstBracket<T,1,P> {
+  private:
+    const P&       parent_;
+    ssize_t        index_;
   public:
     RA_INLINEF const T& operator[](ssize_t nextindex) const noexcept(noboundscheck);
+    RA_INLINEF operator decltype(parent_.at(index_)) ();
     _ConstBracket(const _ConstBracket&) = delete;
     _ConstBracket(const _ConstBracket&&) = delete;
     _ConstBracket& operator=(const _ConstBracket&) = delete;
     _ConstBracket& operator=(const _ConstBracket&&) = delete;
   private:
-    const P&       parent_;
-    ssize_t        index_;
     const ssize_t* shape_;
     RA_INLINEF _ConstBracket(const P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) const noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray;
     template<typename T2,int R2,typename P2> friend class ra::_ConstBracket;
+  public:
+    RA_INLINEF auto at(ssize_t nextindex) const -> decltype(parent_.at(index_)[nextindex]);
 };
-
 
 template<typename S>
 rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true) //
@@ -1997,19 +2005,6 @@ ra::rarray<T,R>::at(size_type i) const
         throw std::out_of_range("rarray<T,R>::at");
     return shape_.ptrs()[i];
 }
-/* * *
-template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::operator typename PointerArray<T,R>::type () noexcept
-{
-    return shape_.ptrs();
-}
-
-template<typename T, int R> RA_INLINEF
-ra::rarray<T,R>::operator typename PointerArray<const T,R>::type () const noexcept
-{
-    return shape_.ptrs();
-}
-* * */
 
 template<typename T, int R> RA_INLINEF
 typename ra::PointerArray<T,R-1>::type ra::rarray<T,R>::_at(ssize_t index)
@@ -2186,8 +2181,6 @@ ra::size_type ra::rarray<T,R>::index(const T& a, int i) const
 
 
 
-
-
 template<typename T, int R, typename P> inline
 ra::_Bracket<T,R-1,ra::_Bracket<T,R,P>> ra::_Bracket<T,R,P>::operator[](ssize_t nextindex) noexcept(noboundscheck)
 {
@@ -2240,11 +2233,6 @@ ra::_Bracket<T,1,P>::_Bracket(P& parent, ssize_t index, const ssize_t* shape) no
     RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
 }
 
-template<typename T, typename P> RA_INLINEF
-auto ra::_Bracket<T,1,P>::_at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex])
-{
-    return parent_._at(index_)[nextindex];
-}
 
 template<typename T, typename P> RA_INLINEF
 auto ra::_Bracket<T,1,P>::at(ssize_t nextindex) -> decltype(parent_.at(index_)[nextindex])
@@ -2253,12 +2241,15 @@ auto ra::_Bracket<T,1,P>::at(ssize_t nextindex) -> decltype(parent_.at(index_)[n
 }
 
 
-
-
 template<typename T,int R,typename P> RA_INLINEF
 ra::_ConstBracket<T,R-1,ra::_ConstBracket<T,R,P>> ra::_ConstBracket<T,R,P>::operator[](ssize_t nextindex) const noexcept(noboundscheck)
 {
     return { *this, nextindex, shape_ + 1 };
+}
+template<typename T, int R, typename P> RA_INLINEF
+ra::_ConstBracket<T,R,P>::operator decltype(parent_.at(index_)) ()
+{
+    return parent_.at(index_);
 }
 template<typename T,int R,typename P>
 RA_INLINEF ra::_ConstBracket<T,R,P>::_ConstBracket(const P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck)
@@ -2281,6 +2272,11 @@ const T& ra::_ConstBracket<T,1,P>::operator[](ssize_t nextindex) const noexcept(
     RA_CHECKORSAY(nextindex >=0 and nextindex < shape_[1], "index out of range of array");
     return parent_._at(index_)[nextindex];
 }
+template<typename T, typename P> RA_INLINEF
+ra::_ConstBracket<T,1,P>::operator decltype(parent_.at(index_)) ()
+{
+    return parent_.at(index_);
+}
 template<typename T,typename P>
 RA_INLINEF ra::_ConstBracket<T,1,P>::_ConstBracket(const P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck)
 : parent_(parent),
@@ -2289,13 +2285,6 @@ RA_INLINEF ra::_ConstBracket<T,1,P>::_ConstBracket(const P& parent, ssize_t inde
 {
     RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
 }
-template<typename T,typename P>
-RA_INLINEF auto ra::_ConstBracket<T,1,P>::_at(ssize_t nextindex) const noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex])
-{
-    return parent_._at(index_)[nextindex];
-}
-
-
 
 
 namespace ra {
