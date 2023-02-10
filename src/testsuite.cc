@@ -156,7 +156,7 @@ TEMPLATE_TEST_CASE("test constructors", "",
     REQUIRE(c.extent(2) == dim[2]);
     REQUIRE(c.data()==b.data());
     b.clear();
-    REQUIRE(b.is_clear());
+    REQUIRE(b.empty());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -371,9 +371,9 @@ TEMPLATE_TEST_CASE("test constructors 7dim", "",
     a1.clear(); //optional here, as a1 will go out of scope
     b7.clear();
 
-    REQUIRE(a1.is_clear());
-    REQUIRE(b7.is_clear());
-    REQUIRE(c7.is_clear() == false);
+    REQUIRE(a1.empty());
+    REQUIRE(b7.empty());
+    REQUIRE(c7.empty() == false);
 }
 
 //////////////////////////////////////////////////////////////////////

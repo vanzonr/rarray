@@ -40,8 +40,8 @@
 #include <list>
 
 //begin #include "versionheader.h"
-#define RA_VERSION "v2.4.1"
-#define RA_VERSION_NUMBER 2004001
+#define RA_VERSION "v2.5.0"
+#define RA_VERSION_NUMBER 2005000
 
 //end #include "versionheader.h"
 
@@ -1135,7 +1135,7 @@ class rarray {
     template<int R_=R,class=typename std::enable_if<R_==11>::type>
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO);
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);
-    RA_INLINE_ bool                is_clear()           const noexcept;
+    RA_INLINE_ bool                empty()           const noexcept;
     RA_INLINE_ rarray<T,R>         copy()               const;
     RA_INLINE_ size_type           extent(int i)        const;
     RA_INLINEF const size_type*    shape()              const noexcept;
@@ -1902,7 +1902,7 @@ ra::rarray<T,R>::~rarray()
 template<typename T, int R> RA_INLINE_
 ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>())
 {
-    RA_CHECKORSAY(not is_clear(), "assignment to unsized array");
+    RA_CHECKORSAY(not empty(), "assignment to unsized array");
     RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
     T* first = &(buffer_[0]);
     if (size() > 0)
@@ -1932,7 +1932,7 @@ ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
 
 
 template<typename T, int R> RA_INLINE_
-bool ra::rarray<T,R>::is_clear() const noexcept
+bool ra::rarray<T,R>::empty() const noexcept
 {
     return buffer_.cbegin() == nullptr;
 }
@@ -2361,7 +2361,7 @@ template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream
     if (R>1) {
         return ra::text_output(o,r);
     } else if (R==1) {
-        if (not r.is_clear()) {
+        if (not r.empty()) {
             o << "{";
             for (ra::size_type i=0; i<r.extent(0); i++)  {
                 if (i>0)
@@ -2378,7 +2378,7 @@ template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream
 template<typename T,int R> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
-    if (not r.is_clear()) {
+    if (not r.empty()) {
         o << "{\n";
         for (size_type i=0; i<r.extent(0); i++)  {
             if (i>0)
@@ -2399,7 +2399,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 template<typename T> RA_INLINE_
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
-    if (not r.is_clear()) {
+    if (not r.empty()) {
         o << '{';
         for (size_type i=0; i<r.extent(0); i++) {
             if (i) o << ',';

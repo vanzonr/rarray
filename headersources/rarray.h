@@ -206,7 +206,7 @@ class rarray {
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO); // R=11
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);                                                                                                                      // any R
     //
-    RA_INLINE_ bool                is_clear()           const noexcept;              // check if undefined
+    RA_INLINE_ bool                empty()           const noexcept;              // check if undefined
     RA_INLINE_ rarray<T,R>         copy()               const;                       // return a copy
     RA_INLINE_ size_type           extent(int i)        const;                       // retrieve array size in dimension i
     RA_INLINEF const size_type*    shape()              const noexcept;              // retrieve array sizes in all dimensions
@@ -1001,7 +1001,7 @@ template<typename T, int R> RA_INLINE_
 ra::CommaOp<T> ra::rarray<T,R>::operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>())
 {
     // Comma separated element assignment: puts the first one in and prepares for more
-    RA_CHECKORSAY(not is_clear(), "assignment to unsized array");
+    RA_CHECKORSAY(not empty(), "assignment to unsized array");
     RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
     T* first = &(buffer_[0]);
     if (size() > 0)
@@ -1036,7 +1036,7 @@ ra::CommaOp<T>& ra::CommaOp<T>::operator,(const T& e)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T, int R> RA_INLINE_
-bool ra::rarray<T,R>::is_clear() const noexcept
+bool ra::rarray<T,R>::empty() const noexcept
 {
     // check if empty
     return buffer_.cbegin() == nullptr;

@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{December 22, 2022 (version 2.4)\vspace{-7mm}}
+\date{February, 2023 (version 2.5.0)\vspace{-7mm}}
 
 \maketitle
 
@@ -229,8 +229,10 @@ The guarrantee of contiguity means strided arrays are not supported.
 \item Can be emptied with the {\tt clear} method.
 \item Can be filled with a uniform value with the {\tt fill} method.
 \item Can be reshaped.
-\item Automatic C-style arrays can be converted to rarrays using {\tt RARRAY}.
-\item A method {\tt is\_clear} to check if the rarray is uninitialized.
+\item Automatic C-style arrays can be converted to rarrays using {\tt
+  RARRAY}.
+\item Checks index bounds if the preprocessor constant {\tt RA\_BOUNDSCHECK} is defined. 
+\item A method {\tt empty} to check if the rarray is uninitialized.
 \item A method to get the number of elements in each
   dimension (\texttt{extent}), or in all dimensions (\texttt{shape}).
 \item A method to obtain the total number of elements in the
@@ -446,6 +448,21 @@ It is never possible to do a reshape that leads to more elements,
 because, by design, the reshape method should not allocated any
 memory.
 
+
+\subsection{Optional bounds checking}
+
+If the preprocessor constant \texttt{{\tt RA\_BOUNDSCHECK}} is defined, an
+\texttt{out\_of\_bounds} exception is thrown~if
+\begin{itemize}\itemsep0pt\parskip3pt
+\item an index is too small or too large;
+\item the size of dimension is requested that does not exist (in a call to \texttt{extent(int i)});
+\item a constructor is called with a zero pointer for the buffer or for the dimensions array;
+\end{itemize}
+\texttt{{\tt RA\_BOUNDSCHECK}} can be defined by
+adding the {\tt -DRA\_BOUNDSCHECK} argument to the compilation command, or
+by \texttt{{\tt\#define RA\_BOUNDSCHECK}} before
+the \texttt{{\tt\#include <rarray>}} in the source.
+
 %\pagebreak
 
 \section{Comparison with standard alternatives}
@@ -510,7 +527,7 @@ public:
  void reshape(const int* size_type);       // change copy's  shape (not data)
  void clear();                             // release memory
  void fill(const T& value);                // fill with uniform value
- bool is_clear() const;                    // check if uninitialized;
+ bool empty() const;                       // check if uninitialized;
  rarray<T,R> copy() const;                 // deep copy
  const size_type*  shape() const;          // all extents as C-style array
  size_type extent(int i) const;            // extent in dimension i
@@ -588,7 +605,7 @@ This method release memory the memory associated with the rarray. If the rarray 
 
 This method fills the array with a uniform value \texttt{value}.
 
-\noindent\textbf{Definition:} \texttt{bool is\_clear();}
+\noindent\textbf{Definition:} \texttt{bool empty();}
 
 Checks if the rarray is in an uninitialized state.
 
@@ -1246,6 +1263,15 @@ Internal refactoring focussed on eliminating warnings, dead code,
 version tracking in code, and exception safety.
 Fixed bug for compound data types.
 Support added for Intel OneAPI's icpx C++ compiler.
+
+\noindent
+Dec 2022: Version 2.5
+
+Optional bounds checking is back.\\
+\texttt{is\_clear} renamed to \texttt{empty}.\\
+Can now get a subarray with square brackets.\\
+Rarray objects no nolonger automatically convert into T*const*... pointers.\\
+More extensive unit and coverage tests.
 
 
 \end{document}

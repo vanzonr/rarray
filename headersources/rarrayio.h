@@ -87,7 +87,7 @@ template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream
     if (R>1) {
         return ra::text_output(o,r);
     } else if (R==1) {
-        if (not r.is_clear()) {
+        if (not r.empty()) {
             o << "{"; 
             for (ra::size_type i=0; i<r.extent(0); i++)  {
                 if (i>0)
@@ -105,7 +105,7 @@ template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream
 template<typename T,int R> RA_INLINE_ 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
-    if (not r.is_clear()) {
+    if (not r.empty()) {
         o << "{\n"; // new newline
         for (size_type i=0; i<r.extent(0); i++)  {
             if (i>0)
@@ -126,7 +126,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 template<typename T> RA_INLINE_ 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
-    if (not r.is_clear()) {
+    if (not r.empty()) {
         o << '{';
         for (size_type i=0; i<r.extent(0); i++) {
             if (i) o << ',';

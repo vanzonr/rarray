@@ -5,7 +5,7 @@ rarray is a C++ library for multidimensional arrays.  It is a
 header-only implementation that uses templates, which allows most
 compilers to generate fast code.
 
-The latest release version is 2.4.1.
+The latest release version is 2.5.0
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -101,18 +101,22 @@ Release History and Changes
    
    Support added for Intel OneAPI's icpx C++ compiler.
 
+   (2.4.1 was a bug fix for the at() function)
+   
+ * Version 2.5.0, February 2023
+
+   Bounds checking reinstated.
+
+   Can now get a subarray with square brackets.
+ 
+   Rarray objects no nolonger automatically convert into T*const*... pointers.
+
+   More extensive unit and coverage tests.
+
+   'is_clear' renamed to 'empty'.
+
 Known issues
 ============
-
-  * Defining RA_BOUNDSCHECK only activates partial bounds checking
-    because some the optional but expensive index-range chekcing
-    capability got lost in the rewrite from v1.2 to v2.0+
-
-  * To get a subarray, you need to use the rarray::at() member
-    function, instead of square brackets.
-
-  * Rarray objects automatically convert into T*const*... pointers to
-    make square brackets work.
 
   * Cannot force alignment of data yet.
 
