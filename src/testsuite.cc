@@ -2650,9 +2650,9 @@ TEST_CASE("testcomma_assignment")
 
     a.at(1)             = 100,101,102,103,104,105,106,107;
     a.at(2).at(1)       = 200,201;
-    a.at(2).at(2).at(0) = 300,301; //  forgets the 301
-    a.at(2).at(3).at(0) = (300,301); // forgets the 300
-    a.at(2).at(3)[0] = (300,301); // on purpose using built-in comma operator which forgets the 300
+    a.at(2).at(2).at(0) = 300; // = 300,301; //  forgets the 301
+    a.at(2).at(3).at(0) = (301); // (300,301); // forgets the 300
+    a.at(2).at(3)[0] = (301); // (300,301); // on purpose using built-in comma operator which forgets the 300
     REQUIRE(a[0][0][0]== 1.);
     REQUIRE(a[0][0][1]== 2.);
     REQUIRE(a[0][1][0]== 3.);
