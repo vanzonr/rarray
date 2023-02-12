@@ -10,3 +10,7 @@ CPPFLAGSOPT=-DNDEBUG
 CXXFLAGSOPT=-O3 -xhost -ansi-alias -funroll-loops
 FC=ifx
 FFLAGS=-O3 -xhost -ansi-alias -funroll-loops
+LDFLAGSCOV=
+CXXFLAGSCOV=
+LIBSCOV=
+GCOV=:

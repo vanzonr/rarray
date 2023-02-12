@@ -5,7 +5,7 @@ CXX=xlC_r
 CXXFLAGS=-qlanglvl=extended0x
 DBGFLAGS=-g
 CPPFLAGSOPT=-DNDEBUG
-CXXFLAGSOPT=-qinline=level=10 -qnoipa
+CXXFLAGSOPT=-O5 -qinline=level=10 -qnoipa
 FC=xlf
 FFLAGS=-O5 -qnoipa
 LDFLAGSCOV=
