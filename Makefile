@@ -244,31 +244,31 @@ list:
 
 run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo Comparison benchmark on a 2d array example
-	@./$(BENCHMARK2DNAME) 1 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 1) 
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 2) 
-	@./$(BENCHMARK2DNAME) 3
-	@./$(BENCHMARK2DNAME) 4
-	@./$(BENCHMARK2DNAME) 5
-	@./$(BENCHMARK2DNAME) 6
-	@./$(BENCHMARK2DNAME) 7
-	@./$(BENCHMARK2DNAME) 8
-	@./$(BENCHMARK2DNAME) 9
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 3) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 4) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 5) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 6) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 7) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 8) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 9) 
 	@./$(BENCHMARK2DNAMEF)
-	@./$(BENCHMARK2DNAME) 1
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 1) 
 
 run_benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@echo Comparison benchmark on a 4d array example
-	@./$(BENCHMARK4DNAME) 1 
-	@(ulimit -s 4000000; ./$(BENCHMARK4DNAME) 2) 
-	@./$(BENCHMARK4DNAME) 3
-	@./$(BENCHMARK4DNAME) 4
-	@./$(BENCHMARK4DNAME) 5
-	@./$(BENCHMARK4DNAME) 6
-	@./$(BENCHMARK4DNAME) 7
-	@./$(BENCHMARK4DNAME) 8
-	@./$(BENCHMARK4DNAME) 9
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 1) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 2) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 3) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 4) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 5) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 6) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 7) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 8) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 9) 
 	@./$(BENCHMARK4DNAMEF)
-	@./$(BENCHMARK4DNAME) 1
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 1) 
 
 $(BENCHMARK2DNAME): $(BENCHMARK2DNAME).o $(PASS).o config.mk
 	$(CXX) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)
