@@ -153,7 +153,7 @@ catch.hpp:
 	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h catch.hpp
-	${CXX} ${CPPFLAGS} ${DBGFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
 
 test_shared_buffer: test_shared_buffer.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $^ ${LIBSCOV}
