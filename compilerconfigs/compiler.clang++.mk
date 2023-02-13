@@ -14,3 +14,4 @@ LDFLAGSCOV=-fprofile-instr-generate -fcoverage-mapping
 CXXFLAGSCOV=-fprofile-instr-generate -fcoverage-mapping
 LIBSCOV=
 GCOV=llvm-profdata merge -sparse default.profraw  -o default.data && llvm-cov show -instr-profile=default.data
+FILTERCOV=grep -hs ^ -

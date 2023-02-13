@@ -60,6 +60,7 @@ LDFLAGSCOV?=-fprofile-arcs -ftest-coverage
 CXXFLAGSCOV?=-fprofile-arcs -ftest-coverage
 LIBSCOV?=
 GCOV?=gcov -trkm
+FILTERCOV?=awk
 
 VALGRIND?=valgrind --leak-check=full
 
@@ -192,7 +193,7 @@ coverage:
 run_test_shared_buffer: test_shared_buffer coverage
 	./test_shared_buffer
 	${GCOV} ./test_shared_buffer.o | \
-	awk '/0:Source:headersources\/shared_buffer.h/{f=1}/0:Colorization:/{f=0}f' \
+	( ${FILTERCOV} '/0:Source:headersources\/shared_buffer.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
 run_valgrind_test_shared_buffer: test_shared_buffer
@@ -201,7 +202,7 @@ run_valgrind_test_shared_buffer: test_shared_buffer
 run_test_offsets: test_offsets coverage
 	./test_offsets
 	${GCOV} ./test_offsets.o | \
-	awk '/0:Source:headersources\/offsets.h/{f=1}/0:Colorization:/{f=0}f' \
+	( ${FILTERCOV} '/0:Source:headersources\/offsets.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
 run_valgrind_test_offsets: test_offsets
@@ -210,7 +211,7 @@ run_valgrind_test_offsets: test_offsets
 run_test_shared_shape: test_shared_shape coverage
 	./test_shared_shape
 	${GCOV} ./test_shared_shape.o | \
-	awk '/0:Source:headersources\/shared_shape.h/{f=1}/0:Colorization:/{f=0}f' \
+	( ${FILTERCOV} '/0:Source:headersources\/shared_shape.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
 run_valgrind_test_shared_shape: test_shared_shape
@@ -225,7 +226,7 @@ run_valgrind_test_rarray: test_rarray
 run_testsuite: testsuite coverage
 	./testsuite
 	${GCOV} ./testsuite.o | \
-	awk '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' \
+	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
 run_valgrind_testsuite: testsuite
@@ -234,7 +235,8 @@ run_valgrind_testsuite: testsuite
 run_testsuite_bc: testsuite_bc coverage
 	./testsuite_bc
 	${GCOV} ./testsuite_bc.o | \
-	awk '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' > coverage/$@
+	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
+	> coverage/$@
 
 run_valgrind_testsuite_bc: testsuite_bc
 	${VALGRIND} ./testsuite_bc
