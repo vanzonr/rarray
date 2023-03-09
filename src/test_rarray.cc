@@ -52,5 +52,6 @@ int main()
         return !(int(a[2][3])==4);
     else
         return 1;
+
 }
 

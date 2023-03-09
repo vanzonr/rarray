@@ -249,6 +249,7 @@ class rarray {
     U&
     >::type
     operator[](ssize_t index) {
+        RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
         return buffer_.begin()[index];
     }
     template<class U=T> typename std::enable_if<R!=1,
@@ -261,6 +262,7 @@ class rarray {
     const U&
     >::type
     operator[](ssize_t index) const {
+        RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
         return buffer_.cbegin()[index];
     }
     template<class U=T> typename std::enable_if<R!=1,
