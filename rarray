@@ -29,16 +29,6 @@
 
 #if __cplusplus >= 201103L
 
-#include <stdexcept>
-#include <cstdlib>
-#include <utility>
-#include <string>
-#include <cmath>
-#include <algorithm>
-#include <sstream>
-#include <iostream>
-#include <list>
-
 //begin #include "versionheader.h"
 #define RA_VERSION "v2.5.0"
 #define RA_VERSION_NUMBER 2005000
@@ -989,6 +979,16 @@ void shared_shape<T,R>::decref() noexcept
 
 //end #include "shared_shape.h"
 
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <list>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace ra {
 typedef ssize_t size_type;

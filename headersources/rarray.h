@@ -29,20 +29,20 @@
 
 #if __cplusplus >= 201103L
 
-#include <stdexcept>
-#include <cstdlib>
-#include <utility>
-#include <string>
-#include <cmath>
-#include <algorithm>
-#include <sstream>
-#include <iostream>
-#include <list>
-
 #include "versionheader.h"
 #include "rarraymacros.h"
 #include "shared_buffer.h"
 #include "shared_shape.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <list>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 // Forward definitions of ra::rarray<T,R> and ra::CommaOp
 namespace ra {
@@ -50,7 +50,7 @@ typedef ssize_t size_type;
 enum class RESIZE { NO, ALLOWED };
 template<typename T,int R> class rarray;
 template<typename T> class CommaOp;
-// Definitions of streaming operator; implementation is in rarrayio
+// // Definitions of streaming operator; implementation is in rarrayio
 template<typename T,int R> RA_INLINE_ std::istream& operator>>(std::istream &i, rarray<T,R>& r);
 template<typename T,int R> RA_INLINE_ std::ostream& operator<<(std::ostream &o, const rarray<T,R>& r);
 // Definitions for (repeated) bracket access
@@ -62,7 +62,7 @@ template<typename T,int R,typename P> class _ConstBracket;
 //typedef int ExOp;
 #define ExOp class
 template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
-}
+} // end namespace ra (forward declarations)
    
 namespace ra {
     
@@ -1455,7 +1455,7 @@ size_type extent(const rarray<T,R> &a, int i)
 {
     return a.extent(i);
 }
-}
+} // end namespace ra
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

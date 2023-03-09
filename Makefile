@@ -89,7 +89,8 @@ help:
         run_test_shared_buffer  run_test_offsets  run_test_shared_shape \
         run_test_rarray  run_testsuite  run_testsuite_bc \
         run_valgrind_test_shared_buffer  run_valgrind_testsuite \
-        run_benchmark2d  run_benchmark4d 
+        run_benchmark2d  run_benchmark4d \
+	lint
 
 headers: rarray rarrayio
 
@@ -105,6 +106,9 @@ valgrindtest: run_valgrind_testsuite  run_valgrind_testsuite_bc \
 benchmarks: run_benchmark2d  run_benchmark4d
 
 doc: rarraydoc.pdf
+
+lint:
+	mkdir -p clang-tidy-output && clang-tidy -checks=modernize-*,cppcoreguidelines-*, headersources/rarray.h -extra-arg-before=-xc++ > clang-tidy-output/clang-tidy-rarray.out
 
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} -o $@ $^
