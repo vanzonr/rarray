@@ -1,7 +1,7 @@
 //
 // testsuite.cc - testsuite for rarray
 //
-// Copyright (c) 2013-2022  Ramses van Zon
+// Copyright (c) 2013-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -141,6 +141,8 @@ TEMPLATE_TEST_CASE("test constructors", "",
     REQUIRE(asize[0] == dim[0]);
     REQUIRE(asize[1] == dim[1]);
     REQUIRE(asize[2] == dim[2]);
+    REQUIRE_THROWS(a.extent(-1));
+    REQUIRE_THROWS(a.extent(3));
     REQUIRE(a.extent(0) == dim[0]);
     REQUIRE(a.extent(1) == dim[1]);
     REQUIRE(a.extent(2) == dim[2]);
@@ -931,19 +933,13 @@ TEMPLATE_TEST_CASE("testsliceconstructor", "",
     //   rarray(int,int,int)
     //   T* data();
     rarray<T,3> a(7,21,13);
-#ifdef RA_SKIPINTERMEDIATE
-    const T* tan=getconstdata(rarray<T,2>(&a[1][0][0],a.extent(1),a.extent(2)));
-    T* tac = &a[1][0][0];
-#else
     rarray<T,2> b(a.at(2));
     rarray<T,1> c(b.at(2));
     const rarray<T,2> d(a.at(2));
     const rarray<T,1> e(b.at(2));
     const T* tan = getconstdata(rarray<T,2>(a.at(1)));
     T* tac = a.at(1).data();
-#endif
     REQUIRE(tan==tac);
-#ifndef RA_SKIPINTERMEDIATE
     REQUIRE(a.at(1).extent(0)==21);
     REQUIRE(a.at(1).extent(1)==13);
     REQUIRE(a.at(1).shape()[1]==13);
@@ -955,7 +951,9 @@ TEMPLATE_TEST_CASE("testsliceconstructor", "",
     T* p2 = a.at(3).data();
     REQUIRE(p1);
     REQUIRE(p2);
-#endif    
+    REQUIRE_THROWS(b.at(-1));
+    REQUIRE_THROWS(c.at(100));
+    REQUIRE_THROWS(d.at(100));
 }
 
 
@@ -1356,10 +1354,8 @@ TEST_CASE("test2dconversions")
     for (int i=0;i<n;i++)
       for (int j=0;j<m;j++)
         a[i][j]=float(i+1)*10+float(j+1);
-#ifndef RA_SKIPINTERMEDIATE
     rarray<float,1> atoo = a.at(1);
     atoo=a.at(1); // not really testing runtime
-#endif
     const rarray<float,2>& c=a; // note the const
     std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
  // print2d_1(c, a.extent(0), a.extent(1), s1); won't work, one needs:
@@ -1886,13 +1882,11 @@ TEST_CASE("testassignment")
     REQUIRE(b.extent(0)==a.extent(0));
     REQUIRE(b.extent(1)==a.extent(1));
     REQUIRE(b.extent(2)==a.extent(2));
-#ifndef RA_SKIPINTERMEDIATE
     rarray<float,2> e;
     e = a.at(2);
     REQUIRE(e.data()==a.at(2).data());
     REQUIRE(e.extent(0)==a.extent(1));
     REQUIRE(e.extent(1)==a.extent(2));    
-#endif
     rarray<float,1> c(2048);
     rarray<float,1> d;
     d = c;
@@ -1905,7 +1899,6 @@ TEST_CASE("testassignment")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RA_SKIPINTERMEDIATE
 void testconstintermediatefunction(const rarray<float,3>& a, const float* data1check)
 {
     const float* atoo=a.at(1).data();
@@ -1917,13 +1910,9 @@ void testconstintermediatefunction(const rarray<float,3>& a, const float* data1c
     REQUIRE(a.at(1).at(2).noconst_ptr_array());
     REQUIRE(a.at(1).at(2).const_ref().ptr_array());
 }
-#endif
 
 TEST_CASE("testconstintermediate")
 {
-#ifdef RA_SKIPINTERMEDIATE
-    
-#else
     rarray<float,3> a(7,8,9);
     int l=0;
     for (int i=0;i<7;i++)
@@ -1931,7 +1920,6 @@ TEST_CASE("testconstintermediate")
             for (int k=0;k<9;k++)
                 a[i][j][k] = float(l++);
     testconstintermediatefunction(a,a.at(1).data());
-#endif
 }
 
 
@@ -1948,11 +1936,9 @@ TEST_CASE("testintermediateconversion")
 {
     rarray<float,2> a(10,10);
     a[2][7]=14;
-#ifndef RA_SKIPINTERMEDIATE
     auto b = a.at(2);
     fill_1d_rarray(b, 13);
     REQUIRE(a[2][7]==13.f);
-#endif
 }
 
 
@@ -1980,12 +1966,14 @@ TEST_CASE("testreshape")
     rarray<float,1> novela(a);
     rarray<float,1> novela2(atoo);
     novela[3] = 4;
-    novela.reshape(4, ra::RESIZE::ALLOWED);
+    novela.reshape(4, ra::RESIZE::ALLOWED);   
     a.reshape(dim);
     a.reshape(*dim);
+    REQUIRE_THROWS( a.reshape(*dim+1,ra::RESIZE::ALLOWED) );
     REQUIRE(novela.extent(0)==4);
     REQUIRE(novela[3]==4.f);
     REQUIRE(novela2.extent(0)==7);
+    REQUIRE_THROWS( novela2.reshape(10,ra::RESIZE::ALLOWED) );
     novela2.reshape(4, ra::RESIZE::ALLOWED);
     REQUIRE(novela2.extent(0)==4);
     REQUIRE(novela2[3]==4.f);
@@ -1994,17 +1982,19 @@ TEST_CASE("testreshape")
     rarray<float,2> novelb2(novelb);
     novelb.reshape(10,7);
     b.reshape(dim);
-    REQUIRE(novelb.extent(0)==10.f);
-    REQUIRE(novelb.extent(1)==7.f);
-    REQUIRE(novelb2.extent(0)==7.f);
-    REQUIRE(novelb2.extent(1)==10.f);
+    REQUIRE_THROWS( b.reshape(dim[0]+1,dim[1]+1,ra::RESIZE::ALLOWED) );
+    REQUIRE(novelb.extent(0)==10);
+    REQUIRE(novelb.extent(1)==7);
+    REQUIRE(novelb2.extent(0)==7);
+    REQUIRE(novelb2.extent(1)==10);
     REQUIRE(novelb[8][0] == 5.f);
     c[4][8][3] = 6;
     rarray<float,3> novelc(c);
     novelc.reshape(10,7,13);
-    REQUIRE(novelc.extent(0)==10.f);
-    REQUIRE(novelc.extent(1)==7.f);
-    REQUIRE(novelc.extent(2)==13.f);
+    REQUIRE_THROWS( novelc.reshape(1000,1000,1000,ra::RESIZE::ALLOWED) );
+    REQUIRE(novelc.extent(0)==10);
+    REQUIRE(novelc.extent(1)==7);
+    REQUIRE(novelc.extent(2)==13);
     REQUIRE(novelc[6][6][3] == 6.f);
     rarray<float,4> noveld(d);
     rarray<float,5> novele(e);
@@ -2016,16 +2006,105 @@ TEST_CASE("testreshape")
     rarray<float,10> novelj(j);
     rarray<float,11> novelk(k);
     rarray<float,12> novell(l);
-    noveld.reshape(2,2,2,2, ra::RESIZE::ALLOWED);                // TODO: check
-    novele.reshape(13,7,10,2,4, ra::RESIZE::ALLOWED);            // TODO: check
-    novelf.reshape(5,6,1,13,10,7, ra::RESIZE::ALLOWED);          // TODO: check
-    novelg.reshape(dimr, ra::RESIZE::ALLOWED);                   // TODO: check
-    novelg.reshape(2,5,6,1,13,10,7, ra::RESIZE::ALLOWED);  // TODO: check
-    novelh.reshape(4,3,2,3,4,3,2,3, ra::RESIZE::ALLOWED);        // TODO: check
-    noveli.reshape(4,3,2,3,4,3,2,3,2, ra::RESIZE::ALLOWED);      // TODO: check
-    novelj.reshape(4,3,2,3,4,3,2,3,2,3, ra::RESIZE::ALLOWED);    // TODO: check
-    novelk.reshape(4,3,2,3,4,3,2,3,2,3,4, ra::RESIZE::ALLOWED);  // TODO: check
-    novell.reshape(dimr12);                 // TODO: check
+    noveld.reshape(2,2,2,2, ra::RESIZE::ALLOWED); 
+    REQUIRE(noveld.extent(0)==2);
+    REQUIRE(noveld.extent(1)==2);
+    REQUIRE(noveld.extent(2)==2);
+    REQUIRE(noveld.extent(3)==2);
+    REQUIRE_THROWS( noveld.reshape(10,10,10,10, ra::RESIZE::ALLOWED) );
+    novele.reshape(13,7,10,2,4, ra::RESIZE::ALLOWED);
+    REQUIRE(novele.extent(0)==13);
+    REQUIRE(novele.extent(1)==7);
+    REQUIRE(novele.extent(2)==10);
+    REQUIRE(novele.extent(3)==2);
+    REQUIRE(novele.extent(4)==4);
+    REQUIRE_THROWS( novele.reshape(100,100,100,100,100, ra::RESIZE::ALLOWED) ); 
+    novelf.reshape(5,6,1,13,10,7, ra::RESIZE::ALLOWED);
+    REQUIRE(novelf.extent(0)==5);
+    REQUIRE(novelf.extent(1)==6);
+    REQUIRE(novelf.extent(2)==1);
+    REQUIRE(novelf.extent(3)==13);
+    REQUIRE(novelf.extent(4)==10);
+    REQUIRE(novelf.extent(5)==7);
+    REQUIRE_THROWS( novelf.reshape(100,100,100,100,100,100, ra::RESIZE::ALLOWED) );
+    novelg.reshape(dimr, ra::RESIZE::ALLOWED);
+    REQUIRE(novelg.extent(0)==dimr[0]);
+    REQUIRE(novelg.extent(1)==dimr[1]);
+    REQUIRE(novelg.extent(2)==dimr[2]);
+    REQUIRE(novelg.extent(3)==dimr[3]);
+    REQUIRE(novelg.extent(4)==dimr[4]);
+    REQUIRE(novelg.extent(5)==dimr[5]);
+    REQUIRE(novelg.extent(6)==dimr[6]);
+    novelg.reshape(2,5,6,1,13,10,7, ra::RESIZE::ALLOWED);  
+    REQUIRE(novelg.extent(0)==2);
+    REQUIRE(novelg.extent(1)==5);
+    REQUIRE(novelg.extent(2)==6);
+    REQUIRE(novelg.extent(3)==1);
+    REQUIRE(novelg.extent(4)==13);
+    REQUIRE(novelg.extent(5)==10);
+    REQUIRE(novelg.extent(6)==7);
+    REQUIRE_THROWS( novelg.reshape(100,100,100,100,100,100,100, ra::RESIZE::ALLOWED) );
+    novelh.reshape(4,3,2,3,4,3,2,3, ra::RESIZE::ALLOWED);
+    REQUIRE(novelh.extent(0)==4);
+    REQUIRE(novelh.extent(1)==3);
+    REQUIRE(novelh.extent(2)==2);
+    REQUIRE(novelh.extent(3)==3);
+    REQUIRE(novelh.extent(4)==4);
+    REQUIRE(novelh.extent(5)==3);
+    REQUIRE(novelh.extent(6)==2);
+    REQUIRE(novelh.extent(7)==3);
+    REQUIRE_THROWS( novelh.reshape(100,100,100,100,100,100,100,100, ra::RESIZE::ALLOWED) );
+    noveli.reshape(4,3,2,3,4,3,2,3,2, ra::RESIZE::ALLOWED);
+    REQUIRE(noveli.extent(0)==4);
+    REQUIRE(noveli.extent(1)==3);
+    REQUIRE(noveli.extent(2)==2);
+    REQUIRE(noveli.extent(3)==3);
+    REQUIRE(noveli.extent(4)==4);
+    REQUIRE(noveli.extent(5)==3);
+    REQUIRE(noveli.extent(6)==2);
+    REQUIRE(noveli.extent(7)==3);
+    REQUIRE(noveli.extent(8)==2);
+    REQUIRE_THROWS( noveli.reshape(100,100,100,100,100,100,100,100,100, ra::RESIZE::ALLOWED) );
+    novelj.reshape(4,3,2,3,4,3,2,3,2,3, ra::RESIZE::ALLOWED);
+    REQUIRE(novelj.extent(0)==4);
+    REQUIRE(novelj.extent(1)==3);
+    REQUIRE(novelj.extent(2)==2);
+    REQUIRE(novelj.extent(3)==3);
+    REQUIRE(novelj.extent(4)==4);
+    REQUIRE(novelj.extent(5)==3);
+    REQUIRE(novelj.extent(6)==2);
+    REQUIRE(novelj.extent(7)==3);
+    REQUIRE(novelj.extent(8)==2);
+    REQUIRE(novelj.extent(9)==3);
+    REQUIRE_THROWS( novelj.reshape(100,100,100,100,100,100,100,100,100,100, ra::RESIZE::ALLOWED) );
+    novelk.reshape(4,3,2,3,4,3,2,3,2,3,4, ra::RESIZE::ALLOWED);
+    REQUIRE(novelk.extent(0)==4);
+    REQUIRE(novelk.extent(1)==3);
+    REQUIRE(novelk.extent(2)==2);
+    REQUIRE(novelk.extent(3)==3);
+    REQUIRE(novelk.extent(4)==4);
+    REQUIRE(novelk.extent(5)==3);
+    REQUIRE(novelk.extent(6)==2);
+    REQUIRE(novelk.extent(7)==3);
+    REQUIRE(novelk.extent(8)==2);
+    REQUIRE(novelk.extent(9)==3);
+    REQUIRE(novelk.extent(10)==4);
+    REQUIRE_THROWS( novelk.reshape(100,100,100,100,100,100,100,100,100,100,100, ra::RESIZE::ALLOWED) );
+    novell.reshape(dimr12);
+    REQUIRE(novell.extent(0)==dimr12[0]);
+    REQUIRE(novell.extent(1)==dimr12[1]);
+    REQUIRE(novell.extent(2)==dimr12[2]);
+    REQUIRE(novell.extent(3)==dimr12[3]);
+    REQUIRE(novell.extent(4)==dimr12[4]);
+    REQUIRE(novell.extent(5)==dimr12[5]);
+    REQUIRE(novell.extent(6)==dimr12[6]);
+    REQUIRE(novell.extent(7)==dimr12[7]);
+    REQUIRE(novell.extent(8)==dimr12[8]);
+    REQUIRE(novell.extent(9)==dimr12[9]);
+    REQUIRE(novell.extent(10)==dimr12[10]);
+    REQUIRE(novell.extent(11)==dimr12[11]);
+    dimr12[0] += 1000;
+    REQUIRE_THROWS( novell.reshape(dimr12) );
 }
 
 
@@ -2330,7 +2409,77 @@ TEST_CASE("test11dautoconversion")
 }
 
 
+TEST_CASE("test12failextent")
+{
+    int twelve[2][2][2][2][2][2][2][2][2][2][2][2];
+    REQUIRE(EXTENT(twelve,0) == 2);
+    REQUIRE(EXTENT(twelve,1) == 2);
+    REQUIRE(EXTENT(twelve,2) == 2);
+    REQUIRE(EXTENT(twelve,3) == 2);
+    REQUIRE(EXTENT(twelve,4) == 2);
+    REQUIRE(EXTENT(twelve,5) == 2);
+    REQUIRE(EXTENT(twelve,6) == 2);
+    REQUIRE(EXTENT(twelve,7) == 2);
+    REQUIRE(EXTENT(twelve,8) == 2);
+    REQUIRE(EXTENT(twelve,9) == 2);
+    REQUIRE(EXTENT(twelve,10) == 2);
+    REQUIRE_THROWS(EXTENT(twelve,11)==2);
+}
+
+TEST_CASE("testzerooutput")
+{
+    char expected_output[] = "{{{{{{{}}}}}}}\n";
+    std::stringstream s;
+    s << rarray<int,7>();
+    REQUIRE(s.str()==expected_output);
+}
+
+TEST_CASE("testinput")
+{
+    char input[] = "{{1,2},{3,4}}";
+    std::stringstream s(input);
+    rarray<int,2> d;
+    s >> d;
+    REQUIRE(d[0][0] == 1);
+    REQUIRE(d[0][1] == 2);
+    REQUIRE(d[1][0] == 3);
+    REQUIRE(d[1][1] == 4);
+
+    std::stringstream smallerinput("{{11},{22}}");
+    smallerinput >> d;
+    REQUIRE(d.extent(0) == 2);
+    REQUIRE(d.extent(1) == 1);
+    REQUIRE(d[0][0] == 11);
+    REQUIRE(d[1][0] == 22);
+    
+    
+    char wronginput[] = "{3,4}";
+    std::stringstream wrongs(wronginput);
+    rarray<int,2> wrongd;
+    REQUIRE_THROWS(wrongs >> wrongd);
+    REQUIRE(wrongs.fail());
+    REQUIRE(wrongd.size() == 0);
+}
+
 ///////////////////////////////////////////////////////////////////
+
+
+TEST_CASE("testcomplexinput")
+{
+    std::stringstream instr("{{(0,0),(1,0)},{(0,1),(1,1)}}");  
+    std::complex<float> zero(0,0), one(1,0), i(0,1), oneplusi(1,1);
+    rarray<std::complex<float>,2> cfarray;
+    instr >> cfarray;
+    REQUIRE(cfarray.extent(0) == 2);
+    REQUIRE(cfarray.extent(1) == 2);
+    REQUIRE(cfarray[0][0] == zero);
+    REQUIRE(cfarray[0][1] == one);
+    REQUIRE(cfarray[1][0] == i);
+    REQUIRE(cfarray[1][1] == oneplusi);
+    std::stringstream wronginstr("{{(0,0),(1,0)}bla,{(0,1),(1,1)}}");
+    REQUIRE_THROWS(wronginstr >> cfarray);
+}
+
 ///////////////////////////////////////////////////////////////////
 
 TEST_CASE("testoutput")
@@ -2403,14 +2552,10 @@ TEST_CASE("testiterators")
     {
         qout << *i << ',';
     }
-#ifndef RA_SKIPINTERMEDIATE
     for (rarray<double,2>::const_iterator i=r.at(1).cbegin(); i!=r.at(1).cend(); i++)
     {
         qout << *i << ',';
     }
-#else
-    qout << "7,8,9,10,";
-#endif
     REQUIRE(qout.str() == "3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,7,8,9,10,");
     const rarray<double,2> rview = r;
     for (rarray<double,2>::const_iterator i=rview.begin(); i!=rview.end(); i++)
@@ -2448,29 +2593,18 @@ TEST_CASE("testiterators")
     }
 #endif
     REQUIRE(rout.str() == "2,4,6,8,10,");
-    #ifndef RA_SKIPINTERMEDIATE
     std::stringstream check;
-#if __cplusplus <= 199711L
-    for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
-        *cp *= 2;
-    for (auto dp = s[1][2].begin(); dp != s[1][2].end(); ++dp)
-        *dp += 10;
-    for (auto cp = s[1].begin(); cp != s[1].end(); ++cp)
-        check << (*cp) << ',';
-#else
     for (auto& cc: s.at(1))
         cc *= 2;
     for (auto& dd: s.at(1).at(2))
         dd += 10;
     for (const auto& cc: s.at(1))
         check << cc << ',';
-#endif
     for (rarray<double,2>::const_iterator i=s.at(2).cbegin(); i!=s.at(2).cend(); i++)
     {
         check << *i << ',';
     }
     REQUIRE(check.str() == "20,22,24,26,28,30,42,44,46,19,20,21,22,23,24,25,26,27,");
-    #endif
     auto sb = s.begin();
     auto se = s.end();
     REQUIRE(not (sb==se));
@@ -2525,23 +2659,17 @@ TEST_CASE("testindex")
     REQUIRE(INDEX(a,a[3],0)==3);
     REQUIRE(INDEX(a,a[4],0)==4);
     REQUIRE(INDEX(a,a[5],0)==5);
+    REQUIRE_THROWS(a.index(a[10],0));
     for (auto i=a.begin(); i != a.end(); i++) {
         auto ind = a.index(i);
         ra::size_type ind2=a.index(i,0);
         REQUIRE(ind[0]==ind2);
         *i =float(ind[0]+1);
     }
-#if __cplusplus <= 199711L
-    for (auto element = a.begin(); element != a.end(); ++element)
-        *element *= a.index(*element,&ind)[0];
-    for (auto element = a.begin(); element != a.end(); ++element)
-        *element *= a.index(*element,0);
-#else
     for (auto& element: a)
         element *= float(a.index(element)[0]);
     for (auto& element: a)
         element *= float(a.index(element,0));
-#endif
     REQUIRE(a[0]==0.f);
     REQUIRE(a[1]==2.f);
     REQUIRE(a[2]==12.f);
@@ -2606,6 +2734,30 @@ TEST_CASE("testindex")
 
 TEST_CASE("testcomma_assignment")
 {
+    rarray<double,1> emptyarray;
+    try {        
+        emptyarray = 1,2;
+        #ifdef RA_BOUNDSCHECK       
+        REQUIRE(false);
+        #endif
+    } catch (...) { REQUIRE(true); }
+    emptyarray = rarray<double,1>(ra::size_type(0));
+    try {
+        emptyarray = 1;
+        #ifdef RA_BOUNDSCHECK
+        REQUIRE(false);
+        #endif
+    } catch(...) { REQUIRE(true); }
+    REQUIRE(emptyarray.size() == 0);
+    rarray<double,2> emptyarray2;
+    emptyarray2 = rarray<double,2>(ra::size_type(0),ra::size_type(0));
+    try {
+        emptyarray2 = 1;
+        #ifdef RA_BOUNDSCHECK
+        REQUIRE(false);
+        #endif
+    } catch(...) { REQUIRE(true); }
+    REQUIRE(emptyarray2.size() == 0);
     rarray<double,1> b(8);
     b.fill(0);
     b = 1,2,3,6,5,4;
@@ -2647,6 +2799,9 @@ TEST_CASE("testcomma_assignment")
     REQUIRE(a[2][2][1]==32.);
     REQUIRE(a[2][3][0]==31.);
     REQUIRE(a[2][3][1]==30.);
+
+    REQUIRE_THROWS( a.at(-1) );
+    REQUIRE_THROWS( a.at(100000000) );
 
     a.at(1)             = 100,101,102,103,104,105,106,107;
     a.at(2).at(1)       = 200,201;
@@ -2692,6 +2847,12 @@ TEST_CASE("testlinspace")
     for (auto x: r) {
         REQUIRE(x==i);
         i++;
+    }
+    auto rev = linspace(b,a);
+    int irev = b;
+    for (auto x: rev) {
+        REQUIRE(x==irev);
+        irev--;
     }
     auto r2 = linspace(0,30,4);
     int check2[] = {0,10,20,30};

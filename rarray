@@ -3,7 +3,7 @@
 //          runtime, reference counted, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2022  Ramses van Zon
+// Copyright (c) 2013-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -208,16 +208,9 @@ template<class T>
 shared_buffer<T>::shared_buffer(size_type asize)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
-    T* data;
+    auto to_be_data = std::unique_ptr<T>(new T[asize]);
     refs_ = new std::atomic<int>(1);
-    try {
-        data = new T[asize];
-    }
-    catch (...) {
-        delete refs_;
-        throw;
-    }
-    data_ = data;
+    data_ = to_be_data.release();
     orig_ = data_;
     size_ = asize;
 }
@@ -305,10 +298,9 @@ shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to)
         throw std::out_of_range("shared_buffer::slice");
     shared_buffer<T> result(*this);
     result.data_ += from;
+    result.size_ = 0;
     if (from <= to)
         result.size_ = to - from;
-    else
-        result.size_ = 0;
     return result;
 }
 
@@ -319,10 +311,9 @@ const shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to) con
         throw std::out_of_range("shared_buffer::slice");
     shared_buffer<T> result(*this);
     result.data_ += from;
+    result.size_ = 0;
     if (from <= to)
         result.size_ = to - from;
-    else
-        result.size_ = 0;
     return result;
 }
 
@@ -625,6 +616,7 @@ inline ssize_t Offsets::get_rank() const noexcept
 
 #include <array>
 #include <stdexcept>
+#include <memory>
 #include <atomic>
 
 int test_shared_shape_main();
@@ -733,21 +725,15 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
   : extent_(anextent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
 {
     Offsets P({extent_.begin(),extent_.end()});
-    orig_ = P.apply_offsets(adata);
+    auto to_be_orig = std::unique_ptr<void**>(P.apply_offsets(adata));
+    if (R>1)
+        refs_ = new std::atomic<int>(1);
+    orig_ = to_be_orig.release();
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
+    if (R==1)
+        orig_ = nullptr;
     noffsets_ = P.get_num_offsets();
     ndataoffsets_ = P.get_num_data_offsets();
-    if (R>1) {
-      try {
-        refs_ = new std::atomic<int>(1);
-      }
-      catch(...) {
-        delete[] orig_;
-        throw;
-      }
-    } else {
-        orig_ = nullptr;
-    }
 }
 
 template<class T, int R>
@@ -1040,7 +1026,7 @@ class rarray {
     RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);
     template<int R_=R,class=typename std::enable_if<R_==11>::type>
     RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10);
-    RA_INLINE_ rarray(const size_type* anextent);
+    explicit RA_INLINE_ rarray(const size_type* anextent);
     template<int R_=R,class=typename std::enable_if<R_==1>::type>
     RA_INLINE_ rarray(T* buffer, size_type n0);
     template<int R_=R,class=typename std::enable_if<R_==2>::type>
@@ -2297,7 +2283,7 @@ size_type extent(const A &a, int i)
     case 8: return std::extent<A,8>();
     case 9: return std::extent<A,9>();
     case 10: return std::extent<A,10>();
-    default: return 0;
+    default: throw std::out_of_range("ra::extent"); return 0;
     }
 }
 
@@ -2335,7 +2321,7 @@ struct StringToValue<std::string> {
     static RA_INLINE_ void get(const std::string& input, std::string& output);
 };
 
-enum class token { UNKNOWN=0, BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
+enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
 
  inline char toch(const token& Token) {
      switch (Token) {
@@ -2344,15 +2330,14 @@ enum class token { UNKNOWN=0, BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
      case ra::token::COMMA:      return ',';
      case ra::token::DATASTRING: return '$';
      case ra::token::END:        return '.';
-     default:                    return '?';
      }
  }
 
-RA_INLINE_
-std::list<std::pair<token,std::string>> parse_shape(std::istream & in, int R, size_type* shape);
+template<int R> RA_INLINE_
+std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in);
 
 template<typename T, int R> RA_INLINE_
-void parse_strings(const std::list<std::pair<token,std::string>> & tokens, const size_type* shape, typename PointerArray<T,R>::type p);
+void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p);
 
 }
 
@@ -2465,13 +2450,13 @@ static char get_but_eat_whitespace(std::istream & in)
     return ch1;
 }
 
-RA_INLINE_
-std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, int R, ra::size_type* shape)
+namespace ra {
+template<int R> RA_INLINE_
+std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in)
 {
-    if (shape == nullptr) {
-        throw std::istream::failure("Parse call error");
-    }
-    std::list<std::pair<ra::token,std::string>> result;
+    std::pair<std::list<std::pair<token,std::string>>,size_type[R]> wholeresult;
+    std::list<std::pair<ra::token,std::string>>& result = wholeresult.first;
+    size_type* shape = wholeresult.second;
     size_t init_file_ptr = in.tellg();
     try {
         size_type current_shape[R];
@@ -2561,17 +2546,19 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
     catch (std::istream::failure& e) {
         in.seekg(init_file_ptr, in.beg);
         in.setstate(std::ios::failbit);
+        throw;
     }
 
-    return result;
+    return wholeresult;
+}
 }
 
 template<typename T, int R> RA_INLINE_
-void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, const ra::size_type* shape, typename ra::PointerArray<T,R>::type p)
+void ra::parse_strings(const std::pair<std::list<std::pair<ra::token,std::string>>,ra::size_type[R]> & tokens, typename ra::PointerArray<T,R>::type p)
 {
     size_type index[R];
     int current_depth = -1;
-    for (auto& tokenpair: tokens) {
+    for (auto& tokenpair: tokens.first) {
         switch (tokenpair.first) {
         case ra::token::BRACEOPEN:
             current_depth++;
@@ -2588,9 +2575,6 @@ void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, c
             break;
         case ra::token::END:
             break;
-        default:
-            throw std::istream::failure("Parsing error");
-            break;
         }
         if (tokenpair.first == ra::token::END) break;
     }
@@ -2599,13 +2583,13 @@ void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, c
 template<typename T,int R> RA_INLINE_
 std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
 {
-    ra::size_type extent[R] = {0};
-    auto X = ra::parse_shape(in, R, extent);
+    auto X = ra::parse_shape<R>(in);
+    ra::size_type* extent = X.second;
     if (ra::mul(extent,R) <= r.size())
         r.reshape(extent, ra::RESIZE::ALLOWED);
     else
         r = rarray<T,R>(extent);
-    ra::parse_strings<T,R>(X, extent, r.ptr_array());
+    ra::parse_strings<T,R>(X, r.ptr_array());
     return in;
 }
 

@@ -38,25 +38,19 @@ int internal_check(const ra::shared_buffer<V>& a,
     int errorcode = 0;
     bool equality;
     equality = (a.data_ == datavalue);
-    if ((datavalue_shouldbe and not equality)  or  (not datavalue_shouldbe and equality))
-        errorcode += 1;
+    errorcode += 1 * ((datavalue_shouldbe and not equality)  or  (not datavalue_shouldbe and equality));        
     equality = (a.orig_ == origvalue);
-    if ((origvalue_shouldbe and not equality)  or  (not origvalue_shouldbe and equality))
-        errorcode += 2;
+    errorcode += 2 * ((origvalue_shouldbe and not equality)  or  (not origvalue_shouldbe and equality));
     equality = (a.refs_ == refsvalue);
-    if ((refsvalue_shouldbe and not equality)  or  (not refsvalue_shouldbe and equality))
-        errorcode += 4;
+    errorcode += 4 * ((refsvalue_shouldbe and not equality)  or  (not refsvalue_shouldbe and equality));
     if (a.refs_) {
         equality = (*(a.refs_) == refscount);
-        if ((refscount_shouldbe and not equality)  or  (not refscount_shouldbe and equality)) 
-            errorcode += 8;
+        errorcode += 8 * ((refscount_shouldbe and not equality)  or  (not refscount_shouldbe and equality));
     } else {
-        if (refscount_shouldbe)
-            errorcode += 8;
+        errorcode += 8 * (refscount_shouldbe);
     }
     equality = (a.size_ == sizevalue);
-    if ((sizevalue_shouldbe and not equality)  or  (not sizevalue_shouldbe and equality))
-        errorcode += 16;
+    errorcode += 16 * ((sizevalue_shouldbe and not equality)  or  (not sizevalue_shouldbe and equality));        
     return errorcode;
 }
 
@@ -309,6 +303,11 @@ TEMPLATE_TEST_CASE("test .slice",
     REQUIRE(a[2]==10);
     ra::shared_buffer<TestType> c = a.slice(3,1);
     REQUIRE(c.size()==0);
+    const ra::shared_buffer<TestType> cc(a.copy());
+    REQUIRE_THROWS(cc.slice(0,cc.size()+1));
+    REQUIRE(cc.slice(0,cc.size()-1).size()==cc.size()-1);
+    const ra::shared_buffer<TestType> ccc =  cc.slice(3,1);
+    REQUIRE(ccc.size()==0);
 }
 
 TEMPLATE_TEST_CASE("test resize",

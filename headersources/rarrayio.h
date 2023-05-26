@@ -1,7 +1,7 @@
 //
 // rarrayio.h - I/O routines for runtime reference counted arrays.
 //
-// Copyright (c) 2013-2022  Ramses van Zon
+// Copyright (c) 2013-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,7 @@ struct StringToValue<std::string> {
     static RA_INLINE_ void get(const std::string& input, std::string& output);
 };
 
-enum class token { UNKNOWN=0, BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
+enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
 
  inline char toch(const token& Token) {
      switch (Token) {
@@ -62,15 +62,15 @@ enum class token { UNKNOWN=0, BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
      case ra::token::COMMA:      return ',';
      case ra::token::DATASTRING: return '$';
      case ra::token::END:        return '.';
-     default:                    return '?';
+     // no default needed, cases are extensive
      }
  }
  
-RA_INLINE_ 
-std::list<std::pair<token,std::string>> parse_shape(std::istream & in, int R, size_type* shape);
+template<int R> RA_INLINE_ 
+std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in);
 
 template<typename T, int R> RA_INLINE_ 
-void parse_strings(const std::list<std::pair<token,std::string>> & tokens, const size_type* shape, typename PointerArray<T,R>::type p);
+void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p);
 
 } // end namespace ra
 
@@ -196,13 +196,13 @@ static char get_but_eat_whitespace(std::istream & in)
     return ch1;
 }
 
-RA_INLINE_ 
-std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, int R, ra::size_type* shape)
+namespace ra {
+template<int R> RA_INLINE_ 
+std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in)
 {
-    if (shape == nullptr) {
-        throw std::istream::failure("Parse call error");
-    }
-    std::list<std::pair<ra::token,std::string>> result;
+    std::pair<std::list<std::pair<token,std::string>>,size_type[R]> wholeresult;
+    std::list<std::pair<ra::token,std::string>>& result = wholeresult.first;
+    size_type* shape = wholeresult.second;
     size_t init_file_ptr = in.tellg();
     try {
         size_type current_shape[R];
@@ -298,17 +298,19 @@ std::list<std::pair<ra::token,std::string>> ra::parse_shape(std::istream & in, i
     catch (std::istream::failure& e) {
         in.seekg(init_file_ptr, in.beg);// upon failure, try to undo characters read in
         in.setstate(std::ios::failbit); // and set the fail bit
+        throw;
     }
 
-    return result;
+    return wholeresult;
+}
 }
 
 template<typename T, int R> RA_INLINE_ 
-void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, const ra::size_type* shape, typename ra::PointerArray<T,R>::type p)
+void ra::parse_strings(const std::pair<std::list<std::pair<ra::token,std::string>>,ra::size_type[R]> & tokens, typename ra::PointerArray<T,R>::type p) 
 {
     size_type index[R];
     int current_depth = -1;
-    for (auto& tokenpair: tokens) {
+    for (auto& tokenpair: tokens.first) {
         switch (tokenpair.first) {
         case ra::token::BRACEOPEN:
             current_depth++;
@@ -325,9 +327,7 @@ void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, c
             break;
         case ra::token::END:
             break;
-        default:
-            throw std::istream::failure("Parsing error");
-            break;
+            // no "default:" needed as the above cases are the exhaustive possibilities for an enum class token.
         }
         if (tokenpair.first == ra::token::END) break;
     }
@@ -337,13 +337,13 @@ void ra::parse_strings(const std::list<std::pair<token,std::string>> & tokens, c
 template<typename T,int R> RA_INLINE_
 std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
 {    
-    ra::size_type extent[R] = {0};
-    auto X = ra::parse_shape(in, R, extent);
+    auto X = ra::parse_shape<R>(in);
+    ra::size_type* extent = X.second;
     if (ra::mul(extent,R) <= r.size())
         r.reshape(extent, ra::RESIZE::ALLOWED);
     else
         r = rarray<T,R>(extent);
-    ra::parse_strings<T,R>(X, extent, r.ptr_array());
+    ra::parse_strings<T,R>(X, r.ptr_array());
     return in;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@
 //          runtime, reference counted, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2022  Ramses van Zon
+// Copyright (c) 2013-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -107,7 +107,7 @@ class rarray {
     RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9);                // R=10
     template<int R_=R,class=typename std::enable_if<R_==11>::type>
     RA_INLINE_ rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10); // R=11
-    RA_INLINE_ rarray(const size_type* anextent);                                                                                                                                 // any R
+    explicit RA_INLINE_ rarray(const size_type* anextent);                                                                                                                                 // any R
     template<int R_=R,class=typename std::enable_if<R_==1>::type>
     RA_INLINE_ rarray(T* buffer, size_type n0);                                                                                           // constructor from an existing buffer for R=1
     template<int R_=R,class=typename std::enable_if<R_==2>::type>
@@ -1448,7 +1448,7 @@ size_type extent(const A &a, int i)
     case 8: return std::extent<A,8>();
     case 9: return std::extent<A,9>();
     case 10: return std::extent<A,10>();
-    default: return 0;
+    default: throw std::out_of_range("ra::extent"); return 0;
     }
 }
 

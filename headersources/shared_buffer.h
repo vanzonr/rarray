@@ -5,7 +5,7 @@
 // non-reference counted buffer, if one is passed to the constructor.
 // Part of rarray 2.x. 
 //
-// Copyright (c) 2018-2022  Ramses van Zon
+// Copyright (c) 2018-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -181,16 +181,9 @@ shared_buffer<T>::shared_buffer(size_type asize)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
     // construct buffer, exception safe
-    T* data;
-    refs_ = new std::atomic<int>(1); // if this throws, let it
-    try {
-        data = new T[asize];
-    }
-    catch (...) {
-        delete refs_; 
-        throw;
-    }
-    data_ = data;
+    auto to_be_data = std::unique_ptr<T>(new T[asize]);
+    refs_ = new std::atomic<int>(1); // if this throws, let it   
+    data_ = to_be_data.release();
     orig_ = data_;
     size_ = asize;
 }
@@ -284,10 +277,9 @@ shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to)
         throw std::out_of_range("shared_buffer::slice");
     shared_buffer<T> result(*this);
     result.data_ += from;
+    result.size_ = 0;
     if (from <= to)
         result.size_ = to - from;
-    else
-        result.size_ = 0;
     return result;
 }
 
@@ -299,10 +291,9 @@ const shared_buffer<T> shared_buffer<T>::slice(size_type from, size_type to) con
         throw std::out_of_range("shared_buffer::slice");
     shared_buffer<T> result(*this);
     result.data_ += from;
+    result.size_ = 0;
     if (from <= to)
         result.size_ = to - from;
-    else
-        result.size_ = 0;
     return result;
 }
 

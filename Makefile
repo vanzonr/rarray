@@ -98,6 +98,7 @@ all: headers test valgrindtest benchmarks
 
 test: run_testsuite  run_testsuite_bc  run_test_shared_buffer  run_test_offsets \
       run_test_shared_shape  run_test_rarray 
+	gcovr -f headersources
 
 valgrindtest: run_valgrind_testsuite  run_valgrind_testsuite_bc \
               run_valgrind_test_shared_buffer  run_valgrind_test_offsets \

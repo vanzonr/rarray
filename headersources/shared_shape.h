@@ -6,7 +6,7 @@
 // structure, but the actual data is a simple pointer.  One of the
 // building blocks for rarray 2.x.
 //
-// Copyright (c) 2018-2022  Ramses van Zon
+// Copyright (c) 2018-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,7 @@
 #include "offsets.h"
 #include <array>
 #include <stdexcept>
+#include <memory>
 #include <atomic>
 
 int test_shared_shape_main();
@@ -155,21 +156,15 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
 {
     // construct shape 
     Offsets P({extent_.begin(),extent_.end()});
-    orig_ = P.apply_offsets(adata); // this could throw, but only if it's allocation fails, so no resource leak
+    auto to_be_orig = std::unique_ptr<void**>(P.apply_offsets(adata)); // this could throw, but only if its allocation fails, so no resource leak
+    if (R>1) 
+        refs_ = new std::atomic<int>(1); // if throws, to_be_orig gets dealloced
+    orig_ = to_be_orig.release(); // no exceptions, so now store orig_
     ptrs_ = reinterpret_cast<ptrs_type>(orig_);
+    if (R==1)
+        orig_ = nullptr;  // avoids "double delete"
     noffsets_ = P.get_num_offsets();
     ndataoffsets_ = P.get_num_data_offsets();
-    if (R>1) {
-      try {
-        refs_ = new std::atomic<int>(1);
-      }
-      catch(...) {
-        delete[] orig_;
-        throw;
-      }
-    } else {
-        orig_ = nullptr;
-    }
 }
 
 template<class T, int R>

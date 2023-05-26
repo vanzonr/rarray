@@ -242,6 +242,21 @@ int test_shared_shape_main()
                             == ((i1*(N/2)+i2)*(N/4)+i3)*(N/8)+i4);
                  }
     }
+    {
+        std::cerr << "Test 11\n";
+        int a[N][N/2];
+        ra::shared_shape<int,2> sh( {N,N/2}, &(a[0][0]) );  // 16 x 8 
+        assert(sh.noffsets_ == N);
+        assert(sh.ndataoffsets_ == N);
+        bool caught = false;
+        try {
+            ra::shared_shape<int,1> subsh = sh.at(N+1);
+        }
+        catch (...) {
+            caught = true;
+        }
+        assert(caught);
+    }
     
     return 0;
 }
