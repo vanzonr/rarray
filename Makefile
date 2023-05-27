@@ -259,7 +259,8 @@ run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 6) 
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 7) 
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 8) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 9) 
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 9)
+	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 10) 
 	@./$(BENCHMARK2DNAMEF)
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 1) 
 
@@ -274,6 +275,7 @@ run_benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 7) 
 	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 8) 
 	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 9) 
+	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 10) 
 	@./$(BENCHMARK4DNAMEF)
 	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 1) 
 
@@ -293,10 +295,10 @@ $(PASS)f.o: ${SRC}/$(PASS)f.f90 config.mk
 	$(FC) -c ${DBGFLAGS} -o $@ $<
 
 $(BENCHMARK2DNAME).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -std=c++14 -c -o $@ $<
 
 $(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
-	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -std=c++14 -c -o $@ $<
 
 $(PASS).o: ${SRC}/$(PASS).cc config.mk
 	$(CXX) -c -o $@ $<

@@ -168,6 +168,9 @@ else
         detect_library ARMADILLO armadillo -DNOARMADILLO -DARMA_NO_DEBUG ""
         #########################################################
         detect_library OPENBLAS openblas_config.h -DNOOPENBLAS -DOPENBLAS ""
+        #########################################################
+        [ -f mdspan.hpp ] || wget "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
+        detect_library MDSPANREF $PWD/mdspan.hpp -DNOMDSPANREF -DMDSPANREF ""
         #######################################################
         echo >> config.mk
         # Extra include dirs added to MORECPPFLAGS

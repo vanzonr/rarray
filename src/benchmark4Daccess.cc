@@ -46,6 +46,10 @@
 #include <Eigen/Dense>
 #endif
 
+#ifndef NOMDSPANREF
+#include "mdspan.hpp"
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 
 const int nrepeats = 3;
@@ -307,6 +311,47 @@ double case_eigen(int repeat)
 }
 
 //////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+double case_mdspan_ref(int repeat) 
+{
+    double d = 0.0;
+#ifndef NOMDSPANREF
+    namespace stdex = std::experimental;
+    std::unique_ptr<float> adata(new float[n*n*n*n]);
+    std::unique_ptr<float> bdata(new float[n*n*n*n]);
+    std::unique_ptr<float> cdata(new float[n*n*n*n]);
+    stdex::mdspan<float,std::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>>
+        a{adata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}},
+        b{bdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}},
+        c{cdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}};    
+    while (repeat--) {
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) {
+                        a(i,j,k,l) = static_cast<float>(l+i+repeat);
+                        b(i,j,k,l) = static_cast<float>(k+j+repeat/2);
+                    }
+        pass(&(a(0,0,0,0)),&(b(0,0,0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        c(i,j,k,l) = a(i,j,k,l)+b(i,j,k,l);
+        pass(&(c(0,0,0,0)),&(c(0,0,0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        d += c(i,j,k,l);
+        pass(&(c(0,0,0,0)),(float*)&d,repeat);
+    }
+#endif
+    return d;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 double case_blitz_1(int repeat) 
 {
@@ -475,6 +520,11 @@ int main(int argc,char**argv)
         printf("eigen:     ");
         fflush(stdout);
         answer = case_eigen(nrepeats);
+        break;
+    case 10: 
+        printf("mdspan_ref:");
+        fflush(stdout);
+        answer = case_mdspan_ref(nrepeats);
         break;
     }
     double eps = 1e-6;

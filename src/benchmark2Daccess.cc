@@ -46,6 +46,10 @@
 #include <Eigen/Dense>
 #endif
 
+#ifndef NOMDSPANREF
+#include "mdspan.hpp"
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 
 const int nrepeats = 3;
@@ -250,6 +254,42 @@ double case_eigen(int repeat)
 
 //////////////////////////////////////////////////////////////////////////////
 
+double case_mdspan_ref(int repeat) 
+{
+#ifndef NOMDSPANREF
+    namespace stdex = std::experimental;
+    double d = 0.0;
+    std::unique_ptr<float> adata(new float[n*n]);
+    std::unique_ptr<float> bdata(new float[n*n]);
+    std::unique_ptr<float> cdata(new float[n*n]);
+    stdex::mdspan<float,std::extents<size_t,std::dynamic_extent,std::dynamic_extent>>
+        a{adata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent>{n,n}},
+        b{bdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent>{n,n}},
+        c{cdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent>{n,n}};    
+    while (repeat--) {
+        for (int i=0;i<n;i++) 
+            for (int j=0;j<n;j++) {
+                a(i,j) = static_cast<float>(i+repeat);
+                b(i,j) = static_cast<float>(j+repeat/2);
+            }
+        pass(&(a(0,0)),&(b(0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                c(i,j) = a(i,j) + b(i,j);
+        pass(&(c(0,0)),&(c(0,0)),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                d += c(i,j);
+        pass(&(c(0,0)),(float*)&d,repeat);
+    }
+    return d;
+#else
+    return 0.0;
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 double case_blitz_1(int repeat) 
 {
 #ifndef NOBLITZ
@@ -397,6 +437,11 @@ int main(int argc,char**argv)
         printf("eigen:     ");
         fflush(stdout);
         answer = case_eigen(nrepeats);
+        break;
+    case 10: 
+        printf("mdspan_ref:");
+        fflush(stdout);
+        answer = case_mdspan_ref(nrepeats);
         break;
     }
     double check = case_exact(nrepeats);
