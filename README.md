@@ -1,11 +1,11 @@
-rarray - multidimensional array class template
-==============================================
+rarray - reference-counted multidimensional arrays
+==================================================
 
-rarray is a C++ library for multidimensional arrays.  It is a
-header-only implementation that uses templates, which allows most
-compilers to generate fast code.
+rarray is a C++ library for reference counted multidimensional arrays.  
+It is a header-only implementation that uses templates, which allows 
+most compilers to generate fast code.
 
-The latest release version is 2.5.0
+The latest release version is 2.5.1
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -114,6 +114,13 @@ Release History and Changes
    More extensive unit and coverage tests.
 
    'is_clear' renamed to 'empty'.
+
+  * Version 2.5.1, May 2023 
+     
+    Bug fixes, most importantely bounds checking of 1d arrays
+    100% code coverage in tests
+    Comparison with mdspan (C++23)
+    Updated documentation.
 
 Known issues
 ============
@@ -254,4 +261,4 @@ compiler.xlc++.mk
 
 
 
-- January 2022
+- May 2023
