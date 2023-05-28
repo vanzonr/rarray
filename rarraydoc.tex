@@ -20,38 +20,33 @@
 
 \setlength{\parskip}{1mm}
 
-\title{\texttt{rarray}: Multidimensional Runtime Arrays for \cxx}
+\title{\texttt{rarray}: Reference-Counted Multidimensional Arrays for \cxx}
 
 \author{Ramses van Zon%\\
 %\it\small SciNet High Performance Computing Consortium, University
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{February, 2023 (version 2.5.0)\vspace{-7mm}}
+\date{May, 2023 (version 2.5.1)\vspace{-7mm}}
 
 \maketitle
 
 \section{For the impatient: the what, why and how of rarray}
 
-\noindent\textbf{What:}
+\noindent\textbf{What:}\\
+Reference-counted and non-owning multidimensional arrays with runtime dimensions. 
 
-Rarray provides multidimensional arrays with dimensions determined at runtime. 
+\noindent\textbf{What not:}\\
+No strides, no linear algebra, overloaded operators etc.
 
-\noindent\textbf{What not:} 
+\noindent\textbf{Why:}\\
+Usually faster than alternatives.\\
+Uses the same accessors as automatic arrays.\\
+Requires only the C++-11 standard.\\
+Data is contiguous to allow interfacing with
+libraries like BLAS, LAPACK, FFTW, etc.
 
-No linear algebra, overloaded operators etc.
-
-\noindent\textbf{Why:} 
-
-Usually faster than alternatives,
-
-Uses the same accessors as compile-time (automatic) arrays,
-
-Data is guarranteed to be contiguous for easy interfacing with
-libraries (CBLAS, LAPACKE).
-
-\noindent\textbf{How:}
-
+\noindent\textbf{How:}\\
 The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. Streaming I/O is also part of the \texttt{rarray} header.
 
 \
@@ -89,10 +84,10 @@ data pre-allocated at a pointer \texttt{ptr}:&
 \rule{0pt}{14pt}A rarray copy of an existing automatic array:&
 \texttt{rarray<float,3> h=RARRAY(f).copy();}
 \\
-\rule{0pt}{14pt}Output a rarray to screen:&
+\rule{0pt}{14pt}Output a rarray to console:&
 \texttt{std::cout << h << std::endl;}
 \\
-\rule{0pt}{14pt}Read a rarray from keyboard:&
+\rule{0pt}{14pt}Read a rarray from console:&
 \texttt{std::cin >> h;}
 \\\hline
 \end{tabular}}
@@ -107,31 +102,53 @@ data pre-allocated at a pointer \texttt{ptr}:&
 While C and thus C++ has some support for multidimensional arrays
 whose sizes are known at compile time, the support for arrays with
 sizes that are known only at runtime, is limited. For one-dimensional
-arrays,  C++ has a reasonable allocation construction in the operators
-\texttt{new} and \texttt{delete}. A standard way to allocate a
+arrays,  C++ has a reasonable allocation and deallocation constructs in the operators
+\texttt{new} and \texttt{delete} in the standard.  A standard way to allocate a
 one-dimensional array is as follows:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-float* a;
 int n = 1000;
+float* a;
 a = new float[n];
 a[40] = 2.4;
 delete[] a;
 \end{verbatim}%
-\vspace{-12pt}\end{framed}\vspace{-5pt}%
-It is important to note that this code also works if \texttt{n} was not known yet, e.g., if it was passed as a function argument or read in as input. 
+\vspace{-12pt}\end{framed}\vspace{-5pt}\noindent%
+It is important to note that this code also works if \texttt{n} was
+not known yet at compile time, e.g., if it was passed as a function
+argument or read in as input.
 
-In the above code snippet, the new/delete construct assigns the address of the array to a pointer. This pointer does not remember its size, so this is not really an 'array'.  The standard C++ library does provide a one-dimensional array that remembers it size in the form of the \texttt{std::vector}, e.g.
+This style of allocation with a
+``raw'' pointer is discouraged in C++ in favor of using ``smart''
+pointers, which is possible since the C++17 standard:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-const int n = 1000;
+int n = 1000;
+std::unique_ptr<float[]> a(new float[n]); 
+a[40] = 2.4;
+// a gets deallocated automatically, or one can explicitly call a.reset(nullptr)
+\end{verbatim}%
+\vspace{-12pt}\end{framed}\vspace{-5pt}\noindent%
+A unique pointer \texttt{a} cannot be copied.  Instead of
+\texttt{unique\_ptr} one can use \texttt{shared\_ptr}, which can be
+copied and keeps a reference counter to know when to deallocate the
+memory.  Automatic deallocation happens when \texttt{a} goes out of scope.
+
+In the above code snippets, the \texttt{new} construct and the
+\texttt{std::unique\_ptr/std::shared\_ptr} assign the address of the
+array to a pointer. These pointers do not remember its size, so they are not really an 'array'.  The standard C++ library does provide a one-dimensional array that remembers its size, in the form of the \texttt{std::vector}, e.g.
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+\begin{verbatim}
+int n = 1000;
 std::vector a(n);
 a[40] = 2.4;
-a.clear();
+// a gets automatically deallocated, or one can explicitly call a.clear()
 \end{verbatim}%
 \vspace{-12pt}\end{framed}\vspace{-5pt}%
 
-Multi-dimensional runtime-allocated arrays are not supported by \cxx.
+Multi-dimensional runtime-allocated arrays are currently not supported yet by
+\cxx (there is a proposal for a non-owning multidimensional array in
+the C++23 standard).
 The textbook \cxx\ solution for multidimensional arrays that are
 dynamically allocated during runtime, is as follows:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
@@ -145,17 +162,16 @@ dynamically allocated during runtime, is as follows:
   }
 \end{verbatim}%
 \vspace{-12pt}\end{framed}\vspace{-5pt}%
-Drawbacks of this solution are:
+Apart from the fact this will soon be obsolute, drawbacks of this solution are:
 \begin{itemize}
-  \item the non-contiguous buffer for the elements, making it unusable
+  \item the elements are not stored contiguously in memory, making
+    this multi-dimensional array unusable
     for many numerical libraries,
-  \item having to keep track of array dimensions,
-  \item having the intermediate pointers be non-const, so the
+  \item one has to keep track of array dimensions, and pass them along
+    to functions,
+  \item the intermediate pointers are non-const, so the
     internal pointer structure can be changed
-    (conceptually, \texttt{a} ought to be of type \texttt{float*const*const*}, which would prevent this, but then one wouldn't be able to
-    assign to be intermediate pointers in the above code, and therefore wouldn't be able
-    to create the array except with some delicate const casts\footnote{Truth
-      be told, the rarray library does that, but only internally}).
+    whereas, conceptually, \texttt{a} ought to be of type \texttt{float*const*const*}.
 \end{itemize}
 At first, there seems to be no shortage of libraries to fill this
 lack of \cxx\ support for dynamic multi-dimensional arrays, such as
@@ -165,13 +181,16 @@ lack of \cxx\ support for dynamic multi-dimensional arrays, such as
 \item Eigen;
 \item Armadillo; and
 \item Nested \texttt{vector}s from the Standard Template Library.
+\item Kokkos's reference implementation of the C++23 mdspan template.
 \end{itemize}
 These typically do have some runtime overhead compared to the above
 textbook solution, or do not allow arbitrary ranks. In contrast, the purpose of the rarray
 library is to be a minimal interface for runtime multidimensional
 arrays of
 arbitrary rank with
-\emph{minimal to no performance overhead} compared to the textbook solution.
+\emph{minimal to no performance overhead} compared to the textbook
+solution.  For the above solutions, only the mdspan implementation in
+Kokkos also has no overhead.
 
 \noindent{\bf Example:\vspace{-7pt}}
 \begin{framed}\vspace{-14pt}%
@@ -193,8 +212,9 @@ arbitrary rank with
 \begin{enumerate}\itemsep1pt\parskip3pt
  
 \item To have dynamically allocated multidimensional arrays that
-combine the convenience of automatic c++ arrays with that of the
-typical textbook dynamically allocated pointer-to-pointer
+combine the convenience of automatic c++ arrays while being compatible
+with the
+typical textbook-style dynamically allocated pointer-to-pointer
 structure. 
 
 The compatibility requirement with pointer-to-pointer structures
@@ -203,18 +223,25 @@ structure accounts for most of the memory overhead from using \texttt{rarray}.
 
 \item To be as fast as pointer-to-pointer structures.
 
-\item To have rarrays know their sizes, so that can be passed to
+\item To have rarrays know their sizes, so that they can be passed to
 functions as a single argument. 
 
-\item To enable interplay with libraries such as BLAS and LAPACK: this
+\item To enable interfacing with libraries such as BLAS and LAPACK: this
   is achieved by guarranteeing contiguous elements in the
   multi-dimensional array, and a way to get this data out.
 
-Relatedly, it should be allowed to use an existing buffer.
-    
-The guarrantee of contiguity means strided arrays are not supported.
+  The guarrantee of contiguity means strided arrays are not supported.
 
-\item To avoid some of the cluttered sematics around \texttt{const} correctness when converting to pointer-to-pointer structers.
+\item To avoid dangling references (by utilizing reference counting).
+
+
+\item To allow rarrays to hold non-owning views that use an existing buffer,
+  without having to use a separate type.
+
+\item To avoid some of the cluttered sematics around \texttt{const}
+  correctness when converting to pointer-to-pointer structures when
+  interfacing with legacy code.
+
 \end{enumerate}
 
 \noindent{\bf Features of rarray:\vspace{-3pt}}
@@ -277,16 +304,18 @@ declared as follows:
 or, using an external, pre-allocated buffer, as
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
-  float* pre_alloc_data=new float[256*256*256];  
+  std::unique_ptr<float> pre_alloc_data(new float[256*256*256]); 
   rarray<float,3> s(pre_alloc_data,256,256,256);
   s[1][2][3] = 105;
   // do whatever you need with s
-  delete[] pre_alloc_data;
-  s.clear();
+  s.clear(); // optional explicit deallocation
+  pre_alloc_data.reset(nullptr); // optional explicit deallocation
 \end{verbatim}%
 \vspace{-14pt}
 \end{framed}
-Without the \texttt{delete[]} statement in the latter example, there would be a memory leak. This reflects that rarray is in this case not responsible
+Note that \texttt{s} will have dangling references (often leading to
+``Segmentation faults'') if pre\_alloc\_data is deallocated while s is
+not.  This reflects that rarray is in this case not responsible
 for the content. The data pointer can also be retrieved using
 \texttt{s.data()}. The \texttt{s.clear()} statement ensures there are
 no dangling references to this data left in \texttt{s}. 
@@ -299,7 +328,7 @@ The construction specifying a number of extents as arguments works for arrays wi
 
 \subsection{Shorthand rarray types: rvector, rmatrix, rtensor}
 
-When compiling in c++11 mode, there are short cut types for
+For convenience, rarray defines shortcut types for
 one-dimensional, two dimensional and three dimensional arrays, called
 rvector, rmatrix and rtensor, respectively. The following equivalences hold:
 
@@ -312,7 +341,7 @@ rtensor<T> = rarray<T,3>
 \vspace{-18pt}\end{framed}\noindent
 for any type \texttt{T}.
 
-\subsection{Accessing the elements}
+\subsection{Accessing elements of an rarray}
 
 The elements of rarray objects are accessed using the repeated square
 bracket notation as for automatic \cxx\ arrays. Thus, if \texttt{s} is a \texttt{rarray} of rank \texttt R, the elements are accessed using \texttt{R} times an index of the form \texttt{[n$_i$]}, i.e. \texttt{s[n$_0$][n$_1$]\dots[n$_{\texttt{R}-1}$]}
@@ -351,7 +380,9 @@ the default way of passing arguments to a function involves a complete
 copy for built-in types.  For C-style arrays, however, only the
 pointer to the first element gets copied, not the whole array. The
 latter is called a shallow copy. Rarrays use shallow copies much like
-pointers, but uses atomic reference counting to know when memory can be released (similar to the \texttt{std::shared\_ptr<T>} of C++11). 
+pointers, but uses atomic reference counting to know when memory can
+be released (similar to the \texttt{std::shared\_ptr<T>} of C++11 and
+\texttt{std::shared\_ptr<T[]>} of C++14). 
 
 What does this essentially mean? Well:
 \begin{enumerate}
@@ -467,12 +498,26 @@ the \texttt{{\tt\#include <rarray>}} in the source.
 
 \section{Comparison with standard alternatives}
 
-Compared to the textbook method (page 3) or the rarray method (page 4)
-of declaring an array, the more-or-less equivalent automatic array version 
+Compared to the old textbook method of declaring an array (see above), or the rarray method:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-  float arr[256][256][256]; 
+#include <rarray>
+int main() {
+  int n = 256;
+  rarray<float,3> arr(n,n,n); 
   arr[1][2][3] = 105;
+}
+\end{verbatim}
+\vspace{-14pt}\end{framed}
+\noindent
+the more-or-less equivalent automatic array version 
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+\begin{verbatim}
+int main() {
+  int n = 256;
+  float arr[n][n][n]; 
+  arr[1][2][3] = 105;
+}
 \end{verbatim}
 \vspace{-14pt}\end{framed}
 \noindent
@@ -503,9 +548,30 @@ solution, i.e. using the Standard Template Library:
 \vspace{-14pt}\end{framed}\vspace{-8pt}
 \noindent
 which is complicated, is non-contiguous in memory, and likely
-slower. 
+slower.
 
-%\pagebreak[4]
+C++23 will have a non-owning library, mdspan, which should work
+roughly as follows:
+\vspace{-5pt}\begin{framed}\vspace{-14pt}%
+%TEST THIS
+\begin{verbatim}
+  #include <memory>
+  #include <mdspan>
+  int main() {
+     int n = 256;                  // size per dimension
+     std::unique_ptr<float[]> p (new float[n*n*n]); // or vector or a shared_ptr
+     using exts =  std::extents<size_t,std::dynamic_extent,
+                   std::dynamic_extent,std::dynamic_extent>;
+     std::mdspan<float,exts> (vector.data(), exts(n,n,n));
+     v[1,2,3] = 105;               // assign to element (for example)
+  }
+\end{verbatim}%
+\vspace{-14pt}\end{framed}\vspace{-8pt}
+This example declares all types explicitly, but C++17 has a lot of
+deduction capabilities, which would also allow this to be a bit more brief. 
+
+
+\pagebreak[4]
 \section{Class definition}
 
 \subsection{Interface}
@@ -537,8 +603,9 @@ public:
  T**... noconst_ptr_array() const;         // converts to a T**... 
  rarray<const T,R>&  const_ref() const;    // convert to const elements
  rarray<T,R>& operator=(const rarray<T,R> &a);// shallow assignment
- operator T*const*... ();                  // enables element access for assignment
- operator const T*const*... () const;      // enables element access with []
+ operator[](size_t i) const;      // enables const element access
+ operator[](size_t i);            // enables element access for assignment
+ rarray<T,R-1> at(size_t i);      // retrieve the ith 'row' with bounds checking
 };
 \end{verbatim}
 \end{framed}
@@ -749,20 +816,20 @@ values between $-1.0$ and $1.0$, one would do
 \begin{verbatim}
   #include <rarray>
   int main() {
-    rvector<int> r = linspace(-1.0, 1.0, 101);
+    rvector<double> r = linspace(-1.0, 1.0, 101);
     ...
   }
 \end{verbatim}
 
 The first argument of linspace is allowed to be greater than the last,
 in which case, decreasing values are generated.  The two arguments are
-allowed to be equal as well, and generates a vector with all equal values. In that case, \texttt{end\_incl} can not
+allowed to be equal as well, which generates a vector with all equal values. In that case, \texttt{end\_incl} can not
 be set to false. The case where the number of points is 1 and
 \texttt{end\_incl=false} is ill defined.
 
 Note that for integer types, using linspace without specifying their
 number (i.e. \texttt{linspace(n1,n2)}) gives the same values as are
-generated by the range function without a stepsize and with the
+generated by the xrange function without a stepsize and with the
 endvalue one higher (i.e., \texttt{xrange(n1,n2+1)}).
 
 
@@ -815,13 +882,6 @@ with rarray, it is advisable to compile with a minimum level of
 optimization \texttt{-O1}. Otherwise, a lot of the internal function
 calls of rarray that could simply be optimized away, and would pollute
 the sampling. 
-
-A hint regarding the current state of gprof and gcc (Mar 2016):  the
-newer gcc compilers encode symbols
-differently than earlier versions, and gprof relies on the earlier
-format. This can impede e.g. profiling by line number. Compiling (and
-linking) with the \texttt{-gstabs} flags enables the earlier way of encoding
-symbols in  the application, and allows for gprof to function fully.
 
 \subsection{Memory overhead using the rarray class}
 
@@ -979,7 +1039,7 @@ For example:
 \vspace{-14pt}
 \end{framed}\vspace{-8pt}
 
-rarray objects are also easy to pass to function that do not use \texttt{rarray}s. Because there are, by design, no automatic conversions of a
+rarray objects are also easy to pass to functions that do not use \texttt{rarray}s. Because there are, by design, no automatic conversions of a
 rarray, this is done using methods.
 
 There are two main ways that such functions expect a multidimensional
@@ -1169,7 +1229,7 @@ to install the header and documentation to /usr/include and /usr/share/doc,
 respectively. Note that this will fail on recent MacOS versions,
 in which case, try \texttt{sudo make install PREFIX=/usr/local}.
 
-To modify rarray, do not edit these file separately. Instead, you
+To modify rarray, do not edit the rarray header file, as this is a generated file. Instead, you
 should edit the files in the \texttt{headersources} directory.  You
 can use the included Makefile to assemble the rarray headers with
 \begin{verbatim}
