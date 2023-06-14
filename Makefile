@@ -119,10 +119,10 @@ VERSION:
 
 ${HS}/versionheader.h: VERSION
 	echo "// define rarray version (i.e. latest git tag)" > $@
-	echo -n "#define RA_VERSION \"" >> $@
+	echo "#define RA_VERSION \"" | tr -d '\n' >> $@
 	cat VERSION | tr -d '\n' >> $@
 	echo "\"" >> $@
-	echo -n "#define RA_VERSION_NUMBER " >> $@
+	echo "#define RA_VERSION_NUMBER " | tr -d '\n' >> $@
 	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
 
 rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
@@ -155,8 +155,8 @@ testsuite_bc.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -DRA_BOUNDSCHECK -g -O0 -c -o $@ $<
 
 catch.hpp:
-	wget https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
-	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
+	curl -Lo catch.hpp https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
+	sed -i.bak 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
@@ -251,33 +251,33 @@ list:
 
 run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF)
 	@echo Comparison benchmark on a 2d array example
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 1) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 2) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 3) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 4) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 5) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 6) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 7) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 8) 
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 9)
-	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 10) 
+	@./$(BENCHMARK2DNAME) 1 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 2 || true) 
+	@./$(BENCHMARK2DNAME) 3 
+	@./$(BENCHMARK2DNAME) 4 
+	@./$(BENCHMARK2DNAME) 5 
+	@./$(BENCHMARK2DNAME) 6 
+	@./$(BENCHMARK2DNAME) 7 
+	@./$(BENCHMARK2DNAME) 8 
+	@./$(BENCHMARK2DNAME) 9
+	@./$(BENCHMARK2DNAME) 10 
 	@./$(BENCHMARK2DNAMEF)
 	@(ulimit -s 4000000; ./$(BENCHMARK2DNAME) 1) 
 
 run_benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF)
 	@echo Comparison benchmark on a 4d array example
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 1) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 2) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 3) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 4) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 5) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 6) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 7) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 8) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 9) 
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 10) 
+	@./$(BENCHMARK4DNAME) 1 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 2 || true) 
+	@./$(BENCHMARK4DNAME) 3 
+	@./$(BENCHMARK4DNAME) 4 
+	@./$(BENCHMARK4DNAME) 5 
+	@./$(BENCHMARK4DNAME) 6 
+	@./$(BENCHMARK4DNAME) 7 
+	@./$(BENCHMARK4DNAME) 8 
+	@./$(BENCHMARK4DNAME) 9 
+	@./$(BENCHMARK4DNAME) 10 
 	@./$(BENCHMARK4DNAMEF)
-	@(ulimit -s 8000000; ./$(BENCHMARK4DNAME) 1) 
+	@./$(BENCHMARK4DNAME) 1
 
 $(BENCHMARK2DNAME): $(BENCHMARK2DNAME).o $(PASS).o config.mk
 	$(CXX) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)

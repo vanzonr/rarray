@@ -2,7 +2,7 @@
 #
 # NOT an autotools configure, just detects compiler for rarray's Makefile
 #
-# Copyright (c) 2015-2016  Ramses van Zon
+# Copyright (c) 2015-2023  Ramses van Zon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,15 +48,17 @@ function detect_library()
     local incvar=$(env | grep ${modulename}_I | head -1 | awk -F= '{print $1}')
     local libdir=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $2}')
     local libvar=$(env | grep ${modulename}_L | head -1 | awk -F= '{print $1}')
+    local lowercasemodulename=$(echo ${modulename} | tr '[:upper:]' '[:lower:]')
+    local perhapspkgconfig=$(which pkg-config || echo false)
     if [ "$incdir" ]; then
         incdir="-I$incdir"
-    elif pkg-config --exists ${modulename,,}; then
-        incdir=$(pkg-config --cflags ${modulename,,})
+    elif $perhapspkgconfig --exists ${lowercasemodulename}; then
+        incdir=$(pkg-config --cflags ${lowercasemodulename})
     fi
     if [ "$libdir" ]; then
         libdir="-L$libdir"
-    elif pkg-config --exists ${modulename,,}; then
-        incdir=$(pkg-config --libs-only-L ${modulename,,})
+    elif $perhapspkgconfig --exists ${lowercasemodulename}; then
+        incdir=$(pkg-config --libs-only-L ${lowercasemodulename})
     fi
     local tmpdir=$(mktemp -d -t configure.XXXXX)
     local tmpfile=$tmpdir/temp.cc
@@ -169,7 +171,10 @@ else
         #########################################################
         detect_library OPENBLAS openblas_config.h -DNOOPENBLAS -DOPENBLAS ""
         #########################################################
-        [ -f mdspan.hpp ] || wget "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
+        if ! [ -f mdspan.hpp ]; then
+           curl -o mdspan.hpp "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
+           sed -i.bak 's/__has_include(<version>)/0/' mdspan.hpp
+        fi
         detect_library MDSPANREF $PWD/mdspan.hpp -DNOMDSPANREF -DMDSPANREF ""
         #######################################################
         echo >> config.mk
@@ -194,7 +199,7 @@ else
         # print what to do next
         echo "To build and run unit tests:            make test"
         echo "To run unit tests through valgrind:     make valgrindtest"
-        echo "To build and run benchmark test:        make benchmark"
+        echo "To build and run benchmark test:        make benchmarks"
         echo "To build the documentation:             make doc"
         echo "To test the code in the documentation:  make doctest"
         echo "To install rarray:                      make install [PREFIX=directory]"
