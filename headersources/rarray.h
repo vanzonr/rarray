@@ -429,11 +429,15 @@ class Xrange {
         typedef T* pointer;
         typedef T& reference;
         typedef std::input_iterator_tag iterator_category;
+        const_iterator(): i_(0), di_(1), b_(0) {}
         const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
         bool operator!=(const const_iterator& other) const {
             return i_ != other.i_;
         }
-        const const_iterator& operator++() {
+        bool operator==(const const_iterator& other) const {
+            return i_ == other.i_ && di_ == other.di_ && b_ == other.b_;
+        }
+        const_iterator& operator++() {
             i_+=di_;
             if (di_>0 && i_ >= b_)
                i_ = b_;
@@ -441,7 +445,12 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        const T& operator*() {
+        const_iterator operator++(int) {
+            const const_iterator temp = *this;
+            this->operator++();
+            return temp;
+        }
+        const T& operator*() const {
             return i_;
         }
         T i_, di_, b_;
@@ -454,7 +463,7 @@ class Xrange {
     const_iterator begin() const {
         return const_iterator(a_, d_, b_);
     }
-    const_iterator end() const {
+    const const_iterator end() const {
         return const_iterator(b_, d_, b_);
     }
 };
