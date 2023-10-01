@@ -466,6 +466,9 @@ class Xrange {
     const const_iterator end() const {
         return const_iterator(b_, d_, b_);
     }
+    size_t size() const {
+        return static_cast<size_t>((b_-a_)/d_);
+    }
 };
 
 template<class T>
