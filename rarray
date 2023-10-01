@@ -208,7 +208,7 @@ template<class T>
 shared_buffer<T>::shared_buffer(size_type asize)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
-    auto to_be_data = std::unique_ptr<T>(new T[asize]);
+    auto to_be_data = std::unique_ptr<T[]>(new T[asize]);
     refs_ = new std::atomic<int>(1);
     data_ = to_be_data.release();
     orig_ = data_;
@@ -1364,6 +1364,9 @@ class Xrange {
     }
     const const_iterator end() const {
         return const_iterator(b_, d_, b_);
+    }
+    size_t size() const {
+        return static_cast<size_t>((b_-a_)/d_);
     }
 };
 

@@ -181,7 +181,7 @@ shared_buffer<T>::shared_buffer(size_type asize)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
     // construct buffer, exception safe
-    auto to_be_data = std::unique_ptr<T>(new T[asize]);
+    auto to_be_data = std::unique_ptr<T[]>(new T[asize]);
     refs_ = new std::atomic<int>(1); // if this throws, let it   
     data_ = to_be_data.release();
     orig_ = data_;
