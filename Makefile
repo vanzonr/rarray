@@ -202,7 +202,7 @@ run_test_shared_buffer: test_shared_buffer coverage
 	> coverage/$@
 
 run_valgrind_test_shared_buffer: test_shared_buffer
-	${VALGRIND} ./test_shared_buffer
+	${VALGRIND} ./test_shared_buffer -e
 
 run_test_offsets: test_offsets coverage
 	./test_offsets
@@ -211,7 +211,7 @@ run_test_offsets: test_offsets coverage
 	> coverage/$@
 
 run_valgrind_test_offsets: test_offsets
-	${VALGRIND} ./test_offsets
+	${VALGRIND} ./test_offsets -e
 
 run_test_shared_shape: test_shared_shape coverage
 	./test_shared_shape
@@ -220,13 +220,13 @@ run_test_shared_shape: test_shared_shape coverage
 	> coverage/$@
 
 run_valgrind_test_shared_shape: test_shared_shape
-	${VALGRIND} ./test_shared_shape
+	${VALGRIND} ./test_shared_shape -e
 
 run_test_rarray: test_rarray 
 	./test_rarray
 
 run_valgrind_test_rarray: test_rarray
-	${VALGRIND} ./test_rarray
+	${VALGRIND} ./test_rarray -e
 
 run_testsuite: testsuite coverage
 	./testsuite
@@ -235,7 +235,7 @@ run_testsuite: testsuite coverage
 	> coverage/$@
 
 run_valgrind_testsuite: testsuite
-	${VALGRIND} ./testsuite
+	${VALGRIND} ./testsuite 
 
 run_testsuite_bc: testsuite_bc coverage
 	./testsuite_bc
@@ -244,7 +244,7 @@ run_testsuite_bc: testsuite_bc coverage
 	> coverage/$@
 
 run_valgrind_testsuite_bc: testsuite_bc
-	${VALGRIND} ./testsuite_bc
+	${VALGRIND} ./testsuite_bc 
 
 list:
 	@grep '^[^#[:space:]].*:' Makefile
