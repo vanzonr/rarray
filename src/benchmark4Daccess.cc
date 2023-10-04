@@ -318,9 +318,9 @@ double case_mdspan_ref(int repeat)
     double d = 0.0;
 #ifndef NOMDSPANREF
     namespace stdex = std::experimental;
-    std::unique_ptr<float> adata(new float[n*n*n*n]);
-    std::unique_ptr<float> bdata(new float[n*n*n*n]);
-    std::unique_ptr<float> cdata(new float[n*n*n*n]);
+    std::unique_ptr<float[]> adata(new float[n*n*n*n]);
+    std::unique_ptr<float[]> bdata(new float[n*n*n*n]);
+    std::unique_ptr<float[]> cdata(new float[n*n*n*n]);
     stdex::mdspan<float,std::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>>
         a{adata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}},
         b{bdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}},
