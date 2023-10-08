@@ -854,6 +854,7 @@ template<> const std::complex<float>& get_value_2<std::complex<float>>() {return
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 template<typename T> 
 void testaccessors(T value1, T value2) 
 {
@@ -897,18 +898,20 @@ void testaccessors(T value1, T value2)
     REQUIRE(c[6][1][0] == value1);    
 }
 
+/* * */
 TEST_CASE("testaccessors_double")
 {
     testaccessors<double>(global::d1,global::d2);
 }
 
-
+/* * */
 TEST_CASE("testaccessors_Compound")
 {
     testaccessors<Compound>(global::c1,global::c2);
 }
 
 
+/* * */
 TEST_CASE("testaccessors_array_Compound_3")
 {
     testaccessors<array<Compound,3> >(global::a1,global::a2);
@@ -960,6 +963,7 @@ TEMPLATE_TEST_CASE("testsliceconstructor", "",
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 template<typename T> 
 void testcopy2d(T value1, T value2) 
 {
@@ -986,18 +990,19 @@ void testcopy2d(T value1, T value2)
     }    
 }
 
+/* * */
 TEST_CASE("testcopy2d_double")
 {
     testcopy2d<double>(global::d1,global::d2);
 }
 
-
+/* * */
 TEST_CASE("testcopy2d_Compound")
 {
     testcopy2d<Compound>(global::c1,global::c2);
 }
 
-
+/* * */
 TEST_CASE("testcopy2d_array_Compound_3")
 {
     testcopy2d<array<Compound,3> >(global::a1,global::a2);
@@ -1009,6 +1014,7 @@ TEST_CASE("testcopy2d_array_Compound_3")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 template<typename T> 
 void testcopy3d(T value1, T value2) 
 {
@@ -1042,18 +1048,19 @@ void testcopy3d(T value1, T value2)
     }
 }
 
+/* * */
 TEST_CASE("testcopy3d_double")
 {
     testcopy3d<double>(global::d1,global::d2);
 }
 
-
+/* * */
 TEST_CASE("testcopy3d_Compound")
 {
     testcopy3d<Compound>(global::c1,global::c2);
 }
 
-
+/* * */
 TEST_CASE("testcopy3d_array_Compound_3")
 {
     testcopy3d<array<Compound,3> >(global::a1,global::a2);
@@ -1105,6 +1112,7 @@ TEST_CASE("testcopy1d_array_Compound_3")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 // matrix matrix mutiple A=B*C
 template<class T>
 void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
@@ -1125,6 +1133,7 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
     }
 }
 
+/* * */
 TEMPLATE_TEST_CASE("testmmm", "", int, double)
 {                  
     using T = TestType;
@@ -1318,6 +1327,7 @@ void print2d_6(const float *a, ra::size_type n, ra::size_type m, std::ostream& c
     cout << '\n';
 }
 
+/* * */
 // print2d_7 takes the wrapper 2d class, which already contains its dimenstions
 // because of const, print2d_7 cannot change the elements of a.
 // - Const-correct.
@@ -1332,6 +1342,7 @@ void print2d_7(const rarray<float,2> &a, std::ostream& cout)
     cout << '\n';
 }
 
+/* * */
 // print2d_8 takes the wrapper 2d class, which already contains its dimenstions
 // because of const, print2d_7 cannot change the elements of a.
 // - Const-correct.
@@ -1346,6 +1357,7 @@ void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
   cout << '\n';
 }
 
+/* * */
 TEST_CASE("test2dconversions")
 {
     const int n = 9;
@@ -1477,6 +1489,7 @@ void print3d_5(float *a, ra::size_type n, ra::size_type m, ra::size_type l, std:
     cout << '\n';
 }
 
+/* * */
 // print3d_6 wants the constant tensor as a contiguous memory block.
 // because of const, print3d_6 cannot change the elements of a. 
 // - Const-correct
@@ -1494,6 +1507,7 @@ void print3d_6(const float *a, ra::size_type n, ra::size_type m, ra::size_type l
     cout << '\n';
 }
 
+/* * */
 // print3d_7 takes the wrapper 3d class, which already contains its dimensions
 // because of const, print3d_7 cannot change the elements of a.
 // - Const-correct.
@@ -1511,6 +1525,7 @@ void print3d_7(const rarray<float,3> &a, std::ostream& cout)
     cout << '\n';
 }
 
+/* * */
 TEST_CASE("test3dconversions")
 {
     const int n = 9;
@@ -1864,6 +1879,7 @@ TEST_CASE("test6dautoconversion")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 TEST_CASE("testassignment")
 {
     const int n=10;
@@ -2434,6 +2450,7 @@ TEST_CASE("testzerooutput")
     REQUIRE(s.str()==expected_output);
 }
 
+/* * */
 TEST_CASE("testinput")
 {
     char input[] = "{{1,2},{3,4}}";
@@ -2618,6 +2635,7 @@ TEST_CASE("testiterators")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 TEST_CASE("testfill")
 {
     rarray<float,2> a(3,3);
@@ -2638,6 +2656,7 @@ TEST_CASE("testfill")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 TEST_CASE("testindex")
 {
     rarray<float,1> a(6);
@@ -2732,6 +2751,7 @@ TEST_CASE("testindex")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+/* * */
 TEST_CASE("testcomma_assignment")
 {
     rarray<double,1> emptyarray;

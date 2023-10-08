@@ -240,10 +240,6 @@ class rarray {
     RA_INLINEF typename std::enable_if<R!=1,U>::type at(size_type i) const;
     template<class U=const T&>
     RA_INLINEF typename std::enable_if<R==1,U>::type at(size_type i) const;
-    /* * *
-    RA_INLINEF operator typename PointerArray<T,R>::type () noexcept;  // makes a[..][..] work, as well as automatic conversion
-    RA_INLINEF operator typename PointerArray<const T,R>::type () const noexcept ; 
-    * * */
     // for square bracket access:
     template<class U=T> typename std::enable_if<R==1,
     U&
@@ -271,6 +267,20 @@ class rarray {
     operator[](ssize_t index) const {
         return { *this, index, this->shape() };
     }
+    // allow c++23 multidimentional subscripts
+    #if __cpp_multidimensional_subscript >= 202110L
+    template<typename... Ts>
+    RA_INLINEF typename std::enable_if<R==sizeof...(Ts)+1,T&>::type
+    operator[](ssize_t index, Ts... args) {
+        return operator[](index)[args...];
+    }
+    template<typename... Ts>
+    RA_INLINEF typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type
+    operator[](ssize_t index, Ts... args) const {
+        std::cout << "c";
+        return operator[](index)[args...];
+    }
+    #endif
     // TODO: for expressions
     RA_INLINEF const T& leval(size_type i) const;
   private:
@@ -332,6 +342,13 @@ class _Bracket {
     template<typename T2,int R2,typename P2> friend class ra::_Bracket; // allow descending   
   public:
     RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex));
+    #if __cpp_multidimensional_subscript >= 202110L
+    template<typename... Ts>
+    RA_INLINEF typename std::enable_if<R==sizeof...(Ts)+1,T&>::type
+    operator[](ssize_t nextindex, Ts... args) {
+        return operator[](nextindex)[args...];
+    }
+    #endif
 };
 
 template<typename T,typename P>
@@ -353,6 +370,7 @@ class _Bracket<T,1,P> {
     RA_INLINEF _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray; // allow descending
+
     template<typename T2,int R2,typename P2> friend class ra::_Bracket; // allow descending   
   public:
     RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex));
@@ -378,6 +396,14 @@ class _ConstBracket {
     template<typename T2,int R2,typename P2> friend class ra::_ConstBracket;
   public:
     RA_INLINEF auto at(ssize_t nextindex) const -> decltype(parent_.at(index_).at(nextindex));
+    // allow c++23 multidimentional subscripts
+    #if __cpp_multidimensional_subscript >= 202110L
+    template<typename... Ts>
+    RA_INLINEF typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type
+    operator[](ssize_t nextindex, Ts... args) {
+        return operator[](nextindex)[args...];
+    }
+    #endif
 };
 
 template<typename T,typename P>

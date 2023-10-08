@@ -1,7 +1,7 @@
 //
 // test_rarray.cc - simple tests for rarray
 //
-// Copyright (c) 2019  Ramses van Zon
+// Copyright (c) 2019-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,32 @@ int main()
 {
     rarray<double,2> a(100,100);
     double *const*z = a.ptr_array();
+#if __cpp_multidimensional_subscript >= 202110L
+    a[2,3] = 4.4;
+    int faultscaught=0;
+    try {
+        a[2,300] = 4.4;
+    }
+    catch (...)
+    {
+        std::cout << "Caught out of bounds\n";
+        faultscaught++;
+    }
+    try {
+        a[200,3] = 4.4;
+    }
+    catch (...)
+    {
+        std::cout << "Caught out of bounds\n";
+        faultscaught++;
+    }
+    if (faultscaught<2)
+        return 2;
+    if (z[2][3]==4.4)
+        return !(int(a[2,3])==4);
+    else
+        return 1;
+#else
     a[2][3] = 4.4;
     int faultscaught=0;
     try {
@@ -53,5 +79,6 @@ int main()
     else
         return 1;
 
+#endif
 }
 
