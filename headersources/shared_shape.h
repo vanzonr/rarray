@@ -156,7 +156,7 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
 {
     // construct shape 
     Offsets P({extent_.begin(),extent_.end()});
-    auto to_be_orig = std::unique_ptr<void**>(P.apply_offsets(adata)); // this could throw, but only if its allocation fails, so no resource leak
+    auto to_be_orig = std::unique_ptr<void**[]>(P.apply_offsets(adata)); // this could throw, but only if its allocation fails, so no resource leak
     if (R>1) 
         refs_ = new std::atomic<int>(1); // if throws, to_be_orig gets dealloced
     orig_ = to_be_orig.release(); // no exceptions, so now store orig_
