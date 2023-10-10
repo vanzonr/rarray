@@ -1,8 +1,10 @@
 #
 # xlC compiler settings for power6
 #
-CXX=xlC
-CXXFLAGS=-qlanglvl=extended0x
+CXX=xlC -qlanglvl=extended0x
+CXX14=:
+CXX23=:
+CXXFLAGS=-g
 DBGFLAGS=-g
 CPPFLAGSOPT=-DNDEBUG
 CXXFLAGSOPT=-O3 -qarch=pwr6 -qtune=pwr6 -qinline=level=10

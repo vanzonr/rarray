@@ -1,9 +1,12 @@
 #
-# intel compiler settings
-# (tested with oneAPI 2021.4.0, and 2022.1.0)
+# clang-based intel compiler settings
+# (c++11: tested with oneAPI 2021.4.0, and 2022.1.0)
+# (c++23: tested with oneAPI 2023.1.0)
 #
-CXX=icpx
-CXXFLAGS=-O0 -std=c++11
+CXX=icpx -std=c++11
+CXX11=icpx -std=c++14
+CXX23=icpx -std=c++23
+CXXFLAGS=-O0
 DBGFLAGS=-g
 CPPFLAGS=-Wall
 CPPFLAGSOPT=-DNDEBUG

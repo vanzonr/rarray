@@ -1,8 +1,10 @@
 #
 # ibm compiler settings
 #
-CXX=xlC_r
-CXXFLAGS=-qlanglvl=extended0x
+CXX=xlC_r -qlanglvl=extended0x
+CXX14=:
+CXX23=:
+CXXFLAGS=
 DBGFLAGS=-g
 CPPFLAGSOPT=-DNDEBUG
 CXXFLAGSOPT=-O3 -qinline=level=10 -qnoipa

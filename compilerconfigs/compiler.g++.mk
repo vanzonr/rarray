@@ -1,8 +1,10 @@
 #
 # g++ 4.8+ settings
 #
-CXX=g++
-CXXFLAGS=-std=c++11 
+CXX=g++ -std=c++11
+CXX14=g++ -std=c++14
+CXX23=g++ -std=c++23
+CXXFLAGS=-Og
 DBGFLAGS=-g
 CPPFLAGS=-Wall -Wshadow -Wconversion -Wfatal-errors
 CPPFLAGSOPT=-DNDEBUG

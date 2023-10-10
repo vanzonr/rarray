@@ -725,7 +725,7 @@ shared_shape<T,R>::shared_shape(const std::array<size_type,R>&anextent, T*adata)
   : extent_(anextent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
 {
     Offsets P({extent_.begin(),extent_.end()});
-    auto to_be_orig = std::unique_ptr<void**>(P.apply_offsets(adata));
+    auto to_be_orig = std::unique_ptr<void**[]>(P.apply_offsets(adata));
     if (R>1)
         refs_ = new std::atomic<int>(1);
     orig_ = to_be_orig.release();

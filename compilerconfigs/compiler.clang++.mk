@@ -1,9 +1,11 @@
 #
 # clang++ 3.5+
-# (tested upto v13)
+# (tested upto v13; need v15 for c++23)
 #
-CXX=clang++
-CXXFLAGS=-std=c++11
+CXX=clang++ -std=c++11
+CXX14=clang++ -std=c++14
+CXX23=clang++ -std=c++23
+CXXFLAGS=-g
 DBGFLAGS=-g
 CPPFLAGS=-Wall -D__extern_always_inline=inline 
 CPPFLAGSOPT=-DNDEBUG -D__extern_always_inline=inline 

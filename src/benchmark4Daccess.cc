@@ -1,7 +1,7 @@
 //
 // benchmark4Daccess.cc - speed test for rarray
 //
-// Copyright (c) 2013-2022  Ramses van Zon
+// Copyright (c) 2013-2023  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -107,6 +107,41 @@ double case_rarray(int repeat)
     }
     return d;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+
+#if __cpp_multidimensional_subscript >= 202110L
+
+double case_rarray23(int repeat)
+{
+    double d = 0.0;
+    rarray<float,4> a(n,n,n,n), b(n,n,n,n), c(n,n,n,n);
+    while (repeat--) {
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) {
+                        a[i,j,k,l] = static_cast<float>(l+i+repeat);
+                        b[i,j,k,l] = static_cast<float>(k+j+repeat/2);
+                    }
+        pass(&a[0,0,0,0],&b[0,0,0,0],repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        c[i,j,k,l] = a[i,j,k,l]+b[i,j,k,l];
+        pass(&c[0,0,0,0],&c[0,0,0,0],repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        d += c[i,j,k,l];
+        pass(&c[0,0,0,0],(float*)&d,repeat);
+    }
+    return d;
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -324,7 +359,31 @@ double case_mdspan_ref(int repeat)
     stdex::mdspan<float,std::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>>
         a{adata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}},
         b{bdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}},
-        c{cdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}};    
+        c{cdata.get(), stdex::extents<size_t,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent,std::dynamic_extent>{n,n,n,n}};
+#if __cpp_multidimensional_subscript >= 202110L
+    while (repeat--) {
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) {
+                        a[i,j,k,l] = static_cast<float>(l+i+repeat);
+                        b[i,j,k,l] = static_cast<float>(k+j+repeat/2);
+                    }
+        pass(&(a[0,0,0,0]),&(b[0,0,0,0]),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        c[i,j,k,l] = a[i,j,k,l]+b[i,j,k,l];
+        pass(&(c[0,0,0,0]),&(c[0,0,0,0]),repeat);
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++) 
+                for (int k=0;k<n;k++) 
+                    for (int l=0;l<n;l++) 
+                        d += c[i,j,k,l];
+        pass(&(c[0,0,0,0]),(float*)&d,repeat);
+    }
+#else
     while (repeat--) {
         for (int i=0;i<n;i++)
             for (int j=0;j<n;j++) 
@@ -347,6 +406,7 @@ double case_mdspan_ref(int repeat)
                         d += c(i,j,k,l);
         pass(&(c(0,0,0,0)),(float*)&d,repeat);
     }
+#endif
 #endif
     return d;
 }
@@ -526,6 +586,13 @@ int main(int argc,char**argv)
         fflush(stdout);
         answer = case_mdspan_ref(nrepeats);
         break;
+    #if __cpp_multidimensional_subscript >= 202110L
+    case 11: 
+        printf("rarray-23: ");
+        fflush(stdout);
+        answer = case_rarray23(nrepeats);
+        break;
+    #endif     
     }
     double eps = 1e-6;
     if (fabs(1-answer/check)>eps) {

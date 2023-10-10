@@ -124,7 +124,6 @@ else
             fi
         fi
     done
-   
     # ${CXX} and ${CXXMKINC} should be defined now
     if [ -n "${CXX}" ]; then        
         echo "Sanity check"
@@ -144,6 +143,12 @@ else
             echo "WARNING: Omitting non-existing fortran compiler ${FC}."
             grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
             echo FC=./nofortran >> config.mk
+        fi
+        # check if c++23 is working as config says
+        CXX23=$(grep CXX23 config.mk | cut -c 7-)
+        if [ "$(eval ${CXX23} --version 2>&1 1>/dev/null)" ]; then
+            echo "WARNING: C++23 support not working with ${CXX23}"
+            echo 'CXX23:=: Skipping ${CXX23}' >> config.mk
         fi
         # detect installation of BLITZ (only needed for benchmarks)
         echo -e "#\n# Variables for compiling\n#">> config.mk
@@ -194,6 +199,8 @@ else
             echo "not found"
             echo "VALGRIND=:" >> config.mk
         fi
+        # check if multidimensional subscripts are avaiable
+        #####$CXX $CPPFLAGS
         # add prefix to the makefile include file
         echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
         # print what to do next

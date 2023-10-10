@@ -29,6 +29,7 @@ int main()
     rarray<double,2> a(100,100);
     double *const*z = a.ptr_array();
 #if __cpp_multidimensional_subscript >= 202110L
+    std::cout << "Simple C++23 test\n";
     a[2,3] = 4.4;
     int faultscaught=0;
     try {
