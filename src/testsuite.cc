@@ -854,7 +854,6 @@ template<> const std::complex<float>& get_value_2<std::complex<float>>() {return
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 template<typename T> 
 void testaccessors(T value1, T value2) 
 {
@@ -897,25 +896,77 @@ void testaccessors(T value1, T value2)
     b[6][1][0] = value1;
     REQUIRE(c[6][1][0] == value1);    
 }
-
-/* * */
 TEST_CASE("testaccessors_double")
 {
     testaccessors<double>(global::d1,global::d2);
 }
-
-/* * */
 TEST_CASE("testaccessors_Compound")
 {
     testaccessors<Compound>(global::c1,global::c2);
 }
-
-
-/* * */
 TEST_CASE("testaccessors_array_Compound_3")
 {
     testaccessors<array<Compound,3> >(global::a1,global::a2);
 }
+
+#if __cpp_multidimensional_subscript >= 202110L
+
+template<typename T> 
+void testaccessors23(T value1, T value2) 
+{
+    // Exercises the following methods of the rarray<T,{1,2,3}> class
+    //   rarray_intermediate operator[](int i);
+    // Uses previously checked
+    //   rarray(int,int,int)
+    //   rarray(const int*)
+    //   rarray(const rarray<T,3>&)
+    //   ~rarray()
+    //   T* data()
+    //   int extent(int)
+    REQUIRE(value1!=value2);  // required for the test to work
+    ra::size_type dim[3] = {7,21,13};
+    rarray<T,3> a(7,21,13);
+    rarray<T,3> b(dim);
+    rarray<T,3> c(b);
+    const ra::size_type l=a.extent(0);
+    const ra::size_type m=a.extent(1);
+    const ra::size_type n=a.extent(2);
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
+                a[i,j,k] = value1;
+                b[i,j,k] = value2;
+            }
+        }
+    }
+    for (ra::size_type i=0; i<l; i++)
+        for (ra::size_type j=0; j<m; j++)
+            for (ra::size_type k=0; k<n; k++)
+                REQUIRE(a[i,j,k] == value1);   
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
+                REQUIRE(b[i,j,k] == value2);   
+            }
+        }
+    }
+    b[6,1,0] = value1;
+    REQUIRE(c[6,1,0] == value1);    
+}
+TEST_CASE("testaccessors23_double")
+{
+    testaccessors23<double>(global::d1,global::d2);
+}
+TEST_CASE("testaccessors23_Compound")
+{
+    testaccessors23<Compound>(global::c1,global::c2);
+}
+TEST_CASE("testaccessors23_array_Compound_3")
+{
+    testaccessors23<array<Compound,3> >(global::a1,global::a2);
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -963,7 +1014,6 @@ TEMPLATE_TEST_CASE("testsliceconstructor", "",
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 template<typename T> 
 void testcopy2d(T value1, T value2) 
 {
@@ -989,32 +1039,66 @@ void testcopy2d(T value1, T value2)
         }
     }    
 }
-
-/* * */
 TEST_CASE("testcopy2d_double")
 {
     testcopy2d<double>(global::d1,global::d2);
 }
-
-/* * */
 TEST_CASE("testcopy2d_Compound")
 {
     testcopy2d<Compound>(global::c1,global::c2);
 }
-
-/* * */
 TEST_CASE("testcopy2d_array_Compound_3")
 {
     testcopy2d<array<Compound,3> >(global::a1,global::a2);
 }
 
+#if __cpp_multidimensional_subscript >= 202110L
+
+template<typename T> 
+void testcopy2d23(T value1, T value2) 
+{
+    // Tests following methods:
+    //   rarray<T,2> copy() const;
+    rarray<T,2> b(4,3);
+    const ra::size_type l=b.extent(0);
+    const ra::size_type m=b.extent(1);
+    T value3 = value1;
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            b[i,j] = value3;
+            value3 = value3+value2;
+        }
+    }
+    rarray<T,2> d(b.copy());
+    REQUIRE(d.data()!=b.data());
+    REQUIRE(d.extent(0)==b.extent(0));
+    REQUIRE(d.extent(1)==b.extent(1));
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            REQUIRE(b[i,j]==d[i,j]);
+        }
+    }    
+}
+TEST_CASE("testcopy2d23_double")
+{
+    testcopy2d23<double>(global::d1,global::d2);
+}
+TEST_CASE("testcopy2d23_Compound")
+{
+    testcopy2d23<Compound>(global::c1,global::c2);
+}
+TEST_CASE("testcopy2d23_array_Compound_3")
+{
+    testcopy2d23<array<Compound,3> >(global::a1,global::a2);
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 template<typename T> 
 void testcopy3d(T value1, T value2) 
 {
@@ -1047,25 +1131,67 @@ void testcopy3d(T value1, T value2)
         }
     }
 }
-
-/* * */
 TEST_CASE("testcopy3d_double")
 {
     testcopy3d<double>(global::d1,global::d2);
 }
-
-/* * */
 TEST_CASE("testcopy3d_Compound")
 {
     testcopy3d<Compound>(global::c1,global::c2);
 }
-
-/* * */
 TEST_CASE("testcopy3d_array_Compound_3")
 {
     testcopy3d<array<Compound,3> >(global::a1,global::a2);
 }
 
+#if __cpp_multidimensional_subscript >= 202110L
+
+template<typename T> 
+void testcopy3d23(T value1, T value2) 
+{
+    // Tests following methods:
+    //   rarray<T,3> copy() const;
+    rarray<T,3> b(100,40,3);
+    //rarray<T,3> b(1,1,2);
+    const ra::size_type l=b.extent(0);
+    const ra::size_type m=b.extent(1);
+    const ra::size_type n=b.extent(2);
+    T value3 = value1;
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
+                b[i,j,k] = value3;
+                value3 = value3+value2;
+            }
+        }
+    }
+    rarray<T,3> d(b.copy());
+    REQUIRE(d.data()!=b.data());
+    REQUIRE(d.extent(0)==b.extent(0));
+    REQUIRE(d.extent(1)==b.extent(1));
+    REQUIRE(d.extent(2)==b.extent(2));
+    for (ra::size_type i=0; i<l; i++) {
+        for (ra::size_type j=0; j<m; j++) {
+            for (ra::size_type k=0; k<n; k++) {
+                REQUIRE(b[i,j,k]==d[i,j,k]);
+            }
+        }
+    }
+}
+TEST_CASE("testcopy3d23_double")
+{
+    testcopy3d23<double>(global::d1,global::d2);
+}
+TEST_CASE("testcopy3d23_Compound")
+{
+    testcopy3d23<Compound>(global::c1,global::c2);
+}
+TEST_CASE("testcopy3d23_array_Compound_3")
+{
+    testcopy3d23<array<Compound,3> >(global::a1,global::a2);
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1112,7 +1238,6 @@ TEST_CASE("testcopy1d_array_Compound_3")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 // matrix matrix mutiple A=B*C
 template<class T>
 void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
@@ -1132,8 +1257,6 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
         }
     }
 }
-
-/* * */
 TEMPLATE_TEST_CASE("testmmm", "", int, double)
 {                  
     using T = TestType;
@@ -1157,6 +1280,52 @@ TEMPLATE_TEST_CASE("testmmm", "", int, double)
     }
     
 }
+
+#if __cpp_multidimensional_subscript >= 202110L
+
+// matrix matrix mutiple A=B*C
+template<class T>
+void mmm23(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
+{
+    assert(A.extent(0)==B.extent(0));
+    assert(B.extent(1)==C.extent(0));
+    assert(C.extent(1)==A.extent(1));
+    const ra::size_type l=B.extent(0);
+    const ra::size_type m=C.extent(1);
+    const ra::size_type n=B.extent(1);
+    for (ra::size_type i=0;i<l;i++) {
+        for (ra::size_type j=0;j<m;j++) {
+            A[i,j] = 0;
+            for (ra::size_type k=0;k<n;k++) {
+                A[i,j] += B[i,k]*C[k,j];
+            }
+        }
+    }
+}
+TEMPLATE_TEST_CASE("testmmm23", "", int, double)
+{                  
+    using T = TestType;
+    T bdata[3*3] = { 1,  2,  3,
+                     4,  5,  6,
+                     7,  8,  9};
+    T cdata[3*3] = { 1, -1,  2,
+                     3, -1,  2,
+                    -1,  4, -1};
+    T adata[3*3] = { 4,  9,  3,
+                    13, 15, 12,
+                    22, 21, 21};
+    rarray<T,2> b(bdata,3,3);
+    rarray<T,2> c(cdata,3,3);
+    rarray<T,2> a(3,3);
+    mmm23(a,b,c);
+    for (int i=0;i<3;i++) {
+        for (int j=0;j<3;j++) {
+            REQUIRE(a[i,j]==adata[i*3+j]);
+        }
+    }
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1327,7 +1496,6 @@ void print2d_6(const float *a, ra::size_type n, ra::size_type m, std::ostream& c
     cout << '\n';
 }
 
-/* * */
 // print2d_7 takes the wrapper 2d class, which already contains its dimenstions
 // because of const, print2d_7 cannot change the elements of a.
 // - Const-correct.
@@ -1342,7 +1510,6 @@ void print2d_7(const rarray<float,2> &a, std::ostream& cout)
     cout << '\n';
 }
 
-/* * */
 // print2d_8 takes the wrapper 2d class, which already contains its dimenstions
 // because of const, print2d_7 cannot change the elements of a.
 // - Const-correct.
@@ -1357,7 +1524,6 @@ void print2d_8(const rarray<const float,2> &a, std::ostream& cout)
   cout << '\n';
 }
 
-/* * */
 TEST_CASE("test2dconversions")
 {
     const int n = 9;
@@ -1398,6 +1564,56 @@ TEST_CASE("test2dconversions")
     print2d_8(c.const_ref(), s8);
     REQUIRE(s8.str()==s1.str());
 }
+
+#if __cpp_multidimensional_subscript >= 202110L
+void print2d_723(const rarray<float,2> &a, std::ostream& cout)
+{
+    for (ra::size_type i=0;i<a.extent(0);i++) {
+        for (ra::size_type j=0;j<a.extent(1);j++) 
+            cout << a[i,j] << ' ';
+        cout << '\n';
+    }
+    cout << '\n';
+}
+void print2d_823(const rarray<const float,2> &a, std::ostream& cout)
+{
+  for (ra::size_type i=0;i<a.extent(0);i++) {
+    for (ra::size_type j=0;j<a.extent(1);j++) 
+      cout << a[i,j] << ' ';
+    cout << '\n';
+  }
+  cout << '\n';
+}
+TEST_CASE("test2dconversions23")
+{
+    const int n = 9;
+    const int m = 5;
+    rarray<float,2> a(n,m);
+    for (int i=0;i<n;i++)
+      for (int j=0;j<m;j++)
+        a[i,j]=float(i+1)*10+float(j+1);
+    rarray<float,1> atoo = a.at(1);
+    atoo=a.at(1); // not really testing runtime
+    const rarray<float,2>& c=a; // note the const
+    std::stringstream s1,s7,s8;
+    print2d_1(c.noconst_ptr_array(), c.extent(0), c.extent(1), s1);
+    REQUIRE(s1.str()==
+          "11 12 13 14 15 \n"
+          "21 22 23 24 25 \n"
+          "31 32 33 34 35 \n" 
+          "41 42 43 44 45 \n"
+          "51 52 53 54 55 \n"
+          "61 62 63 64 65 \n"
+          "71 72 73 74 75 \n"
+          "81 82 83 84 85 \n"
+          "91 92 93 94 95 \n\n");
+    print2d_723(c, s7);
+    REQUIRE(s7.str()==s1.str());
+    print2d_823(c.const_ref(), s8);
+    REQUIRE(s8.str()==s1.str());
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -1489,7 +1705,6 @@ void print3d_5(float *a, ra::size_type n, ra::size_type m, ra::size_type l, std:
     cout << '\n';
 }
 
-/* * */
 // print3d_6 wants the constant tensor as a contiguous memory block.
 // because of const, print3d_6 cannot change the elements of a. 
 // - Const-correct
@@ -1507,7 +1722,6 @@ void print3d_6(const float *a, ra::size_type n, ra::size_type m, ra::size_type l
     cout << '\n';
 }
 
-/* * */
 // print3d_7 takes the wrapper 3d class, which already contains its dimensions
 // because of const, print3d_7 cannot change the elements of a.
 // - Const-correct.
@@ -1525,7 +1739,6 @@ void print3d_7(const rarray<float,3> &a, std::ostream& cout)
     cout << '\n';
 }
 
-/* * */
 TEST_CASE("test3dconversions")
 {
     const int n = 9;
@@ -1570,6 +1783,47 @@ TEST_CASE("test3dconversions")
     REQUIRE(s7.str()==s1.str());
 }
 
+#if __cpp_multidimensional_subscript >= 202110L
+
+void print3d_723(const rarray<float,3> &a, std::ostream& cout)
+{
+    for (ra::size_type i=0;i<a.extent(0);i++) {
+        for (ra::size_type j=0;j<a.extent(1);j++) {
+            for (ra::size_type k=0;k<a.extent(2);k++) 
+                cout << a[i,j,k] << ' ';
+            cout << "      \t";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+TEST_CASE("test3dconversions23")
+{
+    const int n = 9;
+    const int m = 5;
+    const int l = 2;
+    rarray<float,3> a(n,m,l);
+    std::stringstream s7;
+    for (int i=0;i<n;i++)
+      for (int j=0;j<m;j++)
+        for (int k=0;k<l;k++)
+          a[i,j,k]=float(((i+1)*10+j+1)*10+k+1);    
+    const rarray<float,3>& c=a;
+    print3d_723(c, s7);
+    REQUIRE(s7.str()==
+     "111 112       \t121 122       \t131 132       \t141 142       \t151 152       \t\n"
+     "211 212       \t221 222       \t231 232       \t241 242       \t251 252       \t\n"
+     "311 312       \t321 322       \t331 332       \t341 342       \t351 352       \t\n"
+     "411 412       \t421 422       \t431 432       \t441 442       \t451 452       \t\n"
+     "511 512       \t521 522       \t531 532       \t541 542       \t551 552       \t\n"
+     "611 612       \t621 622       \t631 632       \t641 642       \t651 652       \t\n"
+     "711 712       \t721 722       \t731 732       \t741 742       \t751 752       \t\n"
+     "811 812       \t821 822       \t831 832       \t841 842       \t851 852       \t\n"
+     "911 912       \t921 922       \t931 932       \t941 942       \t951 952       \t\n\n");
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -1879,7 +2133,6 @@ TEST_CASE("test6dautoconversion")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 TEST_CASE("testassignment")
 {
     const int n=10;
@@ -1911,6 +2164,41 @@ TEST_CASE("testassignment")
     
 }
 
+
+#if __cpp_multidimensional_subscript >= 202110L
+
+TEST_CASE("testassignment23")
+{
+    const int n=10;
+    const int m=100;
+    const int p=3;
+    int l = 0;
+    rarray<float,3> a(n,m,p);
+    rarray<float,3> b;
+    for (int i=0;i<n;i++)
+        for (int j=0;j<m;j++)
+            for (int k=0;k<p;k++)
+                a[i,j,k] = float(l++);
+    b = a;
+    REQUIRE(b.data()==a.data());
+    //REQUIRE(b.ptr_array()==a.ptr_array()); // not yet, b has its own ptr_array.
+    REQUIRE(b.extent(0)==a.extent(0));
+    REQUIRE(b.extent(1)==a.extent(1));
+    REQUIRE(b.extent(2)==a.extent(2));
+    rarray<float,2> e;
+    e = a.at(2);
+    REQUIRE(e.data()==a.at(2).data());
+    REQUIRE(e.extent(0)==a.extent(1));
+    REQUIRE(e.extent(1)==a.extent(2));    
+    rarray<float,1> c(2048);
+    rarray<float,1> d;
+    d = c;
+    REQUIRE(d.data()==c.data());
+    REQUIRE(d.extent(0)==c.extent(0));
+    
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -2450,7 +2738,6 @@ TEST_CASE("testzerooutput")
     REQUIRE(s.str()==expected_output);
 }
 
-/* * */
 TEST_CASE("testinput")
 {
     char input[] = "{{1,2},{3,4}}";
@@ -2468,7 +2755,35 @@ TEST_CASE("testinput")
     REQUIRE(d.extent(1) == 1);
     REQUIRE(d[0][0] == 11);
     REQUIRE(d[1][0] == 22);
-    
+        
+    char wronginput[] = "{3,4}";
+    std::stringstream wrongs(wronginput);
+    rarray<int,2> wrongd;
+    REQUIRE_THROWS(wrongs >> wrongd);
+    REQUIRE(wrongs.fail());
+    REQUIRE(wrongd.size() == 0);
+}
+
+
+#if __cpp_multidimensional_subscript >= 202110L
+
+TEST_CASE("testinput23")
+{
+    char input[] = "{{1,2},{3,4}}";
+    std::stringstream s(input);
+    rarray<int,2> d;
+    s >> d;
+    REQUIRE(d[0,0] == 1);
+    REQUIRE(d[0,1] == 2);
+    REQUIRE(d[1,0] == 3);
+    REQUIRE(d[1,1] == 4);
+
+    std::stringstream smallerinput("{{11},{22}}");
+    smallerinput >> d;
+    REQUIRE(d.extent(0) == 2);
+    REQUIRE(d.extent(1) == 1);
+    REQUIRE(d[0,0] == 11);
+    REQUIRE(d[1,0] == 22);
     
     char wronginput[] = "{3,4}";
     std::stringstream wrongs(wronginput);
@@ -2477,6 +2792,9 @@ TEST_CASE("testinput")
     REQUIRE(wrongs.fail());
     REQUIRE(wrongd.size() == 0);
 }
+
+#endif
+
 
 ///////////////////////////////////////////////////////////////////
 
@@ -2635,7 +2953,6 @@ TEST_CASE("testiterators")
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 TEST_CASE("testfill")
 {
     rarray<float,2> a(3,3);
@@ -2652,11 +2969,29 @@ TEST_CASE("testfill")
     }
 }
 
+#if __cpp_multidimensional_subscript >= 202110L
+
+TEST_CASE("testfill23")
+{
+    rarray<float,2> a(3,3);
+    a.fill(1.23f);
+    for (ra::size_type i=0;i<EXTENT(a,0);i++) {
+        for (ra::size_type j=0;j<EXTENT(a,1);j++) {
+            REQUIRE(a[i,j]==1.23f);
+        }
+    }    
+    rarray<float,1> b(5);
+    b.fill(1.24f);
+    for (ra::size_type i=0;i<EXTENT(a,0);i++) {
+        REQUIRE(b[i]==1.24f);
+    }
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 TEST_CASE("testindex")
 {
     rarray<float,1> a(6);
@@ -2697,36 +3032,36 @@ TEST_CASE("testindex")
     REQUIRE(a[5]==150.f);
 
     rarray<float,3> z(2,3,4.f);
-    REQUIRE(z.index(z[1][2][3],0)==1.f);
-    REQUIRE(z.index(z[1][2][3],1)==2.f);
-    REQUIRE(z.index(z[1][2][3],2)==3.f);
+    REQUIRE(z.index(z[1][2][3],0)==1);
+    REQUIRE(z.index(z[1][2][3],1)==2);
+    REQUIRE(z.index(z[1][2][3],2)==3);
 
 
     rarray<float,3> b(2,2,2);
-    REQUIRE(b.index(b[0][0][0])[0]==0.f);
-    REQUIRE(b.index(b[0][0][1])[0]==0.f);
-    REQUIRE(b.index(b[0][1][0])[0]==0.f);
-    REQUIRE(b.index(b[0][1][1])[0]==0.f);
-    REQUIRE(b.index(b[1][0][0])[0]==1.f);
-    REQUIRE(b.index(b[1][0][1])[0]==1.f);
-    REQUIRE(b.index(b[1][1][0])[0]==1.f);
-    REQUIRE(b.index(b[1][1][1])[0]==1.f);
-    REQUIRE(b.index(b[0][0][0])[1]==0.f);
-    REQUIRE(b.index(b[0][0][1])[1]==0.f);
-    REQUIRE(b.index(b[0][1][0])[1]==1.f);
-    REQUIRE(b.index(b[0][1][1])[1]==1.f);
-    REQUIRE(b.index(b[1][0][0])[1]==0.f);
-    REQUIRE(b.index(b[1][0][1])[1]==0.f);
-    REQUIRE(b.index(b[1][1][0])[1]==1.f);
-    REQUIRE(b.index(b[1][1][1])[1]==1.f);
-    REQUIRE(b.index(b[0][0][0])[2]==0.f);
-    REQUIRE(b.index(b[0][0][1])[2]==1.f);
-    REQUIRE(b.index(b[0][1][0])[2]==0.f);
-    REQUIRE(b.index(b[0][1][1])[2]==1.f);
-    REQUIRE(b.index(b[1][0][0])[2]==0.f);
-    REQUIRE(b.index(b[1][0][1])[2]==1.f);
-    REQUIRE(b.index(b[1][1][0])[2]==0.f);
-    REQUIRE(b.index(b[1][1][1])[2]==1.f);
+    REQUIRE(b.index(b[0][0][0])[0]==0);
+    REQUIRE(b.index(b[0][0][1])[0]==0);
+    REQUIRE(b.index(b[0][1][0])[0]==0);
+    REQUIRE(b.index(b[0][1][1])[0]==0);
+    REQUIRE(b.index(b[1][0][0])[0]==1);
+    REQUIRE(b.index(b[1][0][1])[0]==1);
+    REQUIRE(b.index(b[1][1][0])[0]==1);
+    REQUIRE(b.index(b[1][1][1])[0]==1);
+    REQUIRE(b.index(b[0][0][0])[1]==0);
+    REQUIRE(b.index(b[0][0][1])[1]==0);
+    REQUIRE(b.index(b[0][1][0])[1]==1);
+    REQUIRE(b.index(b[0][1][1])[1]==1);
+    REQUIRE(b.index(b[1][0][0])[1]==0);
+    REQUIRE(b.index(b[1][0][1])[1]==0);
+    REQUIRE(b.index(b[1][1][0])[1]==1);
+    REQUIRE(b.index(b[1][1][1])[1]==1);
+    REQUIRE(b.index(b[0][0][0])[2]==0);
+    REQUIRE(b.index(b[0][0][1])[2]==1);
+    REQUIRE(b.index(b[0][1][0])[2]==0);
+    REQUIRE(b.index(b[0][1][1])[2]==1);
+    REQUIRE(b.index(b[1][0][0])[2]==0);
+    REQUIRE(b.index(b[1][0][1])[2]==1);
+    REQUIRE(b.index(b[1][1][0])[2]==0);
+    REQUIRE(b.index(b[1][1][1])[2]==1);
 
     float rbuf[3][3] = { {0,0,0}, 
                          {1,1,1}, 
@@ -2747,11 +3082,65 @@ TEST_CASE("testindex")
     }
 }
 
+#if __cpp_multidimensional_subscript >= 202110L
+
+TEST_CASE("testindex23")
+{
+    rarray<float,3> z(2,3,4);
+    REQUIRE(z.index(z[1,2,3],0)==1);
+    REQUIRE(z.index(z[1,2,3],1)==2);
+    REQUIRE(z.index(z[1,2,3],2)==3);
+
+
+    rarray<float,3> b(2,2,2);
+    REQUIRE(b.index(b[0,0,0])[0]==0);
+    REQUIRE(b.index(b[0,0,1])[0]==0);
+    REQUIRE(b.index(b[0,1,0])[0]==0);
+    REQUIRE(b.index(b[0,1,1])[0]==0);
+    REQUIRE(b.index(b[1,0,0])[0]==1);
+    REQUIRE(b.index(b[1,0,1])[0]==1);
+    REQUIRE(b.index(b[1,1,0])[0]==1);
+    REQUIRE(b.index(b[1,1,1])[0]==1);
+    REQUIRE(b.index(b[0,0,0])[1]==0);
+    REQUIRE(b.index(b[0,0,1])[1]==0);
+    REQUIRE(b.index(b[0,1,0])[1]==1);
+    REQUIRE(b.index(b[0,1,1])[1]==1);
+    REQUIRE(b.index(b[1,0,0])[1]==0);
+    REQUIRE(b.index(b[1,0,1])[1]==0);
+    REQUIRE(b.index(b[1,1,0])[1]==1);
+    REQUIRE(b.index(b[1,1,1])[1]==1);
+    REQUIRE(b.index(b[0,0,0])[2]==0);
+    REQUIRE(b.index(b[0,0,1])[2]==1);
+    REQUIRE(b.index(b[0,1,0])[2]==0);
+    REQUIRE(b.index(b[0,1,1])[2]==1);
+    REQUIRE(b.index(b[1,0,0])[2]==0);
+    REQUIRE(b.index(b[1,0,1])[2]==1);
+    REQUIRE(b.index(b[1,1,0])[2]==0);
+    REQUIRE(b.index(b[1,1,1])[2]==1);
+
+    float rbuf[3][3] = { {0,0,0}, 
+                         {1,1,1}, 
+                         {2,2,2} }; 
+    float cbuf[3][3] = { {0,1,2}, 
+                         {0,1,2},
+                         {0,1,2} }; 
+    rarray<float,2> r = RARRAY(rbuf);
+    rarray<float,2> c = RARRAY(cbuf);
+
+    for (auto i=r.begin(); i != r.end(); i++) {
+        REQUIRE(r.index(*i)[0]==*i);
+    }
+    
+    for (auto i=c.begin(); i != c.end(); i++) {
+        REQUIRE(c.index(i)[1]==*i);
+    }
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-/* * */
 TEST_CASE("testcomma_assignment")
 {
     rarray<double,1> emptyarray;
@@ -2855,6 +3244,42 @@ TEST_CASE("testcomma_assignment")
 
 }
 
+#if __cpp_multidimensional_subscript >= 202110L
+
+TEST_CASE("testcomma_assignment23")
+{
+    rarray<double,3> a(3,4,2);
+
+    a =  1,2,    3,6,   5,4,   7,8, 
+         9,12,  11,10, 21,22, 23,26, 
+        25,24,  27,28, 29,32, 31,30;
+    REQUIRE(a[0,0,0]== 1.);
+    REQUIRE(a[0,0,1]== 2.);
+    REQUIRE(a[0,1,0]== 3.);
+    REQUIRE(a[0,1,1]== 6.);
+    REQUIRE(a[0,2,0]== 5.);
+    REQUIRE(a[0,2,1]== 4.);
+    REQUIRE(a[0,3,0]== 7.);
+    REQUIRE(a[0,3,1]== 8.);
+    REQUIRE(a[1,0,0]== 9.);
+    REQUIRE(a[1,0,1]==12.);
+    REQUIRE(a[1,1,0]==11.);
+    REQUIRE(a[1,1,1]==10.);
+    REQUIRE(a[1,2,0]==21.);
+    REQUIRE(a[1,2,1]==22.);
+    REQUIRE(a[1,3,0]==23.);
+    REQUIRE(a[1,3,1]==26.);
+    REQUIRE(a[2,0,0]==25.);
+    REQUIRE(a[2,0,1]==24.);
+    REQUIRE(a[2,1,0]==27.);
+    REQUIRE(a[2,1,1]==28.);
+    REQUIRE(a[2,2,0]==29.);
+    REQUIRE(a[2,2,1]==32.);
+    REQUIRE(a[2,3,0]==31.);
+    REQUIRE(a[2,3,1]==30.);
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -3057,3 +3482,37 @@ TEMPLATE_TEST_CASE("testat", "",
      a.fill(x1);
      REQUIRE(a.at(2) == x1);
  }
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+ 
+#if __cplusplus >= 202002L
+
+#include <ranges>
+
+TEST_CASE("xrange_is_a_view")
+{
+    using namespace std::views;
+    auto odd = [](int i) -> bool { return i%2; };
+    auto shift3 = [](int i) { return i-3; };
+    int sum = 0;
+    for (int i:xrange(6)|filter(odd)|transform(shift3)) {
+        sum+=i;
+    }
+    REQUIRE(sum==0);
+}
+
+#endif
+
+#if __cplusplus >= 202100L
+
+TEST_CASE("xrange_with_zip") 
+{
+    using namespace std::views;
+    rvector<double> r = linspace(0.,5.,6);
+    for (auto [x,y] : zip(xrange(sizeof(r)), r)) {
+        REQUIRE(x==y);
+    }   
+}
+
+#endif

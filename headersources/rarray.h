@@ -277,7 +277,6 @@ class rarray {
     template<typename... Ts>
     RA_INLINEF typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type
     operator[](ssize_t index, Ts... args) const {
-        std::cout << "c";
         return operator[](index)[args...];
     }
     #endif
