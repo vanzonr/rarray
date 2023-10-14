@@ -3506,6 +3506,8 @@ TEST_CASE("xrange_is_a_view")
 
 #if __cplusplus >= 202100L
 
+#ifndef NOZIP
+
 TEST_CASE("xrange_with_zip") 
 {
     using namespace std::views;
@@ -3514,5 +3516,7 @@ TEST_CASE("xrange_with_zip")
         REQUIRE(x==y);
     }   
 }
+
+#endif
 
 #endif

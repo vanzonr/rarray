@@ -144,14 +144,37 @@ else
             grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
             echo FC=./nofortran >> config.mk
         fi
+        # detect installations
+        echo -e "#\n# Variables for compiling\n#">> config.mk
         # check if c++23 is working as config says
         CXX23=$(grep CXX23 config.mk | cut -c 7-)
-        if [ "$(eval ${CXX23} --version 2>&1 1>/dev/null)" ]; then
-            echo "WARNING: C++23 support not working with ${CXX23}"
+        echo -en "Checking for (optional) C++23..."
+        testcppfile=$(mktemp --suffix=.cpp)
+        echo 'int main(){}' > $testcppfile
+        if ! $CXX23 $testcppfile >&/dev/null ; then
+            echo " not found"
             echo 'CXX23:=: Skipping ${CXX23}' >> config.mk
+        else
+            echo " found"
+            # check if c++23 knows std::view::zip
+            echo -en "Checking for (optional) std::view::zip..."
+            sourcefile=$(mktemp --suffix=.cpp)
+            cat >  ${sourcefile} <<EOF
+#include <ranges>
+#include <vector>
+int main() {
+auto x = std::views::zip(std::vector{0});
+}
+EOF
+            if ! $CXX23 $sourcefile &>/dev/null ; then
+                echo " not found"
+                echo 'CXX23:=${CXX23} -DNOZIP' >> config.mk
+            else
+                echo " found"
+            fi
+            rm -f $sourcefile
         fi
-        # detect installation of BLITZ (only needed for benchmarks)
-        echo -e "#\n# Variables for compiling\n#">> config.mk
+        #########################################################
         accincdir=""
         acclibdir=""
         #########################################################
