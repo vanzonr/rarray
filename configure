@@ -177,6 +177,11 @@ EOF
         #########################################################
         accincdir=""
         acclibdir=""
+        echo -n "CPPFLAGS+=" >> config.mk
+        detect_library RANGES ranges -DNORANGES "" ""
+        echo >> config.mk
+        accincdir=""
+        acclibdir=""
         #########################################################
         if [ "$accincdir" ]; then
             echo "TESTCPPFLAGS=${accincdir:1}" | sed 's/-IZ/-I$/g' >> config.mk

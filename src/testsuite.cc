@@ -3488,6 +3488,8 @@ TEMPLATE_TEST_CASE("testat", "",
  
 #if __cplusplus >= 202002L
 
+#ifndef NORANGE
+
 #include <ranges>
 
 TEST_CASE("xrange_is_a_view")
@@ -3516,6 +3518,8 @@ TEST_CASE("xrange_with_zip")
         REQUIRE(x==y);
     }   
 }
+
+#endif
 
 #endif
 
