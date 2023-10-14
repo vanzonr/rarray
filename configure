@@ -147,11 +147,11 @@ else
         # detect installations
         echo -e "#\n# Variables for compiling\n#">> config.mk
         # check if c++23 is working as config says
-        CXX23=$(grep CXX23 config.mk | cut -c 7-)
+        CXX23=$(grep CXX23 config.mk | cut -c 7-)        
         echo -en "Checking for (optional) C++23..."
         testcppfile=$(mktemp --suffix=.cpp)
         echo 'int main(){}' > $testcppfile
-        if ! $CXX23 $testcppfile >&/dev/null ; then
+        if [[ "$CXX23" = ":" ]] || ! $CXX23 $testcppfile >&/dev/null ; then
             echo " not found"
             echo 'CXX23:=: Skipping ${CXX23}' >> config.mk
         else
