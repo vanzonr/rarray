@@ -26,14 +26,14 @@
 
 int main()
 {
-    rarray<double,2> a(100,100);
-    double *const*z = a.ptr_array();
+    rarray<double,3> a(2,100,100);
+    double *const*const*z = a.ptr_array();
 #if __cpp_multidimensional_subscript >= 202110L
     std::cout << "Simple C++23 test\n";
-    a[2,3] = 4.4;
+    a[1,2,3] = 4.4;
     int faultscaught=0;
     try {
-        a[2,300] = 4.4;
+        a[1,2,300] = 4.4;
     }
     catch (...)
     {
@@ -41,7 +41,7 @@ int main()
         faultscaught++;
     }
     try {
-        a[200,3] = 4.4;
+        a[1,200,3] = 4.4;
     }
     catch (...)
     {
@@ -50,15 +50,15 @@ int main()
     }
     if (faultscaught<2)
         return 2;
-    if (z[2][3]==4.4)
-        return !(int(a[2,3])==4);
+    if (z[1][2][3]==4.4)
+        return !(int(a[1,2,3])==4);
     else
         return 1;
 #else
-    a[2][3] = 4.4;
+    a[1][2][3] = 4.4;
     int faultscaught=0;
     try {
-        a[2][300] = 4.4;
+        a[1][2][300] = 4.4;
     }
     catch (...)
     {
@@ -66,7 +66,7 @@ int main()
         faultscaught++;
     }
     try {
-        a[200][3] = 4.4;
+        a[1][200][3] = 4.4;
     }
     catch (...)
     {
@@ -75,8 +75,8 @@ int main()
     }
     if (faultscaught<2)
         return 2;
-    if (z[2][3]==4.4)
-        return !(int(a[2][3])==4);
+    if (z[1][2][3]==4.4)
+        return !(int(a[1][2][3])==4);
     else
         return 1;
 
