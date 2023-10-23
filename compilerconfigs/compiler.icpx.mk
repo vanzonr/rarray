@@ -4,7 +4,7 @@
 # (c++23: tested with oneAPI 2023.1.0)
 #
 CXX=icpx -std=c++11
-CXX11=icpx -std=c++14
+CXX17=icpx -std=c++17
 CXX23=icpx -std=c++23
 CXXFLAGS=-O0
 DBGFLAGS=-g

@@ -2,7 +2,7 @@
 # xlC compiler settings for power6
 #
 CXX=xlC -qlanglvl=extended0x
-CXX14=:
+CXX17=:
 CXX23=:
 CXXFLAGS=-g
 DBGFLAGS=-g

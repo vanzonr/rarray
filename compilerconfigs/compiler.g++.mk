@@ -2,7 +2,7 @@
 # g++ 4.8+ settings
 #
 CXX=g++ -std=c++11
-CXX14=g++ -std=c++14
+CXX17=g++ -std=c++17
 CXX23=g++ -std=c++23
 CXXFLAGS=-Og
 DBGFLAGS=-g

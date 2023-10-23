@@ -3,7 +3,7 @@
 # (tested with versions 13.1.0-15)
 #
 CXX=icpc -std=c++11
-CXX14=icpc -std=c++14
+CXX17=icpc -std=c++17
 CXX23=:
 CXXFLAGS=-O0
 DBGFLAGS=-g

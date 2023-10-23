@@ -24,6 +24,19 @@ installed, and type
 
     make doc
 
+Installation
+============
+
+    mkdir build
+    cd build
+    ../configure --prefix=<PREFIXDIR>
+    make install
+
+Or copy the rarray file to <PREFIXDIR>/include.
+
+The configure-make recipe also allows running tests; type "make help"
+to see the options.
+
 Release History and Changes
 ===========================
 

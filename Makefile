@@ -1,7 +1,7 @@
 # 
 # Makefile - make file for rarray
 #
-# Copyright (c) 2013-2022  Ramses van Zon
+# Copyright (c) 2013-2023  Ramses van Zon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -72,6 +72,7 @@ BENCHMARK2DNAME23=benchmark2Daccess23
 BENCHMARK4DNAME23=benchmark4Daccess23
 PASS=optbarrier
 
+.PHONY: help
 help:
 	@echo ""
 	@echo "This makefile can install, test, and benchmark the rarray library."
@@ -87,38 +88,42 @@ help:
 	@echo "  To build and run c++23 tests:           make test23 valgrindtest23"
 	@echo ""
 
-.PHONY: headers test benchmarks doc valgrindtest install \
-        clean distclean list all \
-        run_test_shared_buffer  run_test_offsets  run_test_shared_shape \
-        run_test_rarray  run_testsuite  run_testsuite_bc \
-        run_valgrind_test_shared_buffer  run_valgrind_testsuite \
-        run_benchmark2d  run_benchmark4d \
-	lint test23 valgrindtest23 benchmark23
-
+.PHONY: headers
 headers: rarray rarrayio
 
+.PHONY: all
 all: headers test valgrindtest benchmarks
 
+.PHONY: test
 test: run_testsuite  run_testsuite_bc  run_test_shared_buffer  run_test_offsets \
       run_test_shared_shape  run_test_rarray
 	gcovr -f headersources
 
+.PHONY: test23
 test23: run_testsuite23  run_testsuite_bc23 run_test_rarray23
 	gcovr -f headersources
 
+.PHONY: valgrindtest
 valgrindtest: run_valgrind_testsuite  run_valgrind_testsuite_bc \
               run_valgrind_test_shared_buffer  run_valgrind_test_offsets \
               run_valgrind_test_shared_shape  run_valgrind_test_rarray 
 
+.PHONY: valgrindtest23
 valgrindtest23: run_valgrind_testsuite23  run_valgrind_testsuite_bc23 \
               run_valgrind_test_rarray23 
 
+.PHONY: benchmarks
 benchmarks: run_benchmark2d  run_benchmark4d
 
+.PHONY: doc
 doc: rarraydoc.pdf
+rarraydoc.pdf: rarraydoc.tex
+	pdflatex $^ && pdflatex $^
 
-lint:
-	mkdir -p clang-tidy-output && clang-tidy -checks=modernize-*,cppcoreguidelines-*, headersources/rarray.h -extra-arg-before=-xc++ > clang-tidy-output/clang-tidy-rarray.out
+.PHONY: lint
+lint: clang-tidy-output/clang-tidy-rarray.out
+clang-tidy-output/clang-tidy-rarray.out: headersources/rarray.h
+	mkdir -p clang-tidy-output && clang-tidy -checks=modernize-*,cppcoreguidelines-*, $< -extra-arg-before=-xc++ > $@
 
 hardinclude: ${SRC}/hardinclude.cc
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} -o $@ $^
@@ -134,22 +139,20 @@ ${HS}/versionheader.h: VERSION
 	echo "#define RA_VERSION_NUMBER " | tr -d '\n' >> $@
 	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
 
+MYDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
-	cd ${HS} ; ../hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > ../rarray
+	cd ${HS} ; ${MYDIR}/hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > ${MYDIR}/rarray
 
 rarrayio: rarray
 	echo '#include <rarray>' > rarrayio
 
+.PHONY: install
 install: rarray rarrayio rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
 	cp -f rarray ${PREFIX}/include/rarray
 	cp -f rarrayio ${PREFIX}/include/rarrayio
 	mkdir -p ${PREFIX}/share/rarray
 	cp -f rarraydoc.pdf ${PREFIX}/share/rarray
-
-rarraydoc.pdf: rarraydoc.tex
-	pdflatex $^
-	pdflatex $^
 
 testsuite: testsuite.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
@@ -212,9 +215,11 @@ test_rarray23: test_rarray23.o
 	echo 'echo "Skipped; c++23 not supported"' > $@ && chmod +x $@
 	${CXX23} ${LDFLAGS} -o $@ $^
 
+.PHONY: clean
 clean:
-	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o test_rarray23.o testsuite.o testsuite23.o testsuite_bc.o testsuite_bc23.o benchmark2Daccess.o benchmark2Daccess23.o benchmark4Daccess.o benchmark4Daccess23.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp *.gcno *.gcda *.gcov
+	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o test_rarray23.o testsuite.o testsuite23.o testsuite_bc.o testsuite_bc23.o benchmark2Daccess.o benchmark2Daccess23.o benchmark4Daccess.o benchmark4Daccess23.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp *.gcno *.gcda *.gcov clang-tidy-output/clang-tidy-rarray.out
 
+.PHONY: distclean
 distclean:
 	make clean
 	make rarray rarrayio doc	
@@ -228,84 +233,100 @@ coverage:
 coverage23:
 	mkdir -p coverage23
 
+.PHONY: run_test_shared_buffer
 run_test_shared_buffer: test_shared_buffer coverage
 	./test_shared_buffer
 	${GCOV} ./test_shared_buffer.o | \
 	( ${FILTERCOV} '/0:Source:headersources\/shared_buffer.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
+.PHONY: run_valgrind_test_shared_buffer
 run_valgrind_test_shared_buffer: test_shared_buffer
 	${VALGRIND} ./test_shared_buffer -e
 
+.PHONY: run_test_offsets
 run_test_offsets: test_offsets coverage
 	./test_offsets
 	${GCOV} ./test_offsets.o | \
 	( ${FILTERCOV} '/0:Source:headersources\/offsets.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
+.PHONY: run_valgrind_test_offsets
 run_valgrind_test_offsets: test_offsets
 	${VALGRIND} ./test_offsets -e
 
+.PHONY: run_test_shared_shape
 run_test_shared_shape: test_shared_shape coverage
 	./test_shared_shape
 	${GCOV} ./test_shared_shape.o | \
 	( ${FILTERCOV} '/0:Source:headersources\/shared_shape.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
+.PHONY: run_valgrind_test_shared_shape
 run_valgrind_test_shared_shape: test_shared_shape
 	${VALGRIND} ./test_shared_shape -e
 
+.PHONY: run_test_rarray
 run_test_rarray: test_rarray 
 	./test_rarray
 
+.PHONY: run_test_rarray23
 run_test_rarray23: test_rarray23
 	./test_rarray23
 
+.PHONY: run_valgrind_test_rarray
 run_valgrind_test_rarray: test_rarray
 	${VALGRIND} ./test_rarray -e
 
+.PHONY: run_valgrind_test_rarray23
 run_valgrind_test_rarray23: test_rarray23
 	${VALGRIND} ./test_rarray23 -e
 
+.PHONY: run_testsuite
 run_testsuite: testsuite coverage
 	./testsuite
 	${GCOV} ./testsuite.o | \
 	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
+.PHONY: run_testsuite23
 run_testsuite23: testsuite23 coverage23
 	./testsuite23
 	${GCOV} ./testsuite23.o | \
 	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage23/$@
 
+.PHONY: run_valgrind_testsuite
 run_valgrind_testsuite: testsuite
 	${VALGRIND} ./testsuite 
 
+.PHONY: run_valgrind_testsuite23
 run_valgrind_testsuite23: testsuite23
 	${VALGRIND} ./testsuite23 
 
+.PHONY: run_testsuite_bc
 run_testsuite_bc: testsuite_bc coverage
 	./testsuite_bc
 	${GCOV} ./testsuite_bc.o | \
 	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
+.PHONY: run_testsuite_bc23
 run_testsuite_bc23: testsuite_bc23 coverage23
 	./testsuite_bc23
 	${GCOV} ./testsuite_bc23.o | \
 	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage23/$@
 
+.PHONY: run_valgrind_testsuite_bc
 run_valgrind_testsuite_bc: testsuite_bc
 	${VALGRIND} ./testsuite_bc 
 
+.PHONY: run_valgrind_testsuite_bc23
 run_valgrind_testsuite_bc23: testsuite_bc23
 	${VALGRIND} ./testsuite_bc23 
 
-list:
-	@grep '^[^#[:space:]].*:' Makefile
-
+.PHONY: run_benchmark2d
 run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK2DNAME23) 
 	@echo Comparison benchmark on a 2d array example
 	@./$(BENCHMARK2DNAME) 1 
@@ -324,6 +345,7 @@ run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK2DNAME23)
 	@./$(BENCHMARK2DNAME23) 11
 	@./$(BENCHMARK2DNAME23) 10
 
+.PHONY: run_benchmark4d
 run_benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF) $(BENCHMARK4DNAME23) 
 	@echo Comparison benchmark on a 4d array example
 	@./$(BENCHMARK4DNAME) 1 
@@ -366,10 +388,10 @@ $(PASS)f.o: ${SRC}/$(PASS)f.f90 config.mk
 	$(FC) -c ${DBGFLAGS} -o $@ $<
 
 $(BENCHMARK2DNAME).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
-	$(CXX14) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX17) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
-	$(CXX14) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
+	$(CXX17) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(BENCHMARK2DNAME23).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
 	$(CXX23) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<

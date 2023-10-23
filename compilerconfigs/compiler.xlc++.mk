@@ -2,7 +2,7 @@
 # ibm compiler settings
 #
 CXX=xlc++ -qlanglvl=extended0x
-CXX14=:
+CXX17=:
 CXX23=:
 CXXFLAGS=-g
 DBGFLAGS=-g

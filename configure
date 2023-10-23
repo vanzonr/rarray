@@ -26,6 +26,10 @@
 # stop immediately when there is an error
 set -e
 
+mydir=$(/usr/bin/dirname $0)
+test $mydir = . && mydir=$PWD
+test ${mydir:0:1} = '/' || mydir=$PWD/$mydir
+
 #############################################################################
 function detect_library()
 {
@@ -114,7 +118,7 @@ else
     compilerset="${CXX} ${compilerset}"
     for compiler in ${compilerset}; do
         if which ${compiler} >& /dev/null; then
-            CXXMKINC="compilerconfigs/compiler.${compiler}.mk"  #for each compiler there is an include makefile
+            CXXMKINC="${mydir}/compilerconfigs/compiler.${compiler}.mk"  #for each compiler there is an include makefile
             if [ -f "${CXXMKINC}" ]; then
                 echo ${compiler}
                 CXX=${compiler}
@@ -231,6 +235,14 @@ EOF
         #####$CXX $CPPFLAGS
         # add prefix to the makefile include file
         echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
+
+        # if not in source dir, create links
+        if [ $(readlink -f $PWD) != ${mydir} ]; then
+            [ -h src ] || ln -sT ${mydir}/src src
+            [ -h headersources ] || ln -sT ${mydir}/headersources headersources
+            [ -h Makefile ] || ln -sT ${mydir}/Makefile Makefile
+            [ -h rarraydoc.tex ] || ln -sT ${mydir}/rarraydoc.tex rarraydoc.tex
+        fi
         # print what to do next
         echo "To build and run unit tests:            make test"
         echo "To run unit tests through valgrind:     make valgrindtest"
