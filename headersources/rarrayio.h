@@ -179,7 +179,7 @@ T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const size_type* i
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static char get_but_eat_newline(std::istream & in)
+static inline char get_but_eat_newline(std::istream & in)
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).    
     char ch1='\n';
@@ -188,7 +188,7 @@ static char get_but_eat_newline(std::istream & in)
     return ch1;
 }
 
-static char get_but_eat_whitespace(std::istream & in)
+static inline char get_but_eat_whitespace(std::istream & in)
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).
     char ch1;

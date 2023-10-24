@@ -30,8 +30,8 @@
 #if __cplusplus >= 201103L
 
 //begin #include "versionheader.h"
-#define RA_VERSION "v2.5.1"
-#define RA_VERSION_NUMBER 2005001
+#define RA_VERSION "v2.4.0"
+#define RA_VERSION_NUMBER 2004000
 
 //end #include "versionheader.h"
 
@@ -2470,7 +2470,7 @@ T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const size_type* i
 }
 
 
-static char get_but_eat_newline(std::istream & in)
+static inline char get_but_eat_newline(std::istream & in)
 {
     char ch1='\n';
     while (ch1=='\n' && ! in.eof())
@@ -2478,7 +2478,7 @@ static char get_but_eat_newline(std::istream & in)
     return ch1;
 }
 
-static char get_but_eat_whitespace(std::istream & in)
+static inline char get_but_eat_whitespace(std::istream & in)
 {
     char ch1;
     in >> ch1;
