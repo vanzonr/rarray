@@ -4,22 +4,25 @@ compilers=(gcc/8 gcc/9 gcc/11 gcc/12 gcc/13 clang/17 intel/2019u1 intel/2019u2 i
 
 . ~/Clones/modbash/modeve || true
 
+mydir=$PWD
 mkdir -p alltestresults
 for mod in "${compilers[@]}"
 do
-    module purge
+    module purge >& /dev/null
     module load $mod 2>/dev/null || module load ${mod/\//\/.experimental-} 2>/dev/null || continue
-    module load python/3
+    module load python/3 texlive
     eve gcovr || true
     echo '========================'$mod'======================'
     mkdir -p "alltestresults/$mod"
     rm -rf "alltestresults/$mod"
     mkdir -p "alltestresults/$mod"
-    make clean >& /dev/null
-    module list  >& "alltestresults/$mod/config.out"
-    ./configure >>& "alltestresults/$mod/config.out"
-    time make test   >& "alltestresults/$mod/test.output"
-    time make test23 >& "alltestresults/$mod/test23.output"
-    time make benchmarks >& "alltestresults/$mod/benchmarks.output"
+    pushd "alltestresults/$mod"  >& /dev/null
+    module list  >& "config.out"
+    $mydir/configure 2>&1 >> "config.out"
+    (time make test)   >& "test.output"
+    (time make test23) >& "test23.output"
+    (time make benchmarks) >& "benchmarks.output"
+    make distclean >& /dev/null
+    popd  >& /dev/null
     eve deactivate || true
 done
