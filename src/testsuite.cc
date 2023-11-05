@@ -3485,6 +3485,47 @@ TEMPLATE_TEST_CASE("testat", "",
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+TEMPLATE_TEST_CASE("constvector2constarray", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+ {
+     using T = TestType;
+     T val = global::get_value_1<T>();
+     rvector<T> a(9);
+     a.fill(val);
+     rmatrix<const T> b = [](const rvector<T>& x) {
+         rmatrix<const T> y(x.data(),3,3);
+         return y;
+     }(a);
+     for (auto& x: b)
+         REQUIRE(x==val);
+ }
+
+double sum2d(const rarray<const double,2> &s) {
+    double x=0;
+    for (int i=0; i<s.extent(0); i++) 
+        for (int j=0; j<s.extent(1); j++)
+            x += s[i][j];
+    return x;
+}
+
+TEST_CASE("converting_from_const_automatic_arrays")
+{
+    const double printme[4][4] = { { 1.0, 1.2, 1.4, 1.6},
+                                   { 2.0, 2.2, 2.4, 2.6},
+                                   { 3.0, 3.2, 3.4, 3.6},
+                                   { 4.0, 4.2, 4.4, 4.6} };
+    double sumall1 = sum2d(RARRAY(printme));
+    rarray<const double,2> a = RARRAY(printme).copy();
+    double sumall2 = sum2d(a);
+    REQUIRE(sumall1 == sumall2);
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
  
 #if __cplusplus >= 202002L
 

@@ -257,6 +257,29 @@ int test_shared_shape_main()
         }
         assert(caught);
     }
+    {
+        // deep copy const
+        std::cerr << "Test 12\n";
+        int a[N][N/2][N/4];
+        ra::shared_shape<const int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        assert(sh.noffsets_ == N*(N/2+1));
+        assert(sh.ndataoffsets_ == N*(N/2));
+        int* aptr = &(a[0][0][0]);
+        for (int i=0;i<N*(N/2)*(N/4);i++)
+            aptr[i] = i;
+        const int*const*const* p = sh.ptrs();
+        ra::shared_shape<const int,3> sh2 = sh.copy();  //failed so far
+        assert(*(sh.refs_) == 1);
+        assert(*(sh2.refs_) == 1);
+        assert(sh.refs_ != sh2.refs_);
+        const int*const*const* p2 = sh2.ptrs();
+        assert(p != p2);
+        for (int i1 = 0; i1 < N; i1++)
+            for (int i2 = 0; i2 < N/2; i2++)
+                for (int i3 = 0; i3 < N/4; i3++) {
+                    assert(p[i1][i2][i3] == p2[i1][i2][i3]);
+                }           
+    }
     
     return 0;
 }

@@ -307,7 +307,7 @@ void shared_shape<T,R>::relocate(T* newdata)
         ptrs_ = reinterpret_cast<ptrs_type>(newdata);
     } else if (R>1) {
         // let shape point to other datablock
-        std::ptrdiff_t shift = reinterpret_cast<char*>(newdata) - reinterpret_cast<char*>(data());
+        std::ptrdiff_t shift = reinterpret_cast<const char*>(newdata) - reinterpret_cast<const char*>(data());
         if (shift != 0) {
             copy_before_write();
             for (size_type i = noffsets_ - ndataoffsets_; i < noffsets_; i++)
@@ -327,8 +327,9 @@ shared_shape<T,R> shared_shape<T,R>::copy() const
     if (R>1) {
         copy_of_this.refs_ = new std::atomic<int>(1);
         copy_of_this.orig_ = new void**[noffsets_];
+        using noconstT = typename std::remove_const<T>::type;
         void*** old_eff_orig = reinterpret_cast<void***>(
-                                   const_cast<typename PointerArray<T,R>::noconst_type>(
+                                   const_cast<typename PointerArray<noconstT,R>::noconst_type>(
                                      ptrs_ ));
         std::copy(old_eff_orig, old_eff_orig + noffsets_, copy_of_this.orig_);
         std::ptrdiff_t shift = reinterpret_cast<char*>(copy_of_this.orig_)

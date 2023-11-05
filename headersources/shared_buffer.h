@@ -140,6 +140,8 @@ class shared_buffer
     void uninit() noexcept;
     void incref() noexcept;
     void decref() noexcept;
+    template<typename InputIt>
+    shared_buffer(size_type asize, InputIt first, InputIt last) RA_NOEXCEPT(true);
 };
 
 /***************************************************************************/
@@ -194,6 +196,22 @@ shared_buffer<T>::shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
 {
     // construct buffer as a wrapper
     RA_CHECKORSAY(adata, "nullptr given as data");
+}
+
+//private in this version at leastt
+template<class T>
+template<typename InputIt>
+shared_buffer<T>::shared_buffer(size_type asize, InputIt first, InputIt last) RA_NOEXCEPT(true)
+  : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
+{
+    // construct buffer, exception safe
+    using noconstT = typename std::remove_const<T>::type;
+    auto to_be_data = std::unique_ptr<T[]>(new T[asize]{*first});
+    std::copy(first, last, const_cast<noconstT*>(to_be_data.get()));    
+    refs_ = new std::atomic<int>(1); // if this throws, let it   
+    data_ = to_be_data.release();
+    orig_ = data_;
+    size_ = asize;
 }
 
 template<class T>
@@ -312,9 +330,7 @@ typename shared_buffer<T>::size_type shared_buffer<T>::size() const noexcept
 template<class T>
 shared_buffer<T> shared_buffer<T>::copy() const    
 {
-    shared_buffer<T> result(size_);
-    std::copy(cbegin(), cend(), result.begin());
-    return result;
+    return shared_buffer<T>(size_,cbegin(), cend());
 }
 
 // iterating
