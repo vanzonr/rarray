@@ -98,7 +98,7 @@ inline void*** Offsets::apply_offsets(T* data) const
     if (ndataoffsets_ == 0 && noffsets == 0)
         return nullptr;
     else if (ndataoffsets_ == 1 && noffsets == 0) // happens only for rank==1
-        return reinterpret_cast<void***>(data);
+        return reinterpret_cast<void***>(const_cast<typename std::remove_const<T>::type*>(data));
     else {
         void*** offsets = new void**[noffsets];
         ssize_t i = 0;

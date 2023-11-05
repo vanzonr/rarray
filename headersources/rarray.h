@@ -1507,7 +1507,7 @@ size_type extent(const rarray<T,R> &a, int i)
 // Global namespace stuff
 
 #define EXTENT(A,I)  ra::extent(A,I)
-#define RARRAY(A)    rarray<std::remove_all_extents<decltype(A)>::type,std::rank<decltype(A)>::value>(A)
+#define RARRAY(A)    rarray<typename std::remove_all_extents<decltype(A)>::type,std::rank<decltype(A)>::value>(A)
 #define INDEX(A,X,I) RARRAY(A).index(X,I)
 
 // make RARRAY and INDEX work for rarrays as well as automatic arrays:
