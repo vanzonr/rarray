@@ -135,12 +135,18 @@ Release History and Changes
     Comparison with mdspan (C++23)
     Updated documentation.
 
+  * Version 2.6.0, November 2023
+
+    Bug fixes (inlining, compiler settings, exception safety).
+    Support for the multidimensional subscript operator for c++23 compilers.
+    Better support for rarray<const T,R>
+    Implicit conversion operator from rarray<T,R> to rarray<const T,R>.
+    
+
 Known issues
 ============
 
   * Cannot force alignment of data yet.
-
-  * Using the RARRAY macro may fails for const types.
 
   * The behavior of rarrays of types whose destructor throws an
     exception is undefined (but really, destructors should not throw

@@ -205,33 +205,34 @@ class rarray {
     template<int R_=R,class=typename std::enable_if<R_==11>::type>
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO); // R=11
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);                                                                                                                      // any R
-    operator const rarray<const T,R>&() const noexcept;
-//
-    RA_INLINE_ bool                empty()           const noexcept;              // check if undefined
-    RA_INLINE_ rarray<T,R>         copy()               const;                       // return a copy
-    RA_INLINE_ size_type           extent(int i)        const;                       // retrieve array size in dimension i
-    RA_INLINEF const size_type*    shape()              const noexcept;              // retrieve array sizes in all dimensions
-    RA_INLINE_ size_type           size()               const noexcept;              // retrieve the total number of elements  
-    RA_INLINE_ T*                  data()               noexcept;                    // return a T* to the internal data
-    RA_INLINE_ const T*            data()               const noexcept;              // return a T* to the internal data
-    RA_INLINE_ parray_t            ptr_array()          const noexcept;              // return a T*const*.. acting similarly to this rarray when using []:
-    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const noexcept;              // return a T**.. acting similarly to this rarray when using []:    
-    RA_INLINE_ const rarray<const T,R>&  const_ref()    const noexcept;              // create a reference to this that treats elements as constant:
-    RA_INLINE_ void                fill(const T& value);                             // fill with uniform value
     //
-    RA_INLINE_ iterator            begin()              noexcept;                    // start of the content
-    RA_INLINE_ const_iterator      begin()              const noexcept;              // start of the content, when *this is constant
-    RA_INLINE_ const_iterator      cbegin()             const noexcept;              // start of the content, when *this can be constant and you need to be explicit
-    RA_INLINE_ iterator            end()                noexcept;                    // end of the content
-    RA_INLINE_ const_iterator      end()                const noexcept;              // end of the content, when *this is constant
-    RA_INLINE_ const_iterator      cend()               const noexcept;              // end of the content, when *this is constant and you need to be explicit about that
-    RA_INLINE_ size_type           index(const T& a, int i) const;                   // if a an element in the array, get index i of that element
-    RA_INLINE_ size_type           index(const iterator& iter, int i) const;         // if i points at an element in the array, get index i of that element
-    RA_INLINE_ std::array<size_type,R> index(const T& a) const;           // if a an element in the array, get the indices of that element
-    RA_INLINE_ std::array<size_type,R> index(const iterator& i) const;// if i points at an element in the array, get the indices of that element
+    operator const rarray<const T,R>&() const noexcept;
+    //
+    RA_INLINE_ bool                      empty()              const noexcept;          // check if undefined
+    RA_INLINE_ rarray<T,R>               copy()               const;                   // return a copy
+    RA_INLINE_ size_type                 extent(int i)        const;                   // retrieve array size in dimension i
+    RA_INLINEF const size_type*          shape()              const noexcept;          // retrieve array sizes in all dimensions
+    RA_INLINE_ size_type                 size()               const noexcept;          // retrieve the total number of elements  
+    RA_INLINE_ T*                        data()               noexcept;                // return a T* to the internal data
+    RA_INLINE_ const T*                  data()               const noexcept;          // return a T* to the internal data
+    RA_INLINE_ parray_t                  ptr_array()          const noexcept;          // return a T*const*.. acting similarly to this rarray when using []:
+    RA_INLINE_ noconst_parray_t          noconst_ptr_array()  const noexcept;          // return a T**.. acting similarly to this rarray when using []:    
+    RA_INLINE_ const rarray<const T,R>&  const_ref()    const noexcept;                // create a reference to this that treats elements as constant:
+    RA_INLINE_ void                      fill(const T& value);                         // fill with uniform value
+    //
+    RA_INLINE_ iterator                  begin()              noexcept;                // start of the content
+    RA_INLINE_ const_iterator            begin()              const noexcept;          // start of the content, when *this is constant
+    RA_INLINE_ const_iterator            cbegin()             const noexcept;          // start of the content, when *this can be constant and you need to be explicit
+    RA_INLINE_ iterator                  end()                noexcept;                // end of the content
+    RA_INLINE_ const_iterator            end()                const noexcept;          // end of the content, when *this is constant
+    RA_INLINE_ const_iterator            cend()               const noexcept;          // end of the content, when *this is constant and you need to be explicit about that
+    RA_INLINE_ size_type                 index(const T& a, int i) const;               // if a an element in the array, get index i of that element
+    RA_INLINE_ size_type                 index(const iterator& iter, int i) const;     // if i points at an element in the array, get index i of that element
+    RA_INLINE_ std::array<size_type,R>   index(const T& a) const;                      // if a an element in the array, get the indices of that element
+    RA_INLINE_ std::array<size_type,R>   index(const iterator& i) const;               // if i points at an element in the array, get the indices of that element
     // old form of index functions:
-    RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;           // if a an element in the array, get the indices of that element
-    RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;          // if i points at an element in the array, get the indices of that element
+    RA_INLINE_ size_type*                index(const T& a, size_type* ind) const;      // if a an element in the array, get the indices of that element
+    RA_INLINE_ size_type*                index(const iterator& i, size_type* ind)const;// if i points at an element in the array, get the indices of that element
     // access elements r
     template<class U=rarray<T,R-1>>
     RA_INLINEF typename std::enable_if<R!=1,U>::type at(size_type i);
@@ -242,27 +243,32 @@ class rarray {
     template<class U=const T&>
     RA_INLINEF typename std::enable_if<R==1,U>::type at(size_type i) const;
     // for square bracket access:
-    template<class U=T> typename std::enable_if<R==1,
+    template<class U=T>
+    RA_INLINEF typename std::enable_if<R==1,
     U&
     >::type
     operator[](ssize_t index) {
         RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
         return buffer_.begin()[index];
     }
-    template<class U=T> typename std::enable_if<R!=1,
+    template<class U=T>
+    RA_INLINEF typename std::enable_if<R!=1,
     typename ra::_Bracket<U,R-1,rarray>
     >::type
     operator[](ssize_t index) {
         return { *this, index, this->shape() };
     }
-    template<class U=T> typename std::enable_if<R==1,
+    template<class U=T>
+    RA_INLINEF
+    typename std::enable_if<R==1,
     const U&
     >::type
     operator[](ssize_t index) const {
         RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
         return buffer_.cbegin()[index];
     }
-    template<class U=T> typename std::enable_if<R!=1,
+    template<class U=T>
+    RA_INLINEF typename std::enable_if<R!=1,
     typename ra::_ConstBracket<U,R-1,rarray>
     >::type
     operator[](ssize_t index) const {
@@ -292,12 +298,12 @@ class rarray {
     // allow rarray<T,R+1>::at(..) to create a proper rarray<T,R>
     // referencing data in current array
     friend class rarray<T,R+1>;    
-    rarray(shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
+    RA_INLINE_ rarray(shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
         buffer_(std::forward<shared_buffer<T>>(abuffer)),
         shape_(std::forward<shared_shape<T,R>>(ashape))
     {}
     // need the following for rarray<T,R+1>::at(..) const
-    rarray(const shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
+    RA_INLINE_ rarray(const shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
         buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&& >(abuffer))),
         shape_(std::forward<shared_shape<T,R>>(ashape))
     {}
@@ -316,7 +322,6 @@ class CommaOp {
     T *ptr_;                                                           // points to next element to be filled
     T * const last_;                                                   // points to last element
     template<typename,int> friend class rarray;
-    template<typename,int> friend class subrarray;
 };
 
 // Classes for repeated bracket access to elements    
@@ -370,7 +375,6 @@ class _Bracket<T,1,P> {
     RA_INLINEF _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray; // allow descending
-
     template<typename T2,int R2,typename P2> friend class ra::_Bracket; // allow descending   
   public:
     RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex));
@@ -429,6 +433,7 @@ class _ConstBracket<T,1,P> {
 };
 
 template<typename S>
+RA_INLINE_
 rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true) //// TODO: Choose better integer type for n
 {
     if (n==0) {
@@ -455,15 +460,15 @@ class Xrange {
         typedef T* pointer;
         typedef T& reference;
         typedef std::input_iterator_tag iterator_category;
-        const_iterator(): i_(0), di_(1), b_(0) {}
-        const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
-        bool operator!=(const const_iterator& other) const {
+        RA_INLINE_ const_iterator(): i_(0), di_(1), b_(0) {}
+        RA_INLINE_ const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
+        RA_INLINE_ bool operator!=(const const_iterator& other) const {
             return i_ != other.i_;
         }
-        bool operator==(const const_iterator& other) const {
+        RA_INLINE_ bool operator==(const const_iterator& other) const {
             return i_ == other.i_ && di_ == other.di_ && b_ == other.b_;
         }
-        const_iterator& operator++() {
+        RA_INLINE_ const_iterator& operator++() {
             i_+=di_;
             if (di_>0 && i_ >= b_)
                i_ = b_;
@@ -471,44 +476,44 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        const_iterator operator++(int) {
+        RA_INLINE_ const_iterator operator++(int) {
             const const_iterator temp = *this;
             this->operator++();
             return temp;
         }
-        const T& operator*() const {
+        RA_INLINE_ const T& operator*() const {
             return i_;
         }
         T i_, di_, b_;
     };
     T a_, b_, d_;
   public:
-    Xrange(T a, T b, T d)
+    RA_INLINE_ Xrange(T a, T b, T d)
         : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d) 
     {}
-    const_iterator begin() const {
+    RA_INLINE_ const_iterator begin() const {
         return const_iterator(a_, d_, b_);
     }
-    const const_iterator end() const {
+    RA_INLINE_ const const_iterator end() const {
         return const_iterator(b_, d_, b_);
     }
-    size_t size() const {
+    RA_INLINE_ size_t size() const {
         return static_cast<size_t>((b_-a_)/d_);
     }
 };
 
 template<class T>
-Xrange<T> xrange(T end) {
+RA_INLINE_ Xrange<T> xrange(T end) {
     return Xrange<T>(static_cast<T>(0), end, static_cast<T>(1));
 }
 
 template<class S, class T>
-Xrange<T> xrange(S begin, T end) {
+RA_INLINE_ Xrange<T> xrange(S begin, T end) {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(1));
 }
 
 template<class S, class T, class U>
-Xrange<T> xrange(S begin, T end, U step) {
+RA_INLINE_ Xrange<T> xrange(S begin, T end, U step) {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(step));
 }
    
@@ -525,7 +530,7 @@ ra::rarray<T,R>::rarray()
   : buffer_(),
     shape_()
 {}
-    
+
 template<typename T, int R>
 template<int R_,typename>
 RA_INLINE_ 

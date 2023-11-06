@@ -183,9 +183,10 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//" << INCLUDETAG << " \"" << includefilename << "\" was already done above\n";
           }
-        } else {
+        } else {            
             auto tohere=endofcodeline(line);
             if (not iscommentline(line)) {
+                if (line.size() < 8 || tohere < 6 || line.substr(tohere-6,6) != "//TEST")                   
                 cout << line.substr(0,tohere) << '\n';
             } else {
                 cout << line << '\n';

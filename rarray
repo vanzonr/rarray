@@ -30,8 +30,8 @@
 #if __cplusplus >= 201103L
 
 //begin #include "versionheader.h"
-#define RA_VERSION "v2.4.0"
-#define RA_VERSION_NUMBER 2004000
+#define RA_VERSION "v2.6.0"
+#define RA_VERSION_NUMBER 2006000
 
 //end #include "versionheader.h"
 
@@ -81,20 +81,8 @@
 #include <cstring>
 #include <atomic>
 
-namespace ra { template<class T> class shared_buffer; }
-template<typename V>
-int internal_check(const ra::shared_buffer<V>& a,
-                   bool datavalue_shouldbe, V* datavalue,
-                   bool origvalue_shouldbe, V* origvalue,
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
-                   bool refscount_shouldbe, int refscount,
-                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue);
-
-/***************************************************************************/
 
 namespace ra {
-
-/***************************************************************************/
 
 template<class T>
 class shared_buffer
@@ -159,46 +147,12 @@ class shared_buffer
     size_type size_;
     std::atomic<int>* refs_;
 
-    template<typename V>
-    friend int ::internal_check(const ra::shared_buffer<V>& a,
-                   bool datavalue_shouldbe, V* datavalue,
-                   bool origvalue_shouldbe, V* origvalue,
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
-                   bool refscount_shouldbe, int refscount,
-                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue);
     void uninit() noexcept;
     void incref() noexcept;
     void decref() noexcept;
     template<typename InputIt>
     shared_buffer(size_type asize, InputIt first, InputIt last) RA_NOEXCEPT(true);
 };
-
-/***************************************************************************/
-/* FUTURE FEATURE :
-#define RA_ALIGNMENT_IN_BYTES 64
-
-template<class T>
-void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
-{
-    size_t paddedsizeinbytes = size*sizeof(T) + bytealignment - 1;
-    void* some_orig = malloc(paddedsizeinbytes);
-    if (some_orig) {
-        void* some_place = some_orig;
-        if (std::align(bytealignment,
-                       size*sizeof(T),
-                       some_place,
-                       paddedsizeinbytes)) {
-            orig = some_orig;
-            place = some_place;
-        } else {
-            free(some_orig);
-            throw std::bad_alloc();
-        }
-    } else {
-        throw std::bad_alloc();
-    }
-}
-*/
 
 template<class T>
 shared_buffer<T>::shared_buffer() noexcept
@@ -483,8 +437,6 @@ void shared_buffer<T>::assign(std::initializer_list<T> ilist)
     assign_iter(ilist.begin(), ilist.end());
 }
 
-/***************************************************************************/
-
 template<class T>
 void shared_buffer<T>::uninit() noexcept {
     data_ = nullptr;
@@ -510,7 +462,6 @@ void shared_buffer<T>::decref() noexcept {
     }
 }
 
-/***************************************************************************/
 }
 #endif
 
@@ -531,8 +482,6 @@ void shared_buffer<T>::decref() noexcept {
 #include <vector>
 #include <type_traits>
 
-/***************************************************************************/
-
 class Offsets
 {
   public:
@@ -551,8 +500,6 @@ class Offsets
     std::vector<unsigned long long> offsets_;
     ssize_t ndataoffsets_;
 };
-
-/***************************************************************************/
 
 inline Offsets::Offsets(const std::vector<ssize_t>& extent)
 {
@@ -622,8 +569,6 @@ inline ssize_t Offsets::get_rank() const noexcept
     return rank_;
 }
 
-/***************************************************************************/
-
 #endif
 
 //end #include "offsets.h"
@@ -633,13 +578,8 @@ inline ssize_t Offsets::get_rank() const noexcept
 #include <memory>
 #include <atomic>
 
-int test_shared_shape_main();
-
-/***************************************************************************/
 
 namespace ra {
-
-/***************************************************************************/
 
 
 template<typename T,int R>
@@ -657,8 +597,6 @@ struct PointerArray<T,0> {
     typedef T& type;
     typedef T& noconst_type;
 };
-
-/***************************************************************************/
 
 template<class T, int R>
 class shared_shape
@@ -707,7 +645,6 @@ class shared_shape
 
     template<class U, int S> friend class shared_shape;
 
-    friend int ::test_shared_shape_main();
 };
 
 template<typename T>
@@ -725,8 +662,6 @@ class shared_shape<T,0> {
     void incref() const noexcept {}
     template<class U, int S> friend class shared_shape;
 };
-
-/***************************************************************************/
 
 template<class T, int R>
 shared_shape<T,R>::shared_shape() noexcept
@@ -972,8 +907,6 @@ void shared_shape<T,R>::decref() noexcept
     }
 }
 
-/***************************************************************************/
-
 }
 
 #endif
@@ -1137,29 +1070,29 @@ class rarray {
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO);
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);
     operator const rarray<const T,R>&() const noexcept;
-    RA_INLINE_ bool                empty()           const noexcept;
-    RA_INLINE_ rarray<T,R>         copy()               const;
-    RA_INLINE_ size_type           extent(int i)        const;
-    RA_INLINEF const size_type*    shape()              const noexcept;
-    RA_INLINE_ size_type           size()               const noexcept;
-    RA_INLINE_ T*                  data()               noexcept;
-    RA_INLINE_ const T*            data()               const noexcept;
-    RA_INLINE_ parray_t            ptr_array()          const noexcept;
-    RA_INLINE_ noconst_parray_t    noconst_ptr_array()  const noexcept;
+    RA_INLINE_ bool                      empty()              const noexcept;
+    RA_INLINE_ rarray<T,R>               copy()               const;
+    RA_INLINE_ size_type                 extent(int i)        const;
+    RA_INLINEF const size_type*          shape()              const noexcept;
+    RA_INLINE_ size_type                 size()               const noexcept;
+    RA_INLINE_ T*                        data()               noexcept;
+    RA_INLINE_ const T*                  data()               const noexcept;
+    RA_INLINE_ parray_t                  ptr_array()          const noexcept;
+    RA_INLINE_ noconst_parray_t          noconst_ptr_array()  const noexcept;
     RA_INLINE_ const rarray<const T,R>&  const_ref()    const noexcept;
-    RA_INLINE_ void                fill(const T& value);
-    RA_INLINE_ iterator            begin()              noexcept;
-    RA_INLINE_ const_iterator      begin()              const noexcept;
-    RA_INLINE_ const_iterator      cbegin()             const noexcept;
-    RA_INLINE_ iterator            end()                noexcept;
-    RA_INLINE_ const_iterator      end()                const noexcept;
-    RA_INLINE_ const_iterator      cend()               const noexcept;
-    RA_INLINE_ size_type           index(const T& a, int i) const;
-    RA_INLINE_ size_type           index(const iterator& iter, int i) const;
-    RA_INLINE_ std::array<size_type,R> index(const T& a) const;
-    RA_INLINE_ std::array<size_type,R> index(const iterator& i) const;
-    RA_INLINE_ size_type*          index(const T& a, size_type* ind) const;
-    RA_INLINE_ size_type*          index(const iterator& i, size_type* ind) const;
+    RA_INLINE_ void                      fill(const T& value);
+    RA_INLINE_ iterator                  begin()              noexcept;
+    RA_INLINE_ const_iterator            begin()              const noexcept;
+    RA_INLINE_ const_iterator            cbegin()             const noexcept;
+    RA_INLINE_ iterator                  end()                noexcept;
+    RA_INLINE_ const_iterator            end()                const noexcept;
+    RA_INLINE_ const_iterator            cend()               const noexcept;
+    RA_INLINE_ size_type                 index(const T& a, int i) const;
+    RA_INLINE_ size_type                 index(const iterator& iter, int i) const;
+    RA_INLINE_ std::array<size_type,R>   index(const T& a) const;
+    RA_INLINE_ std::array<size_type,R>   index(const iterator& i) const;
+    RA_INLINE_ size_type*                index(const T& a, size_type* ind) const;
+    RA_INLINE_ size_type*                index(const iterator& i, size_type* ind)const;
     template<class U=rarray<T,R-1>>
     RA_INLINEF typename std::enable_if<R!=1,U>::type at(size_type i);
     template<class U=T&>
@@ -1168,27 +1101,32 @@ class rarray {
     RA_INLINEF typename std::enable_if<R!=1,U>::type at(size_type i) const;
     template<class U=const T&>
     RA_INLINEF typename std::enable_if<R==1,U>::type at(size_type i) const;
-    template<class U=T> typename std::enable_if<R==1,
+    template<class U=T>
+    RA_INLINEF typename std::enable_if<R==1,
     U&
     >::type
     operator[](ssize_t index) {
         RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
         return buffer_.begin()[index];
     }
-    template<class U=T> typename std::enable_if<R!=1,
+    template<class U=T>
+    RA_INLINEF typename std::enable_if<R!=1,
     typename ra::_Bracket<U,R-1,rarray>
     >::type
     operator[](ssize_t index) {
         return { *this, index, this->shape() };
     }
-    template<class U=T> typename std::enable_if<R==1,
+    template<class U=T>
+    RA_INLINEF
+    typename std::enable_if<R==1,
     const U&
     >::type
     operator[](ssize_t index) const {
         RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
         return buffer_.cbegin()[index];
     }
-    template<class U=T> typename std::enable_if<R!=1,
+    template<class U=T>
+    RA_INLINEF typename std::enable_if<R!=1,
     typename ra::_ConstBracket<U,R-1,rarray>
     >::type
     operator[](ssize_t index) const {
@@ -1213,11 +1151,11 @@ class rarray {
     RA_INLINEF typename PointerArray<T,R-1>::type _at(ssize_t index);
     RA_INLINEF typename PointerArray<T,R-1>::type _at(ssize_t index) const;
     friend class rarray<T,R+1>;
-    rarray(shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
+    RA_INLINE_ rarray(shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
         buffer_(std::forward<shared_buffer<T>>(abuffer)),
         shape_(std::forward<shared_shape<T,R>>(ashape))
     {}
-    rarray(const shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
+    RA_INLINE_ rarray(const shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
         buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&& >(abuffer))),
         shape_(std::forward<shared_shape<T,R>>(ashape))
     {}
@@ -1235,7 +1173,6 @@ class CommaOp {
     T *ptr_;
     T * const last_;
     template<typename,int> friend class rarray;
-    template<typename,int> friend class subrarray;
 };
 
 template<typename T,int R,typename P>
@@ -1284,7 +1221,6 @@ class _Bracket<T,1,P> {
     RA_INLINEF _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck);
     RA_INLINEF auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]);
     template<typename T2,int R2> friend class ra::rarray;
-
     template<typename T2,int R2,typename P2> friend class ra::_Bracket;
   public:
     RA_INLINEF auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex));
@@ -1342,6 +1278,7 @@ class _ConstBracket<T,1,P> {
 };
 
 template<typename S>
+RA_INLINE_
 rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true) //
 {
     if (n==0) {
@@ -1367,15 +1304,15 @@ class Xrange {
         typedef T* pointer;
         typedef T& reference;
         typedef std::input_iterator_tag iterator_category;
-        const_iterator(): i_(0), di_(1), b_(0) {}
-        const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
-        bool operator!=(const const_iterator& other) const {
+        RA_INLINE_ const_iterator(): i_(0), di_(1), b_(0) {}
+        RA_INLINE_ const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
+        RA_INLINE_ bool operator!=(const const_iterator& other) const {
             return i_ != other.i_;
         }
-        bool operator==(const const_iterator& other) const {
+        RA_INLINE_ bool operator==(const const_iterator& other) const {
             return i_ == other.i_ && di_ == other.di_ && b_ == other.b_;
         }
-        const_iterator& operator++() {
+        RA_INLINE_ const_iterator& operator++() {
             i_+=di_;
             if (di_>0 && i_ >= b_)
                i_ = b_;
@@ -1383,44 +1320,44 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        const_iterator operator++(int) {
+        RA_INLINE_ const_iterator operator++(int) {
             const const_iterator temp = *this;
             this->operator++();
             return temp;
         }
-        const T& operator*() const {
+        RA_INLINE_ const T& operator*() const {
             return i_;
         }
         T i_, di_, b_;
     };
     T a_, b_, d_;
   public:
-    Xrange(T a, T b, T d)
+    RA_INLINE_ Xrange(T a, T b, T d)
         : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d)
     {}
-    const_iterator begin() const {
+    RA_INLINE_ const_iterator begin() const {
         return const_iterator(a_, d_, b_);
     }
-    const const_iterator end() const {
+    RA_INLINE_ const const_iterator end() const {
         return const_iterator(b_, d_, b_);
     }
-    size_t size() const {
+    RA_INLINE_ size_t size() const {
         return static_cast<size_t>((b_-a_)/d_);
     }
 };
 
 template<class T>
-Xrange<T> xrange(T end) {
+RA_INLINE_ Xrange<T> xrange(T end) {
     return Xrange<T>(static_cast<T>(0), end, static_cast<T>(1));
 }
 
 template<class S, class T>
-Xrange<T> xrange(S begin, T end) {
+RA_INLINE_ Xrange<T> xrange(S begin, T end) {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(1));
 }
 
 template<class S, class T, class U>
-Xrange<T> xrange(S begin, T end, U step) {
+RA_INLINE_ Xrange<T> xrange(S begin, T end, U step) {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(step));
 }
 

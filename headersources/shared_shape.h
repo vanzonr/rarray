@@ -37,13 +37,9 @@
 #include <memory>
 #include <atomic>
 
-int test_shared_shape_main();
-
-/***************************************************************************/
+int test_shared_shape_main();  //TEST//
 
 namespace ra {
-
-/***************************************************************************/
 
 // class to hold the shape but not the content of a multi-dimensional array.
 
@@ -62,8 +58,6 @@ struct PointerArray<T,0> { // We also end the recursion by specifically defining
     typedef T& type;     
     typedef T& noconst_type; 
 };
-
-/***************************************************************************/
 
 template<class T, int R>
 class shared_shape
@@ -120,8 +114,8 @@ class shared_shape
 
     template<class U, int S> friend class shared_shape; // for "at"
 
-    // for testing and debugging:
-    friend int ::test_shared_shape_main();
+    // for testing and debugging:           //TEST//
+    friend int ::test_shared_shape_main();  //TEST//
 };
 
 // stop at() recursion at R=0. This is a non-shape, but at() for R=1 sets its elements
@@ -141,8 +135,6 @@ class shared_shape<T,0> {
     template<class U, int S> friend class shared_shape; // for "at"
 };
     
-/***************************************************************************/
-
 template<class T, int R>
 shared_shape<T,R>::shared_shape() noexcept
 {
@@ -412,8 +404,6 @@ void shared_shape<T,R>::decref() noexcept // assuming the T::~T() does not throw
         }
     }
 }
-
-/***************************************************************************/
 
 }
 

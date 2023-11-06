@@ -38,21 +38,18 @@
 #include <cstring>
 #include <atomic>
 
-// declaration for unit testing:
-namespace ra { template<class T> class shared_buffer; }
-template<typename V> 
-int internal_check(const ra::shared_buffer<V>& a,
-                   bool datavalue_shouldbe, V* datavalue,
-                   bool origvalue_shouldbe, V* origvalue,
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
-                   bool refscount_shouldbe, int refscount,
-                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue);
-
-/***************************************************************************/
+// declaratieon for unit testing:                                          //TEST//
+namespace ra { template<class T> class shared_buffer; }                    //TEST//
+template<typename V>                                                       //TEST//
+int internal_check(const ra::shared_buffer<V>& a,                          //TEST//
+                   bool datavalue_shouldbe, V* datavalue,                  //TEST//
+                   bool origvalue_shouldbe, V* origvalue,                  //TEST//
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,   //TEST//
+                   bool refscount_shouldbe, int refscount,                 //TEST//
+                   bool sizevalue_shouldbe,                                //TEST//
+                   typename ra::shared_buffer<V>::size_type sizevalue);    //TEST//
 
 namespace ra {
-
-/***************************************************************************/
 
 template<class T>
 class shared_buffer
@@ -129,47 +126,21 @@ class shared_buffer
     size_type size_;
     std::atomic<int>* refs_;
 
-    // for testing:
-    template<typename V> 
-    friend int ::internal_check(const ra::shared_buffer<V>& a,
-                   bool datavalue_shouldbe, V* datavalue,
-                   bool origvalue_shouldbe, V* origvalue,
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
-                   bool refscount_shouldbe, int refscount,
-                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue);
+    // for testing:                                                          //TEST//
+    template<typename V>                                                     //TEST//
+    friend int ::internal_check(const ra::shared_buffer<V>& a,               //TEST// 
+                   bool datavalue_shouldbe, V* datavalue,                    //TEST//
+                   bool origvalue_shouldbe, V* origvalue,                    //TEST//
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,     //TEST//
+                   bool refscount_shouldbe, int refscount,                   //TEST//
+                   bool sizevalue_shouldbe,                                  //TEST//
+                   typename ra::shared_buffer<V>::size_type sizevalue);      //TEST//
     void uninit() noexcept;
     void incref() noexcept;
     void decref() noexcept;
     template<typename InputIt>
     shared_buffer(size_type asize, InputIt first, InputIt last) RA_NOEXCEPT(true);
 };
-
-/***************************************************************************/
-/* FUTURE FEATURE :
-#define RA_ALIGNMENT_IN_BYTES 64
-
-template<class T>
-void malign(void*& orig, void*& place, size_t size, size_t bytealignment)
-{
-    size_t paddedsizeinbytes = size*sizeof(T) + bytealignment - 1;
-    void* some_orig = malloc(paddedsizeinbytes);
-    if (some_orig) {        
-        void* some_place = some_orig;
-        if (std::align(bytealignment,
-                       size*sizeof(T),
-                       some_place,
-                       paddedsizeinbytes)) {
-            orig = some_orig;
-            place = some_place;
-        } else {
-            free(some_orig);
-            throw std::bad_alloc();
-        }
-    } else {
-        throw std::bad_alloc();
-    }
-}
-*/
     
 template<class T>
 shared_buffer<T>::shared_buffer() noexcept
@@ -474,8 +445,6 @@ void shared_buffer<T>::assign(std::initializer_list<T> ilist)
     assign_iter(ilist.begin(), ilist.end());
 }
 
-/***************************************************************************/
-
 template<class T>
 void shared_buffer<T>::uninit() noexcept {
     data_ = nullptr;
@@ -504,6 +473,5 @@ void shared_buffer<T>::decref() noexcept { // noexcept assumes
     }
 }
 
-/***************************************************************************/
 }
 #endif

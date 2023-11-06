@@ -31,8 +31,6 @@
 #include <vector>
 #include <type_traits>
 
-/***************************************************************************/
-
 class Offsets
 {
   public:
@@ -56,8 +54,6 @@ class Offsets
     std::vector<unsigned long long> offsets_;
     ssize_t ndataoffsets_;
 };
-
-/***************************************************************************/
 
 inline Offsets::Offsets(const std::vector<ssize_t>& extent)
 {
@@ -126,7 +122,5 @@ inline ssize_t Offsets::get_rank() const noexcept
 {
     return rank_;
 }
-
-/***************************************************************************/
 
 #endif
