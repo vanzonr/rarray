@@ -1136,6 +1136,7 @@ class rarray {
     template<int R_=R,class=typename std::enable_if<R_==11>::type>
     RA_INLINE_ void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO);
     RA_INLINE_ void reshape(const size_type* extent, RESIZE resize_allowed=RESIZE::NO);
+    operator const rarray<const T,R>&() const noexcept;
     RA_INLINE_ bool                empty()           const noexcept;
     RA_INLINE_ rarray<T,R>         copy()               const;
     RA_INLINE_ size_type           extent(int i)        const;
@@ -2067,6 +2068,12 @@ template<typename T, int R> RA_INLINE_
 const typename ra::rarray<const T,R>& ra::rarray<T,R>::const_ref() const noexcept
 {
     return reinterpret_cast<const rarray<const T,R>&>(*this);
+}
+
+template<typename T, int R> RA_INLINE_
+ra::rarray<T,R>::operator const rarray<const T,R>&() const noexcept
+{
+    return const_ref();
 }
 
 template<typename T, int R> RA_INLINEF

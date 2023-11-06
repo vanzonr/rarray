@@ -1389,7 +1389,7 @@ TEST_CASE("test1dconversions")
     for (int i=0;i<n;i++)
         a[i] = static_cast<float>(i)+1;
     const rarray<float,1>& c=a;
-    std::stringstream s1,s2,s3,s4,s5,s6,s7;
+    std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
     print1d_1(c.ptr_array(), c.extent(0), s1);
     REQUIRE(s1.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_2(c.noconst_ptr_array(), c.extent(0), s2);
@@ -1404,6 +1404,8 @@ TEST_CASE("test1dconversions")
     REQUIRE(s6.str()=="1 2 3 4 5 6 7 8 9 \n");
     print1d_4(c.const_ref(), s7);
     REQUIRE(s7.str()=="1 2 3 4 5 6 7 8 9 \n");
+    print1d_4(c, s8); // test implicit conversion
+    REQUIRE(s8.str()=="1 2 3 4 5 6 7 8 9 \n");
 }
 
 
@@ -1535,7 +1537,7 @@ TEST_CASE("test2dconversions")
     rarray<float,1> atoo = a.at(1);
     atoo=a.at(1); // not really testing runtime
     const rarray<float,2>& c=a; // note the const
-    std::stringstream s1,s2,s3,s4,s5,s6,s7,s8;
+    std::stringstream s1,s2,s3,s4,s5,s6,s7,s8,s9;
  // print2d_1(c, a.extent(0), a.extent(1), s1); won't work, one needs:
     print2d_1(c.noconst_ptr_array(), c.extent(0), c.extent(1), s1);
     REQUIRE(s1.str()==
@@ -1563,6 +1565,8 @@ TEST_CASE("test2dconversions")
     REQUIRE(s7.str()==s1.str());
     print2d_8(c.const_ref(), s8);
     REQUIRE(s8.str()==s1.str());
+    print2d_8(c, s9);
+    REQUIRE(s9.str()==s1.str());
 }
 
 #if __cpp_multidimensional_subscript >= 202110L
