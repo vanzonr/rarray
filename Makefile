@@ -97,11 +97,9 @@ all: headers test valgrindtest benchmarks
 .PHONY: test
 test: run_testsuite  run_testsuite_bc  run_test_shared_buffer  run_test_offsets \
       run_test_shared_shape  run_test_rarray
-	gcovr -f headersources
 
 .PHONY: test23
 test23: run_testsuite23  run_testsuite_bc23 run_test_rarray23
-	gcovr -f headersources
 
 .PHONY: valgrindtest
 valgrindtest: run_valgrind_testsuite  run_valgrind_testsuite_bc \
@@ -139,9 +137,9 @@ ${HS}/versionheader.h: VERSION
 	echo "#define RA_VERSION_NUMBER " | tr -d '\n' >> $@
 	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
 
-MYDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+MYDIR := $(shell dirname "$(abspath $(lastword $(MAKEFILE_LIST)))")
 rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
-	cd ${HS} ; ${MYDIR}/hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > ${MYDIR}/rarray
+	cd ${HS} ; "${MYDIR}"/hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > "${MYDIR}"/rarray
 
 rarrayio: rarray
 	echo '#include <rarray>' > rarrayio
@@ -182,7 +180,7 @@ testsuite_bc23.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
 
 catch.hpp:
 	curl -Lo catch.hpp https://github.com/catchorg/Catch2/releases/download/v2.11.1/catch.hpp
-	sed -i.bak 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
+	sed -i 's/\(static constexpr std::size_t sigStackSize = 32768\).*/\1;\/\//' catch.hpp
 
 test_shared_buffer.o: ${SRC}/test_shared_buffer.cc ${HS}/shared_buffer.h catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${DBGFLAGS} ${CXXFLAGSCOV} -c -o $@ $<
