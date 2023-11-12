@@ -38,25 +38,39 @@
 #define noboundscheck true
 #endif
 
-// For g++ and icpc, RA_INLINE forces inlining, even without optimization.
-// In all other cases, RA_INLINE=inline, and inlining may not occur.
+// Routines using RA_FORCE_inline instead of inline will be forced to
+// inline RA_FORCE_inline includes the "inline" keyword.  Works for
+// gcc, clang and intel compilers, and shuold work MS Visual C++, but
+// untested.  For unsupported compilers, RA_FORCE_inline becomes just
+// inline.
 // Note for xlC: 
 //    In version 10, you need "-O4" to get full inlining.
 //    In version 11, "-O2 -qinline=level=6" suffices.
 //
-#if not defined(RA_INLINE)
-# if defined(__INTEL_COMPILER)
-#   define RA_INLINE  __forceinline
+#if ! defined(RA_FORCE_inline)
+# if defined(_MSC_VER)
+#  if _MSC_VER >= 1900
+#   define RA_FORCE_inline [[msvc::forceinline]] inline
+#  else
+#   define RA_FORCE_inline __forceinline inline
+#  endif
+# elif defined(__INTEL_COMPILER)
+#  define RA_FORCE_inline  __forceinline inline
+# elif defined(__clang__)
+#  if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ < 3)
+#   define RA_FORCE_inline __attribute__((always_inline)) inline
+#  else
+#   define RA_FORCE_inline [[gnu::always_inline]] inline
+#  endif
 # elif defined(__GNUC__)
-#   define RA_INLINE __attribute__((always_inline)) inline
+#  if __GNUC__ < 4 || (GNU_C == 4 && __GNUC_MINOR < 8)
+#   define RA_FORCE_inline __attribute__((always_inline)) inline
+#  else
+#   define RA_FORCE_inline [[gnu::always_inline]] inline
+#  endif
 # else
-#   define RA_INLINE inline
+#  define RA_FORCE_inline inline
 # endif
 #endif
-
-// routines using INLINEF will be forced to inline
-// routines using INLINE_ will not: these were deemed to expensive to inline from a compilation point of view
-#define RA_INLINEF RA_INLINE
-#define RA_INLINE_ inline
 
 #endif

@@ -139,7 +139,7 @@ class shared_buffer
     void incref() noexcept;
     void decref() noexcept;
     template<typename InputIt>
-    shared_buffer(size_type asize, InputIt first, InputIt last) RA_NOEXCEPT(true);
+    shared_buffer(size_type asize, InputIt first, InputIt last);
 };
     
 template<class T>
@@ -172,7 +172,7 @@ shared_buffer<T>::shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
 //private in this version at leastt
 template<class T>
 template<typename InputIt>
-shared_buffer<T>::shared_buffer(size_type asize, InputIt first, InputIt last) RA_NOEXCEPT(true)
+shared_buffer<T>::shared_buffer(size_type asize, InputIt first, InputIt last)
   : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
 {
     // construct buffer, exception safe

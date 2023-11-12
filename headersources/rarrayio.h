@@ -24,8 +24,8 @@
 
 namespace ra {
 
-template<typename T,int R> RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
-template<typename T>       RA_INLINE_ std::ostream& text_output(std::ostream &o, const rarray<T,1>& r);
+template<typename T,int R> inline std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
+template<typename T>       inline std::ostream& text_output(std::ostream &o, const rarray<T,1>& r);
 
 // We need to be able to get a reference in a pointer-to-pointer structure given indices.
 //
@@ -35,22 +35,22 @@ template<typename T>       RA_INLINE_ std::ostream& text_output(std::ostream &o,
 //...
 template<typename T, int R>
 struct Deref {
-    static RA_INLINEF T& access(typename PointerArray<T,R>::type p, const size_type* indices);
+    static inline T& access(typename PointerArray<T,R>::type p, const size_type* indices);
 };
 template<typename T>
 struct Deref<T,1>  // R=1 is special
 {
-    static RA_INLINEF T& access(typename PointerArray<T,1>::type p, const size_type* indices);
+    static inline T& access(typename PointerArray<T,1>::type p, const size_type* indices);
 };
 
 // Convert a string to a value, needed for operator>> .
 template<typename T>
 struct StringToValue {
-    static RA_INLINE_ void get(const std::string& input, T& output);
+    static inline void get(const std::string& input, T& output);
 };
 template<>
 struct StringToValue<std::string> {
-    static RA_INLINE_ void get(const std::string& input, std::string& output);
+    static inline void get(const std::string& input, std::string& output);
 };
 
 enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
@@ -66,10 +66,10 @@ enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
      }
  }
  
-template<int R> RA_INLINE_ 
+template<int R> inline 
 std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in);
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> inline 
 void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p);
 
 } // end namespace ra
@@ -82,7 +82,7 @@ void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_
 //------------------------------------------------//
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream &o, const ra::rarray<T, R>& r)
+template<typename T, int R> inline std::ostream& ra::operator<<(std::ostream &o, const ra::rarray<T, R>& r)
 {
     if (R>1) {
         return ra::text_output(o,r);
@@ -102,7 +102,7 @@ template<typename T, int R> RA_INLINE_ std::ostream& ra::operator<<(std::ostream
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T,int R> RA_INLINE_ 
+template<typename T,int R> inline 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 {
     if (not r.empty()) {
@@ -123,7 +123,7 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,R>& r)
     return o;
 }
 
-template<typename T> RA_INLINE_ 
+template<typename T> inline 
 std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 {
     if (not r.empty()) {
@@ -151,27 +151,27 @@ std::ostream& ra::text_output(std::ostream &o, const ra::rarray<T,1>& r)
 
 // helper routines to convert a string to any data type
 
-template<typename T> RA_INLINE_
+template<typename T> inline
 void ra::StringToValue<T>::get(const std::string& input, T& output) 
 {
     std::stringstream str(input); // use streaming operators by default
     str >> output; // won't work with strings as they get truncated at first whitespace
 }
 
-RA_INLINE_ void ra::StringToValue<std::string>::get(const std::string& input, std::string& output)
+inline void ra::StringToValue<std::string>::get(const std::string& input, std::string& output)
 {
     output = input;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, int R> RA_INLINEF 
+template<typename T, int R> inline 
 T& ra::Deref<T,R>::access(typename PointerArray<T,R>::type p, const size_type* indices) 
 {
     return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
 }
 
-template<typename T> RA_INLINEF 
+template<typename T> inline 
 T& ra::Deref<T,1>::access(typename PointerArray<T,1>::type p, const size_type* indices) 
 {
     return p[indices[0]-1];
@@ -197,7 +197,7 @@ static inline char get_but_eat_whitespace(std::istream & in)
 }
 
 namespace ra {
-template<int R> RA_INLINE_ 
+template<int R> inline 
 std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in)
 {
     std::pair<std::list<std::pair<token,std::string>>,size_type[R]> wholeresult;
@@ -305,7 +305,7 @@ std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std:
 }
 }
 
-template<typename T, int R> RA_INLINE_ 
+template<typename T, int R> inline 
 void ra::parse_strings(const std::pair<std::list<std::pair<ra::token,std::string>>,ra::size_type[R]> & tokens, typename ra::PointerArray<T,R>::type p) 
 {
     size_type index[R];
@@ -334,7 +334,7 @@ void ra::parse_strings(const std::pair<std::list<std::pair<ra::token,std::string
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T,int R> RA_INLINE_
+template<typename T,int R> inline
 std::istream& ra::operator>>(std::istream &in, ra::rarray<T,R>& r)
 {    
     auto X = ra::parse_shape<R>(in);
