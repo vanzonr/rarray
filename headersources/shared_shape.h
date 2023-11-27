@@ -40,6 +40,7 @@
 int test_shared_shape_main();  //TEST//
 
 namespace ra {
+namespace detail {
 
 // class to hold the shape but not the content of a multi-dimensional array.
 
@@ -80,7 +81,7 @@ class shared_shape
     : extent_(anextent), ptrs_(nullptr), refs_(nullptr), orig_(nullptr)
     {
         // construct shape 
-        Offsets P({extent_.begin(),extent_.end()});
+        ra::detail::Offsets P({extent_.begin(),extent_.end()});
         auto to_be_orig = std::unique_ptr<void**[]>(P.apply_offsets(adata)); // this could throw, but only if its allocation fails, so no resource leak
         if (R>1) 
             refs_ = new std::atomic<int>(1); // if throws, to_be_orig gets dealloced
@@ -320,6 +321,7 @@ struct _data_from_ptrs_noffsets_ndataoffsets<T,1> {
     }
 };
 
+}
 }
 
 #endif

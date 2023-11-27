@@ -38,18 +38,23 @@
 #include <atomic>
 
 // declaratieon for unit testing:                                          //TEST//
-namespace ra { template<class T> class shared_buffer; }                    //TEST//
+namespace ra {                                                             //TEST//   
+namespace detail {                                                         //TEST//
+template<class T> class shared_buffer;                                     //TEST//
+}                                                                          //TEST//
+}                                                                          //TEST//
 template<typename V>                                                       //TEST//
-int internal_check(const ra::shared_buffer<V>& a,                          //TEST//
+int internal_check(const ra::detail::shared_buffer<V>& a,                  //TEST//
                    bool datavalue_shouldbe, V* datavalue,                  //TEST//
                    bool origvalue_shouldbe, V* origvalue,                  //TEST//
                    bool refsvalue_shouldbe, std::atomic<int>* refsvalue,   //TEST//
                    bool refscount_shouldbe, int refscount,                 //TEST//
                    bool sizevalue_shouldbe,                                //TEST//
-                   typename ra::shared_buffer<V>::size_type sizevalue);    //TEST//
+                   typename ra::detail::shared_buffer<V>::size_type sizevalue);    //TEST//
 
 namespace ra {
-
+namespace detail {
+     
 template<class T>
 class shared_buffer
 {
@@ -286,13 +291,13 @@ class shared_buffer
 
     // for testing:                                                          //TEST//
     template<typename V>                                                     //TEST//
-    friend int ::internal_check(const ra::shared_buffer<V>& a,               //TEST// 
+    friend int ::internal_check(const ra::detail::shared_buffer<V>& a,               //TEST// 
                    bool datavalue_shouldbe, V* datavalue,                    //TEST//
                    bool origvalue_shouldbe, V* origvalue,                    //TEST//
                    bool refsvalue_shouldbe, std::atomic<int>* refsvalue,     //TEST//
                    bool refscount_shouldbe, int refscount,                   //TEST//
                    bool sizevalue_shouldbe,                                  //TEST//
-                   typename ra::shared_buffer<V>::size_type sizevalue);      //TEST//
+                   typename ra::detail::shared_buffer<V>::size_type sizevalue);      //TEST//
     void uninit() noexcept  {
         data_ = nullptr;
         orig_ = nullptr;
@@ -331,5 +336,7 @@ class shared_buffer
 
 };
 
+} 
 }
+
 #endif

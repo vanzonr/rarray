@@ -23,6 +23,7 @@
 //
 
 #include "offsets.h"
+using ra::detail::Offsets;
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"

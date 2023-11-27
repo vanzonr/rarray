@@ -31,6 +31,9 @@
 #include <vector>
 #include <type_traits>
 
+namespace ra {
+namespace detail {
+    
 class Offsets
 {
   public:
@@ -108,5 +111,7 @@ class Offsets
     std::vector<unsigned long long> offsets_;
     ssize_t ndataoffsets_;
 };
+
+}}  // end namespace ra::detail and ra
 
 #endif

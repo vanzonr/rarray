@@ -47,34 +47,29 @@
 // Forward definitions of ra::rarray<T,R> and ra::CommaOp
 namespace ra {
 typedef ssize_t size_type;
+typedef int rank_type;
 enum class RESIZE { NO, ALLOWED };
-template<typename T,int R> class rarray;
-template<typename T> class CommaOp;
-// // Definitions of streaming operator; implementation is in rarrayio
-template<typename T,int R> inline std::istream& operator>>(std::istream &i, rarray<T,R>& r);
-template<typename T,int R> inline std::ostream& operator<<(std::ostream &o, const rarray<T,R>& r);
-// Definitions for (repeated) bracket access
-template<typename T,int R,typename P> class _Bracket;
-template<typename T,int R,typename P> class _ConstBracket;
-// TODO: Each operator will create a subexpression of the Expr<...>, which we forward-define first
-// Forward definitions to support array expressions //
-// What type enumerates possible operators?
-//typedef int ExOp;
-#define ExOp class
-template<typename T, int R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
-} // end namespace ra (forward declarations)
-   
-namespace ra {
-
-// auxiliar multiplication function
-inline size_type mul(const size_type * x, std::size_t n) noexcept {
-    size_type result = 1;
-    for (std::size_t i=0;i<n;i++)
-        result *= x[i];
-    return result;
+template<typename T,rank_type R> class rarray;
+namespace detail {
+    template<typename T> class CommaOp;
+    template<typename T,rank_type R,typename P> class _Bracket;
+    template<typename T,rank_type R,typename P> class _ConstBracket;
+    // auxiliar multiplication function
+    inline size_type mul(const size_type * x, std::size_t n) noexcept {
+        size_type result = 1;
+        for (std::size_t i=0;i<n;i++)
+            result *= x[i];
+        return result;
+    }
+    // TODO: Each operator will create a subexpression of the Expr<...>, which we forward-define first
+    // Forward definitions to support array expressions //
+    // What type enumerates possible operators?
+    //typedef int ExOp;
+    #define ExOp class
+    template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
 }
 
-template<typename T,int R> 
+template<typename T,rank_type R> 
 class rarray {
     
   public:
@@ -83,194 +78,194 @@ class rarray {
     typedef ssize_t                                   size_type;        // type of indices
     typedef T*                                        iterator;         // iterator type
     typedef const T*                                  const_iterator;   // iterator type for constant access
-    typedef typename PointerArray<T,R>::type          parray_t;         // shorthand for T*const*const*...
-    typedef typename PointerArray<T,R>::noconst_type  noconst_parray_t; // shorthand for T***...
+    typedef typename detail::PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
+    typedef typename detail::PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
     // constructor leaving rarray undefined
     inline rarray()
     : buffer_(), shape_() {}
     // constructors creating its own buffer for various R values
-    template<int R_=R,class=typename std::enable_if<R_==1>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==1>::type>
     inline explicit rarray(size_type n0)
     : buffer_(n0),
       shape_({n0}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==2>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==2>::type>
     inline rarray(size_type n0, size_type n1)
     : buffer_(n0*n1),
       shape_({n0,n1}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==3>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==3>::type>
     inline rarray(size_type n0, size_type n1, size_type n2)
     : buffer_(n0*n1*n2),
       shape_({n0,n1,n2}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==4>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==4>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3)
     : buffer_(n0*n1*n2*n3),
       shape_({n0,n1,n2,n3}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==5>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==5>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4)
     : buffer_(n0*n1*n2*n3*n4),
       shape_({n0,n1,n2,n3,n4}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==6>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==6>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5)
     : buffer_(n0*n1*n2*n3*n4*n5),
       shape_({n0,n1,n2,n3,n4,n5}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==7>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==7>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6)
     : buffer_(n0*n1*n2*n3*n4*n5*n6),
       shape_({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==8>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==8>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==9>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==9>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin())
     {}
-    template<int R_=R,class=typename std::enable_if<R_==10>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==10>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin())
     {}  
-    template<int R_=R,class=typename std::enable_if<R_==11>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==11>::type>
     inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin())
     {}
     explicit inline rarray(const size_type* anextent)
-    : buffer_(mul(anextent,R)),
+    : buffer_(detail::mul(anextent,R)),
       shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer_.begin())
     {}
     // constructors from an existing buffer 
-    template<int R_=R,class=typename std::enable_if<R_==1>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==1>::type>
     inline rarray(T* buffer, size_type n0)
     : buffer_(n0,  buffer),
       shape_({n0}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==2>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==2>::type>
     inline rarray(T* buffer, size_type n0, size_type n1)
     : buffer_(n0*n1,  buffer),
       shape_({n0,n1}, buffer)
     {}  
-    template<int R_=R,class=typename std::enable_if<R_==3>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==3>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2)
     : buffer_(n0*n1*n2,  buffer),
       shape_({n0,n1,n2}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==4>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==4>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3)
     : buffer_(n0*n1*n2*n3,  buffer),
       shape_({n0,n1,n2,n3}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==5>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==5>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4)
     : buffer_(n0*n1*n2*n3*n4,  buffer),
       shape_({n0,n1,n2,n3,n4}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==6>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==6>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5)
     : buffer_(n0*n1*n2*n3*n4*n5,  buffer),
       shape_({n0,n1,n2,n3,n4,n5}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==7>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==7>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6)
     : buffer_(n0*n1*n2*n3*n4*n5*n6,  buffer),
       shape_({n0,n1,n2,n3,n4,n5,n6}, buffer)
     {}  
-    template<int R_=R,class=typename std::enable_if<R_==8>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==8>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7,  buffer),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==9>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==9>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8,  buffer),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer)
     {} 
-    template<int R_=R,class=typename std::enable_if<R_==10>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==10>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9,  buffer),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer)
     {}
-    template<int R_=R,class=typename std::enable_if<R_==11>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==11>::type>
     inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10,  buffer),
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer)
     {}
     inline rarray(T* buffer, const size_type* anextent)
-    : buffer_(mul(anextent,R), buffer),
+    : buffer_(detail::mul(anextent,R), buffer),
       shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer)
     {}       
     // constructors from automatic arrays
     template<std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==1>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==1>::type>
     inline explicit rarray(T (&a)[Z])
     : buffer_(Z, a),
       shape_({Z}, buffer_.begin())
     {}
     template<std::size_t Y, std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==2>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==2>::type>
     inline explicit rarray(T (&a)[Y][Z])
     : buffer_(Y*Z, *a),
       shape_({Y,Z}, buffer_.begin())
     {}
     template<std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==3>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==3>::type>
     inline explicit rarray(T (&a)[X][Y][Z])
     : buffer_(X*Y*Z, **a),
       shape_({X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==4>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==4>::type>
     inline explicit rarray(T (&a)[W][X][Y][Z])
     : buffer_(W*X*Y*Z, ***a),
       shape_({W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==5>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==5>::type>
     inline explicit rarray(T (&a)[V][W][X][Y][Z])
     : buffer_(V*W*X*Y*Z, ****a),
       shape_({V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==6>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==6>::type>
     inline explicit rarray(T (&a)[U][V][W][X][Y][Z])
     : buffer_(U*V*W*X*Y*Z,  *****a),
       shape_({U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==7>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==7>::type>
     inline explicit rarray(T (&a)[T_][U][V][W][X][Y][Z])
     : buffer_(T_*U*V*W*X*Y*Z,  ******a),
       shape_({T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==8>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==8>::type>
     inline explicit rarray(T (&a)[S][T_][U][V][W][X][Y][Z])
     : buffer_(S*T_*U*V*W*X*Y*Z,  *******a),
       shape_({S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==9>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==9>::type>
     inline explicit rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********a),
       shape_({R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==10>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==10>::type>
     inline explicit rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********a),
       shape_({Q,R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t P,std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
-             int R__=R,typename=typename std::enable_if<R__==11>::type>
+             rank_type R__=R,typename=typename std::enable_if<R__==11>::type>
     inline explicit rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
       shape_({P,Q,R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
@@ -296,7 +291,7 @@ class rarray {
         return *this;
     }
     // Comma separated element assignment
-    inline CommaOp<T> operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>()) {
+    inline detail::CommaOp<T> operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>()) {
         // Comma separated element assignment: puts the first one in and prepares for more
         RA_CHECKORSAY(not empty(), "assignment to unsized array");
         RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
@@ -304,113 +299,113 @@ class rarray {
         if (size() > 0)
             *first = e;
         else
-            return ra::CommaOp<T>(nullptr, nullptr);
-        ra::CommaOp<T> co(first+1, first+size()-1); 
+            return detail::CommaOp<T>(nullptr, nullptr);
+        detail::CommaOp<T> co(first+1, first+size()-1); 
         return co;
     }
     // destructor
     RA_FORCE_inline ~rarray() {}
     // Will need constructor and assignment for expressions
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline explicit   rarray (const Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator= (const Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator+=(const Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator-=(const Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator*=(const Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator/=(const Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator%=(const Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline explicit   rarray (const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator= (const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator+=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator-=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator*=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator/=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator%=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
     // reshape shallow copy keeping the underlying data 
-    template<int R_=R,class=typename std::enable_if<R_==1>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==1>::type>
     inline void reshape(size_type n0, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0))     
-            shape_ = shared_shape<T,R>({n0}, buffer_.begin());           
+            shape_ = detail::shared_shape<T,R>({n0}, buffer_.begin());           
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));        
     }
-    template<int R_=R,class=typename std::enable_if<R_==2>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==2>::type>
     inline void reshape(size_type n0, size_type n1, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1))
-            shape_ = shared_shape<T,R>({n0,n1}, buffer_.begin());       
+            shape_ = detail::shared_shape<T,R>({n0,n1}, buffer_.begin());       
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }    
-    template<int R_=R,class=typename std::enable_if<R_==3>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==3>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2))
-            shape_ = shared_shape<T,R>({n0,n1,n2}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==4>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==4>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3)) 
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==5>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==5>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4)) 
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4}, buffer_.begin());
        else
            throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==6>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==6>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4*n5
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5)) 
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==7>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==7>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4*n5*n6
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6))             
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));        
     }
-    template<int R_=R,class=typename std::enable_if<R_==8>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==8>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7)) 
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin());
         else 
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==9>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==9>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8))
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin());       
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin());       
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==10>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==10>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9))
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin());
         else        
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    template<int R_=R,class=typename std::enable_if<R_==11>::type>
+    template<rank_type R_=R,class=typename std::enable_if<R_==11>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4, size_type n5, size_type n6, size_type n7, size_type n8, size_type n9, size_type n10, RESIZE resize_allowed=RESIZE::NO) {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10
             or (resize_allowed == RESIZE::ALLOWED and size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10))        
-            shape_ = shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin());
+            shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin());
         else         
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
     inline void reshape(const size_type* newshape, RESIZE resize_allowed=RESIZE::NO) {
-        if (size() == mul(newshape,R)
-            or (resize_allowed == RESIZE::ALLOWED and size() >= mul(newshape,R)))
-            shape_ = shared_shape<T,R>((const std::array<size_type,R>&)(*newshape), buffer_.begin());
+        if (size() == detail::mul(newshape,R)
+            or (resize_allowed == RESIZE::ALLOWED and size() >= detail::mul(newshape,R)))
+            shape_ = detail::shared_shape<T,R>((const std::array<size_type,R>&)(*newshape), buffer_.begin());
         else         
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
@@ -470,8 +465,8 @@ class rarray {
     // modifiers
     // make undefined
     RA_FORCE_inline void clear() noexcept {
-        shape_ = shared_shape<T,R>();
-        buffer_ = shared_buffer<T>();
+        shape_ = detail::shared_shape<T,R>();
+        buffer_ = detail::shared_buffer<T>();
     }
     // fill with uniform value
     inline void fill(const T& value) {
@@ -582,7 +577,7 @@ class rarray {
     }
     template<class U=T>
     RA_FORCE_inline typename std::enable_if<R!=1,
-    typename ra::_Bracket<U,R-1,rarray>
+    typename detail::_Bracket<U,R-1,rarray>
     >::type
     operator[](ssize_t index) {
         return { *this, index, this->shape() };
@@ -598,7 +593,7 @@ class rarray {
     }
     template<class U=T>
     RA_FORCE_inline typename std::enable_if<R!=1,
-    typename ra::_ConstBracket<U,R-1,rarray>
+    typename detail::_ConstBracket<U,R-1,rarray>
     >::type
     operator[](ssize_t index) const {
         return { *this, index, this->shape() };
@@ -620,31 +615,32 @@ class rarray {
     RA_FORCE_inline const T& leval(size_type i) const;
   private:
     // allow _*Bracket to access _at
-    friend class _Bracket<T,R-1,rarray<T,R>>;
-    friend class _ConstBracket<T,R-1,rarray<T,R>>;
-    RA_FORCE_inline typename PointerArray<T,R-1>::type _at(ssize_t index) {
+    friend class detail::_Bracket<T,R-1,rarray<T,R>>;
+    friend class detail::_ConstBracket<T,R-1,rarray<T,R>>;
+    RA_FORCE_inline typename detail::PointerArray<T,R-1>::type _at(ssize_t index) {
         return shape_.ptrs()[index];
     }
-    RA_FORCE_inline typename PointerArray<T,R-1>::type _at(ssize_t index) const {
+    RA_FORCE_inline typename detail::PointerArray<T,R-1>::type _at(ssize_t index) const {
                 return shape_.ptrs()[index];
     }
     // allow rarray<T,R+1>::at(..) to create a proper rarray<T,R>
     // referencing data in current array
     friend class rarray<T,R+1>;    
-    inline rarray(shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
-        buffer_(std::forward<shared_buffer<T>>(abuffer)),
-        shape_(std::forward<shared_shape<T,R>>(ashape))
+    inline rarray(detail::shared_buffer<T>&& abuffer, detail::shared_shape<T,R>&& ashape) :
+        buffer_(std::forward<detail::shared_buffer<T>>(abuffer)),
+        shape_(std::forward<detail::shared_shape<T,R>>(ashape))
     {}
     // need the following for rarray<T,R+1>::at(..) const
-    inline rarray(const shared_buffer<T>&& abuffer, shared_shape<T,R>&& ashape) :
-        buffer_(std::forward<shared_buffer<T>>(const_cast<shared_buffer<T>&& >(abuffer))),
-        shape_(std::forward<shared_shape<T,R>>(ashape))
+    inline rarray(const detail::shared_buffer<T>&& abuffer, detail::shared_shape<T,R>&& ashape) :
+        buffer_(std::forward<detail::shared_buffer<T>>(const_cast<detail::shared_buffer<T>&& >(abuffer))),
+        shape_(std::forward<detail::shared_shape<T,R>>(ashape))
     {}
-    shared_buffer<T>  buffer_;
-    shared_shape<T,R> shape_;
+    detail::shared_buffer<T>  buffer_;
+    detail::shared_shape<T,R> shape_;
         
 }; // end definition rarray<T,R>
-    
+
+namespace detail {
 // Class to facilitate assignment from a comma separated list
 template<typename T>
 class CommaOp {
@@ -665,11 +661,11 @@ class CommaOp {
     }
     T *ptr_;                                                           // points to next element to be filled
     T * const last_;                                                   // points to last element
-    template<typename,int> friend class rarray;
+    template<typename,int> friend class ra::rarray;
 };
 
 // Classes for repeated bracket access to elements    
-template<typename T,int R,typename P>
+template<typename T,rank_type R,typename P>
 class _Bracket {
   private:
     P&             parent_; // what array/array expre is being accessed
@@ -699,8 +695,8 @@ class _Bracket {
     RA_FORCE_inline auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]) {
         return parent_._at(index_)[nextindex];
     }
-    template<typename T2,int R2> friend class ra::rarray; // allow descending
-    template<typename T2,int R2,typename P2> friend class ra::_Bracket; // allow descending   
+    template<typename,int> friend class ra::rarray; // allow descending
+    template<typename,int,typename> friend class detail::_Bracket; // allow descending   
   public:
     RA_FORCE_inline auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
         return parent_.at(index_).at(nextindex);
@@ -742,8 +738,8 @@ class _Bracket<T,1,P> {
     {
         RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
     }
-    template<typename T2,int R2> friend class ra::rarray; // allow descending
-    template<typename T2,int R2,typename P2> friend class ra::_Bracket; // allow descending   
+    template<typename,int> friend class ra::rarray; // allow descending
+    template<typename,int,typename> friend class detail::_Bracket; // allow descending   
   public:
     RA_FORCE_inline auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
         // used for conversion to whatever parent.at() gives
@@ -751,7 +747,7 @@ class _Bracket<T,1,P> {
     }
 };
 
-template<typename T,int R,typename P>
+template<typename T,rank_type R,typename P>
 class _ConstBracket {
   private:
     const P&       parent_;
@@ -780,8 +776,8 @@ class _ConstBracket {
     RA_FORCE_inline auto _at(ssize_t nextindex) const noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]) {
         return parent_._at(index_)[nextindex];
     }
-    template<typename T2,int R2> friend class ra::rarray; // allow descending
-    template<typename T2,int R2,typename P2> friend class ra::_ConstBracket;
+    template<typename,int> friend class ra::rarray; // allow descending
+    template<typename,int,typename> friend class detail::_ConstBracket;
   public:
     RA_FORCE_inline auto at(ssize_t nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
         // used for conversion to whatever parent.at() gives
@@ -824,15 +820,15 @@ class _ConstBracket<T,1,P> {
     {
         RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
     }
-    template<typename T2,int R2> friend class ra::rarray; // allow descending
-    template<typename T2,int R2,typename P2> friend class ra::_ConstBracket;
+    template<typename,int> friend class ra::rarray; // allow descending
+    template<typename,int,typename> friend class detail::_ConstBracket;
   public:
     RA_FORCE_inline auto at(ssize_t nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
         // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
 };
-
+}
 //// TODO: Choose better integer type for n 
 template<typename S>
 inline
@@ -938,7 +934,7 @@ size_type extent(const A &a, int i)
     }
 }
 
-template<typename T, int R> 
+template<typename T,rank_type R> 
 size_type extent(const rarray<T,R> &a, int i)
 {
     return a.extent(i);
@@ -948,11 +944,11 @@ size_type extent(const rarray<T,R> &a, int i)
 
 // make RARRAY and INDEX work for rarrays as well as automatic arrays:
 namespace std {
-    template<class T, int R >
+    template<typename T,ra::rank_type R>
     struct remove_all_extents<ra::rarray<T,R>> {
         typedef T type;
     };
-    template<class T, int R >
+    template<typename T,ra::rank_type R>
     struct rank<ra::rarray<T,R>> {
         static const size_t value = R;
     };

@@ -36,8 +36,8 @@ int test_shared_shape_main()
     const int N = 16;
     {
         std::cerr << "Test 0\n";
-        ra::shared_shape<int,1> sh;
-        assert(sh.extent_ == (std::array<ra::shared_shape<int,1>::size_type ,1>()));
+        ra::detail::shared_shape<int,1> sh;
+        assert(sh.extent_ == (std::array<ra::detail::shared_shape<int,1>::size_type ,1>()));
         assert(sh.ptrs_ == nullptr);
         assert(sh.orig_ == nullptr);
         assert(sh.noffsets_ == 0);
@@ -46,7 +46,7 @@ int test_shared_shape_main()
     {
         std::cerr << "Test 1\n";
         int a[N];
-        ra::shared_shape<int,1> sh( {N}, &(a[0]) );
+        ra::detail::shared_shape<int,1> sh( {N}, &(a[0]) );
         assert(sh.noffsets_ == 0);
         assert(sh.ndataoffsets_ == 1);
         for (int i=0;i<N;i++)
@@ -59,7 +59,7 @@ int test_shared_shape_main()
     {
         std::cerr << "Test 2\n";
         int a[N][N/2];
-        ra::shared_shape<int,2> sh( {N,N/2}, &(a[0][0]) );  // 16 x 8 
+        ra::detail::shared_shape<int,2> sh( {N,N/2}, &(a[0][0]) );  // 16 x 8 
         assert(sh.noffsets_ == N);
         assert(sh.ndataoffsets_ == N);
         int* aptr=&(a[0][0]);
@@ -74,7 +74,7 @@ int test_shared_shape_main()
     {
         std::cerr << "Test 3\n";        
         int a[N][N/2][N/4];
-        ra::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        ra::detail::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
         assert(sh.noffsets_ == N*(N/2+1));
         assert(sh.ndataoffsets_ == N*(N/2));
         int* aptr = &(a[0][0][0]);
@@ -90,7 +90,7 @@ int test_shared_shape_main()
     {
         std::cerr << "Test 4\n";        
         int a[N][N/2][N/4][N/8];
-        ra::shared_shape<int,4> sh{{N,N/2,N/4,N/8},&(a[0][0][0][0])}; // 16 x 8 x 4 x 2
+        ra::detail::shared_shape<int,4> sh{{N,N/2,N/4,N/8},&(a[0][0][0][0])}; // 16 x 8 x 4 x 2
         assert(sh.noffsets_ == N*(N/2*(N/4+1)+1));
         assert(sh.ndataoffsets_ == N*(N/2)*(N/4));        
         int* aptr = &a[0][0][0][0];
@@ -108,7 +108,7 @@ int test_shared_shape_main()
     {
         std::cerr << "Test 5\n";        
         int a[N][N/2][N/4][N/8][N/16];
-        ra::shared_shape<int,5> sh({N,N/2,N/4,N/8,N/16},&(a[0][0][0][0][0])); // 16 x 8 x 4 x 2 x 1
+        ra::detail::shared_shape<int,5> sh({N,N/2,N/4,N/8,N/16},&(a[0][0][0][0][0])); // 16 x 8 x 4 x 2 x 1
         assert(sh.noffsets_ == N*(N/2*(N/4*(N/8+1)+1)+1));
         assert(sh.ndataoffsets_ == N*(N/2)*(N/4)*(N/8));
         int* aptr = &a[0][0][0][0][0];
@@ -128,14 +128,14 @@ int test_shared_shape_main()
         // shallow copy
         std::cerr << "Test 6\n";
         int a[N][N/2][N/4];
-        ra::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        ra::detail::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
         assert(sh.noffsets_ == N*(N/2+1));
         assert(sh.ndataoffsets_ == N*(N/2));
         int* aptr = &(a[0][0][0]);
         for (int i=0;i<N*(N/2)*(N/4);i++)
             aptr[i] = i;
         int*const*const* p = sh.ptrs();
-        ra::shared_shape<int,3> sh2 = sh;
+        ra::detail::shared_shape<int,3> sh2 = sh;
         assert(*(sh.refs_) == 2);
         assert(sh.refs_ == sh2.refs_);
         int*const*const* p2 = sh2.ptrs();
@@ -151,14 +151,14 @@ int test_shared_shape_main()
         // deep copy
         std::cerr << "Test 7\n";
         int a[N][N/2][N/4];
-        ra::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        ra::detail::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
         assert(sh.noffsets_ == N*(N/2+1));
         assert(sh.ndataoffsets_ == N*(N/2));
         int* aptr = &(a[0][0][0]);
         for (int i=0;i<N*(N/2)*(N/4);i++)
             aptr[i] = i;
         int*const*const* p = sh.ptrs();
-        ra::shared_shape<int,3> sh2 = sh.copy();
+        ra::detail::shared_shape<int,3> sh2 = sh.copy();
         assert(*(sh.refs_) == 1);
         assert(*(sh2.refs_) == 1);
         assert(sh.refs_ != sh2.refs_);
@@ -174,14 +174,14 @@ int test_shared_shape_main()
         // .relocate
         std::cerr << "Test 8\n";
         int a[N][N/2][N/4];
-        ra::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        ra::detail::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
         assert(sh.noffsets_ == N*(N/2+1));
         assert(sh.ndataoffsets_ == N*(N/2));
         int* aptr = &(a[0][0][0]);
         for (int i=0;i<N*(N/2)*(N/4);i++)
             aptr[i] = i;
         int*const*const* p = sh.ptrs();
-        ra::shared_shape<int,3> sh2 = sh;
+        ra::detail::shared_shape<int,3> sh2 = sh;
         int a2[N][N/2][N/4];
         int* aptr2 = &(a2[0][0][0]);
         for (int i=0;i<N*(N/2)*(N/4);i++)
@@ -202,7 +202,7 @@ int test_shared_shape_main()
         // .reshape
         std::cerr << "Test 9\n";        
         int a[N][N/2][N/4];
-        ra::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        ra::detail::shared_shape<int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
         assert(sh.noffsets_ == N*(N/2+1));
         assert(sh.ndataoffsets_ == N*(N/2));
         int* aptr = &(a[0][0][0]);
@@ -226,13 +226,13 @@ int test_shared_shape_main()
     {
          std::cerr << "Test 10\n";  
          int a[N][N/2][N/4][N/8];
-         ra::shared_shape<int,4> sh{{N,N/2,N/4,N/8},&(a[0][0][0][0])}; // 16 x 8 x 4 x 2
+         ra::detail::shared_shape<int,4> sh{{N,N/2,N/4,N/8},&(a[0][0][0][0])}; // 16 x 8 x 4 x 2
          assert(sh.noffsets_ == N*(N/2*(N/4+1)+1));
          assert(sh.ndataoffsets_ == N*(N/2)*(N/4));        
          int* aptr = &a[0][0][0][0];
          for ( int i=0;i<N*(N/2)*(N/4)*(N/8);i++)
              aptr[i] = i;
-         ra::shared_shape<int,3> subsh = sh.at(1);
+         ra::detail::shared_shape<int,3> subsh = sh.at(1);
          int*const*const* p2 = subsh.ptrs();
          int i1 = 1;
          for (int i2 = 0; i2 < N/2; i2++)
@@ -245,12 +245,12 @@ int test_shared_shape_main()
     {
         std::cerr << "Test 11\n";
         int a[N][N/2];
-        ra::shared_shape<int,2> sh( {N,N/2}, &(a[0][0]) );  // 16 x 8 
+        ra::detail::shared_shape<int,2> sh( {N,N/2}, &(a[0][0]) );  // 16 x 8 
         assert(sh.noffsets_ == N);
         assert(sh.ndataoffsets_ == N);
         bool caught = false;
         try {
-            ra::shared_shape<int,1> subsh = sh.at(N+1);
+            ra::detail::shared_shape<int,1> subsh = sh.at(N+1);
         }
         catch (...) {
             caught = true;
@@ -261,14 +261,14 @@ int test_shared_shape_main()
         // deep copy const
         std::cerr << "Test 12\n";
         int a[N][N/2][N/4];
-        ra::shared_shape<const int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
+        ra::detail::shared_shape<const int,3> sh{{N,N/2,N/4},&(a[0][0][0])};  // 16 x 8 x 4
         assert(sh.noffsets_ == N*(N/2+1));
         assert(sh.ndataoffsets_ == N*(N/2));
         int* aptr = &(a[0][0][0]);
         for (int i=0;i<N*(N/2)*(N/4);i++)
             aptr[i] = i;
         const int*const*const* p = sh.ptrs();
-        ra::shared_shape<const int,3> sh2 = sh.copy();  //failed so far
+        ra::detail::shared_shape<const int,3> sh2 = sh.copy();  //failed so far
         assert(*(sh.refs_) == 1);
         assert(*(sh2.refs_) == 1);
         assert(sh.refs_ != sh2.refs_);

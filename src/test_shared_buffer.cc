@@ -28,12 +28,12 @@
 #include "catch.hpp"
 
 template<typename V>
-int internal_check(const ra::shared_buffer<V>& a,
+int internal_check(const ra::detail::shared_buffer<V>& a,
                    bool datavalue_shouldbe, V* datavalue,
                    bool origvalue_shouldbe, V* origvalue,
                    bool refsvalue_shouldbe, std::atomic<int>* refsvalue,
                    bool refscount_shouldbe, int refscount,
-                   bool sizevalue_shouldbe, typename ra::shared_buffer<V>::size_type sizevalue)
+                   bool sizevalue_shouldbe, typename ra::detail::shared_buffer<V>::size_type sizevalue)
 {
     int errorcode = 0;
     bool equality;
@@ -56,7 +56,7 @@ int internal_check(const ra::shared_buffer<V>& a,
 
 TEST_CASE("test default shared_buffer state")
 {
-    ra::shared_buffer<int> z;
+    ra::detail::shared_buffer<int> z;
     REQUIRE(0 == internal_check
             (z,
              true,  (int*)nullptr,      // data_
@@ -70,7 +70,7 @@ TEST_CASE("test default shared_buffer state")
 TEST_CASE("test deep and shallow copy")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> a(N);
     REQUIRE(0 == internal_check
             (a,
              false, (double*)nullptr,      // data_
@@ -81,8 +81,8 @@ TEST_CASE("test deep and shallow copy")
             );
     int i = 0;
     for (double& x: a) x = i++;
-    ra::shared_buffer<double> b = a.copy();
-    ra::shared_buffer<double> c = a;
+    ra::detail::shared_buffer<double> b = a.copy();
+    ra::detail::shared_buffer<double> c = a;
     a[50] = 7;
     REQUIRE(b[50]+c[50]==57);
 }
@@ -92,7 +92,7 @@ TEMPLATE_TEST_CASE("test non-owned buffer",
 {
     const int N = 100;
     TestType b[N];
-    ra::shared_buffer<TestType> a(N,b);
+    ra::detail::shared_buffer<TestType> a(N,b);
     REQUIRE(0 == internal_check
             (a,
              true,  (TestType*)b,          // data_
@@ -107,9 +107,9 @@ TEMPLATE_TEST_CASE("inspect internal structure and reference counting",
                    "",double,int)
 {
     const int N = 100;
-    ra::shared_buffer<TestType> a(N);
+    ra::detail::shared_buffer<TestType> a(N);
     {
-        ra::shared_buffer<TestType> b(a);
+        ra::detail::shared_buffer<TestType> b(a);
         REQUIRE(0 == internal_check
             (b,
              true,  (TestType*)a.cbegin(),  // data_
@@ -129,7 +129,7 @@ TEMPLATE_TEST_CASE("inspect internal structure and reference counting",
             );
     {
         TestType* d = (TestType*)a.begin();
-        ra::shared_buffer<TestType> c;
+        ra::detail::shared_buffer<TestType> c;
         c = std::move(a);
         REQUIRE(0 == internal_check
             (c,
@@ -153,8 +153,8 @@ TEMPLATE_TEST_CASE("inspect internal structure and reference counting",
 TEST_CASE("Test reference counting")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
-    ra::shared_buffer<double> b;
+    ra::detail::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> b;
     b = a;
     REQUIRE(0 == internal_check
             (a,
@@ -169,7 +169,7 @@ TEST_CASE("Test reference counting")
 TEST_CASE("Test constructor from shared_buffer")
 {
     const int N = 100;
-    ra::shared_buffer<double> a{ra::shared_buffer<double>(N)};
+    ra::detail::shared_buffer<double> a{ra::detail::shared_buffer<double>(N)};
     REQUIRE(0 == internal_check
             (a,
              false, (double*)nullptr,            // data_
@@ -184,7 +184,7 @@ TEST_CASE("Test constructor from shared_buffer")
 TEST_CASE("Test square bracket operator #1")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> a(N);
     REQUIRE(0 == internal_check
             (a,
              false, (double*)nullptr,     // data_
@@ -203,7 +203,7 @@ TEST_CASE("Test square bracket operator #1")
 TEST_CASE("Test square bracket operator #2")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> a(N);
     REQUIRE(0 == internal_check
             (a,
              false, (double*)nullptr,     // data_
@@ -221,10 +221,10 @@ TEST_CASE("Test square bracket operator #2")
 TEST_CASE("Test deep copy")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> a(N);
     int i = 0;
     for (double& x: a) x = i++;
-    const ra::shared_buffer<double> b(a.copy());
+    const ra::detail::shared_buffer<double> b(a.copy());
     int j = 0;
     for (const double& x: b) REQUIRE(x == j++);
 }
@@ -232,10 +232,10 @@ TEST_CASE("Test deep copy")
 TEST_CASE("test cbegin and cend")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> a(N);
     int i = 0;
     for (double& x: a) x = i++;
-    const ra::shared_buffer<double> b(a.copy());
+    const ra::detail::shared_buffer<double> b(a.copy());
     int j = 0;
     for (auto it=b.cbegin(); it != b.cend();it++)
         REQUIRE(*it == j++);
@@ -244,7 +244,7 @@ TEST_CASE("test cbegin and cend")
 TEST_CASE("test assign")
 {
     const int N = 100;
-    ra::shared_buffer<int> a(N);
+    ra::detail::shared_buffer<int> a(N);
     a.assign(-15);
     for (const auto& x: a) REQUIRE(x == -15);
 }
@@ -252,7 +252,7 @@ TEST_CASE("test assign")
 TEMPLATE_TEST_CASE("test .at()",
                    "",double,int)
 {
-    ra::shared_buffer<TestType> a;
+    ra::detail::shared_buffer<TestType> a;
     a.assign({1,2,3,4});
     REQUIRE(a.size()==4);
     REQUIRE(a[0]==1);
@@ -267,9 +267,9 @@ TEMPLATE_TEST_CASE("test .at()",
 
 TEST_CASE("test .assign_iter()")
 {
-    ra::shared_buffer<int> a(6);
+    ra::detail::shared_buffer<int> a(6);
     a.assign({1,2,3,4});
-    ra::shared_buffer<int> b;
+    ra::detail::shared_buffer<int> b;
     b.assign_iter(a.begin(),a.end());
     assert(b[0]==1);
     assert(b[1]==2);
@@ -280,10 +280,10 @@ TEST_CASE("test .assign_iter()")
 TEST_CASE("test crbegin and crend")
 {
     const int N = 100;
-    ra::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<double> a(N);
     int i = 0;
     for (double& x: a) x = i++;
-    const ra::shared_buffer<double> b(a.copy());
+    const ra::detail::shared_buffer<double> b(a.copy());
     int j = N;
     for (auto it=a.crbegin(); it != a.crend();it++){
         REQUIRE(*it == --j);
@@ -293,37 +293,37 @@ TEST_CASE("test crbegin and crend")
 TEMPLATE_TEST_CASE("test .slice",
                    "",double,int)
 {
-    ra::shared_buffer<TestType> a;
+    ra::detail::shared_buffer<TestType> a;
     a.assign({1,2,3,4});
-    ra::shared_buffer<TestType> b = a.slice(1,3);
+    ra::detail::shared_buffer<TestType> b = a.slice(1,3);
     REQUIRE(b[0]==2);
     REQUIRE(b[1]==3);
     REQUIRE(b.size()==2);
     b[1]=10;
     REQUIRE(a[2]==10);
-    ra::shared_buffer<TestType> c = a.slice(3,1);
+    ra::detail::shared_buffer<TestType> c = a.slice(3,1);
     REQUIRE(c.size()==0);
-    const ra::shared_buffer<TestType> cc(a.copy());
+    const ra::detail::shared_buffer<TestType> cc(a.copy());
     REQUIRE_THROWS(cc.slice(0,cc.size()+1));
     REQUIRE(cc.slice(0,cc.size()-1).size()==cc.size()-1);
-    const ra::shared_buffer<TestType> ccc =  cc.slice(3,1);
+    const ra::detail::shared_buffer<TestType> ccc =  cc.slice(3,1);
     REQUIRE(ccc.size()==0);
 }
 
 TEMPLATE_TEST_CASE("test resize",
                    "",double,int)
 {
-    ra::shared_buffer<TestType> a(5);
+    ra::detail::shared_buffer<TestType> a(5);
     a.resize(4);
     REQUIRE(a.size()==4);
-    ra::shared_buffer<TestType> b = a.slice(1,4);
+    ra::detail::shared_buffer<TestType> b = a.slice(1,4);
     b[0]=1; b[1]=2; b[2]=3;
     REQUIRE(a[1]==b[0]);
     b.resize(2); // resize of a reference makes a new array
     b[0]=4;
     REQUIRE(a[1]==1);
     REQUIRE(b[0]==4); // no guarantees on b[1]
-    ra::shared_buffer<TestType> c = a.slice(1,4);
+    ra::detail::shared_buffer<TestType> c = a.slice(1,4);
     c.resize(2,true); // resize makes new array but now also copies
     REQUIRE(c[0]==a[1]);
     REQUIRE(c[1]==a[2]);
@@ -335,15 +335,15 @@ TEMPLATE_TEST_CASE("test resize",
 TEST_CASE("Fail test not enough memory")
 {
     const long long int N = 1000000000000000LL;
-    REQUIRE_THROWS( ra::shared_buffer<double>(N) );
-    REQUIRE_THROWS( ra::shared_buffer<int>(N) );
+    REQUIRE_THROWS( ra::detail::shared_buffer<double>(N) );
+    REQUIRE_THROWS( ra::detail::shared_buffer<int>(N) );
 }
 
 TEST_CASE("Fail test at out of bounds")
 {
     const long long int N = 100;
-    ra::shared_buffer<double> a(N);
-    ra::shared_buffer<int> b(N);
+    ra::detail::shared_buffer<double> a(N);
+    ra::detail::shared_buffer<int> b(N);
     REQUIRE_THROWS( a.at(N) );
     REQUIRE_THROWS( b.at(N) );
     REQUIRE_THROWS( a.at(-1) );
@@ -353,16 +353,16 @@ TEST_CASE("Fail test at out of bounds")
 TEMPLATE_TEST_CASE("Fail test slice out of bounds",
                    "",double,int)
 {
-    ra::shared_buffer<TestType> a;
+    ra::detail::shared_buffer<TestType> a;
     a.assign({1,2,3,4});
-    ra::shared_buffer<TestType> b;
+    ra::detail::shared_buffer<TestType> b;
     REQUIRE_THROWS(b = a.slice(1,13));
 }
 
 TEMPLATE_TEST_CASE("Fail test resize for not enough memory",
                    "",double,int)
 {
-    ra::shared_buffer<TestType> a(5);
+    ra::detail::shared_buffer<TestType> a(5);
     const long long int N = 1000000000000000LL;
     REQUIRE_THROWS(a.resize(N));
 }
