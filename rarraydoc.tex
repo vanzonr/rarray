@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{May, 2023 (version 2.5.1)\vspace{-7mm}}
+\date{November, 2023 (version 2.6.1)\vspace{-7mm}}
 
 \maketitle
 
@@ -47,9 +47,7 @@ Data is contiguous to allow interfacing with
 libraries like BLAS, LAPACK, FFTW, etc.
 
 \noindent\textbf{How:}\\
-The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. Streaming I/O is also part of the \texttt{rarray} header.
-
-\
+The header file \texttt{rarray} provides the type \texttt{rarray<T,R>}, where \texttt{T} is any type and {\tt R} is the rank. Element access uses repeated square brackets. Copying rarrays or passing them to functions mean shallow copies, unless explicitly asking for a deep copy. Streaming I/O is also supported.\vspace{2mm}
 
 \centerline{\begin{tabular}{|l|l|}
 \hline
@@ -67,8 +65,17 @@ data pre-allocated at a pointer \texttt{ptr}:&
 \rule{0pt}{14pt}Pointer to the contiguous data in \texttt{b}:&
 \texttt{b.data()}
 \\
+\rule{0pt}{14pt}Total number of elements in \texttt{b}:&
+\texttt{b.size()}
+\\
 \rule{0pt}{14pt}Extent in the \texttt{i}th dimension in \texttt{b:}&
 \texttt{b.extent(i)}
+\\
+\rule{0pt}{14pt}Array of all extents of \texttt{b}&
+\texttt{b.shape()}
+\\
+\rule{0pt}{14pt}Define an array with same shape as \texttt{b}&
+\texttt{rarray<float,3> b2(b.shape());}
 \\
 \rule{0pt}{14pt}Shallow, reference-counted copy of the array:&
 \texttt{rarray<float,3> d=b;}
@@ -77,12 +84,9 @@ data pre-allocated at a pointer \texttt{ptr}:&
 \texttt{rarray<float,3> e=b.copy();}
 \\
 \rule{0pt}{14pt}A rarray using an existing automatic array:&
-\texttt{float f[10][20][8]=\{\dots\};}\\
+\texttt{float f[10][20][8]=\{\{\{\dots\}\}\};}\\
 &
-\texttt{rarray<float,3> g=RARRAY(f);}
-\\
-\rule{0pt}{14pt}A rarray copy of an existing automatic array:&
-\texttt{rarray<float,3> h=RARRAY(f).copy();}
+\texttt{rarray<float,3> g(f);}
 \\
 \rule{0pt}{14pt}Output a rarray to console:&
 \texttt{std::cout << h << std::endl;}
@@ -136,7 +140,7 @@ memory.  Automatic deallocation happens when \texttt{a} goes out of scope.
 
 In the above code snippets, the \texttt{new} construct and the
 \texttt{std::unique\_ptr/std::shared\_ptr} assign the address of the
-array to a pointer. These pointers do not remember its size, so they are not really an 'array'.  The standard C++ library does provide a one-dimensional array that remembers its size, in the form of the \texttt{std::vector}, e.g.
+array to a pointer. These pointers do not remember their size, so they are not really an 'array'.  The standard C++ library does provide a one-dimensional array that remembers its size, in the form of the \texttt{std::vector}, e.g.
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
 int n = 1000;
@@ -147,9 +151,11 @@ a[40] = 2.4;
 \vspace{-12pt}\end{framed}\vspace{-5pt}%
 
 Multi-dimensional runtime-allocated arrays are currently not supported yet by
-\cxx (there is a proposal for a non-owning multidimensional array in
-the C++23 standard).
-The textbook \cxx\ solution for multidimensional arrays that are
+\cxx, but there is a proposal for a non-owning multidimensional array in
+the C++23 standard, and C++26 may have an owning multidimenstional
+array.
+
+The (early) textbook \cxx\ solution for multidimensional arrays that are
 dynamically allocated during runtime, is as follows:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 \begin{verbatim}
@@ -189,8 +195,8 @@ library is to be a minimal interface for runtime multidimensional
 arrays of
 arbitrary rank with
 \emph{minimal to no performance overhead} compared to the textbook
-solution.  For the above solutions, only the mdspan implementation in
-Kokkos also has no overhead.
+solution.  From the above solutions, only the  implementation in
+Kokkos of the non-owning mdspan also has virtually no overhead.
 
 \noindent{\bf Example:\vspace{-7pt}}
 \begin{framed}\vspace{-14pt}%
@@ -212,7 +218,7 @@ Kokkos also has no overhead.
 \begin{enumerate}\itemsep1pt\parskip3pt
  
 \item To have dynamically allocated multidimensional arrays that
-combine the convenience of automatic c++ arrays while being compatible
+combine the ease and convenience of automatic c++ arrays while being compatible
 with the
 typical textbook-style dynamically allocated pointer-to-pointer
 structure. 
@@ -223,6 +229,8 @@ structure accounts for most of the memory overhead from using \texttt{rarray}.
 
 \item To be as fast as pointer-to-pointer structures.
 
+\item Shallow copy default, deep copy possible.
+  
 \item To have rarrays know their sizes, so that they can be passed to
 functions as a single argument. 
 
@@ -232,8 +240,7 @@ functions as a single argument.
 
   The guarrantee of contiguity means strided arrays are not supported.
 
-\item To avoid dangling references (by utilizing reference counting).
-
+\item To allow sharing between components of an application while avoiding dangling references (by utilizing reference counting).
 
 \item To allow rarrays to hold non-owning views that use an existing buffer,
   without having to use a separate type.
@@ -265,7 +272,7 @@ functions as a single argument.
 \item A method to obtain the total number of elements in the
   array (\texttt{size}).
 \item A method to make the data type of the array const
-  (\texttt{const\_ref}).
+  (\texttt{const\_ref}).  Used in automatic conversion to \texttt{rarray<const T,R>}.
 \item Conversion methods using the member
   function \texttt{data()} for conversions to a \texttt{T*} or
   \texttt{const T*}, using the method \texttt{ptr\_array()} for
@@ -315,14 +322,15 @@ or, using an external, pre-allocated buffer, as
 \end{framed}
 Note that \texttt{s} will have dangling references (often leading to
 ``Segmentation faults'') if pre\_alloc\_data is deallocated while s is
-not.  This reflects that rarray is in this case not responsible
-for the content. The data pointer can also be retrieved using
+not.  This reflects that rarray is in this case does not \textbf{own}
+the content. The data pointer can also be retrieved using
 \texttt{s.data()}. The \texttt{s.clear()} statement ensures there are
 no dangling references to this data left in \texttt{s}. 
 
 In the former case (\texttt{rarray<float,3> s(256,256,256)}), calling
-\texttt{s.clear()} before the rarray goes out of scope would
-release the memory of this array.
+\texttt{s.clear()}  would
+release the memory of this array. Otherwise, the memory will be
+released when the rarray goes out of scope.
 
 The construction specifying a number of extents as arguments works for arrays with rank up to and including 11. For arrays with larger rank, you have to pass an pointer to the array of extents.
 
@@ -560,8 +568,8 @@ roughly as follows:
   int main() {
      int n = 256;                  // size per dimension
      std::unique_ptr<float[]> p (new float[n*n*n]); // or vector or a shared_ptr
-     using exts =  std::extents<size_t,std::dynamic_extent,
-                   std::dynamic_extent,std::dynamic_extent>;
+     using exts = std::extents<size_t,std::dynamic_extent,
+                  std::dynamic_extent,std::dynamic_extent>;
      std::mdspan<float,exts> (vector.data(), exts(n,n,n));
      v[1,2,3] = 105;               // assign to element (for example)
   }
@@ -579,7 +587,8 @@ Effectively, the interface part of a rarray object is defined as follows:%
 \vspace{-8pt}%
 \begin{framed}\vspace{-14pt}%
 \begin{verbatim}
-template<typename T, int R>
+namespace ra {
+template<typename T, rank_type R>
 class rarray {
 public:    
  rarray();                                 // create uninitialized array
@@ -589,8 +598,8 @@ public:
  rarray(T* data, const size_type* extents);// alternative: extents in array
  rarray(const rarray<T,R> &a);             // shallow copy constructor   
  ~rarray();                                // destructor 
- void reshape(size_type extent0, ...);     // change copy's shape (not data)
- void reshape(const int* size_type);       // change copy's  shape (not data)
+ void reshape(size_type extent0, ...);     // change shape (not data)
+ void reshape(const size_type* size_type); // change shape (not data)
  void clear();                             // release memory
  void fill(const T& value);                // fill with uniform value
  bool empty() const;                       // check if uninitialized;
@@ -598,6 +607,7 @@ public:
  const size_type*  shape() const;          // all extents as C-style array
  size_type extent(int i) const;            // extent in dimension i
  size_type size() const;                   // total number of elements
+ rank_type rank() const;                   // rank, i.e, the value of R
  T* data() const;                          // start of internal buffer
  T*const*... ptr_array() const;            // convert to a T*const*... 
  T**... noconst_ptr_array() const;         // converts to a T**... 
@@ -607,6 +617,7 @@ public:
  operator[](size_t i);            // enables element access for assignment
  rarray<T,R-1> at(size_t i);      // retrieve the ith 'row' with bounds checking
 };
+}
 \end{verbatim}
 \end{framed}
 
@@ -615,19 +626,23 @@ public:
 \subsection{Methods}
 
 %\subsubsection{Get size in each dimension: \tt extent}
-\noindent\textbf{Definition:} \texttt{int extent(int i) const;}
+\noindent\textbf{Definition:} \texttt{size\_type extent(rank\_type i) const;}
 
 This method returns the size of dimension \texttt{i}.
 
 %\subsubsection{Get size in each dimension: \tt extent}
-\noindent\textbf{Definition:} \texttt{const int* shape() const;}
+\noindent\textbf{Definition:} \texttt{const size\_type* shape() const;}
 
 This method returns the size of all dimensions as a c array. 
 
 %\subsubsection{Get total size: \tt size}
-\noindent\textbf{Definition:} \texttt{int size() const;}
+\noindent\textbf{Definition:} \texttt{size\_type size() const;}
 
 This method returns the total number of elements.
+
+\noindent\textbf{Definition:} \texttt{rank\_type rank() const;}
+
+This method returns the number of dimensions.
 
 %\subsubsection{Get pointer equivalent: \tt data}
 
@@ -654,7 +669,7 @@ This method returns a pointer to a \texttt{T**...}. (This conversion breaks cons
 
 This method creates reference to this with const elements.
 
-\noindent\textbf{Definition:} \texttt{void reshape(int extent0, ...);}
+\noindent\textbf{Definition:} \texttt{void reshape(size\_type extent0, ...);}
 
 This method can be used to change the shape of the rarray. The data in
 the underlying buffer will not change. Note that the number of
@@ -1330,8 +1345,16 @@ Dec 2022: Version 2.5
 Optional bounds checking is back.\\
 \texttt{is\_clear} renamed to \texttt{empty}.\\
 Can now get a subarray with square brackets.\\
-Rarray objects no nolonger automatically convert into T*const*... pointers.\\
+Rarray objects no no longer automatically convert into T*const*... pointers.\\
 More extensive unit and coverage tests.
 
+\noindent
+Nov 2023: Version 2.6
+
+Bug fixes (inlining, compiler settings, exception safety).  Better
+support for \texttt{rarray<const T,R>}.  Implicit conversion operator
+from \texttt{rarray<T,R>} to \texttt{rarray<const T,R>}.  Started
+support for the multidimensional subscript operator for C++23 complient compilers.
+Code cleanup.
 
 \end{document}
