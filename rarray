@@ -891,67 +891,67 @@ class rarray {
     {}
     template<std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==1>::type>
-    inline explicit rarray(T (&a)[Z])
+    inline rarray(T (&a)[Z])
     : buffer_(Z, a),
       shape_({Z}, buffer_.begin())
     {}
     template<std::size_t Y, std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==2>::type>
-    inline explicit rarray(T (&a)[Y][Z])
+    inline rarray(T (&a)[Y][Z])
     : buffer_(Y*Z, *a),
       shape_({Y,Z}, buffer_.begin())
     {}
     template<std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==3>::type>
-    inline explicit rarray(T (&a)[X][Y][Z])
+    inline rarray(T (&a)[X][Y][Z])
     : buffer_(X*Y*Z, **a),
       shape_({X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==4>::type>
-    inline explicit rarray(T (&a)[W][X][Y][Z])
+    inline rarray(T (&a)[W][X][Y][Z])
     : buffer_(W*X*Y*Z, ***a),
       shape_({W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==5>::type>
-    inline explicit rarray(T (&a)[V][W][X][Y][Z])
+    inline rarray(T (&a)[V][W][X][Y][Z])
     : buffer_(V*W*X*Y*Z, ****a),
       shape_({V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==6>::type>
-    inline explicit rarray(T (&a)[U][V][W][X][Y][Z])
+    inline rarray(T (&a)[U][V][W][X][Y][Z])
     : buffer_(U*V*W*X*Y*Z,  *****a),
       shape_({U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==7>::type>
-    inline explicit rarray(T (&a)[T_][U][V][W][X][Y][Z])
+    inline rarray(T (&a)[T_][U][V][W][X][Y][Z])
     : buffer_(T_*U*V*W*X*Y*Z,  ******a),
       shape_({T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==8>::type>
-    inline explicit rarray(T (&a)[S][T_][U][V][W][X][Y][Z])
+    inline rarray(T (&a)[S][T_][U][V][W][X][Y][Z])
     : buffer_(S*T_*U*V*W*X*Y*Z,  *******a),
       shape_({S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==9>::type>
-    inline explicit rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z])
+    inline rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********a),
       shape_({R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==10>::type>
-    inline explicit rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
+    inline rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********a),
       shape_({Q,R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
     template<std::size_t P,std::size_t Q,std::size_t R_,std::size_t S,std::size_t T_,std::size_t U,std::size_t V,std::size_t W,std::size_t X,std::size_t Y,std::size_t Z,
              rank_type R__=R,typename=typename std::enable_if<R__==11>::type>
-    inline explicit rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
+    inline rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
       shape_({P,Q,R_,S,T_,U,V,W,X,Y,Z}, buffer_.begin())
     {}
