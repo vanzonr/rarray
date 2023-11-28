@@ -27,6 +27,7 @@
 #define OFFSETSH
 
 #include "rarraymacros.h"
+#include "rarraytypes.h"
 #include <cstdlib>
 #include <vector>
 #include <type_traits>
@@ -38,30 +39,30 @@ class Offsets
 {
   public:
     // offsets are computed by the constructor
-    inline Offsets(const std::vector<ssize_t>& extent)
+    inline Offsets(const std::vector<index_type>& extent)
     {
-        rank_ = extent.size();
-        ssize_t noffsets = 0;
+        rank_ = static_cast<rank_type>(extent.size());
+        size_type noffsets = 0;
         ndataoffsets_ = 0;
         if (rank_ > 0) {
             ndataoffsets_ = 1;
-            for (ssize_t i = rank_ - 1; i--; )
+            for (rank_type i = rank_ - 1; i--; )
                 noffsets = extent[i]*(1 + noffsets);
-            for (ssize_t i = 0 ; i < rank_-1; i++ ) 
+            for (rank_type i = 0 ; i < rank_-1; i++ ) 
                 ndataoffsets_ *= extent[i];
             offsets_.reserve(noffsets);
             offsets_.resize(noffsets);
             if (noffsets > 1) { // catches rank_ == 1 and zero-dimensioned arrays
-                ssize_t offsetnum = 0;
-                ssize_t extenttot = extent[0];
-                for (ssize_t i = 1; i < rank_ - 1; i++) {
-                    for (ssize_t j = 0; j < extenttot; j++) 
+                size_type offsetnum = 0;
+                size_type extenttot = extent[0];
+                for (rank_type i = 1; i < rank_ - 1; i++) {
+                    for (size_type j = 0; j < extenttot; j++) 
                         offsets_[offsetnum+j] = offsetnum + extenttot + j*extent[i];
                     offsetnum += extenttot;
                     extenttot *= extent[i];
                 }
                 ndataoffsets_ = extenttot;
-                for (ssize_t j = 0; j < ndataoffsets_; j++) 
+                for (index_type j = 0; j < ndataoffsets_; j++) 
                    offsets_[offsetnum + j] = j*extent[rank_ - 1];
             }
         }        
@@ -75,14 +76,14 @@ class Offsets
         static_assert(sizeof(T*) == sizeof(void*) &&
                       sizeof(T*) == sizeof(void**),
                       "rarray's Offsets requires all pointers to have the same size");
-        ssize_t noffsets = offsets_.size();
+        size_type noffsets = offsets_.size();
         if (ndataoffsets_ == 0 && noffsets == 0)
             return nullptr;
         else if (ndataoffsets_ == 1 && noffsets == 0) // happens only for rank==1
             return reinterpret_cast<void***>(const_cast<typename std::remove_const<T>::type*>(data));
         else {
             void*** offsets = new void**[noffsets];
-            ssize_t i = 0;
+            size_type i = 0;
             for (;i < noffsets - ndataoffsets_; i++)            
                 offsets[i] = reinterpret_cast<void**>(offsets) + offsets_[i];
             for (;i < noffsets; i++)            
@@ -93,23 +94,23 @@ class Offsets
         }
     }
     // information about the the ptr-to-ptr structure 
-    inline ssize_t get_num_data_offsets() const noexcept
+    inline size_type get_num_data_offsets() const noexcept
     {
         return ndataoffsets_;
     }
-    inline ssize_t get_num_offsets() const noexcept
+    inline size_type get_num_offsets() const noexcept
     {
         return offsets_.size();
     }
-    inline ssize_t get_rank() const noexcept
+    inline rank_type get_rank() const noexcept
     {
         return rank_;
     }
     
   private:
-    ssize_t rank_;
+    rank_type rank_;
     std::vector<unsigned long long> offsets_;
-    ssize_t ndataoffsets_;
+    size_type ndataoffsets_;
 };
 
 }}  // end namespace ra::detail and ra

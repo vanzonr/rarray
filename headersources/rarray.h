@@ -31,6 +31,7 @@
 
 #include "versionheader.h"
 #include "rarraymacros.h"
+#include "rarraytypes.h"
 #include "shared_buffer.h"
 #include "shared_shape.h"
 
@@ -41,13 +42,11 @@
 #include <list>
 #include <sstream>
 #include <stdexcept>
-#include <string>
 #include <utility>
 
 // Forward definitions of ra::rarray<T,R> and ra::CommaOp
 namespace ra {
-typedef ssize_t size_type;
-typedef int rank_type;
+
 enum class RESIZE { NO, ALLOWED };
 template<typename T,rank_type R> class rarray;
 namespace detail {

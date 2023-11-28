@@ -43,7 +43,7 @@
 //     return std::operator==(a,b);
 // }
 
-template<typename T,int R> 
+template<typename T,ra::rank_type R> 
 const T* getconstdata(const rarray<T,R>& a)
 {
     return a.data();
@@ -76,13 +76,13 @@ std::ostream& operator<<(std::ostream &os, const Compound& x)
     return os;
 }
 //////////////////////////////////////////////////////////////////////
-template<typename T, int R>
+template<typename T, ra::rank_type R>
 struct array {
     T elements_[R];
-    T& operator[](const int i) { return elements_[i]; }
-    const T& operator[](const int i) const { return elements_[i]; }
+    T& operator[](const ra::rank_type i) { return elements_[i]; }
+    const T& operator[](const ra::rank_type i) const { return elements_[i]; }
     bool operator!=(const struct array& other) const {
-        for (int i=0;i<R;i++)
+        for (ra::rank_type i=0;i<R;i++)
             if (elements_[i] != other.elements_[i])
                 return true;
         return false;
@@ -91,12 +91,12 @@ struct array {
         return !operator!=(other);
     }       
 };
-template<typename T, int R>
+template<typename T, ra::rank_type R>
 std::ostream& operator<<(std::ostream &os, const array<T,R>& x)
 {    
     os << '{';
     if (R>0) os << x[0];
-    for (int r=1;r<R;r++)
+    for (ra::rank_type r=1;r<R;r++)
         os << ',' << x[r];
     os << '}';
     return os;
@@ -1273,8 +1273,8 @@ TEMPLATE_TEST_CASE("testmmm", "", int, double)
     rarray<T,2> c(cdata,3,3);
     rarray<T,2> a(3,3);
     mmm(a,b,c);
-    for (int i=0;i<3;i++) {
-        for (int j=0;j<3;j++) {
+    for (ra::index_type i=0;i<3;i++) {
+        for (ra::index_type j=0;j<3;j++) {
             REQUIRE(a[i][j]==adata[i*3+j]);
         }
     }

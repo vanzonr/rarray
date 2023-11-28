@@ -22,12 +22,11 @@
 // THE SOFTWARE.
 //
 
-namespace ra {
-namespace detail{
-        
-template<typename T,rank_type R> inline std::ostream& text_output(std::ostream &o, const rarray<T,R>& r);
-template<typename T>       inline std::ostream& text_output(std::ostream &o, const rarray<T,1>& r);
+#include "rarraytypes.h"
 
+namespace ra {    
+namespace detail {
+        
 // We need to be able to get a reference in a pointer-to-pointer structure given indices.
 //
 // Deref<T,1>(T*   p, size_type* i) where i->{n1}        =  p[n1]
@@ -36,80 +35,50 @@ template<typename T>       inline std::ostream& text_output(std::ostream &o, con
 //...
 template<typename T, rank_type R>
 struct Deref {
-    static inline T& access(typename PointerArray<T,R>::type p, const size_type* indices);
+    static inline T& access(typename PointerArray<T,R>::type p, const size_type* indices)
+    {
+        return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
+    }
 };
 template<typename T>
 struct Deref<T,1>  // R=1 is special
 {
-    static inline T& access(typename PointerArray<T,1>::type p, const size_type* indices);
+    static inline T& access(typename PointerArray<T,1>::type p, const size_type* indices)
+    {
+        return p[indices[0]-1];
+    }
 };
 
 // Convert a string to a value, needed for operator>> .
 template<typename T>
 struct StringToValue {
-    static inline void get(const std::string& input, T& output);
+    static inline void get(const std::string& input, T& output) {
+        std::stringstream str(input); // use streaming operators by default
+        str >> output; // won't work with strings as they get truncated at first whitespace
+    }
 };
 template<>
 struct StringToValue<std::string> {
-    static inline void get(const std::string& input, std::string& output);
+    static inline void get(const std::string& input, std::string& output) {
+        output = input;
+    }
 };
 
 enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
 
 inline char toch(const token& Token) {
      switch (Token) {
-     case ra::detail::token::BRACEOPEN:  return '{';
-     case ra::detail::token::BRACECLOSE: return '}';
-     case ra::detail::token::COMMA:      return ',';
-     case ra::detail::token::DATASTRING: return '$';
-     case ra::detail::token::END:        return '.';
+     case token::BRACEOPEN:  return '{';
+     case token::BRACECLOSE: return '}';
+     case token::COMMA:      return ',';
+     case token::DATASTRING: return '$';
+     case token::END:        return '.';
      // no default needed, cases are extensive
      }
  }
- 
-template<rank_type R> inline 
-std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in);
 
 template<typename T, rank_type R> inline 
-void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p);
-
-} // end namespace detail
-} // end namespace ra
-
-
-//------------------------------------------------//
-//                                                //
-//          I M P L E M E N T A T I O N           //
-//                                                //
-//------------------------------------------------//
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-namespace ra {
-    
-template<typename T, ra::rank_type R> inline std::ostream& operator<<(std::ostream &o, const ra::rarray<T, R>& r)
-{
-    if (R>1) {
-        return ra::detail::text_output(o,r);
-    } else if (R==1) {
-        if (not r.empty()) {
-            o << "{"; 
-            for (ra::size_type i=0; i<r.extent(0); i++)  {
-                if (i>0)
-                    o << ",";
-                o << r.data()[i];
-            }
-            o << "}"; 
-        }
-    }
-    return o;
-}
-
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T, ra::rank_type R> inline 
-std::ostream& ra::detail::text_output(std::ostream &o, const ra::rarray<T,R>& r)
+std::ostream& text_output(std::ostream &o, const rarray<T,R>& r)
 {
     if (not r.empty()) {
         o << "{\n"; // new newline
@@ -130,7 +99,7 @@ std::ostream& ra::detail::text_output(std::ostream &o, const ra::rarray<T,R>& r)
 }
 
 template<typename T> inline 
-std::ostream& ra::detail::text_output(std::ostream &o, const ra::rarray<T,1>& r)
+std::ostream& text_output(std::ostream &o, const rarray<T,1>& r)
 {
     if (not r.empty()) {
         o << '{';
@@ -153,37 +122,7 @@ std::ostream& ra::detail::text_output(std::ostream &o, const ra::rarray<T,1>& r)
     return o;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // helper routines to convert a string to any data type
-
-template<typename T> inline
-void ra::detail::StringToValue<T>::get(const std::string& input, T& output) 
-{
-    std::stringstream str(input); // use streaming operators by default
-    str >> output; // won't work with strings as they get truncated at first whitespace
-}
-
-inline void ra::detail::StringToValue<std::string>::get(const std::string& input, std::string& output)
-{
-    output = input;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T, ra::rank_type R> inline 
-T& ra::detail::Deref<T,R>::access(typename ra::detail::PointerArray<T,R>::type p, const size_type* indices) 
-{
-    return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
-}
-
-template<typename T> inline 
-T& ra::detail::Deref<T,1>::access(typename PointerArray<T,1>::type p, const size_type* indices) 
-{
-    return p[indices[0]-1];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static inline char get_but_eat_newline(std::istream & in)
 {
@@ -202,24 +141,22 @@ static inline char get_but_eat_whitespace(std::istream & in)
     return ch1;
 }
 
-namespace ra {
-namespace detail {
 template<rank_type R> inline 
 std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in)
 {
     std::pair<std::list<std::pair<token,std::string>>,size_type[R]> wholeresult;
-    std::list<std::pair<ra::detail::token,std::string>>& result = wholeresult.first;
+    std::list<std::pair<token,std::string>>& result = wholeresult.first;
     size_type* shape = wholeresult.second;
     size_t init_file_ptr = in.tellg();
     try {
         size_type current_shape[R];
-        for (int i=0; i<R; i++) {
+        for (rank_type i=0; i<R; i++) {
             current_shape[i] = 1;
             shape[i] = 0;
             if (get_but_eat_newline(in) != '{')  // eat
                 throw std::istream::failure("Format error");
             else
-                result.push_back({ra::detail::token::BRACEOPEN,""});
+                result.push_back({token::BRACEOPEN,""});
         }
         int current_depth = R-1; // start scanning the deepest level
         while (current_depth>=0) {
@@ -265,14 +202,14 @@ std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std:
                         in.get(lastchar);
                     }
                     if (lastchar == ',') {
-                        result.push_back({ra::detail::token::DATASTRING,word});
-                        result.push_back({ra::detail::token::COMMA,""});
+                        result.push_back({token::DATASTRING,word});
+                        result.push_back({token::COMMA,""});
                         word="";
                         current_shape[current_depth]++;
                     }
                 } while (lastchar != '}');                
-                result.push_back({ra::detail::token::DATASTRING,word});
-                result.push_back({ra::detail::token::BRACECLOSE,""});
+                result.push_back({token::DATASTRING,word});
+                result.push_back({token::BRACECLOSE,""});
                 if (shape)
                     if (shape[current_depth] < current_shape[current_depth])
                         shape[current_depth] = current_shape[current_depth];
@@ -280,16 +217,16 @@ std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std:
             } else {
                 switch (get_but_eat_whitespace(in)) { 
                    case ',':
-                    result.push_back({ra::detail::token::COMMA,""});
+                    result.push_back({token::COMMA,""});
                     current_shape[current_depth]++;
                     break;
                   case '{':
-                    result.push_back({ra::detail::token::BRACEOPEN,""});
+                    result.push_back({token::BRACEOPEN,""});
                     current_depth++;
                     current_shape[current_depth] = 1;
                     break;
                   case '}':
-                    result.push_back({ra::detail::token::BRACECLOSE,""});
+                    result.push_back({token::BRACECLOSE,""});
                     if (shape)
                           if (shape[current_depth] < current_shape[current_depth])
                               shape[current_depth] = current_shape[current_depth];
@@ -300,7 +237,7 @@ std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std:
                 }
             }
         }       
-        result.push_back({ra::detail::token::END,""});
+        result.push_back({token::END,""});
     }
     catch (std::istream::failure& e) {
         in.seekg(init_file_ptr, in.beg);// upon failure, try to undo characters read in
@@ -310,52 +247,68 @@ std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std:
 
     return wholeresult;
 }
-}
-}
 
-template<typename T, ra::rank_type R> inline 
-void ra::detail::parse_strings(const std::pair<std::list<std::pair<ra::detail::token,std::string>>,ra::size_type[R]> & tokens, typename ra::detail::PointerArray<T,R>::type p) 
+template<typename T, rank_type R> inline 
+void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p) 
 {
     size_type index[R];
     int current_depth = -1;
     for (auto& tokenpair: tokens.first) {
         switch (tokenpair.first) {
-        case ra::detail::token::BRACEOPEN:
+        case token::BRACEOPEN:
             current_depth++;
             index[current_depth]=1;
             break;
-        case ra::detail::token::BRACECLOSE:
+        case token::BRACECLOSE:
             current_depth--;
             break;
-        case ra::detail::token::COMMA:
+        case token::COMMA:
             index[current_depth]++;
             break;
-        case ra::detail::token::DATASTRING:
+        case token::DATASTRING:
             StringToValue<T>::get(tokenpair.second, Deref<T,R>::access(p, index));
             break;
-        case ra::detail::token::END:
+        case token::END:
             break;
             // no "default:" needed as the above cases are the exhaustive possibilities for an enum class token.
         }
-        if (tokenpair.first == ra::detail::token::END) break;
+        if (tokenpair.first == token::END) break;
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
 
-namespace ra {
+template<typename T, rank_type R> inline
+std::ostream& operator<<(std::ostream &o, const rarray<T, R>& r)
+{
+    if (R>1) {
+        return detail::text_output(o,r);
+    } else if (R==1) {
+        if (not r.empty()) {
+            o << "{"; 
+            for (size_type i=0; i<r.extent(0); i++)  {
+                if (i>0)
+                    o << ",";
+                o << r.data()[i];
+            }
+            o << "}"; 
+        }
+    }
+    return o;
+}
+
 template<typename T,rank_type R> inline
-std::istream& operator>>(std::istream &in, ra::rarray<T,R>& r)
-{    
-    auto X = ra::detail::parse_shape<R>(in);
-    ra::size_type* extent = X.second;
+std::istream& operator>>(std::istream &in, rarray<T,R>& r)
+{
+    auto X = detail::parse_shape<R>(in);
+    size_type* extent = X.second;
     if (detail::mul(extent,R) <= r.size())
-        r.reshape(extent, ra::RESIZE::ALLOWED);
+        r.reshape(extent, RESIZE::ALLOWED);
     else
         r = rarray<T,R>(extent);
-    ra::detail::parse_strings<T,R>(X, r.ptr_array());
+    detail::parse_strings<T,R>(X, r.ptr_array());
     return in;
 }
+
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

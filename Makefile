@@ -138,8 +138,8 @@ ${HS}/versionheader.h: VERSION
 	cat VERSION | tr -dc '0-9.\n' | awk -F\. '{print 1000000*$$1 + 1000*$$2 + $$3}' >> $@
 
 MYDIR := $(shell dirname "$(abspath $(lastword $(MAKEFILE_LIST)))")
-rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
-	cd ${HS} ; "${MYDIR}"/hardinclude rarray.h rarraymacros.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > "${MYDIR}"/rarray
+rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraytypes.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
+	cd ${HS} ; "${MYDIR}"/hardinclude rarray.h rarraymacros.h rarraytypes.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > "${MYDIR}"/rarray
 
 rarrayio: rarray
 	echo '#include <rarray>' > rarrayio
@@ -385,16 +385,16 @@ $(BENCHMARK4DNAME23): $(BENCHMARK4DNAME23).o $(PASS).o config.mk
 $(PASS)f.o: ${SRC}/$(PASS)f.f90 config.mk
 	$(FC) -c ${DBGFLAGS} -o $@ $<
 
-$(BENCHMARK2DNAME).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
+$(BENCHMARK2DNAME).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraytypes.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
 	$(CXX17) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
+$(BENCHMARK4DNAME).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraytypes.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
 	$(CXX17) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK2DNAME23).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
+$(BENCHMARK2DNAME23).o: ${SRC}/$(BENCHMARK2DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraytypes.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
 	$(CXX23) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
-$(BENCHMARK4DNAME23).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
+$(BENCHMARK4DNAME23).o: ${SRC}/$(BENCHMARK4DNAME).cc rarray ${HS}/rarraymacros.h ${HS}/rarraytypes.h ${HS}/rarraydelmacros.h ${HS}/elapsed.h config.mk
 	$(CXX23) $(CPPFLAGS) $(CPPFLAGSOPT) $(MORECPPFLAGSOPT) $(CXXFLAGS) $(CXXFLAGSOPT) -c -o $@ $<
 
 $(PASS).o: ${SRC}/$(PASS).cc config.mk

@@ -31,6 +31,7 @@
 #define SHARED_SHAPEH
 
 #include "rarraymacros.h"
+#include "rarraytypes.h"
 #include "offsets.h"
 #include <array>
 #include <stdexcept>
@@ -44,7 +45,7 @@ namespace detail {
 
 // class to hold the shape but not the content of a multi-dimensional array.
 
-template<typename T,int R> 
+template<typename T,rank_type R> 
 struct PointerArray {
     typedef typename PointerArray<T,R-1>::type const*    type;         // const shape, recursive
     typedef typename PointerArray<T,R-1>::noconst_type*  noconst_type; // non-const variant
@@ -60,16 +61,16 @@ struct PointerArray<T,0> { // We also end the recursion by specifically defining
     typedef T& noconst_type; 
 };
 
-template<class T, int R>
+template<class T, rank_type R>
 struct _data_from_ptrs_noffsets_ndataoffsets;
 
-template<class T, int R>
+template<class T, rank_type R>
 class shared_shape
 {
   public:
 
     typedef typename PointerArray<T,R>::type ptrs_type;
-    typedef ssize_t size_type;
+    typedef ra::size_type size_type;
 
     // constructors
     // non-functional shape
@@ -204,7 +205,7 @@ class shared_shape
         return ndataoffsets_ * extent_[R-1];
     }
     // get extent in dimension i
-    size_type extent(int i) const {
+    size_type extent(rank_type i) const {
         if (i < 0 or i >= R)
             throw std::out_of_range("shared_shape::extent(int)");
         return extent_[i];
@@ -219,7 +220,7 @@ class shared_shape
             throw std::out_of_range("shared_shape::at");
         shared_shape<T,R-1> result;
         if (R>1) {
-            for (size_type i = 0; i < R-1; ++i)
+            for (rank_type i = 0; i < R-1; ++i)
                 result.extent_[i] = extent_[i+1];
             result.ptrs_         = ptrs_[index];
             result.refs_         = refs_;
@@ -284,7 +285,7 @@ template<typename T>
 class shared_shape<T,0> {
   public:
     typedef T ptrs_type;
-    typedef ssize_t size_type;
+    typedef ra::size_type size_type;
   private:
     std::array<size_type,0> extent_;
     ptrs_type ptrs_;
@@ -296,7 +297,7 @@ class shared_shape<T,0> {
     template<class U, int S> friend class shared_shape; // for "at"
 };
     
-template<class T, int R>
+template<class T, rank_type R>
 struct _data_from_ptrs_noffsets_ndataoffsets {
     static
     T* call(typename PointerArray<T,R>::type ptrs,

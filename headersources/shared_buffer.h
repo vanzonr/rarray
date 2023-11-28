@@ -30,6 +30,7 @@
 #define SHAREDBUFFERH
 
 #include "rarraymacros.h"
+#include "rarraytypes.h"
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
@@ -60,7 +61,7 @@ class shared_buffer
 {
   public:
 
-    typedef ssize_t size_type;
+    typedef ra::size_type size_type;
 
     // constructors 
     shared_buffer() noexcept
@@ -246,8 +247,8 @@ class shared_buffer
             // copy content if so requested       
             if (keep_content) {
                 try { // in case a copy assignment throws an exception
-                    size_t n = ((size_<newsize)?size_:newsize);
-                    for (size_t i=0; i<n; i++)
+                    size_type n = ((size_<newsize)?size_:newsize);
+                    for (size_type i=0; i<n; i++)
                         newdata[i] = data_[i];
                 }
                 catch (...) {// in case a copy assignment throws an exception
@@ -268,7 +269,7 @@ class shared_buffer
 
     // assign values (could throw if copy assignment throws)
     void assign(const T& value) {
-        for (int i=0;i<size_;i++)
+        for (size_type i = 0; i < size_; i++)
             data_[i] = value;
     }
     void assign(std::initializer_list<T> ilist) {
