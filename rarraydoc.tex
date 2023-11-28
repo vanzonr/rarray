@@ -263,8 +263,7 @@ functions as a single argument.
 \item Can be emptied with the {\tt clear} method.
 \item Can be filled with a uniform value with the {\tt fill} method.
 \item Can be reshaped.
-\item Automatic C-style arrays can be converted to rarrays using {\tt
-  RARRAY}.
+\item Automatic C-style arrays can be converted to rarrays.
 \item Checks index bounds if the preprocessor constant {\tt RA\_BOUNDSCHECK} is defined. 
 \item A method {\tt empty} to check if the rarray is uninitialized.
 \item A method to get the number of elements in each
@@ -937,6 +936,17 @@ from blas, using the cblas interface:
   #include <iostream>
   #include <rarray>
   #include <cblas.h>
+  void matrix_product(const rmatrix<double> A,
+                      const rmatrix<double> B,
+                      rmatrix<double> C)
+  {
+      cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                  C.extent(0), C.extent(1), A.extent(1), 1.0,
+                  A.data(), A.extent(1),
+                  B.data(), B.extent(1),
+                  1.0,
+                  C.data(), C.extent(1));
+  }
   int main() {
      int m=2, k=3, n=4;
      rmatrix<double> a(m,k), b(k,n), c(m,n);
@@ -945,12 +955,7 @@ from blas, using the cblas interface:
      b = -1,3,-2,1,
          -2,1,-3,2,
          -3,2,-1,3;
-     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                 c.extent(0), c.extent(1), a.extent(1), 1.0,
-                 a.data(), a.extent(1),
-                 b.data(), b.extent(1),
-                 1.0,
-                 c.data(), c.extent(1));
+     matrix_product(A,B,C);
      std::cout << "a=" << a << '\n'
                << "a=" << b << '\n' 
                << "c=a*b=" << c << '\n';
@@ -962,7 +967,7 @@ from blas, using the cblas interface:
 See the blas documentation, for the precise meaning and operation of
 (c)blas.
 
-Especially when working with complex data, an extra conversion may be
+When working with complex data, an extra conversion may be
 required. For instance, working with the library called FFTW3, the
 following is a way to compute the fourier transform of a complex
 rarray:
@@ -1002,7 +1007,8 @@ data and pass it as a pre-existing buffer to the rarray constructor
 
 \subsection{Converting automatic C-style arrays to rarrays}
 
-It is possible to convert C-style automatic arrays to rarrays using the {\tt RARRAY} macro (which calls some templated functions under the hood).  You can apply {\tt RARRAY} to any automatic array of rank six or less. 
+It is possible to convert C-style automatic arrays to rarrays if they
+have a rank of at most 11.
 The main convenience of this is that one can write functions that take rarray argument(s) and pass automatic arrays to them. Another use is in initializing a rarray. For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 %TEST THIS
@@ -1017,13 +1023,18 @@ void print2d(const rarray<float,2> &s) {
     }
 }
 int main() {
-    float printme[4][4] = { { 1.0, 1.2, 1.4, 1.6},
-                            { 2.0, 2.2, 2.4, 2.6},
-                            { 3.0, 3.2, 3.4, 3.6},
-                            { 4.0, 4.2, 4.4, 4.6} };
-    print2d(RARRAY(printme));
-    rarray<float,2> a = RARRAY(printme).copy();
+    float stackarray[4][4] = { { 1.0, 1.2, 1.4, 1.6},
+                               { 2.0, 2.2, 2.4, 2.6},
+                               { 3.0, 3.2, 3.4, 3.6},
+                               { 4.0, 4.2, 4.4, 4.6} };
+    // automatic conversion
+    print2d(stackarray);
+    // view using the same data
+    auto a = rarray<float,2>(stackarray);
     print2d(a);
+    // independent copy of the same data
+    auto b = rarray<float,2>(stackarray).copy();
+    print2d(b);
 }
 \end{verbatim}%
 %END TEST THIS
@@ -1033,11 +1044,16 @@ int main() {
 
 \subsection{Conversions for function arguments}
 
-A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter if elements are not changed by it. Because \cxx\ cannot convert a reference to a \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}}, one has to use the \texttt{const\_ref} method to do this for you.
-For example:
+A function might take a \texttt{rarray{\tt<}const T,R{\tt>}} parameter
+if elements are not changed by it.  Although \cxx\ cannot convert
+template types with a \texttt{T} to once with a \texttt{const T}
+reference, the rarray library provides this conversion from
+\texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const
+  T,R{\tt>}}. For example:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
 %TEST THIS
 \begin{verbatim}
+  #include <rarray>
   float add(const rarray<const float,2> &s)   {
      float x = 0.0;
      for (int i=0; i<s.extent(0); i++)
@@ -1047,15 +1063,19 @@ For example:
   }
   int main() {
      rarray<float,2> s(40, 40);
-     float z = add(s.const_ref()); // because add() takes <const float>
+     float z = add(s); // because add() takes <const float>
   }
 \end{verbatim}%
 %END TEST THIS
 \vspace{-14pt}
 \end{framed}\vspace{-8pt}
+One can also explicitly use the \texttt{const\_ref} method to do this conversion.
+Note: This works equally well when the function argument is passed by value.
 
-rarray objects are also easy to pass to functions that do not use \texttt{rarray}s. Because there are, by design, no automatic conversions of a
-rarray, this is done using methods.
+Rarray objects are also easy to pass to functions from legacy that do
+not use \texttt{rarray}s but pointers.  To avoid ambiguities, 
+conversions of a rarray to a pointer must be done using
+methods.
 
 There are two main ways that such functions expect a multidimensional
 array to be passed: either as a pointer (a \texttt{T*}) to the first
@@ -1074,7 +1094,7 @@ We will briefly looking at these cases separately now.
 A function may expect a multidimensional array to be passed as a
 simple pointer to the first element, of the form \texttt{T*}, or of
 the form  \texttt{const T*}. This is the case for most c or fortran
-libraries, as disussed above in \ref{libraries}. A rarray object
+libraries, as disussed above. A rarray object
 \texttt{s} of type \texttt{rarray{\tt<}T,I{\tt>}} can be passed to these
 functions using the syntax \texttt{s.data()}, which yields a
 \texttt{T*}.
@@ -1124,8 +1144,7 @@ C++ accepts a \texttt{float*} instead of a \texttt{const float*}, so \texttt{dat
 In \texttt{T*const*}, the middle const means that one cannot reassign
 the row pointers. 
 The rarray classes can be converted to this type using the
-\texttt{ptr\_array()} method, but rarrays  also an automatic
-conversion to this type.
+\texttt{ptr\_array()} method.
 For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt{T*const*const*const*}, etc.
 
 \noindent
@@ -1172,13 +1191,16 @@ For higher dimensions, this case generalizes to \texttt{T*const*const*}, \texttt
 
 \noindent
 \cxx\ accepts a \texttt{T*const*} where a \texttt{const T*const*} is expected, so here one can again use the method \texttt{ptr\_array()}.
-This extends to its generalizations \texttt{const T*const*const*},\linebreak \texttt{const T*const*const*const*}, etc., as well.
 
 
 \subsection{Conversion to a {\tt T**}}
 
 \noindent
-Generating a T** from a rarray object, one could change the internal structure of that rarray object through the double pointer.  This is therefore considered a not const-correct.  It is however commonly needed, so \texttt{rarray} does have a function for it, called \texttt{noconst\_ptr\_array}. 
+If one were to generating a T** from a rarray object, one could change
+the internal structure of that rarray object through the double
+pointer.  This is therefore considered not ``const-correct''.  It is
+however sometimes needed when using legacy code that expects such a
+pointer, and for that reason, \texttt{rarray} has a function for it, called \texttt{noconst\_ptr\_array}. 
 
 \noindent
 {\bf Example:}
@@ -1199,8 +1221,6 @@ Generating a T** from a rarray object, one could change the internal structure o
 \vspace{-14pt}
 \end{framed}
 
-\subsection{Conversion to a {\tt const T**}}
-\noindent
 C++ does not allow conversion from T** to \texttt{const T**}. To convert to a \texttt{const T**}, one first needs to convert the \texttt{rarray{\tt<}T,R{\tt>}} to a \texttt{rarray{\tt<}const T,R{\tt>}} using \texttt{const\_ref()}, after which one can use the \texttt{noconst\_ptr\_array} function.
 
 \noindent
