@@ -27,8 +27,8 @@
 set -e
 
 mydir=$(/usr/bin/dirname $0)
-test "$mydir" = . && mydir=$PWD
-test "${mydir:0:1}" = '/' || mydir="$PWD/$mydir"
+test $mydir = . && mydir=$PWD
+test ${mydir:0:1} = '/' || mydir=$PWD/$mydir
 
 #############################################################################
 function detect_library()
@@ -135,17 +135,17 @@ else
             echo "Cannot find $CXX" 1>&2
             exit 1
         else
-            #CXX=$(grep FC= "${CXXMKINC}"|cut -f2- -d=)
+            #CXX=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
             :
         fi
-        CPPFLAGS=$(grep CPPFLAGS= "${CXXMKINC}"|cut -f2- -d=)
-        echo "Generating config.mk from '${CXXMKINC}'"
-        FC=$(grep FC= "${CXXMKINC}"|cut -f2- -d=)
+        CPPFLAGS=$(grep CPPFLAGS= ${CXXMKINC}|cut -f2- -d=)
+        echo "Generating config.mk from ${CXXMKINC}"
+        FC=$(grep FC= ${CXXMKINC}|cut -f2- -d=)
         if which $FC >& /dev/null; then
-            cp -f "${CXXMKINC}" config.mk
+            cp -f ${CXXMKINC} config.mk
         else
             echo "WARNING: Omitting non-existing fortran compiler ${FC}."
-            grep -v "FC=${FC}" "${CXXMKINC}" | grep -v "FFLAGS=" > config.mk
+            grep -v "FC=${FC}" ${CXXMKINC} | grep -v "FFLAGS=" > config.mk
             echo FC=./nofortran >> config.mk
         fi
         # detect installations
@@ -212,7 +212,7 @@ EOF
            curl -o mdspan.hpp "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
            sed -i.bak 's/__has_include(<version>)/0/' mdspan.hpp
         fi
-        detect_library MDSPANREF "$PWD/mdspan.hpp" -DNOMDSPANREF -DMDSPANREF ""
+        detect_library MDSPANREF $PWD/mdspan.hpp -DNOMDSPANREF -DMDSPANREF ""
         #######################################################
         echo >> config.mk
         # Extra include dirs added to MORECPPFLAGS
@@ -237,11 +237,11 @@ EOF
         echo -e "#\n# Default installation directory\n#\nPREFIX?=${prefix}" >> config.mk
 
         # if not in source dir, create links
-        if [ "$(readlink -f $PWD)" != "${mydir}" ]; then
-            [ -h src ] || ln -sT "${mydir}/src" src
-            [ -h headersources ] || ln -sT "${mydir}/headersources" headersources
-            [ -h Makefile ] || ln -sT "${mydir}/Makefile" Makefile
-            [ -h rarraydoc.tex ] || ln -sT "${mydir}/rarraydoc.tex" rarraydoc.tex
+        if [ $(readlink -f $PWD) != $(readlink -f ${mydir}) ]; then
+            [ -h src ] || ln -sT ${mydir}/src src
+            [ -h headersources ] || ln -sT ${mydir}/headersources headersources
+            [ -h Makefile ] || ln -sT ${mydir}/Makefile Makefile
+            [ -h rarraydoc.tex ] || ln -sT ${mydir}/rarraydoc.tex rarraydoc.tex
         fi
         # print what to do next
         echo "To build and run unit tests:            make test"

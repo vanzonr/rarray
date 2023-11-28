@@ -327,7 +327,12 @@ class shared_buffer
     {
         // construct buffer, exception safe
         using noconstT = typename std::remove_const<T>::type;
+        #ifndef __ibmxl__
         auto to_be_data = std::unique_ptr<T[]>(new T[asize]{*first});
+	#else
+	// ibm xl compiler does not support "new T[N]{init}" nor "new const T[N]", so have to cast const away:
+	auto to_be_data	= std::unique_ptr<T[]>(const_cast<T*>(new typename std::remove_const<T>::type[asize]));
+	#endif
         std::copy(first, last, const_cast<noconstT*>(to_be_data.get()));    
         refs_ = new std::atomic<int>(1); // if this throws, let it   
         data_ = to_be_data.release();
