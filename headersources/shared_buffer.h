@@ -61,15 +61,15 @@ class shared_buffer
 {
   public:
 
-    typedef ra::size_type size_type;
+    using size_type = ::ra::size_type;
 
     // constructors 
-    shared_buffer() noexcept
+    inline shared_buffer() noexcept
     {
         // uninitialized buffer
         uninit();
     }
-    explicit shared_buffer(size_type asize)
+    explicit inline shared_buffer(size_type asize)
     : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
     {
         // construct buffer, exception safe
@@ -79,26 +79,26 @@ class shared_buffer
         orig_ = data_;
         size_ = asize;
     }    
-    shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
+    inline shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
     : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr)
     {
         // construct buffer as a wrapper
         RA_CHECKORSAY(adata, "nullptr given as data");
     }
-    shared_buffer(const shared_buffer& other) noexcept
+    // copy constructor
+    inline shared_buffer(const shared_buffer& other) noexcept
     : data_(other.data_), orig_(other.orig_), size_(other.size_), refs_(other.refs_)
     {
-        // copy constructor
         incref();
     }
-    shared_buffer(shared_buffer&& from) noexcept
+    inline shared_buffer(shared_buffer&& from) noexcept
     : data_(from.data_), orig_(from.orig_), size_(from.size_), refs_(from.refs_)
     {
         from.uninit();
     }
     
     // copy and move assignment
-    shared_buffer& operator=(const shared_buffer& other) noexcept {
+    inline auto operator=(const shared_buffer& other) noexcept -> shared_buffer& {
         // shallow assignment with ref counting
         if (this != &other) {
             decref();
@@ -110,7 +110,7 @@ class shared_buffer
         }
         return *this;
     }
-    void operator=(shared_buffer&& from) noexcept {
+    inline void operator=(shared_buffer&& from) noexcept {
         decref();
         data_ = from.data_;
         orig_ = from.orig_;
@@ -120,28 +120,28 @@ class shared_buffer
     }
 
     // destructor
-    ~shared_buffer() noexcept {
+    inline ~shared_buffer() noexcept {
         decref();
     }
 
     // element access without bounds checking (unless RA_BOUNDSCHECK is defined
-    const T& operator[](size_type index) const RA_NOEXCEPT(true) {
+    inline auto operator[](size_type index) const RA_NOEXCEPT(true) -> const T& {
         RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
         return data_[index];
     }
-    T& operator[](size_type index) RA_NOEXCEPT(true) {
+    inline auto operator[](size_type index) RA_NOEXCEPT(true) -> T& {
         RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
         return data_[index];
     }
 
     // element access with bounds checking
-    const T& at(size_type index) const {
+    inline auto at(size_type index) const -> const T& {
         // element access with bounds checking
         if (index < 0 or index >= size_)
             throw std::out_of_range("shared_buffer::at");
         return data_[index];
     }
-    T& at(size_type index) {
+    inline auto at(size_type index) -> T& {
         // element access with bounds checking
         if (index < 0 or index >= size_)
             throw std::out_of_range("shared_buffer::at");
@@ -149,7 +149,7 @@ class shared_buffer
     }
 
     // slice a part
-    shared_buffer<T> slice(size_type from, size_type to) {
+    inline auto slice(size_type from, size_type to) -> shared_buffer<T> {
         // slice a part, checking bounds
         if (from < 0 or to < 0 or from > size_ or to > size_)
             throw std::out_of_range("shared_buffer::slice");
@@ -160,7 +160,7 @@ class shared_buffer
             result.size_ = to - from;
         return result;
     }
-    const shared_buffer<T> slice(size_type from, size_type to) const {
+    inline auto slice(size_type from, size_type to) const -> const shared_buffer<T> {
         // slice a part, checking bounds
         if (from < 0 or to < 0 or from > size_ or to > size_)
             throw std::out_of_range("shared_buffer::slice");
@@ -173,69 +173,69 @@ class shared_buffer
     }
 
     // size
-    size_type size() const noexcept {
+    inline auto size() const noexcept -> size_type {
         return size_;
     }
 
     // create deep copy
-    shared_buffer<T> copy() const {
+    inline auto copy() const -> shared_buffer<T> {
         return shared_buffer<T>(size_,cbegin(), cend());
     }
 
     // iterators
-    typedef T* iterator;
-    typedef const T* const_iterator;
-    iterator begin() noexcept {
+    using iterator = T*;
+    using const_iterator = const T*;
+    inline auto begin() noexcept -> iterator {
         return data_;
     }
-    iterator end() noexcept {
+    inline auto end() noexcept -> iterator {
         return data_+size_;
     }
-    const_iterator begin() const noexcept {
+    inline auto begin() const noexcept -> const_iterator {
         return data_;
     }
-    const_iterator end() const noexcept {
+    inline auto end() const noexcept -> const_iterator {
         return data_+size_;
     }
-    const_iterator cbegin() const noexcept {
+    inline auto cbegin() const noexcept -> const_iterator {
         return data_;
     }
-    const_iterator cend() const noexcept {
+    inline auto cend() const noexcept -> const_iterator {
         return data_+size_;
     }
 
     // reverse iterator
-    typedef std::reverse_iterator<iterator> reverse_iterator;
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-    reverse_iterator rbegin() {
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    inline auto rbegin() -> reverse_iterator {
         return std::reverse_iterator<iterator>(data_+size_);
     }
-    reverse_iterator rend() {
+    inline auto rend() -> reverse_iterator {
         return std::reverse_iterator<iterator>(data_);
     }
-    const_reverse_iterator rbegin() const {
+    inline auto rbegin() const -> const_reverse_iterator {
         return std::reverse_iterator<const_iterator>(data_+size_);
     }
-    const_reverse_iterator rend() const {
+    inline auto rend() const -> const_reverse_iterator {
         return std::reverse_iterator<const_iterator>(data_);
     }
-    const_reverse_iterator crbegin() const  {
+    inline auto crbegin() const -> const_reverse_iterator {
         return std::reverse_iterator<const_iterator>(data_+size_);
     }
-    const_reverse_iterator crend() const {
+    inline auto crend() const -> const_reverse_iterator{
         return std::reverse_iterator<const_iterator>(data_);
     }
 
     // resize
-    void resize(size_type newsize, bool keep_content = false) {
+    inline void resize(size_type newsize, bool keep_content = false) {
         if ( (newsize<size_) and (refs_) and (*refs_)==1) {
             // optimize if this is known (from refs_) to be the only
             // instance of the buffer, and the new size is smaller:        
-                size_ = newsize; // That's all? Yep!
+            size_ = newsize; // That's all? Yep!
             // note: this always keeps the content.
         } else {
             // create a new buffer
-            std::atomic<int>* newrefs = new std::atomic<int>(1);
+            auto newrefs = new std::atomic<int>(1);
             T* newdata;
             try {
                 newdata = new T[newsize];
@@ -268,15 +268,15 @@ class shared_buffer
     }
 
     // assign values (could throw if copy assignment throws)
-    void assign(const T& value) {
+    inline void assign(const T& value) {
         for (size_type i = 0; i < size_; i++)
             data_[i] = value;
     }
-    void assign(std::initializer_list<T> ilist) {
+    inline void assign(std::initializer_list<T> ilist) {
         assign_iter(ilist.begin(), ilist.end());
     }
     template<class InputIt>
-    void assign_iter(InputIt first, InputIt last) {
+    inline void assign_iter(InputIt first, InputIt last) {
         resize(last-first);
         T* data = data_;
         for (InputIt it = first; it != last; it++)
@@ -290,27 +290,27 @@ class shared_buffer
     size_type size_;
     std::atomic<int>* refs_;
 
-    // for testing:                                                          //TEST//
-    template<typename V>                                                     //TEST//
-    friend int ::internal_check(const ra::detail::shared_buffer<V>& a,               //TEST// 
-                   bool datavalue_shouldbe, V* datavalue,                    //TEST//
-                   bool origvalue_shouldbe, V* origvalue,                    //TEST//
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,     //TEST//
-                   bool refscount_shouldbe, int refscount,                   //TEST//
-                   bool sizevalue_shouldbe,                                  //TEST//
-                   typename ra::detail::shared_buffer<V>::size_type sizevalue);      //TEST//
-    void uninit() noexcept  {
+    // for testing:                                                            //TEST//
+    template<typename V>                                                       //TEST//
+    friend int ::internal_check(const ra::detail::shared_buffer<V>& a,         //TEST// 
+                   bool datavalue_shouldbe, V* datavalue,                      //TEST//
+                   bool origvalue_shouldbe, V* origvalue,                      //TEST//
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,       //TEST//
+                   bool refscount_shouldbe, int refscount,                     //TEST//
+                   bool sizevalue_shouldbe,                                    //TEST//
+                   typename ra::detail::shared_buffer<V>::size_type sizevalue);//TEST//
+    inline void uninit() noexcept {
         data_ = nullptr;
         orig_ = nullptr;
         size_ = 0;
         refs_ = nullptr;
     }
-    void incref() noexcept  {
+    inline void incref() noexcept {
         if (refs_)
             (*refs_)++;
     }
     // noexcept assumes destructors of T do not throw exceptions (as no destructor should)
-    void decref() noexcept {
+    inline void decref() noexcept {
         if (refs_) {
             if (--(*refs_) == 0) {
                 delete[] orig_;
@@ -322,7 +322,7 @@ class shared_buffer
 
     // private in this version at least
     template<typename InputIt>
-    shared_buffer(size_type asize, InputIt first, InputIt last)
+    inline shared_buffer(size_type asize, InputIt first, InputIt last)
     : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
     {
         // construct buffer, exception safe

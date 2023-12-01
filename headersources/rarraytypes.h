@@ -28,9 +28,9 @@
 #include <string>
 
 namespace ra {    
-    typedef ssize_t size_type;
-    typedef ssize_t index_type;
-    typedef int rank_type;
+    using size_type = ssize_t;
+    using index_type = ssize_t;
+    using rank_type = int;
 }
 
 #endif

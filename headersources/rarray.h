@@ -48,13 +48,13 @@
 namespace ra {
 
 enum class RESIZE { NO, ALLOWED };
-template<typename T,rank_type R> class rarray;
+
 namespace detail {
     template<typename T> class CommaOp;
-    template<typename T,rank_type R,typename P> class _Bracket;
-    template<typename T,rank_type R,typename P> class _ConstBracket;
+    template<typename T,rank_type R,typename P> class Bracket;
+    template<typename T,rank_type R,typename P> class ConstBracket;
     // auxiliar multiplication function
-    inline size_type mul(const size_type * x, std::size_t n) noexcept {
+    inline auto mul(const size_type * x, std::size_t n) noexcept -> size_type {
         size_type result = 1;
         for (std::size_t i=0;i<n;i++)
             result *= x[i];
@@ -63,7 +63,7 @@ namespace detail {
     // TODO: Each operator will create a subexpression of the Expr<...>, which we forward-define first
     // Forward definitions to support array expressions //
     // What type enumerates possible operators?
-    //typedef int ExOp;
+    //using ExOp = int;
     #define ExOp class
     template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
 }
@@ -71,14 +71,14 @@ namespace detail {
 template<typename T,rank_type R> 
 class rarray {
     
-  public:
-    typedef T                                         value_type;       
-    typedef ssize_t                                   difference_type;  // difference type for indices
-    typedef ssize_t                                   size_type;        // type of indices
-    typedef T*                                        iterator;         // iterator type
-    typedef const T*                                  const_iterator;   // iterator type for constant access
-    typedef typename detail::PointerArray<T,R>::type         parray_t;         // shorthand for T*const*const*...
-    typedef typename detail::PointerArray<T,R>::noconst_type noconst_parray_t; // shorthand for T***...
+  public:   
+    using value_type = T;       
+    using difference_type = ::ra::size_type;   // difference type for indices
+    using size_type = ::ra::size_type;   // type of indices
+    using iterator = T*;               // iterator type
+    using const_iterator = const T*;   // iterator type for constant access
+    using parray_t = typename detail::PointerArray<T,R>::type; // shorthand for T*const*const*...
+    using noconst_parray_t = typename detail::PointerArray<T,R>::noconst_type; // shorthand for T***...
     // constructor leaving rarray undefined
     inline rarray()
     : buffer_(), shape_() {}
@@ -274,24 +274,24 @@ class rarray {
     : buffer_(a.buffer_),
       shape_(a.shape_)
     {}
-    inline rarray<T,R>& operator=(const rarray<T,R> &a) noexcept {
+    inline auto operator=(const rarray<T,R> &a) noexcept -> rarray<T,R>& {
         buffer_ = a.buffer_;
         shape_ = a.shape_;
         return *this;
     }
     // move constructor and assignment operator
-    rarray(rarray<T,R>&& x) noexcept
+    inline rarray(rarray<T,R>&& x) noexcept
     : buffer_(std::move(x.buffer_)),
       shape_(std::move(x.shape_))
     {}
-    rarray<T,R>& operator=(rarray<T,R>&& x) noexcept {
+    inline auto operator=(rarray<T,R>&& x) noexcept -> rarray<T,R>& {
         buffer_ = std::move(x.buffer_);
         shape_ = std::move(x.shape_);
         return *this;
     }
     // Comma separated element assignment
-    inline detail::CommaOp<T> operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>()) {
-        // Comma separated element assignment: puts the first one in and prepares for more
+    inline auto operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>()) -> detail::CommaOp<T> {
+        // puts the first element in and prepares for more
         RA_CHECKORSAY(not empty(), "assignment to unsized array");
         RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
         T* first = &(buffer_[0]);
@@ -303,15 +303,15 @@ class rarray {
         return co;
     }
     // destructor
-    RA_FORCE_inline ~rarray() {}
+    RA_FORCE_inline ~rarray() = default;
     // Will need constructor and assignment for expressions
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline explicit   rarray (const detail::Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator= (const detail::Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator+=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator-=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator*=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator/=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline rarray& operator%=(const detail::Expr<T,R,AOP,A1,A2,A3>& e);
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator= (const detail::Expr<T,R,AOP,A1,A2,A3>& e) -> rarray&;
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator+=(const detail::Expr<T,R,AOP,A1,A2,A3>& e) -> rarray&;
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator-=(const detail::Expr<T,R,AOP,A1,A2,A3>& e) -> rarray&;
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator*=(const detail::Expr<T,R,AOP,A1,A2,A3>& e) -> rarray&;
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator/=(const detail::Expr<T,R,AOP,A1,A2,A3>& e) -> rarray&;
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator%=(const detail::Expr<T,R,AOP,A1,A2,A3>& e) -> rarray&;
     // reshape shallow copy keeping the underlying data 
     template<rank_type R_=R,class=typename std::enable_if<R_==1>::type>
     inline void reshape(size_type n0, RESIZE resize_allowed=RESIZE::NO) {
@@ -409,7 +409,7 @@ class rarray {
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
     // create a deep copy
-    inline rarray<T,R> copy() const {
+    inline auto copy() const -> rarray<T,R> {
         // return a copy
         rarray<T,R> clone;
         clone.buffer_ = buffer_.copy();
@@ -417,48 +417,50 @@ class rarray {
         clone.shape_.relocate(clone.buffer_.begin());
         return clone;
     }
-    // automatic conversion to const value_type
-    operator const rarray<const T,R>&() const noexcept {
+    // automatic conversion to const value_type, *if* it is not already const
+    template<typename U=T,
+	typename=typename std::enable_if<!std::is_const<U>::value>::type>
+    inline operator const rarray<const U,R>&() const noexcept {
         return const_ref();
     }
     // properties
-    constexpr int rank() const noexcept {
+    constexpr auto rank() const noexcept -> int {
         return R;
     }
     // check if undefined
-    inline bool empty() const noexcept {
+    inline auto empty() const noexcept -> bool {
         return buffer_.cbegin() == nullptr;
     }
     // retrieve array size in dimension i
-    inline size_type extent(int i) const {
+    inline auto extent(int i) const -> size_type {
         return shape_.extent(i);
     }
     // retrieve array sizes in all dimensions
-    RA_FORCE_inline const size_type* shape() const noexcept {
+    RA_FORCE_inline auto shape() const noexcept -> const size_type* {
         return &(shape_.extent()[0]);
     }
     // retrieve the total number of elements  
-    inline size_type size() const noexcept {
+    inline auto size() const noexcept -> size_type {
         return shape_.size(); 
     }
     // return pointer to the internal data
-    inline T* data() noexcept {
-        return buffer_.begin(); 
+    inline auto data() noexcept -> T* {
+        return buffer_.begin();
     }
     // return a T* to the internal data
-    inline const T* data() const noexcept {
+    inline auto data() const noexcept -> const T* {
         return buffer_.begin(); 
     }
     // return a T*const*.. acting similarly to this rarray when using []:
-    inline parray_t ptr_array() const noexcept {
+    inline auto ptr_array() const noexcept -> parray_t {
         return shape_.ptrs();
     }
     // return a T**.. acting similarly to this rarray when using []:    
-    inline noconst_parray_t noconst_ptr_array() const noexcept {
+    inline auto noconst_ptr_array() const noexcept -> noconst_parray_t {
         return const_cast<noconst_parray_t>(shape_.ptrs());
     }
     // create a reference to this that treats elements as constant:
-    inline const rarray<const T,R>&  const_ref() const noexcept {
+    inline auto const_ref() const noexcept -> const rarray<const T,R>& {
         return reinterpret_cast<const rarray<const T,R>&>(*this);
     }
     // modifiers
@@ -472,22 +474,22 @@ class rarray {
         buffer_.assign(value);
     }
     // iterators over the data
-    inline iterator begin() noexcept {
+    inline auto begin() noexcept -> iterator {
         return buffer_.begin();
     }
-    inline const_iterator begin() const noexcept {
+    inline auto begin() const noexcept -> const_iterator {
         return buffer_.begin();
     }
-    inline const_iterator cbegin() const noexcept {
+    inline auto cbegin() const noexcept -> const_iterator {
         return buffer_.cbegin();
     }
-    inline iterator end() noexcept {
+    inline auto end() noexcept -> iterator {
         return buffer_.end();
     }
-    inline const_iterator end() const noexcept {
+    inline auto end() const noexcept -> const_iterator {
         return buffer_.end();
     }
-    inline const_iterator cend() const noexcept {
+    inline auto cend() const noexcept -> const_iterator {
         return buffer_.cend();
     }
     // compute index of a reference inside an array
@@ -495,7 +497,7 @@ class rarray {
     // if i points at an element in the array, get index in dimension i of that element
     // if a is an element in the array, get the indices of that element
     // if i points at an element in the array, get the indices of that element
-    inline size_type index(const T& a, int i) const {
+    inline auto index(const T& a, int i) const -> size_type {
         // retrieve index in dimension i within *this of the element a
         ptrdiff_t linearindex = &a - &(buffer_[0]);
         if (linearindex < 0 or linearindex >= size())
@@ -505,10 +507,10 @@ class rarray {
             linearindex /= extent_[j];
         return linearindex % extent_[i];
     }
-    inline size_type index(const iterator& iter, int i) const {
+    inline auto index(const iterator& iter, int i) const -> size_type {
         return index(*iter, i);
     }
-    inline std::array<size_type,R> index(const T& a) const {
+    inline auto index(const T& a) const -> std::array<size_type,R> {
         std::array<size_type,R> ind;
         ptrdiff_t linearindex = &a - &(buffer_[0]);
         RA_CHECKORSAY(linearindex >=0 and linearindex < size(), "element not in array");
@@ -520,11 +522,11 @@ class rarray {
         }
         return ind;
     }
-    inline std::array<size_type,R> index(const iterator& i) const {
+    inline auto index(const iterator& i) const -> std::array<size_type,R> {
         return index(*i);
     }
     // old forms of index functions:
-    inline size_type* index(const T& a, size_type* ind) const {
+    inline auto index(const T& a, size_type* ind) const -> size_type* {
         ptrdiff_t linearindex = &a - &(buffer_[0]);
         RA_CHECKORSAY(linearindex >= 0 and linearindex < size(), "element not in array");
         int j = R;
@@ -535,92 +537,95 @@ class rarray {
         }
         return ind;
     }
-    inline size_type* index(const iterator& i, size_type* ind) const {
+    inline auto index(const iterator& i, size_type* ind) const -> size_type* {
         return index(*i, ind);
     }
     // access subarrays with bounds checking
     template<class U=rarray<T,R-1>>
-    RA_FORCE_inline typename std::enable_if<R!=1,U>::type at(size_type i) {
+    RA_FORCE_inline auto at(size_type i) 
+    -> typename std::enable_if<R!=1,U>::type 
+    {
         if (i < 0 or i >= extent(0))
             throw std::out_of_range("rarray<T,R>::at");
         size_type stride = size()/extent(0);
         return ra::rarray<T,R-1>(buffer_.slice(i*stride, (i+1)*stride), shape_.at(i));
     }
     template<class U=T&>
-    RA_FORCE_inline typename std::enable_if<R==1,U>::type at(size_type i) {
+    RA_FORCE_inline auto at(size_type i) 
+    -> typename std::enable_if<R==1,U>::type 
+    {
         if (i < 0 or i >= extent(0))
             throw std::out_of_range("rarray<T,R>::at");
         return shape_.ptrs()[i];
     }
     template<class U=const rarray<T,R-1>>
-    RA_FORCE_inline typename std::enable_if<R!=1,U>::type at(size_type i) const {
+    RA_FORCE_inline auto at(size_type i) const 
+    -> typename std::enable_if<R!=1,U>::type 
+    {
         if (i < 0 or i >= extent(0))
             throw std::out_of_range("rarray<T,R>::at");
         size_type stride = size()/extent(0);
         return ra::rarray<T,R-1>(buffer_.slice(i*stride, (i+1)*stride), shape_.at(i));
     }
     template<class U=const T&>
-    RA_FORCE_inline typename std::enable_if<R==1,U>::type at(size_type i) const {
+    RA_FORCE_inline auto at(size_type i) const 
+    -> typename std::enable_if<R==1,U>::type 
+    {
         if (i < 0 or i >= extent(0))
             throw std::out_of_range("rarray<T,R>::at");
         return shape_.ptrs()[i];
     }
     // for square bracket access:
     template<class U=T>
-    RA_FORCE_inline typename std::enable_if<R==1,
-    U&
-    >::type
-    operator[](ssize_t index) {
-        RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
-        return buffer_.begin()[index];
+    RA_FORCE_inline auto operator[](size_type i) 
+    -> typename std::enable_if<R==1, U&>::type {
+        RA_CHECKORSAY(i >= 0 and i < extent(0), "index out of range of array");
+        return buffer_.begin()[i];
     }
     template<class U=T>
-    RA_FORCE_inline typename std::enable_if<R!=1,
-    typename detail::_Bracket<U,R-1,rarray>
-    >::type
-    operator[](ssize_t index) {
-        return { *this, index, this->shape() };
+    RA_FORCE_inline auto operator[](size_type i) 
+    -> typename std::enable_if<R!=1,typename detail::Bracket<U,R-1,rarray> >::type 
+    {
+        return { *this, i, this->shape() };
     }
     template<class U=T>
-    RA_FORCE_inline
-    typename std::enable_if<R==1,
-    const U&
-    >::type
-    operator[](ssize_t index) const {
-        RA_CHECKORSAY(index >= 0 and index < extent(0), "index out of range of array");
-        return buffer_.cbegin()[index];
+    RA_FORCE_inline auto operator[](size_type i) const 
+    -> typename std::enable_if<R==1,const U&>::type 
+    {
+        RA_CHECKORSAY(i >= 0 and i < extent(0), "index out of range of array");
+        return buffer_.cbegin()[i];
     }
     template<class U=T>
-    RA_FORCE_inline typename std::enable_if<R!=1,
-    typename detail::_ConstBracket<U,R-1,rarray>
-    >::type
-    operator[](ssize_t index) const {
-        return { *this, index, this->shape() };
+    RA_FORCE_inline auto operator[](size_type i) const 
+    -> typename std::enable_if<R!=1,typename detail::ConstBracket<U,R-1,rarray>>::type {
+        return { *this, i, this->shape() };
     }
     // allow c++23 multidimentional subscripts
     #if __cpp_multidimensional_subscript >= 202110L
     template<typename... Ts>
-    RA_FORCE_inline typename std::enable_if<R==sizeof...(Ts)+1,T&>::type
-    operator[](ssize_t index, Ts... args) {
-        return operator[](index)[args...];
+    RA_FORCE_inline auto operator[](size_type i, Ts... args) 
+    -> typename std::enable_if<R==sizeof...(Ts)+1,T&>::type
+    {
+        return operator[](i)[args...];
     }
     template<typename... Ts>
-    RA_FORCE_inline typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type
-    operator[](ssize_t index, Ts... args) const {
-        return operator[](index)[args...];
+    RA_FORCE_inline auto operator[](size_type i, Ts... args) const 
+    -> typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type
+    {
+        return operator[](i)[args...];
     }
     #endif
     // TODO: for expressions
-    RA_FORCE_inline const T& leval(size_type i) const;
+    RA_FORCE_inline auto leval(size_type i) const -> const T&;
   private:
-    // allow _*Bracket to access _at
-    friend class detail::_Bracket<T,R-1,rarray<T,R>>;
-    friend class detail::_ConstBracket<T,R-1,rarray<T,R>>;
-    RA_FORCE_inline typename detail::PointerArray<T,R-1>::type _at(ssize_t index) {
-        return shape_.ptrs()[index];
+    // allow *Bracket to access private_at
+    friend class detail::Bracket<T,R-1,rarray<T,R>>;
+    friend class detail::ConstBracket<T,R-1,rarray<T,R>>;
+    RA_FORCE_inline auto private_at(size_type i) -> typename detail::PointerArray<T,R-1>::type {
+        return shape_.ptrs()[i];
     }
-    RA_FORCE_inline typename detail::PointerArray<T,R-1>::type _at(ssize_t index) const {
-                return shape_.ptrs()[index];
+    RA_FORCE_inline auto private_at(size_type i) const -> typename detail::PointerArray<T,R-1>::type {
+	return shape_.ptrs()[i];
     }
     // allow rarray<T,R+1>::at(..) to create a proper rarray<T,R>
     // referencing data in current array
@@ -645,7 +650,7 @@ template<typename T>
 class CommaOp {
   public:
     // put the next number into the array:
-    RA_FORCE_inline CommaOp& operator,(const T& e) {
+    RA_FORCE_inline auto operator,(const T& e) -> CommaOp& {
         RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
         RA_CHECKORSAY(ptr_<=last_, "assignment with more elements than in array");
         if (ptr_ and ptr_ <= last_)
@@ -658,171 +663,173 @@ class CommaOp {
     {
         RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
     }
-    T *ptr_;                                                           // points to next element to be filled
-    T * const last_;                                                   // points to last element
+    T *ptr_;          // points to next element to be filled
+    T * const last_;  // points to last element
     template<typename,int> friend class ra::rarray;
 };
 
 // Classes for repeated bracket access to elements    
 template<typename T,rank_type R,typename P>
-class _Bracket {
+class Bracket {
   private:
-    P&             parent_; // what array/array expre is being accessed
-    ssize_t        index_;  // at what index
-    const ssize_t* shape_;  // what is the shape of the result
+    P&               parent_; // what array/array expression is being accessed
+    size_type          index_;  // at what index
+    const size_type* shape_;  // what is the shape of the result
   public:
     // implement square brackets to go to the next level:
-    RA_FORCE_inline _Bracket<T,R-1,_Bracket> operator[](ssize_t nextindex) noexcept(noboundscheck) {
+    RA_FORCE_inline auto operator[](size_type nextindex) noexcept(noboundscheck) -> Bracket<T,R-1,Bracket> {
         return { *this, nextindex, shape_ + 1 };
     }
     // implement implicit conversion to whatever parent.at() gives:
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
         return parent_.at(index_);
     }
-    _Bracket(const _Bracket&) = delete;
-    _Bracket(const _Bracket&&) = delete;
-    _Bracket& operator=(const _Bracket&) = delete;                              
-    _Bracket& operator=(const _Bracket&&) = delete;      
+    Bracket(const Bracket&) = delete;
+    Bracket(const Bracket&&) = delete;
+    auto operator=(const Bracket&) -> Bracket& = delete;
+    auto operator=(const Bracket&&) -> Bracket& = delete;
+    ~Bracket() = default;
   private:
-    RA_FORCE_inline _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck)
+    RA_FORCE_inline Bracket(P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
     : parent_(parent),
-      index_(index),
+      index_(i),
       shape_(shape)
     {
-        RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
+        RA_CHECKORSAY(index_ >=0 and index_ < shape_[0], "index out of range of array");
     }
-    RA_FORCE_inline auto _at(ssize_t nextindex) noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]) {
-        return parent_._at(index_)[nextindex];
+    RA_FORCE_inline auto private_at(size_type nextindex) noexcept(noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
+        return parent_.private_at(index_)[nextindex];
     }
     template<typename,int> friend class ra::rarray; // allow descending
-    template<typename,int,typename> friend class detail::_Bracket; // allow descending   
+    template<typename,int,typename> friend class detail::Bracket; // allow descending   
   public:
-    RA_FORCE_inline auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
+    RA_FORCE_inline auto at(size_type nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
         return parent_.at(index_).at(nextindex);
     }
     #if __cpp_multidimensional_subscript >= 202110L
     template<typename... Ts>
-    RA_FORCE_inline typename std::enable_if<R==sizeof...(Ts)+1,T&>::type
-    operator[](ssize_t nextindex, Ts... args) {
+    RA_FORCE_inline auto operator[](size_type nextindex, Ts... args) -> typename std::enable_if<R==sizeof...(Ts)+1,T&>::type {
         return operator[](nextindex)[args...];
     }
     #endif
 };
 
 template<typename T,typename P>
-class _Bracket<T,1,P> {
+class Bracket<T,1,P> {
   private:
     P&             parent_; // what array/array expression is being accessed
-    ssize_t        index_;  // at what index
-    const ssize_t* shape_;  // what is the shape of the result
+    size_type        index_;  // at what index
+    const size_type* shape_;  // what is the shape of the result
   public:
     // implement square brackets to go to the next level:
-    RA_FORCE_inline T& operator[](ssize_t nextindex) noexcept(noboundscheck) {
+    RA_FORCE_inline auto operator[](size_type nextindex) noexcept(noboundscheck) -> T& {
         RA_CHECKORSAY(nextindex >=0 and nextindex < shape_[1], "index out of range of array");
-        return parent_._at(index_)[nextindex];
+        return parent_.private_at(index_)[nextindex];
     }
     // implement implicit conversion to whatever parent.at() gives:
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
-        return parent_.at(index);
+        return parent_.at(index_);
     }
-    _Bracket(const _Bracket&) = delete;
-    _Bracket(const _Bracket&&) = delete;
-    _Bracket& operator=(const _Bracket&) = delete;                              
-    _Bracket& operator=(const _Bracket&&) = delete;      
+    Bracket(const Bracket&) = delete;
+    Bracket(const Bracket&&) = delete;
+    auto operator=(const Bracket&) -> Bracket& = delete;
+    auto operator=(const Bracket&&) -> Bracket& = delete;
+    ~Bracket() = default;
   private:
-    RA_FORCE_inline _Bracket(P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck)
+    RA_FORCE_inline Bracket(P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
     : parent_(parent),
-      index_(index),
+      index_(i),
       shape_(shape)
     {
-        RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
+        RA_CHECKORSAY(index_ >=0 and index_ < shape_[0], "index out of range of array");
     }
     template<typename,int> friend class ra::rarray; // allow descending
-    template<typename,int,typename> friend class detail::_Bracket; // allow descending   
+    template<typename,int,typename> friend class detail::Bracket; // allow descending   
   public:
-    RA_FORCE_inline auto at(ssize_t nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
+    RA_FORCE_inline auto at(size_type nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
         // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
 };
 
 template<typename T,rank_type R,typename P>
-class _ConstBracket {
+class ConstBracket {
   private:
     const P&       parent_;
-    ssize_t        index_;
+    size_type        index_;
   public:
-    RA_FORCE_inline _ConstBracket<T,R-1,_ConstBracket> operator[](ssize_t nextindex) const noexcept(noboundscheck) {
+    RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(noboundscheck) -> ConstBracket<T,R-1,ConstBracket> {
         return { *this, nextindex, shape_ + 1 };
     }
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
         // implement implicit conversion to whatever parent.at() gives
         return parent_.at(index_);
     }
-    _ConstBracket(const _ConstBracket&) = delete;
-    _ConstBracket(const _ConstBracket&&) = delete;
-    _ConstBracket& operator=(const _ConstBracket&) = delete;                              
-    _ConstBracket& operator=(const _ConstBracket&&) = delete;
+    ConstBracket(const ConstBracket&) = delete;
+    ConstBracket(const ConstBracket&&) = delete;
+    auto operator=(const ConstBracket&) -> ConstBracket& = delete;
+    auto operator=(const ConstBracket&&) -> ConstBracket& = delete;
+    ~ConstBracket() = default;
   private:
-    const ssize_t* shape_;
-    RA_FORCE_inline _ConstBracket(const P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck)
+    const size_type* shape_;
+    RA_FORCE_inline ConstBracket(const P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
     : parent_(parent),
-      index_(index),
+      index_(i),
       shape_(shape)
     {
-        RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
+        RA_CHECKORSAY(index_ >=0 and index_ < shape_[0], "index out of range of array");
     }
-    RA_FORCE_inline auto _at(ssize_t nextindex) const noexcept(noboundscheck) -> decltype(parent_._at(index_)[nextindex]) {
-        return parent_._at(index_)[nextindex];
+    RA_FORCE_inline auto private_at(size_type nextindex) const noexcept(noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
+        return parent_.private_at(index_)[nextindex];
     }
     template<typename,int> friend class ra::rarray; // allow descending
-    template<typename,int,typename> friend class detail::_ConstBracket;
+    template<typename,int,typename> friend class detail::ConstBracket;
   public:
-    RA_FORCE_inline auto at(ssize_t nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
+    RA_FORCE_inline auto at(size_type nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
         // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
     // allow c++23 multidimentional subscripts
     #if __cpp_multidimensional_subscript >= 202110L
     template<typename... Ts>
-    RA_FORCE_inline typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type
-    operator[](ssize_t nextindex, Ts... args) {
+    RA_FORCE_inline auto operator[](size_type nextindex, Ts... args) -> typename std::enable_if<R==sizeof...(Ts)+1,const T&>::type {
         return operator[](nextindex)[args...];
     }
     #endif
 };
 
 template<typename T,typename P>
-class _ConstBracket<T,1,P> {
+class ConstBracket<T,1,P> {
   private:
-    const P&       parent_;
-    ssize_t        index_;
+    const P& parent_;
+    size_type  index_;
   public:
-    RA_FORCE_inline const T& operator[](ssize_t nextindex) const noexcept(noboundscheck) {
+    RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(noboundscheck) -> const T& {
         RA_CHECKORSAY(nextindex >=0 and nextindex < shape_[1], "index out of range of array");
-        return parent_._at(index_)[nextindex];
+        return parent_.private_at(index_)[nextindex];
     }
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
         // implement implicit conversion to whatever parent.at() gives
         return parent_.at(index_);
     }
-    _ConstBracket(const _ConstBracket&) = delete;
-    _ConstBracket(const _ConstBracket&&) = delete;
-    _ConstBracket& operator=(const _ConstBracket&) = delete;                              
-    _ConstBracket& operator=(const _ConstBracket&&) = delete;
+    ConstBracket(const ConstBracket&) = delete;
+    ConstBracket(const ConstBracket&&) = delete;
+    auto operator=(const ConstBracket&) -> ConstBracket& = delete;
+    auto operator=(const ConstBracket&&) -> ConstBracket& = delete;
+    ~ConstBracket() = default;
   private:
-    const ssize_t* shape_;
-    RA_FORCE_inline _ConstBracket(const P& parent, ssize_t index, const ssize_t* shape) noexcept(noboundscheck)
+    const size_type* shape_;
+    RA_FORCE_inline ConstBracket(const P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
     : parent_(parent),
-      index_(index),
+      index_(i),
       shape_(shape)
     {
-        RA_CHECKORSAY(index >=0 and index_ < shape_[0], "index out of range of array");
+        RA_CHECKORSAY(index_ >=0 and index_ < shape_[0], "index out of range of array");
     }
     template<typename,int> friend class ra::rarray; // allow descending
-    template<typename,int,typename> friend class detail::_ConstBracket;
+    template<typename,int,typename> friend class detail::ConstBracket;
   public:
-    RA_FORCE_inline auto at(ssize_t nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
+    RA_FORCE_inline auto at(size_type nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
         // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
@@ -830,8 +837,7 @@ class _ConstBracket<T,1,P> {
 }
 //// TODO: Choose better integer type for n 
 template<typename S>
-inline
-rarray<S,1> linspace(S x1, S x2, int n=0, bool end_incl=true)
+inline auto linspace(S x1, S x2, int n=0, bool end_incl=true) -> rarray<S,1>
 {
     if (n==0) {
         if (x2>x1)
@@ -852,20 +858,20 @@ template<class T>
 class Xrange {
   private:
     struct const_iterator {
-        typedef std::ptrdiff_t difference_type;
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-        typedef std::input_iterator_tag iterator_category;
+        using difference_type = std::ptrdiff_t;
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
+	using iterator_category = std::input_iterator_tag;
         inline const_iterator(): i_(0), di_(1), b_(0) {}
         inline const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
-        inline bool operator!=(const const_iterator& other) const {
+        inline auto operator!=(const const_iterator& other) const -> bool {
             return i_ != other.i_;
         }
-        inline bool operator==(const const_iterator& other) const {
+        inline auto operator==(const const_iterator& other) const -> bool {
             return i_ == other.i_ && di_ == other.di_ && b_ == other.b_;
         }
-        inline const_iterator& operator++() {
+        inline auto operator++() -> const_iterator& {
             i_+=di_;
             if (di_>0 && i_ >= b_)
                i_ = b_;
@@ -873,12 +879,12 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        inline const_iterator operator++(int) {
+        inline auto operator++(int) -> const_iterator {
             const const_iterator temp = *this;
             this->operator++();
             return temp;
         }
-        inline const T& operator*() const {
+        inline auto operator*() const -> const T& {
             return i_;
         }
         T i_, di_, b_;
@@ -888,34 +894,34 @@ class Xrange {
     inline Xrange(T a, T b, T d)
     : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d) 
     {}
-    inline const_iterator begin() const {
+    inline auto begin() const -> const_iterator {
         return const_iterator(a_, d_, b_);
     }
-    inline const const_iterator end() const {
+    inline auto end() const -> const_iterator {
         return const_iterator(b_, d_, b_);
     }
-    inline size_t size() const {
+    inline auto size() const -> size_t  {
         return static_cast<size_t>((b_-a_)/d_);
     }
 };
 
 template<class T>
-inline Xrange<T> xrange(T end) {
+inline auto xrange(T end) -> Xrange<T> {
     return Xrange<T>(static_cast<T>(0), end, static_cast<T>(1));
 }
 
 template<class S, class T>
-inline Xrange<T> xrange(S begin, T end) {
+inline auto xrange(S begin, T end) -> Xrange<T> {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(1));
 }
 
 template<class S, class T, class U>
-inline Xrange<T> xrange(S begin, T end, U step) {
+inline auto xrange(S begin, T end, U step) -> Xrange<T> {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(step));
 }
    
 template<typename A> 
-size_type extent(const A &a, int i)
+inline auto extent(const A &a, int i) -> size_type
 {
     switch (i) {
     case 0: return std::extent<A,0>();
@@ -934,7 +940,7 @@ size_type extent(const A &a, int i)
 }
 
 template<typename T,rank_type R> 
-size_type extent(const rarray<T,R> &a, int i)
+inline auto extent(const rarray<T,R> &a, int i) -> size_type
 {
     return a.extent(i);
 }
@@ -945,7 +951,7 @@ size_type extent(const rarray<T,R> &a, int i)
 namespace std {
     template<typename T,ra::rank_type R>
     struct remove_all_extents<ra::rarray<T,R>> {
-        typedef T type;
+        using type = T;
     };
     template<typename T,ra::rank_type R>
     struct rank<ra::rarray<T,R>> {

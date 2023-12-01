@@ -35,7 +35,7 @@ namespace detail {
 //...
 template<typename T, rank_type R>
 struct Deref {
-    static inline T& access(typename PointerArray<T,R>::type p, const size_type* indices)
+    static inline auto access(typename PointerArray<T,R>::type p, const size_type* indices) -> T&
     {
         return Deref<T,R-1>::access(p[indices[0]-1], indices+1);
     }
@@ -43,7 +43,7 @@ struct Deref {
 template<typename T>
 struct Deref<T,1>  // R=1 is special
 {
-    static inline T& access(typename PointerArray<T,1>::type p, const size_type* indices)
+    static inline auto access(typename PointerArray<T,1>::type p, const size_type* indices) -> T&
     {
         return p[indices[0]-1];
     }
@@ -66,19 +66,20 @@ struct StringToValue<std::string> {
 
 enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
 
-inline char toch(const token& Token) {
+inline auto toch(const token& Token) -> char {
      switch (Token) {
      case token::BRACEOPEN:  return '{';
      case token::BRACECLOSE: return '}';
      case token::COMMA:      return ',';
      case token::DATASTRING: return '$';
      case token::END:        return '.';
-     // no default needed, cases are extensive
+     // no default needed, cases are extensive, but to silence the Intel compiler:
+     default: return '\0';
      }
  }
 
-template<typename T, rank_type R> inline 
-std::ostream& text_output(std::ostream &o, const rarray<T,R>& r)
+template<typename T, rank_type R> 
+inline auto text_output(std::ostream &o, const rarray<T,R>& r) -> std::ostream&
 {
     if (not r.empty()) {
         o << "{\n"; // new newline
@@ -98,8 +99,8 @@ std::ostream& text_output(std::ostream &o, const rarray<T,R>& r)
     return o;
 }
 
-template<typename T> inline 
-std::ostream& text_output(std::ostream &o, const rarray<T,1>& r)
+template<typename T> 
+inline auto text_output(std::ostream &o, const rarray<T,1>& r) -> std::ostream&
 {
     if (not r.empty()) {
         o << '{';
@@ -124,7 +125,7 @@ std::ostream& text_output(std::ostream &o, const rarray<T,1>& r)
 
 // helper routines to convert a string to any data type
 
-static inline char get_but_eat_newline(std::istream & in)
+static inline auto get_but_eat_newline(std::istream & in) -> char
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).    
     char ch1='\n';
@@ -133,7 +134,7 @@ static inline char get_but_eat_newline(std::istream & in)
     return ch1;
 }
 
-static inline char get_but_eat_whitespace(std::istream & in)
+static inline auto get_but_eat_whitespace(std::istream & in) -> char
 {
     // helper function to read a character but omit leading and trailing newlines (not other whitespace).
     char ch1;
@@ -141,8 +142,8 @@ static inline char get_but_eat_whitespace(std::istream & in)
     return ch1;
 }
 
-template<rank_type R> inline 
-std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std::istream & in)
+template<rank_type R> 
+inline auto parse_shape(std::istream & in) -> std::pair<std::list<std::pair<token,std::string>>,size_type[R]>
 {
     std::pair<std::list<std::pair<token,std::string>>,size_type[R]> wholeresult;
     std::list<std::pair<token,std::string>>& result = wholeresult.first;
@@ -248,8 +249,8 @@ std::pair<std::list<std::pair<token,std::string>>,size_type[R]> parse_shape(std:
     return wholeresult;
 }
 
-template<typename T, rank_type R> inline 
-void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p) 
+template<typename T, rank_type R> 
+inline void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p) 
 {
     size_type index[R];
     int current_depth = -1;
@@ -278,8 +279,8 @@ void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_
 
 }
 
-template<typename T, rank_type R> inline
-std::ostream& operator<<(std::ostream &o, const rarray<T, R>& r)
+template<typename T, rank_type R> 
+inline auto operator<<(std::ostream &o, const rarray<T, R>& r) -> std::ostream&
 {
     if (R>1) {
         return detail::text_output(o,r);
@@ -297,8 +298,8 @@ std::ostream& operator<<(std::ostream &o, const rarray<T, R>& r)
     return o;
 }
 
-template<typename T,rank_type R> inline
-std::istream& operator>>(std::istream &in, rarray<T,R>& r)
+template<typename T,rank_type R> 
+inline auto operator>>(std::istream &in, rarray<T,R>& r) -> std::istream&
 {
     auto X = detail::parse_shape<R>(in);
     size_type* extent = X.second;

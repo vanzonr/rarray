@@ -215,7 +215,7 @@ test_rarray23: test_rarray23.o
 
 .PHONY: clean
 clean:
-	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o test_rarray23.o testsuite.o testsuite23.o testsuite_bc.o testsuite_bc23.o benchmark2Daccess.o benchmark2Daccess23.o benchmark4Daccess.o benchmark4Daccess23.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp *.gcno *.gcda *.gcov clang-tidy-output/clang-tidy-rarray.out
+	${RM} test_shared_buffer.o test_offsets.o test_shared_shape.o test_rarray.o test_rarray23.o testsuite.o testsuite23.o testsuite_bc.o testsuite_bc23.o benchmark2Daccess.o benchmark2Daccess23.o benchmark4Daccess.o benchmark4Daccess23.o benchmark2Dfrtrn.o benchmark4Dfrtrn.o optbarrier.o optbarrierf.o rarraydoc.log rarraydoc.out rarraydoc.aux rarraydoc.toc catch.hpp *.gcno *.gcda *.gcov clang-tidy-output/clang-tidy-rarray.out hardinclude.o hardinclude
 
 .PHONY: distclean
 distclean:

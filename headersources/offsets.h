@@ -40,10 +40,10 @@ class Offsets
   public:
     // offsets are computed by the constructor
     inline Offsets(const std::vector<index_type>& extent)
+    : rank_(static_cast<rank_type>(extent.size())),
+      ndataoffsets_(0)
     {
-        rank_ = static_cast<rank_type>(extent.size());
         size_type noffsets = 0;
-        ndataoffsets_ = 0;
         if (rank_ > 0) {
             ndataoffsets_ = 1;
             for (rank_type i = rank_ - 1; i--; )
@@ -70,13 +70,12 @@ class Offsets
     // they can be applied to yield a pointer-to-pointer structure;
     // for rank>1, this structure will be allocated; it should be deallocate elsewhere
     // for rank==1, this structure is identical to data itself, so no allocation is done.
-    template<class T> inline
-    void*** apply_offsets(T* data) const
+    template<class T> inline auto apply_offsets(T* data) const -> void***
     {
         static_assert(sizeof(T*) == sizeof(void*) &&
                       sizeof(T*) == sizeof(void**),
                       "rarray's Offsets requires all pointers to have the same size");
-        size_type noffsets = offsets_.size();
+        auto noffsets = (size_type)offsets_.size();
         if (ndataoffsets_ == 0 && noffsets == 0)
             return nullptr;
         else if (ndataoffsets_ == 1 && noffsets == 0) // happens only for rank==1
@@ -94,22 +93,22 @@ class Offsets
         }
     }
     // information about the the ptr-to-ptr structure 
-    inline size_type get_num_data_offsets() const noexcept
+    inline auto get_num_data_offsets() const noexcept -> size_type
     {
         return ndataoffsets_;
     }
-    inline size_type get_num_offsets() const noexcept
+    inline auto get_num_offsets() const noexcept -> size_type
     {
-        return offsets_.size();
+        return (size_type)offsets_.size();
     }
-    inline rank_type get_rank() const noexcept
+    inline auto get_rank() const noexcept -> rank_type
     {
         return rank_;
     }
     
   private:
     rank_type rank_;
-    std::vector<unsigned long long> offsets_;
+    std::vector<size_type> offsets_;
     size_type ndataoffsets_;
 };
 
