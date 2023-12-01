@@ -1,0 +1,34 @@
+\contentsline {section}{\numberline {1}For the impatient: the what, why and how of rarray}{1}{section.1}%
+\contentsline {section}{\numberline {2}Introduction}{3}{section.2}%
+\contentsline {section}{\numberline {3}Using rarrays}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Defining a multidimensional rarray}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Shorthand rarray types: rvector, rmatrix, rtensor}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Accessing elements of an rarray}{7}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Copying and function arguments}{7}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Returning a rarray from a function}{7}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Reshaping the rarray}{8}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Optional bounds checking}{9}{subsection.3.7}%
+\contentsline {section}{\numberline {4}Comparison with standard alternatives}{9}{section.4}%
+\contentsline {section}{\numberline {5}Class definition}{11}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Interface}{11}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Methods}{11}{subsection.5.2}%
+\contentsline {section}{\numberline {6}I/O}{12}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Streaming input and output}{12}{subsection.6.1}%
+\contentsline {section}{\numberline {7}Utilities: xrange and linspace}{13}{section.7}%
+\contentsline {subsection}{\numberline {7.1}xrange}{13}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}linspace}{14}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Performance}{15}{section.8}%
+\contentsline {subsection}{\numberline {8.1}General performance consideration}{15}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Debugging}{15}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Profiling}{16}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Memory overhead using the rarray class}{16}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Compilation overhead using the rarray class}{16}{subsection.8.5}%
+\contentsline {section}{\numberline {9}Working with libraries}{16}{section.9}%
+\contentsline {section}{\numberline {10}Conversions}{18}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Converting automatic C-style arrays to rarrays}{18}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Conversions for function arguments}{19}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Conversion to a {\tt T*} or a {\tt const T*}}{19}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Conversion to a {\tt T*const*} or a {\tt const T*const*} }{20}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Conversion to a {\tt T**}}{21}{subsection.10.5}%
+\contentsline {section}{\numberline {A}Installation}{23}{appendix.A}%
+\contentsline {section}{\numberline {B}History}{24}{appendix.B}%
