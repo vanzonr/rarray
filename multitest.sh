@@ -8,6 +8,7 @@ for mod in "${compilers[@]}"
 do
     module purge >& /dev/null
     module load $mod 2>/dev/null || module load ${mod/\//\/.experimental-} 2>/dev/null || continue
+    module load valgrind || true
     echo '========================'$mod'====================='
     mkdir -p "alltestresults/$mod"
     rm -rf "alltestresults/$mod"
