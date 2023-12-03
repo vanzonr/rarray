@@ -89,7 +89,7 @@ help:
 	@echo ""
 
 .PHONY: headers
-headers: rarray rarrayio
+headers: rarray
 
 .PHONY: all
 all: headers test valgrindtest benchmarks
@@ -141,14 +141,10 @@ MYDIR := $(shell dirname "$(abspath $(lastword $(MAKEFILE_LIST)))")
 rarray: ${HS}/rarray.h ${HS}/rarraymacros.h ${HS}/rarraytypes.h ${HS}/rarraydelmacros.h ${HS}/shared_buffer.h ${HS}/shared_shape.h ${HS}/offsets.h ${HS}/rarrayio.h ${HS}/versionheader.h hardinclude
 	cd ${HS} ; "${MYDIR}"/hardinclude rarray.h rarraymacros.h rarraytypes.h rarraydelmacros.h shared_buffer.h shared_shape.h rarrayio.h offsets.h versionheader.h > "${MYDIR}"/rarray
 
-rarrayio: rarray
-	echo '#include <rarray>' > rarrayio
-
 .PHONY: install
-install: rarray rarrayio rarraydoc.pdf
+install: rarray rarraydoc.pdf
 	mkdir -p ${PREFIX}/include
 	cp -f rarray ${PREFIX}/include/rarray
-	cp -f rarrayio ${PREFIX}/include/rarrayio
 	mkdir -p ${PREFIX}/share/rarray
 	cp -f rarraydoc.pdf ${PREFIX}/share/rarray
 
@@ -159,10 +155,10 @@ testsuite23: testsuite23.o
 	echo 'echo "Skipped; c++23 not supported"' > $@ && chmod +x $@
 	${CXX23} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
 
-testsuite.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
+testsuite.o: ${SRC}/testsuite.cc rarray catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -g -O0 -c -o $@ $<
 
-testsuite23.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
+testsuite23.o: ${SRC}/testsuite.cc rarray catch.hpp
 	${CXX23} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -g -O0 -c -o $@ $<
 
 testsuite_bc: testsuite_bc.o
@@ -172,10 +168,10 @@ testsuite_bc23: testsuite_bc23.o
 	echo 'echo "Skipped; c++23 not supported"' > $@ && chmod +x $@
 	${CXX23} ${LDFLAGS} ${LDFLAGSCOV} -o $@ $< ${LIBSCOV}
 
-testsuite_bc.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
+testsuite_bc.o: ${SRC}/testsuite.cc rarray catch.hpp
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -DRA_BOUNDSCHECK -g -O0 -c -o $@ $<
 
-testsuite_bc23.o: ${SRC}/testsuite.cc rarray rarrayio catch.hpp
+testsuite_bc23.o: ${SRC}/testsuite.cc rarray catch.hpp
 	${CXX23} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} -DRA_BOUNDSCHECK -g -O0 -c -o $@ $<
 
 catch.hpp:
@@ -220,7 +216,7 @@ clean:
 .PHONY: distclean
 distclean:
 	make clean
-	make rarray rarrayio doc	
+	make rarray doc	
 	make clean
 	${RM} test_shared_buffer test_offsets test_shared_shape test_rarray test_rarray23 testsuite testsuite_bc testsuite23 testsuite_bc23 hardinclude benchmark2Daccess benchmark4Daccess benchmark2Daccess23 benchmark4Daccess23 benchmark2Dfrtrn benchmark4Dfrtrn config.mk coverage/*
 	rmdir coverage

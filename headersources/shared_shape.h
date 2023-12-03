@@ -37,6 +37,7 @@
 #include <stdexcept>
 #include <memory>
 #include <atomic>
+#include <numeric>
 
 int test_shared_shape_main();  //TEST//
 
@@ -136,7 +137,7 @@ class shared_shape
     }
 
     // destructor
-    inline ~shared_shape() {
+    inline ~shared_shape() noexcept {
         decref();
     }
 
@@ -188,7 +189,12 @@ class shared_shape
     inline void reshape(const std::array<size_type,R>&newextent) {
         if (newextent != extent_) {
             // should check if new extent is even valid
-            *this = shared_shape<T,R>(newextent, data());
+            if (size() ==
+                std::accumulate(&newextent[0], &newextent[R],
+                                1, std::multiplies<size_type>()))
+                *this = shared_shape<T,R>(newextent, data());
+            else
+                throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__)); 
         }
     }
 

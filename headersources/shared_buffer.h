@@ -79,7 +79,7 @@ class shared_buffer
         orig_ = data_;
         size_ = asize;
     }    
-    inline shared_buffer(size_type asize, T* adata) RA_NOEXCEPT(true)
+    inline shared_buffer(size_type asize, T* adata) noexcept(RA_noboundscheck)
     : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr)
     {
         // construct buffer as a wrapper
@@ -125,11 +125,11 @@ class shared_buffer
     }
 
     // element access without bounds checking (unless RA_BOUNDSCHECK is defined
-    inline auto operator[](size_type index) const RA_NOEXCEPT(true) -> const T& {
+    inline auto operator[](size_type index) const noexcept(RA_noboundscheck) -> const T& {
         RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
         return data_[index];
     }
-    inline auto operator[](size_type index) RA_NOEXCEPT(true) -> T& {
+    inline auto operator[](size_type index) noexcept(RA_noboundscheck) -> T& {
         RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
         return data_[index];
     }

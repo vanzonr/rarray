@@ -193,7 +193,7 @@ else
         #########################################################
         if ! [ -f mdspan.hpp ]; then
            curl -o mdspan.hpp "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
-           sed -i.bak 's/__has_include(<version>)/0/' mdspan.hpp
+           sed -i 's/__has_include(<version>)/0/' mdspan.hpp
         fi
         detect_library MDSPANREF $PWD/mdspan.hpp -DNOMDSPANREF -DMDSPANREF ""
         #######################################################

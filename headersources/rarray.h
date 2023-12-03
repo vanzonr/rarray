@@ -53,13 +53,6 @@ namespace detail {
     template<typename T> class CommaOp;
     template<typename T,rank_type R,typename P> class Bracket;
     template<typename T,rank_type R,typename P> class ConstBracket;
-    // auxiliar multiplication function
-    inline auto mul(const size_type * x, std::size_t n) noexcept -> size_type {
-        size_type result = 1;
-        for (std::size_t i=0;i<n;i++)
-            result *= x[i];
-        return result;
-    }
     // TODO: Each operator will create a subexpression of the Expr<...>, which we forward-define first
     // Forward definitions to support array expressions //
     // What type enumerates possible operators?
@@ -139,7 +132,7 @@ class rarray {
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer_.begin())
     {}
     explicit inline rarray(const size_type* anextent)
-    : buffer_(detail::mul(anextent,R)),
+    : buffer_(std::accumulate(anextent,anextent+R,1,std::multiplies<size_type>())),
       shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer_.begin())
     {}
     // constructors from an existing buffer 
@@ -199,7 +192,7 @@ class rarray {
       shape_({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10}, buffer)
     {}
     inline rarray(T* buffer, const size_type* anextent)
-    : buffer_(detail::mul(anextent,R), buffer),
+    : buffer_(std::accumulate(anextent,anextent+R,1,std::multiplies<size_type>()), buffer),  
       shape_(reinterpret_cast<const std::array<size_type,R>&>(*anextent), buffer)
     {}       
     // constructors from automatic arrays
@@ -290,7 +283,7 @@ class rarray {
         return *this;
     }
     // Comma separated element assignment
-    inline auto operator=(const T& e) RA_NOEXCEPT(std::is_nothrow_copy_constructible<T>()) -> detail::CommaOp<T> {
+    inline auto operator=(const T& e) noexcept(RA_noboundscheck && std::is_nothrow_copy_constructible<T>()) -> detail::CommaOp<T> {
         // puts the first element in and prepares for more
         RA_CHECKORSAY(not empty(), "assignment to unsized array");
         RA_CHECKORSAY(size()>0,"assignment with more elements than in array");
@@ -402,8 +395,10 @@ class rarray {
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
     inline void reshape(const size_type* newshape, RESIZE resize_allowed=RESIZE::NO) {
-        if (size() == detail::mul(newshape,R)
-            or (resize_allowed == RESIZE::ALLOWED and size() >= detail::mul(newshape,R)))
+        size_type newsize = std::accumulate(newshape, newshape+R,
+                                            1, std::multiplies<size_type>());
+        if (size() == newsize
+            or (resize_allowed == RESIZE::ALLOWED and size() >= newsize))
             shape_ = detail::shared_shape<T,R>((const std::array<size_type,R>&)(*newshape), buffer_.begin());
         else         
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
@@ -658,7 +653,7 @@ class CommaOp {
         return *this;
     }
   private:
-    RA_FORCE_inline CommaOp(T* ptr, T* last) RA_NOEXCEPT(true)
+    RA_FORCE_inline CommaOp(T* ptr, T* last) noexcept(RA_noboundscheck)
     : ptr_(ptr), last_(last)
     {
         RA_CHECKORSAY(ptr_!=nullptr and last_!=nullptr, "invalid comma operator");
@@ -677,7 +672,7 @@ class Bracket {
     const size_type* shape_;  // what is the shape of the result
   public:
     // implement square brackets to go to the next level:
-    RA_FORCE_inline auto operator[](size_type nextindex) noexcept(noboundscheck) -> Bracket<T,R-1,Bracket> {
+    RA_FORCE_inline auto operator[](size_type nextindex) noexcept(RA_noboundscheck) -> Bracket<T,R-1,Bracket> {
         return { *this, nextindex, shape_ + 1 };
     }
     // implement implicit conversion to whatever parent.at() gives:
@@ -690,14 +685,14 @@ class Bracket {
     auto operator=(const Bracket&&) -> Bracket& = delete;
     ~Bracket() = default;
   private:
-    RA_FORCE_inline Bracket(P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
+    RA_FORCE_inline Bracket(P& parent, size_type i, const size_type* shape) noexcept(RA_noboundscheck)
     : parent_(parent),
       index_(i),
       shape_(shape)
     {
         RA_CHECKORSAY(index_ >=0 and index_ < shape_[0], "index out of range of array");
     }
-    RA_FORCE_inline auto private_at(size_type nextindex) noexcept(noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
+    RA_FORCE_inline auto private_at(size_type nextindex) noexcept(RA_noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
         return parent_.private_at(index_)[nextindex];
     }
     template<typename,int> friend class ra::rarray; // allow descending
@@ -722,7 +717,7 @@ class Bracket<T,1,P> {
     const size_type* shape_;  // what is the shape of the result
   public:
     // implement square brackets to go to the next level:
-    RA_FORCE_inline auto operator[](size_type nextindex) noexcept(noboundscheck) -> T& {
+    RA_FORCE_inline auto operator[](size_type nextindex) noexcept(RA_noboundscheck) -> T& {
         RA_CHECKORSAY(nextindex >=0 and nextindex < shape_[1], "index out of range of array");
         return parent_.private_at(index_)[nextindex];
     }
@@ -736,7 +731,7 @@ class Bracket<T,1,P> {
     auto operator=(const Bracket&&) -> Bracket& = delete;
     ~Bracket() = default;
   private:
-    RA_FORCE_inline Bracket(P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
+    RA_FORCE_inline Bracket(P& parent, size_type i, const size_type* shape) noexcept(RA_noboundscheck)
     : parent_(parent),
       index_(i),
       shape_(shape)
@@ -758,7 +753,7 @@ class ConstBracket {
     const P&       parent_;
     size_type        index_;
   public:
-    RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(noboundscheck) -> ConstBracket<T,R-1,ConstBracket> {
+    RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(RA_noboundscheck) -> ConstBracket<T,R-1,ConstBracket> {
         return { *this, nextindex, shape_ + 1 };
     }
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
@@ -772,14 +767,14 @@ class ConstBracket {
     ~ConstBracket() = default;
   private:
     const size_type* shape_;
-    RA_FORCE_inline ConstBracket(const P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
+    RA_FORCE_inline ConstBracket(const P& parent, size_type i, const size_type* shape) noexcept(RA_noboundscheck)
     : parent_(parent),
       index_(i),
       shape_(shape)
     {
         RA_CHECKORSAY(index_ >=0 and index_ < shape_[0], "index out of range of array");
     }
-    RA_FORCE_inline auto private_at(size_type nextindex) const noexcept(noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
+    RA_FORCE_inline auto private_at(size_type nextindex) const noexcept(RA_noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
         return parent_.private_at(index_)[nextindex];
     }
     template<typename,int> friend class ra::rarray; // allow descending
@@ -804,7 +799,7 @@ class ConstBracket<T,1,P> {
     const P& parent_;
     size_type  index_;
   public:
-    RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(noboundscheck) -> const T& {
+    RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(RA_noboundscheck) -> const T& {
         RA_CHECKORSAY(nextindex >=0 and nextindex < shape_[1], "index out of range of array");
         return parent_.private_at(index_)[nextindex];
     }
@@ -819,7 +814,7 @@ class ConstBracket<T,1,P> {
     ~ConstBracket() = default;
   private:
     const size_type* shape_;
-    RA_FORCE_inline ConstBracket(const P& parent, size_type i, const size_type* shape) noexcept(noboundscheck)
+    RA_FORCE_inline ConstBracket(const P& parent, size_type i, const size_type* shape) noexcept(RA_noboundscheck)
     : parent_(parent),
       index_(i),
       shape_(shape)
@@ -835,9 +830,9 @@ class ConstBracket<T,1,P> {
     }
 };
 }
-//// TODO: Choose better integer type for n 
+
 template<typename S>
-inline auto linspace(S x1, S x2, int n=0, bool end_incl=true) -> rarray<S,1>
+inline auto linspace(S x1, S x2, size_type n=0, bool end_incl=true) -> rarray<S,1>
 {
     if (n==0) {
         if (x2>x1)
@@ -846,8 +841,11 @@ inline auto linspace(S x1, S x2, int n=0, bool end_incl=true) -> rarray<S,1>
             n = static_cast<int>(x1 - x2 + end_incl);
     }
     rarray<S,1> x(n);
-    for (int i = 0; i < n; i++)
-        x[i] = x1 + static_cast<S>(((x2-x1)*static_cast<long long int>(i))/(n-end_incl));
+    for (size_type i = 0; i < n; i++)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wconversion"
+        x[i] = x1 + static_cast<S>(((x2-x1)*i)/(n-end_incl));
+        #pragma GCC diagnostic pop
     if (end_incl)
         x[n-1] = x2;
     return x;

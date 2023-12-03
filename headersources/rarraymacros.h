@@ -30,22 +30,17 @@
 #ifdef RA_BOUNDSCHECK
 #include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__) + " (rarray:" + std::to_string(__LINE__) + ")")
-#define RA_NOEXCEPT(x)
-#define noboundscheck false
+#define RA_noboundscheck false
 #else
 #define RA_CHECKORSAY(a, b) 
-#define RA_NOEXCEPT(x) noexcept(x)
-#define noboundscheck true
+#define RA_noboundscheck true
 #endif
 
 // Routines using RA_FORCE_inline instead of inline will be forced to
 // inline RA_FORCE_inline includes the "inline" keyword.  Works for
 // gcc, clang and intel compilers, and shuold work MS Visual C++, but
 // untested.  For unsupported compilers, RA_FORCE_inline becomes just
-// inline.
-// Note for xlC: 
-//    In version 10, you need "-O4" to get full inlining.
-//    In version 11, "-O2 -qinline=level=6" suffices.
+// inline. For xlC, you'll likely need "-O4" to get full inlining.
 //
 #if ! defined(RA_FORCE_inline)
 # if defined(_MSC_VER)

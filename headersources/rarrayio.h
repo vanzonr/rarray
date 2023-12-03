@@ -302,8 +302,9 @@ template<typename T,rank_type R>
 inline auto operator>>(std::istream &in, rarray<T,R>& r) -> std::istream&
 {
     auto X = detail::parse_shape<R>(in);
-    size_type* extent = X.second;
-    if (detail::mul(extent,R) <= r.size())
+    size_type* extent = X.second;    
+    if (std::accumulate(extent,extent+R,1,std::multiplies<size_type>())
+        <= r.size())
         r.reshape(extent, RESIZE::ALLOWED);
     else
         r = rarray<T,R>(extent);

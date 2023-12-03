@@ -5,7 +5,7 @@ rarray is a C++ library for reference counted multidimensional arrays.
 It is a header-only implementation that uses templates, which allows 
 most compilers to generate fast code.
 
-The latest release version is 2.5.1
+The latest release version is 2.6.1
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -32,7 +32,7 @@ Installation
     ../configure --prefix=<PREFIXDIR>
     make install
 
-Or copy the rarray file to <PREFIXDIR>/include.
+Or copy the file "`rarray`" to <PREFIXDIR>/include.
 
 The configure-make recipe also allows running tests; type "make help"
 to see the options.
@@ -141,7 +141,10 @@ Release History and Changes
     Support for the multidimensional subscript operator for c++23 compilers.
     Better support for rarray<const T,R>
     Implicit conversion operator from rarray<T,R> to rarray<const T,R>.
-    
+
+    Version 2.6.1 from December 2023 is functionally the same, but
+    with substantial code cleanup and C++11 modernization.  The stub
+    header file rarrayio was removed.
 
 Known issues
 ============
@@ -149,9 +152,12 @@ Known issues
   * Cannot force alignment of data yet.
 
   * The behavior of rarrays of types whose destructor throws an
-    exception is undefined (but really, destructors should not throw
-    exceptions).
+    exception is undefined (note: destructors should not throw
+    exceptions anyway).
 
+  * `xrange` result does not act as a range in C++23 mode for
+    clang-based compilers (note: rarray only promisses C++11).
+  
 Reporting Bugs
 ==============
 
@@ -168,9 +174,6 @@ In the top directory
 
 rarray                 Header file defining runtime arrays (produced from headersources)
 
-rarrayio               Header file defining I/O for rarrays (produced from headersources)
-                       Note: Unnecessary since version 2.3.0.
-                       
 rarraydoc.tex          LaTeX source of the documentation
 
 rarraydoc.pdf          Pdf format of the documentation
@@ -280,4 +283,4 @@ compiler.xlc++.mk
 
 
 
-- May 2023
+- December 2023
