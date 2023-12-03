@@ -30,8 +30,8 @@
 #if __cplusplus >= 201103L
 
 //begin #include "versionheader.h"
-#define RA_VERSION "v2.6.0"
-#define RA_VERSION_NUMBER 2006000
+#define RA_VERSION "v2.6.1"
+#define RA_VERSION_NUMBER 2006001
 
 //end #include "versionheader.h"
 

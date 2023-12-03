@@ -160,23 +160,6 @@ else
             echo 'CXX23:=: Skipping ${CXX23}' >> config.mk
         else
             echo " found"
-            # check if c++23 knows std::view::zip
-            echo -en "Checking for (optional) std::view::zip..."
-            sourcefile=$(mktemp --suffix=.cpp)
-            cat >  ${sourcefile} <<EOF
-#include <ranges>
-#include <vector>
-int main() {
-auto x = std::views::zip(std::vector{0});
-}
-EOF
-            if ! $CXX23 $sourcefile &>/dev/null ; then
-                echo " not found"
-                echo 'CXX23:=${CXX23} -DNOZIP' >> config.mk
-            else
-                echo " found"
-            fi
-            rm -f $sourcefile
         fi
         #########################################################
         accincdir=""
