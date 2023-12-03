@@ -501,7 +501,7 @@ class shared_shape
   public:
 
     using ptrs_type = typename PointerArray<T,R>::type;
-    using size_type = ra::size_type;
+    using size_type = ::ra::size_type;
 
     inline shared_shape() noexcept {
         uninit();

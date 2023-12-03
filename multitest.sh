@@ -4,16 +4,16 @@ compilers=(gcc/8 gcc/9 gcc/11 gcc/12 gcc/13 clang/17 intel/2019u1 intel/2019u2 i
 
 mydir=$PWD
 mkdir -p alltestresults
-for mod in "${compilers[@]}"
+for onemod in "${compilers[@]}"
 do
     module purge >& /dev/null
-    module load $mod 2>/dev/null || module load ${mod/\//\/.experimental-} 2>/dev/null || continue
+    module load $onemod 2>/dev/null || module load ${onemod/\//\/.experimental-} 2>/dev/null || continue
     module load valgrind || true
-    echo '========================'$mod'====================='
-    mkdir -p "alltestresults/$mod"
-    rm -rf "alltestresults/$mod"
-    mkdir -p "alltestresults/$mod"
-    pushd "alltestresults/$mod"  >& /dev/null
+    echo '========================'$onemod'====================='
+    mkdir -p "alltestresults/$onemod"
+    rm -rf "alltestresults/$onemod"
+    mkdir -p "alltestresults/$onemod"
+    pushd "alltestresults/$onemod"  >& /dev/null
     module list  >& "config.out"
     $mydir/configure 2>&1 >> "config.out"
     (time make test)   >& "test.output"
