@@ -35,6 +35,9 @@
 #include <string>
 #include <vector>
 
+#ifndef ADDEDCOMMENTS
+#define NOADDEDCOMMENTS
+#endif
 using namespace std;
 
 // check if a file exists
@@ -172,16 +175,22 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         }
         if (include != NOTFOUND) {
           if (not alreadyincluded[include]) {
+            #ifndef NOADDEDCOMMENTS  
             if (continueat != line.size())
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//begin " << INCLUDETAG << " \"" << includefilename << "\"\n";
+            #endif
             process_one_file(includefilename, includefiles, alreadyincluded, headercommentsdone);
+            #ifndef NOADDEDCOMMENTS
             cout << "//end " << INCLUDETAG << " \"" << includefilename << "\"\n\n";
+            #endif
             alreadyincluded[include] = true;
           } else {
+            #ifndef NOADDEDCOMMENTS  
             if (continueat != line.size())
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//" << INCLUDETAG << " \"" << includefilename << "\" was already done above\n";
+            #endif
           }
         } else {            
             auto tohere=endofcodeline(line);

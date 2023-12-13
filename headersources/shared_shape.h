@@ -27,8 +27,8 @@
 // THE SOFTWARE.
 //
 
-#ifndef SHARED_SHAPEH
-#define SHARED_SHAPEH
+#ifndef SHARED_SHAPEH //TEST//
+#define SHARED_SHAPEH //TEST//
 
 #include "rarraymacros.h"
 #include "rarraytypes.h"
@@ -330,4 +330,4 @@ struct DataFromPtrsNoffsetsNdataoffsets<T,1> {
 }
 }
 
-#endif
+#endif //TEST//

@@ -23,9 +23,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#ifndef OFFSETSH
-#define OFFSETSH
-
+#ifndef OFFSETSH //TEST//
+#define OFFSETSH //TEST//
 #include "rarraymacros.h"
 #include "rarraytypes.h"
 #include <cstdlib>
@@ -113,5 +112,4 @@ class Offsets
 };
 
 }}  // end namespace ra::detail and ra
-
-#endif
+#endif //TEST//

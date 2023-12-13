@@ -25,10 +25,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-
-#ifndef SHAREDBUFFERH
-#define SHAREDBUFFERH
-
+#ifndef SHAREDBUFFERH //TEST//
+#define SHAREDBUFFERH //TEST//
 #include "rarraymacros.h"
 #include "rarraytypes.h"
 #include <cstddef>
@@ -344,5 +342,4 @@ class shared_buffer
 
 } 
 }
-
-#endif
+#endif //TEST//

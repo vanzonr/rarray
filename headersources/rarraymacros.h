@@ -21,9 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#ifndef _RARRAYMACROSH_
-#define _RARRAYMACROSH_
-
+#ifndef _RARRAYMACROSH_ //TEST//
+#define _RARRAYMACROSH_ //TEST//
 // Compiling with -DRA_BOUNDSCHECK switches on the RA_CHECKORSAY macro to
 // check its first argument and throw an exception if it is not true.
 // checkOrSay is intended to be used for bound checks.
@@ -67,5 +66,4 @@
 #  define RA_FORCE_inline inline
 # endif
 #endif
-
-#endif
+#endif //TEST//

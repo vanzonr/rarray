@@ -21,10 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-
-#ifndef _RARRAYTYPESH_
-#define _RARRAYTYPESH_
-
+#ifndef _RARRAYTYPESH_ //TEST//
+#define _RARRAYTYPESH_ //TEST//
 #include <string>
 
 namespace ra {    
@@ -32,5 +30,4 @@ namespace ra {
     using index_type = ssize_t;
     using rank_type = int;
 }
-
-#endif
+#endif //TEST//

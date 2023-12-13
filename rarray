@@ -29,15 +29,8 @@
 
 #if __cplusplus >= 201103L
 
-//begin #include "versionheader.h"
 #define RA_VERSION "v2.6.1"
 #define RA_VERSION_NUMBER 2006001
-
-//end #include "versionheader.h"
-
-//begin #include "rarraymacros.h"
-#ifndef _RARRAYMACROSH_
-#define _RARRAYMACROSH_
 
 #ifdef RA_BOUNDSCHECK
 #include <string>
@@ -74,15 +67,6 @@
 # endif
 #endif
 
-#endif
-
-//end #include "rarraymacros.h"
-
-//begin #include "rarraytypes.h"
-
-#ifndef _RARRAYTYPESH_
-#define _RARRAYTYPESH_
-
 #include <string>
 
 namespace ra {
@@ -91,17 +75,6 @@ namespace ra {
     using rank_type = int;
 }
 
-#endif
-
-//end #include "rarraytypes.h"
-
-//begin #include "shared_buffer.h"
-
-#ifndef SHAREDBUFFERH
-#define SHAREDBUFFERH
-
-//#include "rarraymacros.h" was already done above
-//#include "rarraytypes.h" was already done above
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
@@ -362,23 +335,8 @@ class shared_buffer
 }
 }
 
-#endif
 
-//end #include "shared_buffer.h"
 
-//begin #include "shared_shape.h"
-
-#ifndef SHARED_SHAPEH
-#define SHARED_SHAPEH
-
-//#include "rarraymacros.h" was already done above
-//#include "rarraytypes.h" was already done above
-//begin #include "offsets.h"
-#ifndef OFFSETSH
-#define OFFSETSH
-
-//#include "rarraymacros.h" was already done above
-//#include "rarraytypes.h" was already done above
 #include <cstdlib>
 #include <vector>
 #include <type_traits>
@@ -459,10 +417,6 @@ class Offsets
 };
 
 }}
-
-#endif
-
-//end #include "offsets.h"
 
 #include <array>
 #include <stdexcept>
@@ -728,9 +682,6 @@ struct DataFromPtrsNoffsetsNdataoffsets<T,1> {
 }
 }
 
-#endif
-
-//end #include "shared_shape.h"
 
 
 #include <algorithm>
@@ -1592,9 +1543,7 @@ namespace std {
     };
 }
 
-//begin #include "rarrayio.h"
 
-//#include "rarraytypes.h" was already done above
 
 namespace ra {
 namespace detail {
@@ -1869,17 +1818,12 @@ inline auto operator>>(std::istream &in, rarray<T,R>& r) -> std::istream&
 }
 
 
-//end #include "rarrayio.h"
 
-
-//begin #include "rarraydelmacros.h"
 
 #undef RA_CHECKORSAY
 #undef RA_FORCE_inline
 #undef RA_noboundscheck
 
-
-//end #include "rarraydelmacros.h"
 
 
 
