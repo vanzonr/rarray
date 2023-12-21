@@ -266,21 +266,26 @@ class shared_buffer
     }
 
     // assign values (could throw if copy assignment throws)
-    inline void assign(const T& value) {
+    inline void fill(const T& value) {
         for (size_type i = 0; i < size_; i++)
             data_[i] = value;
     }
-    inline void assign(std::initializer_list<T> ilist) {
-        assign_iter(ilist.begin(), ilist.end());
+    void assign(size_type count, const T& value) {
+        resize(count);
+        fill(value);
     }
-    template<class InputIt>
-    inline void assign_iter(InputIt first, InputIt last) {
+    template<class InputIt,
+             class=typename std::enable_if<
+                 std::is_convertible<decltype(*InputIt()),T>::value>::type>
+    inline void assign(InputIt first, InputIt last) {
         resize(last-first);
         T* data = data_;
         for (InputIt it = first; it != last; it++)
             *(data++) = *it;
     }
-   
+    inline void assign(std::initializer_list<T> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
   private:
     
     T*        data_;
@@ -340,6 +345,6 @@ class shared_buffer
 
 };
 
-} 
-}
+}  // namespace detail 
+}  // namespace ra
 #endif //TEST//

@@ -77,7 +77,8 @@ size_t endofcodeline(const std::string& line)
         size_t lastslashi = line.size()-1;
         while (lastslashi > 0 and line[lastslashi] != '/')
             lastslashi--;
-        if (lastslashi==0 or line[lastslashi] != '/' or line[lastslashi-1] != '/') {
+        if (lastslashi==0 or line[lastslashi] != '/' or line[lastslashi-1] != '/'
+            or line.find("  // namespace") != std::string::npos) {
             end = line.size();
         } else {
             end = lastslashi-1;
@@ -88,9 +89,19 @@ size_t endofcodeline(const std::string& line)
     return end;
 }
 
+// trim whitespace 
+string trimline(const string& line)
+{
+    size_t i = 0;
+    while (i < line.size() and line[i] == ' ')
+        i++;
+    return line.substr(i);
+}
+
 // to process one file (allowing for recursive application)
 void process_one_file(const string& inputfile, const vector<string>& includefiles,
-                 vector<bool>& alreadyincluded, bool& headercommentsdone);
+                      vector<bool>& alreadyincluded, bool& headercommentsdone,
+                      const vector<string>& systemincludefiles);
 
 // start 
 int main(int argc, char** argv)
@@ -99,7 +110,8 @@ int main(int argc, char** argv)
     vector<string> includefiles;
     vector<bool>   alreadyincluded(argc-2, false); 
     bool           headercommentsdone = false;
-   
+    vector<string> systemincludefiles;
+    
     // check command line arguments:
     if (argc<3) {
         cerr << "ERROR: Not enough arguments\n"
@@ -121,27 +133,41 @@ int main(int argc, char** argv)
             }
         }
         inputfile = argv[1];
-        for (auto filenameptr=argv+2; filenameptr < argv+argc; filenameptr++)
+        for (auto filenameptr=argv+2; filenameptr < argv+argc; filenameptr++) {
             includefiles.push_back(*filenameptr);
+            std::ifstream f(*filenameptr);
+            while (f.good() && !f.eof()) {
+                string line;
+                getline(f, line);
+                if (line.substr(0,10) == "#include <") 
+                    if (string_in_set(line, systemincludefiles) == NOTFOUND) 
+                        systemincludefiles.push_back(line);
+            }
+            f.close();
+        }
     }
 
     // start processing:
-    process_one_file(inputfile, includefiles, alreadyincluded, headercommentsdone);
+    process_one_file(inputfile, includefiles, alreadyincluded, headercommentsdone, systemincludefiles);
 }
     
 void process_one_file(const string& inputfile, const vector<string>& includefiles,
-                 vector<bool>& alreadyincluded, bool& headercommentsdone)
+                      vector<bool>& alreadyincluded, bool& headercommentsdone,
+                      const vector<string>& systemincludefiles
+                      )
 {
     static const string INCLUDETAG("#include");
     ifstream infile(inputfile); // note: doesn't throw on failuer e.g with inputfile=="-"
     istream& in = (inputfile == "-")?cin:infile;
-
+    int insertline = -1;
     while (in.good() && !in.eof()) {
         // read in a line from the file
         string line;
         getline(in, line);
-        if (not headercommentsdone and not iscommentline(line))
+        if (not headercommentsdone and not iscommentline(line)) {
+            insertline = 3; // assumes a guard header
             headercommentsdone = true;
+        }
         if (headercommentsdone and iscommentline(line))
             continue;
         auto include = NOTFOUND;
@@ -180,7 +206,7 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//begin " << INCLUDETAG << " \"" << includefilename << "\"\n";
             #endif
-            process_one_file(includefilename, includefiles, alreadyincluded, headercommentsdone);
+            process_one_file(includefilename, includefiles, alreadyincluded, headercommentsdone, systemincludefiles);
             #ifndef NOADDEDCOMMENTS
             cout << "//end " << INCLUDETAG << " \"" << includefilename << "\"\n\n";
             #endif
@@ -195,8 +221,17 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         } else {            
             auto tohere=endofcodeline(line);
             if (not iscommentline(line)) {
-                if (line.size() < 8 || tohere < 6 || line.substr(tohere-6,6) != "//TEST")                   
-                cout << line.substr(0,tohere) << '\n';
+                if (line.size() < 8 || tohere < 6 || line.substr(tohere-6,6) != "//TEST")
+                    if (trimline(line.substr(0,tohere))!="")
+                        if (string_in_set(line,systemincludefiles) == NOTFOUND) {
+                            if (insertline > 0) {
+                                insertline--;
+                                if (insertline == 0) 
+                                    for (const auto& line: systemincludefiles)
+                                        cout << line << '\n';
+                            }
+                            cout << line.substr(0,tohere) << '\n';
+                        }
             } else {
                 cout << line << '\n';
             }

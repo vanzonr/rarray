@@ -327,7 +327,7 @@ struct DataFromPtrsNoffsetsNdataoffsets<T,1> {
     }
 };
 
-}
-}
+}  // namespace detail
+}  // namespace ra
 
 #endif //TEST//

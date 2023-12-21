@@ -111,5 +111,6 @@ class Offsets
     size_type ndataoffsets_;
 };
 
-}}  // end namespace ra::detail and ra
+}  // namespace detail
+}  // namespace ra
 #endif //TEST//

@@ -38,11 +38,6 @@
 // AUXILIARY STUFF
 //////////////////////////////////////////////////////////////////////
 
-// bool operator==(const std::string&a, const std::string& b)
-// {
-//     return std::operator==(a,b);
-// }
-
 template<typename T,ra::rank_type R> 
 const T* getconstdata(const rarray<T,R>& a)
 {
@@ -1257,7 +1252,7 @@ void mmm(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
         }
     }
 }
-TEMPLATE_TEST_CASE("testmmm", "", int, double)
+TEMPLATE_TEST_CASE("testmmm", "", int, double, (std::complex<float>))
 {                  
     using T = TestType;
     T bdata[3*3] = { 1,  2,  3,
@@ -1302,7 +1297,7 @@ void mmm23(rarray<T,2> &A, const rarray<T,2>& B, const rarray<T,2>& C)
         }
     }
 }
-TEMPLATE_TEST_CASE("testmmm23", "", int, double)
+TEMPLATE_TEST_CASE("testmmm23", "", int, double, (std::complex<float>))
 {                  
     using T = TestType;
     T bdata[3*3] = { 1,  2,  3,
@@ -2953,7 +2948,6 @@ TEST_CASE("testiterators")
     REQUIRE(se >= sb);
 }
 
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -2971,6 +2965,185 @@ TEST_CASE("testfill")
     for (ra::size_type i=0;i<EXTENT(a,0);i++) {
         REQUIRE(b[i]==1.24f);
     }
+}
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+TEMPLATE_TEST_CASE("testassign1", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,1> a;
+    a.assign(12, x1);
+    REQUIRE(a.extent(0) == 12); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign2", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,2> a;
+    a.assign(3,4, x1);
+    REQUIRE(a.extent(0)==3);
+    REQUIRE(a.extent(1)==4);
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign3", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,3> a;
+    a.assign(2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+         REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign4", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,4> a;
+    a.assign(2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign5", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,5> a;
+    a.assign(2,2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign6", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,6> a;
+    a.assign(2,2,2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign7", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+ {
+     using T = TestType;
+     T x1 = global::get_value_1<T>();
+     rarray<T,7> a;
+     a.assign(2,2,2,2,2,2,2, x1);
+     for (const auto& i: xrange(a.rank()))
+         REQUIRE(a.extent(i) == 2); 
+     for (const auto& x: a) 
+         REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign8", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,8> a;
+    a.assign(2,2,2,2,2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign9", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,9> a;
+    a.assign(2,2,2,2,2,2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign10", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,10> a;
+    a.assign(2,2,2,2,2,2,2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
+}
+
+TEMPLATE_TEST_CASE("testassign11", "",
+                    double,
+                    Compound,
+                    (array<Compound,3>),
+                    (std::complex<float>))
+{
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    rarray<T,11> a;
+    a.assign(2,2,2,2,2,2,2,2,2,2,2, x1);
+    for (const auto& i: xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2); 
+    for (const auto& x: a) 
+        REQUIRE(x==x1);
 }
 
 #if __cpp_multidimensional_subscript >= 202110L

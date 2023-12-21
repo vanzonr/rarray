@@ -277,7 +277,7 @@ inline void parse_strings(const std::pair<std::list<std::pair<token,std::string>
     }
 }
 
-}
+}  // namespace detail
 
 template<typename T, rank_type R> 
 inline auto operator<<(std::ostream &o, const rarray<T, R>& r) -> std::ostream&
@@ -312,5 +312,5 @@ inline auto operator>>(std::istream &in, rarray<T,R>& r) -> std::istream&
     return in;
 }
 
-}
+}  // namespace ra
 

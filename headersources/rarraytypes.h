@@ -29,5 +29,6 @@ namespace ra {
     using size_type = ssize_t;
     using index_type = ssize_t;
     using rank_type = int;
-}
+}  // namespace ra
+
 #endif //TEST//

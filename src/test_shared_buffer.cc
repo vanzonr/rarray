@@ -245,7 +245,7 @@ TEST_CASE("test assign")
 {
     const int N = 100;
     ra::detail::shared_buffer<int> a(N);
-    a.assign(-15);
+    a.fill(-15);
     for (const auto& x: a) REQUIRE(x == -15);
 }
 
@@ -265,12 +265,23 @@ TEMPLATE_TEST_CASE("test .at()",
     REQUIRE(a.at(3)==4);
 }
 
-TEST_CASE("test .assign_iter()")
+TEST_CASE("test .assign (count)")
+{
+    ra::detail::shared_buffer<int> b;
+    b.assign(4, 14);
+    assert(b.size()==4);
+    assert(b[0]==14);
+    assert(b[1]==14);
+    assert(b[2]==14);
+    assert(b[3]==14);
+}
+
+TEST_CASE("test .assign (iter)")
 {
     ra::detail::shared_buffer<int> a(6);
     a.assign({1,2,3,4});
     ra::detail::shared_buffer<int> b;
-    b.assign_iter(a.begin(),a.end());
+    b.assign(a.begin(),a.end());
     assert(b[0]==1);
     assert(b[1]==2);
     assert(b[2]==3);

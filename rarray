@@ -23,24 +23,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-
 #ifndef RARRAY_H
 #define RARRAY_H
-
+#include <string>
+#include <cstddef>
+#include <algorithm>
+#include <stdexcept>
+#include <memory>
+#include <cstring>
+#include <atomic>
+#include <array>
+#include <numeric>
+#include <cstdlib>
+#include <vector>
+#include <type_traits>
 #if __cplusplus >= 201103L
-
 #define RA_VERSION "v2.6.1"
 #define RA_VERSION_NUMBER 2006001
-
 #ifdef RA_BOUNDSCHECK
-#include <string>
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__) + " (rarray:" + std::to_string(__LINE__) + ")")
 #define RA_noboundscheck false
 #else
 #define RA_CHECKORSAY(a, b)
 #define RA_noboundscheck true
 #endif
-
 #if ! defined(RA_FORCE_inline)
 # if defined(_MSC_VER)
 #  if _MSC_VER >= 1900
@@ -66,33 +72,18 @@
 #  define RA_FORCE_inline inline
 # endif
 #endif
-
-#include <string>
-
 namespace ra {
     using size_type = ssize_t;
     using index_type = ssize_t;
     using rank_type = int;
-}
-
-#include <cstddef>
-#include <algorithm>
-#include <stdexcept>
-#include <memory>
-#include <cstring>
-#include <atomic>
-
-
+}  // namespace ra
 namespace ra {
 namespace detail {
-
 template<class T>
 class shared_buffer
 {
   public:
-
     using size_type = ::ra::size_type;
-
     inline shared_buffer() noexcept
     {
         uninit();
@@ -121,7 +112,6 @@ class shared_buffer
     {
         from.uninit();
     }
-
     inline auto operator=(const shared_buffer& other) noexcept -> shared_buffer& {
         if (this != &other) {
             decref();
@@ -141,11 +131,9 @@ class shared_buffer
         refs_ = from.refs_;
         from.uninit();
     }
-
     inline ~shared_buffer() noexcept {
         decref();
     }
-
     inline auto operator[](size_type index) const noexcept(RA_noboundscheck) -> const T& {
         RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
         return data_[index];
@@ -154,7 +142,6 @@ class shared_buffer
         RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
         return data_[index];
     }
-
     inline auto at(size_type index) const -> const T& {
         if (index < 0 or index >= size_)
             throw std::out_of_range("shared_buffer::at");
@@ -165,7 +152,6 @@ class shared_buffer
             throw std::out_of_range("shared_buffer::at");
         return data_[index];
     }
-
     inline auto slice(size_type from, size_type to) -> shared_buffer<T> {
         if (from < 0 or to < 0 or from > size_ or to > size_)
             throw std::out_of_range("shared_buffer::slice");
@@ -186,15 +172,12 @@ class shared_buffer
             result.size_ = to - from;
         return result;
     }
-
     inline auto size() const noexcept -> size_type {
         return size_;
     }
-
     inline auto copy() const -> shared_buffer<T> {
         return shared_buffer<T>(size_,cbegin(), cend());
     }
-
     using iterator = T*;
     using const_iterator = const T*;
     inline auto begin() noexcept -> iterator {
@@ -215,7 +198,6 @@ class shared_buffer
     inline auto cend() const noexcept -> const_iterator {
         return data_+size_;
     }
-
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     inline auto rbegin() -> reverse_iterator {
@@ -236,7 +218,6 @@ class shared_buffer
     inline auto crend() const -> const_reverse_iterator{
         return std::reverse_iterator<const_iterator>(data_);
     }
-
     inline void resize(size_type newsize, bool keep_content = false) {
         if ( (newsize<size_) and (refs_) and (*refs_)==1) {
             size_ = newsize;
@@ -269,29 +250,31 @@ class shared_buffer
             refs_ = newrefs;
        }
     }
-
-    inline void assign(const T& value) {
+    inline void fill(const T& value) {
         for (size_type i = 0; i < size_; i++)
             data_[i] = value;
     }
-    inline void assign(std::initializer_list<T> ilist) {
-        assign_iter(ilist.begin(), ilist.end());
+    void assign(size_type count, const T& value) {
+        resize(count);
+        fill(value);
     }
-    template<class InputIt>
-    inline void assign_iter(InputIt first, InputIt last) {
+    template<class InputIt,
+             class=typename std::enable_if<
+                 std::is_convertible<decltype(*InputIt()),T>::value>::type>
+    inline void assign(InputIt first, InputIt last) {
         resize(last-first);
         T* data = data_;
         for (InputIt it = first; it != last; it++)
             *(data++) = *it;
     }
-
+    inline void assign(std::initializer_list<T> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
   private:
-
     T*        data_;
     T*        orig_;
     size_type size_;
     std::atomic<int>* refs_;
-
     inline void uninit() noexcept {
         data_ = nullptr;
         orig_ = nullptr;
@@ -311,7 +294,6 @@ class shared_buffer
             }
         }
     }
-
     template<typename InputIt>
     inline shared_buffer(size_type asize, InputIt first, InputIt last)
     : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
@@ -320,7 +302,6 @@ class shared_buffer
         #ifndef __ibmxl__
         auto to_be_data = std::unique_ptr<T[]>(new T[asize]{*first});
 	#else
-
 	auto to_be_data	= std::unique_ptr<T[]>(const_cast<T*>(new typename std::remove_const<T>::type[asize]));
 	#endif
         std::copy(first, last, const_cast<noconstT*>(to_be_data.get()));
@@ -329,21 +310,11 @@ class shared_buffer
         orig_ = data_;
         size_ = asize;
      }
-
 };
-
-}
-}
-
-
-
-#include <cstdlib>
-#include <vector>
-#include <type_traits>
-
+}  // namespace detail
+}  // namespace ra
 namespace ra {
 namespace detail {
-
 class Offsets
 {
   public:
@@ -409,26 +380,15 @@ class Offsets
     {
         return rank_;
     }
-
   private:
     rank_type rank_;
     std::vector<size_type> offsets_;
     size_type ndataoffsets_;
 };
-
-}}
-
-#include <array>
-#include <stdexcept>
-#include <memory>
-#include <atomic>
-#include <numeric>
-
-
+}  // namespace detail
+}  // namespace ra
 namespace ra {
 namespace detail {
-
-
 template<typename T,rank_type R>
 struct PointerArray {
     using type = typename PointerArray<T,R-1>::type const*;
@@ -444,18 +404,14 @@ struct PointerArray<T,0> {
     using type = T&;
     using noconst_type = T&;
 };
-
 template<class T, rank_type R>
 struct DataFromPtrsNoffsetsNdataoffsets;
-
 template<class T, rank_type R>
 class shared_shape
 {
   public:
-
     using ptrs_type = typename PointerArray<T,R>::type;
     using size_type = ::ra::size_type;
-
     inline shared_shape() noexcept {
         uninit();
     }
@@ -485,7 +441,6 @@ class shared_shape
     {
         other.uninit();
     }
-
     inline auto operator=(const shared_shape& other) noexcept -> shared_shape&
     {
         if (this != &other) {
@@ -511,11 +466,9 @@ class shared_shape
         ndataoffsets_ = other.ndataoffsets_;
         other.uninit();
     }
-
     inline ~shared_shape() noexcept {
         decref();
     }
-
     inline auto copy() const -> shared_shape {
         shared_shape copy_of_this;
         copy_of_this.extent_ = extent_;
@@ -538,9 +491,7 @@ class shared_shape
             copy_of_this.ptrs_ = ptrs_;
       }
       return copy_of_this;
-
     }
-
     inline void relocate(T* newdata) {
         if (R==1) {
             ptrs_ = reinterpret_cast<ptrs_type>(newdata);
@@ -563,7 +514,6 @@ class shared_shape
                 throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
         }
     }
-
     inline auto ptrs() const noexcept -> ptrs_type {
         return ptrs_;
     }
@@ -597,16 +547,13 @@ class shared_shape
         }
         return result;
     }
-
   private:
-
     std::array<size_type,R> extent_;
     ptrs_type ptrs_;
     std::atomic<int>* refs_;
     void***   orig_;
     size_type noffsets_;
     size_type ndataoffsets_;
-
     inline void uninit() noexcept {
         ptrs_         = nullptr;
         orig_         = nullptr;
@@ -629,16 +576,12 @@ class shared_shape
             }
         }
     }
-
     inline void copy_before_write() {
         if (R > 1 and refs_ and *refs_ > 1)
             *this = this->copy();
     }
-
     template<class U, int S> friend class shared_shape;
-
 };
-
 template<typename T>
 class shared_shape<T,0> {
   public:
@@ -654,7 +597,6 @@ class shared_shape<T,0> {
     inline void incref() const noexcept {}
     template<class U, int S> friend class shared_shape;
 };
-
 template<class T, rank_type R>
 struct DataFromPtrsNoffsetsNdataoffsets {
     static inline auto call(typename PointerArray<T,R>::type ptrs,
@@ -668,7 +610,6 @@ struct DataFromPtrsNoffsetsNdataoffsets {
                );
     }
 };
-
 template<class T>
 struct DataFromPtrsNoffsetsNdataoffsets<T,1> {
     static inline auto call(typename PointerArray<T,1>::type ptrs,
@@ -678,36 +619,24 @@ struct DataFromPtrsNoffsetsNdataoffsets<T,1> {
         return reinterpret_cast<T*>(ptrs);
     }
 };
-
-}
-}
-
-
-
-#include <algorithm>
+}  // namespace detail
+}  // namespace ra
 #include <cmath>
-#include <cstdlib>
 #include <iostream>
 #include <list>
 #include <sstream>
-#include <stdexcept>
 #include <utility>
-
 namespace ra {
-
 enum class RESIZE { NO, ALLOWED };
-
 namespace detail {
-    template<typename T> class CommaOp;
-    template<typename T,rank_type R,typename P> class Bracket;
-    template<typename T,rank_type R,typename P> class ConstBracket;
-    #define ExOp class
-    template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
-}
-
+template<typename T> class CommaOp;
+template<typename T,rank_type R,typename P> class Bracket;
+template<typename T,rank_type R,typename P> class ConstBracket;
+#define ExOp class
+template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
+}  // namespace detail
 template<typename T,rank_type R>
 class rarray {
-
   public:
     using value_type = T;
     using difference_type = ::ra::size_type;
@@ -1149,7 +1078,97 @@ class rarray {
         buffer_ = detail::shared_buffer<T>();
     }
     inline void fill(const T& value) {
-        buffer_.assign(value);
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==1>::type>
+    inline void assign(size_type n0, const T& value) {
+        buffer_ = detail::shared_buffer<T>(n0);
+        shape_ = detail::shared_shape<T,R>({n0}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==2>::type>
+    inline void assign(size_type n0, size_type n1, const T& value) {
+        buffer_ = detail::shared_buffer<T>(n0*n1);
+        shape_ = detail::shared_shape<T,R>({n0,n1}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==3>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==4>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==5>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==6>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==7>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==8>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==9>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7, size_type n8,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==10>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7, size_type n8, size_type n9,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==11>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7, size_type n8, size_type n9,
+                       size_type n10,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10},
+                                           buffer_.begin());
+        buffer_.fill(value);
     }
     inline auto begin() noexcept -> iterator {
         return buffer_.begin();
@@ -1303,9 +1322,7 @@ class rarray {
     {}
     detail::shared_buffer<T>  buffer_;
     detail::shared_shape<T,R> shape_;
-
 };
-
 namespace detail {
 template<typename T>
 class CommaOp {
@@ -1327,7 +1344,6 @@ class CommaOp {
     T * const last_;
     template<typename,int> friend class ra::rarray;
 };
-
 template<typename T,rank_type R,typename P>
 class Bracket {
   private:
@@ -1370,7 +1386,6 @@ class Bracket {
     }
     #endif
 };
-
 template<typename T,typename P>
 class Bracket<T,1,P> {
   private:
@@ -1405,7 +1420,6 @@ class Bracket<T,1,P> {
         return parent_.at(index_).at(nextindex);
     }
 };
-
 template<typename T,rank_type R,typename P>
 class ConstBracket {
   private:
@@ -1448,7 +1462,6 @@ class ConstBracket {
     }
     #endif
 };
-
 template<typename T,typename P>
 class ConstBracket<T,1,P> {
   private:
@@ -1483,8 +1496,7 @@ class ConstBracket<T,1,P> {
         return parent_.at(index_).at(nextindex);
     }
 };
-}
-
+}  // namespace detail
 template<typename S>
 inline auto linspace(S x1, S x2, size_type n=0, bool end_incl=true) -> rarray<S,1>
 {
@@ -1504,7 +1516,6 @@ inline auto linspace(S x1, S x2, size_type n=0, bool end_incl=true) -> rarray<S,
         x[n-1] = x2;
     return x;
 }
-
 template<class T>
 class Xrange {
   private:
@@ -1555,22 +1566,18 @@ class Xrange {
         return static_cast<size_t>((b_-a_)/d_);
     }
 };
-
 template<class T>
 inline auto xrange(T end) -> Xrange<T> {
     return Xrange<T>(static_cast<T>(0), end, static_cast<T>(1));
 }
-
 template<class S, class T>
 inline auto xrange(S begin, T end) -> Xrange<T> {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(1));
 }
-
 template<class S, class T, class U>
 inline auto xrange(S begin, T end, U step) -> Xrange<T> {
     return Xrange<T>(static_cast<T>(begin), end, static_cast<T>(step));
 }
-
 template<typename A>
 inline auto extent(const A &a, int i) -> size_type
 {
@@ -1589,31 +1596,24 @@ inline auto extent(const A &a, int i) -> size_type
     default: throw std::out_of_range("ra::extent"); return 0;
     }
 }
-
 template<typename T,rank_type R>
 inline auto extent(const rarray<T,R> &a, int i) -> size_type
 {
     return a.extent(i);
 }
-
-}
-
+}  // namespace ra
 namespace std {
-    template<typename T,ra::rank_type R>
-    struct remove_all_extents<ra::rarray<T,R>> {
-        using type = T;
-    };
-    template<typename T,ra::rank_type R>
-    struct rank<ra::rarray<T,R>> {
-        static const size_t value = R;
-    };
-}
-
-
-
+template<typename T,ra::rank_type R>
+struct remove_all_extents<ra::rarray<T,R>> {
+    using type = T;
+};
+template<typename T,ra::rank_type R>
+struct rank<ra::rarray<T,R>> {
+    static const size_t value = R;
+};
+}  // namespace std
 namespace ra {
 namespace detail {
-
 template<typename T, rank_type R>
 struct Deref {
     static inline auto access(typename PointerArray<T,R>::type p, const size_type* indices) -> T&
@@ -1629,7 +1629,6 @@ struct Deref<T,1>
         return p[indices[0]-1];
     }
 };
-
 template<typename T>
 struct StringToValue {
     static inline void get(const std::string& input, T& output) {
@@ -1643,9 +1642,7 @@ struct StringToValue<std::string> {
         output = input;
     }
 };
-
 enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
-
 inline auto toch(const token& Token) -> char {
      switch (Token) {
      case token::BRACEOPEN:  return '{';
@@ -1656,7 +1653,6 @@ inline auto toch(const token& Token) -> char {
      default: return '\0';
      }
  }
-
 template<typename T, rank_type R>
 inline auto text_output(std::ostream &o, const rarray<T,R>& r) -> std::ostream&
 {
@@ -1677,7 +1673,6 @@ inline auto text_output(std::ostream &o, const rarray<T,R>& r) -> std::ostream&
     }
     return o;
 }
-
 template<typename T>
 inline auto text_output(std::ostream &o, const rarray<T,1>& r) -> std::ostream&
 {
@@ -1701,8 +1696,6 @@ inline auto text_output(std::ostream &o, const rarray<T,1>& r) -> std::ostream&
         o << "{}";
     return o;
 }
-
-
 static inline auto get_but_eat_newline(std::istream & in) -> char
 {
     char ch1='\n';
@@ -1710,14 +1703,12 @@ static inline auto get_but_eat_newline(std::istream & in) -> char
         in >> ch1;
     return ch1;
 }
-
 static inline auto get_but_eat_whitespace(std::istream & in) -> char
 {
     char ch1;
     in >> ch1;
     return ch1;
 }
-
 template<rank_type R>
 inline auto parse_shape(std::istream & in) -> std::pair<std::list<std::pair<token,std::string>>,size_type[R]>
 {
@@ -1815,10 +1806,8 @@ inline auto parse_shape(std::istream & in) -> std::pair<std::list<std::pair<toke
         in.setstate(std::ios::failbit);
         throw;
     }
-
     return wholeresult;
 }
-
 template<typename T, rank_type R>
 inline void parse_strings(const std::pair<std::list<std::pair<token,std::string>>,size_type[R]> & tokens, typename PointerArray<T,R>::type p)
 {
@@ -1845,9 +1834,7 @@ inline void parse_strings(const std::pair<std::list<std::pair<token,std::string>
         if (tokenpair.first == token::END) break;
     }
 }
-
-}
-
+}  // namespace detail
 template<typename T, rank_type R>
 inline auto operator<<(std::ostream &o, const rarray<T, R>& r) -> std::ostream&
 {
@@ -1866,7 +1853,6 @@ inline auto operator<<(std::ostream &o, const rarray<T, R>& r) -> std::ostream&
     }
     return o;
 }
-
 template<typename T,rank_type R>
 inline auto operator>>(std::istream &in, rarray<T,R>& r) -> std::istream&
 {
@@ -1880,34 +1866,20 @@ inline auto operator>>(std::istream &in, rarray<T,R>& r) -> std::istream&
     detail::parse_strings<T,R>(X, r.ptr_array());
     return in;
 }
-
-}
-
-
-
-
+}  // namespace ra
 #undef RA_CHECKORSAY
 #undef RA_FORCE_inline
 #undef RA_noboundscheck
-
-
-
-
 #define EXTENT(A,I)  ra::extent(A,I)
 #define RARRAY(A)    rarray<typename std::remove_all_extents<decltype(A)>::type,std::rank<decltype(A)>::value>(A)
 #define INDEX(A,X,I) RARRAY(A).index(X,I)
-
 using ra::rarray;
 using ra::linspace;
 using ra::xrange;
-
 template<typename T> using rvector = rarray<T,1>;
 template<typename T> using rmatrix = rarray<T,2>;
 template<typename T> using rtensor = rarray<T,3>;
-
 #else
 #error "This file requires C++11 or newer support."
 #endif
-
 #endif
-

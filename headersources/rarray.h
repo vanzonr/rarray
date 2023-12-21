@@ -50,16 +50,16 @@ namespace ra {
 enum class RESIZE { NO, ALLOWED };
 
 namespace detail {
-    template<typename T> class CommaOp;
-    template<typename T,rank_type R,typename P> class Bracket;
-    template<typename T,rank_type R,typename P> class ConstBracket;
-    // TODO: Each operator will create a subexpression of the Expr<...>, which we forward-define first
-    // Forward definitions to support array expressions //
-    // What type enumerates possible operators?
-    //using ExOp = int;
-    #define ExOp class
-    template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
-}
+template<typename T> class CommaOp;
+template<typename T,rank_type R,typename P> class Bracket;
+template<typename T,rank_type R,typename P> class ConstBracket;
+// TODO: Each operator will create a subexpression of the Expr<...>,
+// which we forward-define first Forward definitions to support array
+// expressions // What type enumerates possible operators?
+// using ExOp = int;
+#define ExOp class
+template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
+}  // namespace detail
 
 template<typename T,rank_type R> 
 class rarray {
@@ -532,9 +532,100 @@ class rarray {
         shape_ = detail::shared_shape<T,R>();
         buffer_ = detail::shared_buffer<T>();
     }
-    // fill with uniform value
+    // fill with uniform value (does not change the size or shape)
     inline void fill(const T& value) {
-        buffer_.assign(value);
+        buffer_.fill(value);
+    }
+    // assign with uniform value (will set the size and shape)
+    template<rank_type R_=R,class=typename std::enable_if<R_==1>::type>
+    inline void assign(size_type n0, const T& value) {
+        buffer_ = detail::shared_buffer<T>(n0);
+        shape_ = detail::shared_shape<T,R>({n0}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==2>::type>
+    inline void assign(size_type n0, size_type n1, const T& value) {
+        buffer_ = detail::shared_buffer<T>(n0*n1);
+        shape_ = detail::shared_shape<T,R>({n0,n1}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==3>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==4>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==5>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==6>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, 
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==7>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==8>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==9>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7, size_type n8,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==10>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7, size_type n8, size_type n9,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9}, buffer_.begin());
+        buffer_.fill(value);
+    }
+    template<rank_type R_=R,class=typename std::enable_if<R_==11>::type>
+    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+                       size_type n5, size_type n6, size_type n7, size_type n8, size_type n9,
+                       size_type n10,
+                       const T& value)
+    {
+        buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10);
+        shape_ = detail::shared_shape<T,R>({n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10},
+                                           buffer_.begin());
+        buffer_.fill(value);
     }
     // iterators over the data
     inline auto begin() noexcept -> iterator {
@@ -897,7 +988,8 @@ class ConstBracket<T,1,P> {
         return parent_.at(index_).at(nextindex);
     }
 };
-}
+
+}  // namespace detail
 
 template<typename S>
 inline auto linspace(S x1, S x2, size_type n=0, bool end_incl=true) -> rarray<S,1>
@@ -1011,19 +1103,19 @@ inline auto extent(const rarray<T,R> &a, int i) -> size_type
     return a.extent(i);
 }
 
-} // end namespace ra
+}  // namespace ra
 
 // make RARRAY and INDEX work for rarrays as well as automatic arrays:
 namespace std {
-    template<typename T,ra::rank_type R>
-    struct remove_all_extents<ra::rarray<T,R>> {
-        using type = T;
-    };
-    template<typename T,ra::rank_type R>
-    struct rank<ra::rarray<T,R>> {
-        static const size_t value = R;
-    };
-}
+template<typename T,ra::rank_type R>
+struct remove_all_extents<ra::rarray<T,R>> {
+    using type = T;
+};
+template<typename T,ra::rank_type R>
+struct rank<ra::rarray<T,R>> {
+    static const size_t value = R;
+};
+}  // namespace std
 
 // Include I/O always (from version 2.3 onwards)
 #include "rarrayio.h"
