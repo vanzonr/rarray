@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#ifndef _RARRAYMACROSH_ //TEST//
-#define _RARRAYMACROSH_ //TEST//
+#ifndef HEADERSOURCES_RARRAYMACROS_H_  // EXCLUDE //
+#define HEADERSOURCES_RARRAYMACROS_H_  // EXCLUDE //
 // Compiling with -DRA_BOUNDSCHECK switches on the RA_CHECKORSAY macro to
 // check its first argument and throw an exception if it is not true.
 // checkOrSay is intended to be used for bound checks.
@@ -31,7 +31,7 @@
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__) + " (rarray:" + std::to_string(__LINE__) + ")")
 #define RA_noboundscheck false
 #else
-#define RA_CHECKORSAY(a, b) 
+#define RA_CHECKORSAY(a, b)
 #define RA_noboundscheck true
 #endif
 
@@ -41,7 +41,7 @@
 // untested.  For unsupported compilers, RA_FORCE_inline becomes just
 // inline. For xlC, you'll likely need "-O4" to get full inlining.
 //
-#if ! defined(RA_FORCE_inline)
+#if !defined(RA_FORCE_inline)
 # if defined(_MSC_VER)
 #  if _MSC_VER >= 1900
 #   define RA_FORCE_inline [[msvc::forceinline]] inline
@@ -66,4 +66,4 @@
 #  define RA_FORCE_inline inline
 # endif
 #endif
-#endif //TEST//
+#endif  // EXCLUDE //

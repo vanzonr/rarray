@@ -21,14 +21,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#ifndef _RARRAYTYPESH_ //TEST//
-#define _RARRAYTYPESH_ //TEST//
+#ifndef HEADERSOURCES_RARRAYTYPES_H_  // EXCLUDE //
+#define HEADERSOURCES_RARRAYTYPES_H_  // EXCLUDE //
 #include <string>
 
-namespace ra {    
+namespace ra {
     using size_type = ssize_t;
     using index_type = ssize_t;
     using rank_type = int;
 }  // namespace ra
 
-#endif //TEST//
+#endif  // EXCLUDE //

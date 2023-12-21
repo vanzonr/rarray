@@ -22,7 +22,11 @@
 // THE SOFTWARE.
 //
 
+#ifndef HEADERSOURCES_RARRAYDELMACROS_H_  // EXCLUDE //
+#define HEADERSOURCES_RARRAYDELMACROS_H_  // EXCLUDE //
+
 #undef RA_CHECKORSAY
 #undef RA_FORCE_inline
 #undef RA_noboundscheck
 
+#endif  // EXCLUDE //

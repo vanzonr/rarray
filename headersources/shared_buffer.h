@@ -3,7 +3,7 @@
 // Header that defines a buffer class with reference counting (a bit
 // like shared_array in boost, I suppose).  Can also hold a
 // non-reference counted buffer, if one is passed to the constructor.
-// Part of rarray 2.x. 
+// Part of rarray 2.x.
 //
 // Copyright (c) 2018-2023  Ramses van Zon
 //
@@ -25,76 +25,68 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#ifndef SHAREDBUFFERH //TEST//
-#define SHAREDBUFFERH //TEST//
-#include "rarraymacros.h"
-#include "rarraytypes.h"
+#ifndef HEADERSOURCES_SHARED_BUFFER_H_  // EXCLUDE //
+#define HEADERSOURCES_SHARED_BUFFER_H_  // EXCLUDE //
+
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
 #include <memory>
 #include <cstring>
 #include <atomic>
+#include "rarraymacros.h"
+#include "rarraytypes.h"
 
-// declaratieon for unit testing:                                          //TEST//
-namespace ra {                                                             //TEST//   
-namespace detail {                                                         //TEST//
-template<class T> class shared_buffer;                                     //TEST//
-}                                                                          //TEST//
-}                                                                          //TEST//
-template<typename V>                                                       //TEST//
-int internal_check(const ra::detail::shared_buffer<V>& a,                  //TEST//
-                   bool datavalue_shouldbe, V* datavalue,                  //TEST//
-                   bool origvalue_shouldbe, V* origvalue,                  //TEST//
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,   //TEST//
-                   bool refscount_shouldbe, int refscount,                 //TEST//
-                   bool sizevalue_shouldbe,                                //TEST//
-                   typename ra::detail::shared_buffer<V>::size_type sizevalue);    //TEST//
+// declaratieon for unit testing:                                          // EXCLUDE //
+namespace ra {                                                             // EXCLUDE //
+namespace detail {                                                         // EXCLUDE //
+template<class T> class shared_buffer;                                     // EXCLUDE //
+}                                                                          // EXCLUDE //
+}                                                                          // EXCLUDE //
+template<typename V>                                                       // EXCLUDE //
+int internal_check(const ra::detail::shared_buffer<V>& a,                  // EXCLUDE //
+                   bool datavalue_shouldbe, V* datavalue,                  // EXCLUDE //
+                   bool origvalue_shouldbe, V* origvalue,                  // EXCLUDE //
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,   // EXCLUDE //
+                   bool refscount_shouldbe, int refscount,                 // EXCLUDE //
+                   bool sizevalue_shouldbe,                                // EXCLUDE //
+          typename ra::detail::shared_buffer<V>::size_type sizevalue);     // EXCLUDE //
 
 namespace ra {
 namespace detail {
-     
+
 template<class T>
-class shared_buffer
-{
-  public:
-
+class shared_buffer {
+ public:
     using size_type = ::ra::size_type;
-
-    // constructors 
-    inline shared_buffer() noexcept
-    {
+    // constructors
+    inline shared_buffer() noexcept {
         // uninitialized buffer
         uninit();
     }
     explicit inline shared_buffer(size_type asize)
-    : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
-    {
+    : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr) {
         // construct buffer, exception safe
         auto to_be_data = std::unique_ptr<T[]>(new T[asize]);
-        refs_ = new std::atomic<int>(1); // if this throws, let it   
+        refs_ = new std::atomic<int>(1);  // if this throws, let it
         data_ = to_be_data.release();
         orig_ = data_;
         size_ = asize;
-    }    
+    }
     inline shared_buffer(size_type asize, T* adata) noexcept(RA_noboundscheck)
-    : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr)
-    {
+    : data_(adata), orig_(nullptr), size_(asize), refs_(nullptr) {
         // construct buffer as a wrapper
         RA_CHECKORSAY(adata, "nullptr given as data");
     }
     // copy constructor
     inline shared_buffer(const shared_buffer& other) noexcept
-    : data_(other.data_), orig_(other.orig_), size_(other.size_), refs_(other.refs_)
-    {
+    : data_(other.data_), orig_(other.orig_), size_(other.size_), refs_(other.refs_) {
         incref();
     }
     inline shared_buffer(shared_buffer&& from) noexcept
-    : data_(from.data_), orig_(from.orig_), size_(from.size_), refs_(from.refs_)
-    {
+    : data_(from.data_), orig_(from.orig_), size_(from.size_), refs_(from.refs_) {
         from.uninit();
     }
-    
     // copy and move assignment
     inline auto operator=(const shared_buffer& other) noexcept -> shared_buffer& {
         // shallow assignment with ref counting
@@ -116,40 +108,36 @@ class shared_buffer
         refs_ = from.refs_;
         from.uninit();
     }
-
     // destructor
     inline ~shared_buffer() noexcept {
         decref();
     }
-
     // element access without bounds checking (unless RA_BOUNDSCHECK is defined
     inline auto operator[](size_type index) const noexcept(RA_noboundscheck) -> const T& {
-        RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
+        RA_CHECKORSAY(index >= 0 && index < size(), "element not in buffer");
         return data_[index];
     }
     inline auto operator[](size_type index) noexcept(RA_noboundscheck) -> T& {
-        RA_CHECKORSAY(index >= 0 and index < size(), "element not in buffer");
+        RA_CHECKORSAY(index >= 0 && index < size(), "element not in buffer");
         return data_[index];
     }
-
     // element access with bounds checking
     inline auto at(size_type index) const -> const T& {
         // element access with bounds checking
-        if (index < 0 or index >= size_)
+        if (index < 0 || index >= size_)
             throw std::out_of_range("shared_buffer::at");
         return data_[index];
     }
     inline auto at(size_type index) -> T& {
         // element access with bounds checking
-        if (index < 0 or index >= size_)
+        if (index < 0 || index >= size_)
             throw std::out_of_range("shared_buffer::at");
         return data_[index];
     }
-
     // slice a part
     inline auto slice(size_type from, size_type to) -> shared_buffer<T> {
         // slice a part, checking bounds
-        if (from < 0 or to < 0 or from > size_ or to > size_)
+        if (from < 0 || to < 0 || from > size_ || to > size_)
             throw std::out_of_range("shared_buffer::slice");
         shared_buffer<T> result(*this);
         result.data_ += from;
@@ -160,7 +148,7 @@ class shared_buffer
     }
     inline auto slice(size_type from, size_type to) const -> const shared_buffer<T> {
         // slice a part, checking bounds
-        if (from < 0 or to < 0 or from > size_ or to > size_)
+        if (from < 0 || to < 0 || from > size_ || to > size_)
             throw std::out_of_range("shared_buffer::slice");
         shared_buffer<T> result(*this);
         result.data_ += from;
@@ -169,17 +157,14 @@ class shared_buffer
             result.size_ = to - from;
         return result;
     }
-
     // size
     inline auto size() const noexcept -> size_type {
         return size_;
     }
-
     // create deep copy
     inline auto copy() const -> shared_buffer<T> {
-        return shared_buffer<T>(size_,cbegin(), cend());
+        return shared_buffer<T>(size_, cbegin(), cend());
     }
-
     // iterators
     using iterator = T*;
     using const_iterator = const T*;
@@ -201,7 +186,6 @@ class shared_buffer
     inline auto cend() const noexcept -> const_iterator {
         return data_+size_;
     }
-
     // reverse iterator
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -220,16 +204,15 @@ class shared_buffer
     inline auto crbegin() const -> const_reverse_iterator {
         return std::reverse_iterator<const_iterator>(data_+size_);
     }
-    inline auto crend() const -> const_reverse_iterator{
+    inline auto crend() const -> const_reverse_iterator {
         return std::reverse_iterator<const_iterator>(data_);
     }
-
     // resize
     inline void resize(size_type newsize, bool keep_content = false) {
-        if ( (newsize<size_) and (refs_) and (*refs_)==1) {
+        if ( newsize < size_ && refs_ && (*refs_) == 1 ) {
             // optimize if this is known (from refs_) to be the only
-            // instance of the buffer, and the new size is smaller:        
-            size_ = newsize; // That's all? Yep!
+            // instance of the buffer, and the new size is smaller:
+            size_ = newsize;  // That's all? Yep!
             // note: this always keeps the content.
         } else {
             // create a new buffer
@@ -242,14 +225,14 @@ class shared_buffer
                 delete newrefs;
                 throw;
             }
-            // copy content if so requested       
+            // copy content if so requested
             if (keep_content) {
-                try { // in case a copy assignment throws an exception
-                    size_type n = ((size_<newsize)?size_:newsize);
-                    for (size_type i=0; i<n; i++)
+                try {  // in case a copy assignment throws an exception
+                    size_type n = ((size_ < newsize)?size_:newsize);
+                    for (size_type i = 0; i < n; i++)
                         newdata[i] = data_[i];
                 }
-                catch (...) {// in case a copy assignment throws an exception
+                catch (...) {  // in case a copy assignment throws an exception
                     delete newrefs;
                     delete[] newdata;
                     throw;
@@ -264,7 +247,6 @@ class shared_buffer
             refs_ = newrefs;
        }
     }
-
     // assign values (could throw if copy assignment throws)
     inline void fill(const T& value) {
         for (size_type i = 0; i < size_; i++)
@@ -275,8 +257,8 @@ class shared_buffer
         fill(value);
     }
     template<class InputIt,
-             class=typename std::enable_if<
-                 std::is_convertible<decltype(*InputIt()),T>::value>::type>
+             class = typename std::enable_if<
+                 std::is_convertible<decltype(*InputIt()), T>::value>::type>
     inline void assign(InputIt first, InputIt last) {
         resize(last-first);
         T* data = data_;
@@ -286,22 +268,21 @@ class shared_buffer
     inline void assign(std::initializer_list<T> ilist) {
         assign(ilist.begin(), ilist.end());
     }
-  private:
-    
+
+ private:
     T*        data_;
     T*        orig_;
     size_type size_;
     std::atomic<int>* refs_;
-
-    // for testing:                                                            //TEST//
-    template<typename V>                                                       //TEST//
-    friend int ::internal_check(const ra::detail::shared_buffer<V>& a,         //TEST// 
-                   bool datavalue_shouldbe, V* datavalue,                      //TEST//
-                   bool origvalue_shouldbe, V* origvalue,                      //TEST//
-                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,       //TEST//
-                   bool refscount_shouldbe, int refscount,                     //TEST//
-                   bool sizevalue_shouldbe,                                    //TEST//
-                   typename ra::detail::shared_buffer<V>::size_type sizevalue);//TEST//
+    // for testing:                                                              // EXCLUDE //
+    template<typename V>                                                         // EXCLUDE //
+    friend int ::internal_check(const ra::detail::shared_buffer<V>& a,           // EXCLUDE //
+                   bool datavalue_shouldbe, V* datavalue,                        // EXCLUDE //
+                   bool origvalue_shouldbe, V* origvalue,                        // EXCLUDE //
+                   bool refsvalue_shouldbe, std::atomic<int>* refsvalue,         // EXCLUDE //
+                   bool refscount_shouldbe, int refscount,                       // EXCLUDE //
+                   bool sizevalue_shouldbe,                                      // EXCLUDE //
+                   typename ra::detail::shared_buffer<V>::size_type sizevalue);  // EXCLUDE //
     inline void uninit() noexcept {
         data_ = nullptr;
         orig_ = nullptr;
@@ -322,29 +303,26 @@ class shared_buffer
             }
         }
     }
-
     // private in this version at least
     template<typename InputIt>
     inline shared_buffer(size_type asize, InputIt first, InputIt last)
-    : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr)
-    {
+    : data_(nullptr), orig_(nullptr), size_(0), refs_(nullptr) {
         // construct buffer, exception safe
         using noconstT = typename std::remove_const<T>::type;
         #ifndef __ibmxl__
         auto to_be_data = std::unique_ptr<T[]>(new T[asize]{*first});
-	#else
-	// ibm xl compiler does not support "new T[N]{init}" nor "new const T[N]", so have to cast const away:
-	auto to_be_data	= std::unique_ptr<T[]>(const_cast<T*>(new typename std::remove_const<T>::type[asize]));
-	#endif
-        std::copy(first, last, const_cast<noconstT*>(to_be_data.get()));    
-        refs_ = new std::atomic<int>(1); // if this throws, let it   
+        #else
+        // ibm xl compiler does not support "new T[N]{init}" nor "new const T[N]", so have to cast const away:
+        auto to_be_data = std::unique_ptr<T[]>(const_cast<T*>(new typename std::remove_const<T>::type[asize]));
+        #endif
+        std::copy(first, last, const_cast<noconstT*>(to_be_data.get()));
+        refs_ = new std::atomic<int>(1);  // if this throws, let it
         data_ = to_be_data.release();
         orig_ = data_;
         size_ = asize;
      }
-
 };
 
-}  // namespace detail 
+}  // namespace detail
 }  // namespace ra
-#endif //TEST//
+#endif  // EXCLUDE //

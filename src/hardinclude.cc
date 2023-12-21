@@ -221,14 +221,14 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         } else {            
             auto tohere=endofcodeline(line);
             if (not iscommentline(line)) {
-                if (line.size() < 8 || tohere < 6 || line.substr(tohere-6,6) != "//TEST")
+                if (line.size() < 12 || tohere < 10 || line.substr(tohere-10,10) != "// EXCLUDE")
                     if (trimline(line.substr(0,tohere))!="")
                         if (string_in_set(line,systemincludefiles) == NOTFOUND) {
                             if (insertline > 0) {
                                 insertline--;
                                 if (insertline == 0) 
-                                    for (const auto& line: systemincludefiles)
-                                        cout << line << '\n';
+                                    for (const auto& sysline: systemincludefiles)
+                                        cout << sysline << '\n';
                             }
                             cout << line.substr(0,tohere) << '\n';
                         }
