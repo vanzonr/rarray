@@ -38,18 +38,24 @@
 #ifndef ADDEDCOMMENTS
 #define NOADDEDCOMMENTS
 #endif
-using namespace std;
+
+using std::string;
+using std::vector;
+using std::ifstream;
+using std::istream;
+using std::cin;
+using std::cerr;
+using std::cout;
+using std::endl;
 
 // check if a file exists
-bool file_exists(const string& file_name)
-{
+bool file_exists(const string& file_name) {
     return ifstream(file_name).is_open();
 }
 
 // check if string is one of a set of strings
 const size_t NOTFOUND = -1;
-size_t string_in_set(const string& str, const vector<string>& strset)
-{
+size_t string_in_set(const string& str, const vector<string>& strset) {
     for (size_t i = 0; i < strset.size(); i++)
         if (strset[i] == str)
             return i;
@@ -58,42 +64,39 @@ size_t string_in_set(const string& str, const vector<string>& strset)
 
 
 // check if a line is just a comment
-bool iscommentline(const std::string& line)
-{
+bool iscommentline(const std::string& line) {
     size_t i = 0;
-    while (i < line.size() and line[i] == ' ')
+    while (i < line.size() && line[i] == ' ')
         i++;
-    return line.substr(i,2) == std::string("//");
+    return line.substr(i, 2) == std::string("//");
 }
 
 // find the end of the code line, not counting trailing comments or spaces
 // note: not prepared for quoted strings
-size_t endofcodeline(const std::string& line)
-{
+size_t endofcodeline(const std::string& line) {
     size_t end;
     if (iscommentline(line)) {
         end = 0;
     } else {
         size_t lastslashi = line.size()-1;
-        while (lastslashi > 0 and line[lastslashi] != '/')
+        while (lastslashi > 0 && line[lastslashi] != '/')
             lastslashi--;
-        if (lastslashi==0 or line[lastslashi] != '/' or line[lastslashi-1] != '/'
-            or line.find("  // namespace") != std::string::npos) {
+        if (lastslashi == 0 || line[lastslashi] != '/' || line[lastslashi-1] != '/'
+            || line.find("  // namespace") != std::string::npos) {
             end = line.size();
         } else {
             end = lastslashi-1;
         }
     }
     // discard trailing spaces
-    while (end > 0 and (line[end-1]==' ' or line[end-1]=='\t')) end--;
+    while (end > 0 && (line[end-1] == ' ' || line[end-1] == '\t')) end--;
     return end;
 }
 
-// trim whitespace 
-string trimline(const string& line)
-{
+// trim whitespace
+string trimline(const string& line) {
     size_t i = 0;
-    while (i < line.size() and line[i] == ' ')
+    while (i < line.size() && line[i] == ' ')
         i++;
     return line.substr(i);
 }
@@ -103,33 +106,32 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
                       vector<bool>& alreadyincluded, bool& headercommentsdone,
                       const vector<string>& systemincludefiles);
 
-// start 
-int main(int argc, char** argv)
-{
+// start
+int main(int argc, char** argv) {
     string         inputfile;
     vector<string> includefiles;
-    vector<bool>   alreadyincluded(argc-2, false); 
+    vector<bool>   alreadyincluded(argc-2, false);
     bool           headercommentsdone = false;
     vector<string> systemincludefiles;
-    
+
     // check command line arguments:
-    if (argc<3) {
+    if (argc < 3) {
         cerr << "ERROR: Not enough arguments\n"
                   << " Usage: " << argv[0]
                   << " inputfile includefile1 includefile2 ..."
                   << endl;
         return 1;
     } else {
-        if ( ( (argv[1][0] != '-') or (argv[1][1] != '\0')) and (not file_exists(argv[1])) ) {
+        if (((argv[1][0] != '-') || (argv[1][1] != '\0')) && (!file_exists(argv[1]))) {
             cerr << "ERROR: File " << argv[1]
                  << " does not exist or is not readable." << endl;
-            return 1;                
+            return 1;
         }
         for (int i = 2; i < argc; i++) {
-            if ( not file_exists(argv[i]) ) {
+            if (!file_exists(argv[i])) {
                 cerr << "ERROR: File " << argv[i]
                           << " does not exist or is not readable." << endl;
-                return 1;                
+                return 1;
             }
         }
         inputfile = argv[1];
@@ -139,8 +141,8 @@ int main(int argc, char** argv)
             while (f.good() && !f.eof()) {
                 string line;
                 getline(f, line);
-                if (line.substr(0,10) == "#include <") 
-                    if (string_in_set(line, systemincludefiles) == NOTFOUND) 
+                if (line.substr(0, 10) == "#include <")
+                    if (string_in_set(line, systemincludefiles) == NOTFOUND)
                         systemincludefiles.push_back(line);
             }
             f.close();
@@ -150,25 +152,23 @@ int main(int argc, char** argv)
     // start processing:
     process_one_file(inputfile, includefiles, alreadyincluded, headercommentsdone, systemincludefiles);
 }
-    
+
 void process_one_file(const string& inputfile, const vector<string>& includefiles,
                       vector<bool>& alreadyincluded, bool& headercommentsdone,
-                      const vector<string>& systemincludefiles
-                      )
-{
+                      const vector<string>& systemincludefiles) {
     static const string INCLUDETAG("#include");
-    ifstream infile(inputfile); // note: doesn't throw on failuer e.g with inputfile=="-"
+    ifstream infile(inputfile);  // note: doesn't throw on failuer e.g with inputfile=="-"
     istream& in = (inputfile == "-")?cin:infile;
     int insertline = -1;
     while (in.good() && !in.eof()) {
         // read in a line from the file
         string line;
         getline(in, line);
-        if (not headercommentsdone and not iscommentline(line)) {
-            insertline = 3; // assumes a guard header
+        if (!headercommentsdone && !iscommentline(line)) {
+            insertline = 3;  // assumes a guard header
             headercommentsdone = true;
         }
-        if (headercommentsdone and iscommentline(line))
+        if (headercommentsdone && iscommentline(line))
             continue;
         auto include = NOTFOUND;
         string includefilename;
@@ -178,8 +178,8 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         if (pos != string::npos) {
             // check if there are only spaces before it
             bool only_leading_space = true;
-            for (size_t i = 0; i < pos; i++) 
-                if (line[i]!=' ' && line[i]!='\t') {
+            for (size_t i = 0; i < pos; i++)
+                if (line[i] != ' ' && line[i] != '\t') {
                     only_leading_space = false;
                     break;
                 }
@@ -187,21 +187,21 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
                 pos += INCLUDETAG.size();
                 while (pos < line.length() && (line[pos] == ' ' || line[pos] == '\t'))
                     pos++;
-                if (line[pos] == '"') { // || line[pos] == '<') {
+                if (line[pos] == '"') {  // || line[pos] == '<') {
                     char endchar = (line[pos] == '"')?'"':'>';
-                    pos ++;
+                    pos++;
                     continueat = line.find(endchar, pos+2);
                     if (continueat != string::npos) {
-                        includefilename = string(&line[pos],&line[continueat]);
-                        include = string_in_set(includefilename,includefiles);
-                        if (line[continueat]=='"') continueat++;
+                        includefilename = string(&line[pos], &line[continueat]);
+                        include = string_in_set(includefilename, includefiles);
+                        if (line[continueat] == '"') continueat++;
                     }
                 }
             }
         }
         if (include != NOTFOUND) {
-          if (not alreadyincluded[include]) {
-            #ifndef NOADDEDCOMMENTS  
+          if (!alreadyincluded[include]) {
+            #ifndef NOADDEDCOMMENTS
             if (continueat != line.size())
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//begin " << INCLUDETAG << " \"" << includefilename << "\"\n";
@@ -212,30 +212,31 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
             #endif
             alreadyincluded[include] = true;
           } else {
-            #ifndef NOADDEDCOMMENTS  
+            #ifndef NOADDEDCOMMENTS
             if (continueat != line.size())
             cout << "// " << line.c_str()+continueat << "\n";
             cout << "//" << INCLUDETAG << " \"" << includefilename << "\" was already done above\n";
             #endif
           }
-        } else {            
-            auto tohere=endofcodeline(line);
-            if (not iscommentline(line)) {
-                if (line.size() < 12 || tohere < 10 || line.substr(tohere-10,10) != "// EXCLUDE")
-                    if (trimline(line.substr(0,tohere))!="")
-                        if (string_in_set(line,systemincludefiles) == NOTFOUND) {
+        } else {
+            auto tohere = endofcodeline(line);
+            if (!iscommentline(line)) {
+                if (line.size() < 12 || tohere < 10 || line.substr(tohere-10, 10) != "// EXCLUDE") {
+                    if (trimline(line.substr(0, tohere)) != "") {
+                        if (string_in_set(line, systemincludefiles) == NOTFOUND) {
                             if (insertline > 0) {
                                 insertline--;
-                                if (insertline == 0) 
-                                    for (const auto& sysline: systemincludefiles)
+                                if (insertline == 0)
+                                    for (const auto& sysline : systemincludefiles)
                                         cout << sysline << '\n';
                             }
-                            cout << line.substr(0,tohere) << '\n';
+                            cout << line.substr(0, tohere) << '\n';
                         }
+                    }
+                }
             } else {
                 cout << line << '\n';
             }
         }
     }
-
 }

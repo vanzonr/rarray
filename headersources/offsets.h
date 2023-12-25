@@ -40,8 +40,8 @@ class Offsets {
     // offsets are computed by the constructor
     inline explicit Offsets(const std::vector<index_type>& extent)
     : rank_(static_cast<rank_type>(extent.size())), ndataoffsets_(0) {
-        size_type noffsets = 0;
         if (rank_ > 0) {
+            size_type noffsets = 0;
             ndataoffsets_ = 1;
             for (rank_type i = rank_ - 1; i--; )
                 noffsets = extent[i]*(1 + noffsets);

@@ -22,5 +22,5 @@
 // THE SOFTWARE.
 //
 
-void pass(float*,float*,int&)
+void pass(float*, float*, int&)
 {}

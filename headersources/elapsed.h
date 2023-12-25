@@ -38,7 +38,7 @@ inline double elapsed_etime() {
 inline void elapsed_write(double time) {
     int continu = 0;
     int recapsec = 0;
-    unsigned long long itime = (unsigned long long int)(time*1000000);
+    auto itime = static_cast<decltype(1ULL)>(time*1000000);
     if (itime >= 1000) {
         if (itime > 86400000000ULL) {
             fprintf(stderr, "%llud:", itime/86400000000ULL);

@@ -150,10 +150,10 @@ static inline auto get_but_eat_whitespace(std::istream & in) -> char {
 template<rank_type R>
 inline auto parse_shape(std::istream & in) -> std::pair<std::list<std::pair<token, std::string>>, size_type[R]> {
     std::pair<std::list<std::pair<token, std::string>>, size_type[R]> wholeresult;
-    std::list<std::pair<token, std::string>>& result = wholeresult.first;
-    size_type* shape = wholeresult.second;
     size_t init_file_ptr = in.tellg();
     try {
+        std::list<std::pair<token, std::string>>& result = wholeresult.first;
+        size_type* shape = wholeresult.second;
         size_type current_shape[R];
         for (rank_type i = 0; i < R; i++) {
             current_shape[i] = 1;
@@ -304,12 +304,12 @@ inline auto operator<<(std::ostream &o, const rarray<T, R>& r) -> std::ostream& 
 template<typename T, rank_type R>
 inline auto operator>>(std::istream &in, rarray<T, R>& r) -> std::istream& {
     auto X = detail::parse_shape<R>(in);
-    size_type* extent = X.second;
-    if (std::accumulate(extent, extent+R, 1, std::multiplies<size_type>())
+    size_type* Xextent = X.second;
+    if (std::accumulate(Xextent, Xextent+R, 1, std::multiplies<size_type>())
         <= r.size())
-        r.reshape(extent, RESIZE::ALLOWED);
+        r.reshape(Xextent, RESIZE::ALLOWED);
     else
-        r = rarray<T, R>(extent);
+        r = rarray<T, R>(Xextent);
     detail::parse_strings<T, R>(X, r.ptr_array());
     return in;
 }

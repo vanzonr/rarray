@@ -24,17 +24,20 @@
 
 #include <rarray>
 
-int main()
-{
-    rmatrix<int> P((int[2][2]){}); // point at a temporary!!!
-    P[1][1]=20; // not guarranteed to work, in fact, it should not, but often does because how compilers optimize/implement the temporary array
+int main() {
+    rmatrix<int> P((int[2][2]){});   // points at a temporary!!!
+    P[1][1] = 20;  // Not guarranteed to work, in fact, it should not, but often
+                   // does because how compilers optimize/implement the temporary array
     std::cout << P << "\n";
-    auto V = rvector<int>((int[4]){1,2,3,4}).copy(); // this is safe, though still not standard c++. Also, the "<int>" may be omitted in c++20, but not supported by clang (so also not aocc and intel) 
+    auto V = rvector<int>((int[4]){1, 2, 3, 4}).copy();  // this is safe, though still not
+    // standard c++. Also, the "<int>" may be omitted in c++20, but not supported by clang
+    // (and so also not by aocc and intel)
     std::cout << V << "\n";
-    auto M = rmatrix<int>((int[][2]){{1,2},{3,4}}).copy(); // same c++20 remark
+    auto M = rmatrix<int>((int[][2]){{1, 2}, {3, 4}}).copy();  // same c++20 remark
     std::cout << M << "\n";
-    const int Nstack[2][2]{{1,-2},{-3,4}};
-    rarray<const int,2> N(Nstack);  // even in c++20, "rarray NN(Nstack);" does not work because the compiler can't determine that R==2.
+    const int Nstack[2][2]{{1, -2}, {-3, 4}};
+    rarray<const int, 2> N(Nstack);  // even in c++20, "rarray N(Nstack);" does not work
+                                     // because the compiler can't determine that R==2.
     std::cout << N << "\n";
 
     ///////
@@ -48,117 +51,113 @@ int main()
     // a.ii const int Aconst[2][2]{{1,2},{3,4}};
     // b.i (int[2][2]){{1,2},{3,4}};
     // b.ii (const int[2][2]){{1,2},{3,4}};
-    
+
     // 1.a.i  : X create reference to A's data
     {
-        int A[2][2]{{1,2},{3,4}};
-        auto x = rarray<int,2>(A);
+        int A[2][2]{{1, 2}, {3, 4}};
+        auto x = rarray<int, 2>(A);
     }
-    // 1.a.ii : - should not compile, as it would refer to Aconst's data
+    // 1.a.ii : - should not compile, as x would refer to Aconst's data
     {
-        ////const int A[2][2]{{1,2},{3,4}};
-        ////auto x = rarray<int,2>(A);
+        //// const int A[2][2]{{1,2},{3,4}};
+        //// auto x = rarray<int,2>(A);
     }
     // 1.b.i  : Y create reference of the temporary (dangling!)
     {
-        auto x = rarray<int,2>((int[2][2]){{1,2},{3,4}});
+        auto x = rarray<int, 2>((int[2][2]){{1, 2}, {3, 4}});
     }
     // 1.b.ii : Z create reference of the const temporary (dangling, but:)
     // should not compile
     {
-        ////auto x = rarray<int,2>((const int[2][2]){{1,2},{3,4}}).copy();
-    } 
+        //// auto x = rarray<int,2>((const int[2][2]){{1,2},{3,4}}).copy();
+    }
     // 2.a.i  : X create (const) reference to A's data
     {
-        int A[2][2]{{1,2},{3,4}};
-        auto x = rarray<const int,2>(A);
+        int A[2][2]{{1, 2}, {3, 4}};
+        auto x = rarray<const int, 2>(A);
     }
     // 2.a.ii : X create (const) reference to A's const data
     {
-        const int A[2][2]{{1,2},{3,4}};
-        auto x = rarray<const int,2>(A);
+        const int A[2][2]{{1, 2}, {3, 4}};
+        auto x = rarray<const int, 2>(A);
     }
     // 2.b.i  : Z create reference to the temporary (dangling!)
     {
-        auto x = rarray<const int,2>((int [2][2]){{1,2},{3,4}});
+        auto x = rarray<const int, 2>((int[2][2]){{1, 2}, {3, 4}});
     }
     // 2.b.ii : Y create a const referencey of the temporary (dangling!)
     {
-        auto x = rarray<const int,2>((const int [2][2]){{1,2},{3,4}});
+        auto x = rarray<const int, 2>((const int[2][2]){{1, 2}, {3, 4}});
     }
 
     ///////
-    
-    rarray<double,3> a(2,100,100);
+
+    rarray<double, 3> a(2, 100, 100);
     double *const*const*z = a.ptr_array();
-    
+
 #if __cpp_multidimensional_subscript >= 202110L
     // 3.a.i  : X create (const) reference to A's data
     {
-        int A[2][2]{{1,2},{3,4}};
+        int A[2][2]{{1, 2}, {3, 4}};
         auto x = rmatrix(A);
     }
     // 3.a.ii : X create (const) reference to A's const data
     {
-        const int A[2][2]{{1,2},{3,4}};
+        const int A[2][2]{{1, 2}, {3, 4}};
         auto x = rmatrix(A);
     }
     // 3.b.i  : Z create reference to the temporary (dangling!)
     {
-        auto x = rmatrix((int [2][2]){{1,2},{3,4}});
+        auto x = rmatrix((int[2][2]){{1, 2}, {3, 4}});
     }
     // 3.b.ii : Y create a const referencey of the temporary (dangling!)
     {
-        auto x = rmatrix((const int [2][2]){{1,2},{3,4}});
+        auto x = rmatrix((const int[2][2]){{1, 2}, {3, 4}});
     }
     std::cout << "Simple C++23 test\n";
-    a[1,2,3] = 4.4;
-    int faultscaught=0;
+    a[1, 2, 3] = 4.4;
+    int faultscaught = 0;
     try {
-        a[1,2,300] = 4.4;
+        a[1, 2, 300] = 4.4;
     }
-    catch (...)
-    {
+    catch (...) {
         std::cout << "Caught out of bounds\n";
         faultscaught++;
     }
     try {
-        a[1,200,3] = 4.4;
+        a[1, 200, 3] = 4.4;
     }
-    catch (...)
-    {
+    catch (...) {
         std::cout << "Caught out of bounds\n";
         faultscaught++;
     }
-    if (faultscaught<2)
+    if (faultscaught < 2)
         return 2;
-    if (z[1][2][3]==4.4)
-        return !(int(a[1,2,3])==4);
+    if (z[1][2][3] == 4.4)
+        return !(static_cast<int>(a[1, 2, 3]) == 4);
     else
         return 1;
 #else
     a[1][2][3] = 4.4;
-    int faultscaught=0;
+    int faultscaught = 0;
     try {
         a[1][2][300] = 4.4;
     }
-    catch (...)
-    {
+    catch (...) {
         std::cout << "Caught out of bounds\n";
         faultscaught++;
     }
     try {
         a[1][200][3] = 4.4;
     }
-    catch (...)
-    {
+    catch (...) {
         std::cout << "Caught out of bounds\n";
         faultscaught++;
     }
-    if (faultscaught<2)
+    if (faultscaught < 2)
         return 2;
-    if (z[1][2][3]==4.4)
-        return !(int(a[1][2][3])==4);
+    if (z[1][2][3] == 4.4)
+        return !(static_cast<int>(a[1][2][3]) == 4);
     else
         return 1;
 

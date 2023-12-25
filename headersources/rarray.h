@@ -1163,6 +1163,7 @@ struct rank<ra::rarray<T, R>> {
 
 // Global namespace stuff
 
+// EXTENT, RARRAY and INDEX are deprecated
 #define EXTENT(A, I)   ra::extent(A, I)
 #define RARRAY(A)      rarray<typename std::remove_all_extents<decltype(A)>::type, std::rank<decltype(A)>::value>(A)
 #define INDEX(A, X, I) RARRAY(A).index(X, I)
