@@ -317,13 +317,13 @@ TEMPLATE_TEST_CASE("test resize", "", double, int) {
     REQUIRE(c[1] == a[2]);
 }
 
-TEST_CASE("Fail test not enough memory") {
+TEST_CASE("Test failure not enough memory") {
     const auto N = 1000000000000000LL;
     REQUIRE_THROWS(ra::detail::shared_buffer<double>(N));
     REQUIRE_THROWS(ra::detail::shared_buffer<int>(N));
 }
 
-TEST_CASE("Fail test at out of bounds") {
+TEST_CASE("Test failure at out of bounds") {
     const auto N = 100LL;
     ra::detail::shared_buffer<double> a(N);
     ra::detail::shared_buffer<int> b(N);
@@ -333,14 +333,14 @@ TEST_CASE("Fail test at out of bounds") {
     REQUIRE_THROWS(b.at(-1));
 }
 
-TEMPLATE_TEST_CASE("Fail test slice out of bounds", "", double, int) {
+TEMPLATE_TEST_CASE("Test failure slice out of bounds", "", double, int) {
     ra::detail::shared_buffer<TestType> a;
     a.assign({1, 2, 3, 4});
     ra::detail::shared_buffer<TestType> b;
     REQUIRE_THROWS(b = a.slice(1, 13));
 }
 
-TEMPLATE_TEST_CASE("Fail test resize for not enough memory", "", double, int) {
+TEMPLATE_TEST_CASE("Test failure resize for not enough memory", "", double, int) {
     ra::detail::shared_buffer<TestType> a(5);
     const auto N = 1000000000000000LL;
     REQUIRE_THROWS(a.resize(N));

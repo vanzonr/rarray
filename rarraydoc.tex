@@ -27,7 +27,7 @@
 %of Toronto, Toronto, Ontario, Canada
 \vspace{-8pt}} 
 
-\date{November, 2023 (version 2.6.1)\vspace{-7mm}}
+\date{December, 2023 (version 2.7.0, unreleased)\vspace{-7mm}}
 
 \maketitle
 
@@ -307,7 +307,7 @@ declared as follows:
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
   rarray<float,3> s(256,256,256);
-  // do whatever you need with s
+  // do whatever you need with s, e.g.
   s[1][2][3] = 105;
 \end{verbatim}%
 \vspace{-14pt}
@@ -364,9 +364,12 @@ For example:\vspace{-9pt}
 \vspace{-12pt}
 \end{framed}%\vspace{-8pt}\noindent
 
-In addition to the explicit assignment of each element, there is an
-alternative way to assign values to the elements of an rarray using a
-comma separate form, as follows
+\subsection{Assigning values to the elements of an rarray}
+
+In addition to the explicit assignment of each element as in the
+example above, there are a few
+ways to assign values to the elements of an rarray as a whole.  One is
+the comma separate form, as follows
 \vspace{-9pt}
 \begin{framed}\vspace{-18pt}%
 \begin{verbatim}
@@ -380,9 +383,168 @@ comma separate form, as follows
 This is usefully, for instance, for small matrices (e.g.\ in tests). Entering
 large rarrays in this way would be rather impractical.
 
-\subsection{Copying and function arguments}
+Another way to set the values of the element is to use nested
+initializer lists, from which the shape can be deduced.  The library
+offers are two method to do this:
+\begin{enumerate}
+  \item The \texttt{fill} method, which changes the values of an
+    already existing rarray.
+  \item The \texttt{form} method, which discard any existing array
+    and reconstructs a new rarray whose shape is based on the
+    parameters passed to the method.
+\end{enumerate}
 
-In C++, when we copy a variable of a built-in type to a new variable,
+\subsubsection{Filling an rarray}
+
+The \texttt{fill} family of methods assigns values to an already
+constructed rarray within its existing shape.  Filling with a uniform
+value is the simplest case:
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix(3,3);
+  matrix.fill(1);
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+In addition, there is a \texttt{fill} method that takes nested
+initializer lists, like so:
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix(3,3);
+  matrix.fill({{1.0, 2.0, 3.0},
+               {4.0, 5.0, 6.0},
+               {7.0, 8.0, 9.0}});
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+Similar to how automatic multidimensional arrays are initialized in C,
+if there are missing elements, those spots will be assigned the
+default value corresponding to the type (which amounts to 0 for
+numerical types).
+
+Two other ways to deal with missing elements can be
+specified as well.  One is to repeat the pattern that was given, e.g.
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix(4,4);
+  matrix.fill({{1.0, 2.0}, {3.0, 4.0}}, ra::MISSING::REPEAT);
+  std::cout << matrix << '\n';
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\noindent
+will give
+\begin{verbatim}
+{{1,2,1,2}
+ {3,4,3,4},
+ {1,2,1,2},
+ {3,4,3,4}}
+\end{verbatim}
+The other way to deal with missing elements is to keep what ever value was there before. E.g.
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix(4,4);
+  matrix.fill(5.0);
+  matrix.fill({{1.0, 2.0}, {3.0, 4.0}}, ra::MISSING::SKIP);
+  std::cout << matrix << '\n';
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\noindent
+will give
+\begin{verbatim}
+{{1,2,5,5}
+ {3,4,5,5},
+ {5,5,5,5},
+ {5,5,5,5}}
+\end{verbatim}
+The default way of zeroing missing elements that one gets by no using
+a \texttt{ra::MISSING} argument can also be established by
+passing \texttt{ra::MISSING::DEFAULT} as the second argument to the
+\texttt{fill} method.
+
+\newpage
+\subsubsection{Forming an rarray}
+
+The \texttt{fill} methods require that the rarray already has a
+shape, and its storage is reused.  In contrast, the \texttt{form}
+method create and allocate this storage.  Any existing storage and
+shape is discarded as if the array went out of scope.
+
+One can form an rarray that is filled with a single value as follows:
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix;
+  matrix.fill(3, 3, 1.0);
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+Because this rarray's rank is 2, the first two arguments specify the
+rarray's new shape, where as the last argument (here, \texttt{1.0}) is what the
+matrix will be filled with.
+
+Another form takes nested
+initializer lists, like so:
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix;
+  matrix.form({{1.0, 2.0, 3.0},
+               {4.0, 5.0, 6.0},
+               {7.0, 8.0, 9.0}});
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+The size of the matrix is determined from the number of elements in
+the initializer lists.
+Similar to the situation with \texttt{fill},
+if there are missing elements, those spots will be assigned the
+default value corresponding to the type (which amounts to 0 for
+numerical types). Thus, one can for instance create a 3x3 matrix of zeros with
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix;
+  matrix.form({{},{},{0.0,0.0,0.0}};
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+As with \texttt{fill}, one can specify other
+ways to deal with missing elements.  E.g.
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix;
+  matrix.form({{1,2,3},{},{}, ra::MISSING::REPEAT};
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+creates an array with 1s in the first column, 2s in the second column
+and 3s in the third column.  While
+\vspace{-9pt}
+\begin{framed}\vspace{-18pt}%
+\begin{verbatim}
+  rarray<double,2> matrix;
+  matrix.form({{1,1,1},{2},{3}, ra::MISSING::REPEAT};
+\end{verbatim}%
+\vspace{-12pt}
+\end{framed}\vspace{-8pt}\noindent
+creates an array with 1s in the first row, 2s in the second row
+and 3s in the third row. Because the size of the array is determined
+from the nested expression, at least on row must be fully specified.
+
+When using \texttt{ra::MISSING::SKIP} instead of \texttt{ra::MISSING::REPEAT}, the
+missing elements are not initialized.
+
+As will be explained in the next two sections, assignment of rarrays
+as a whole
+(e.g. \texttt{a=b} where \texttt{a} and \texttt{b} are both rarray objects of
+the same rank) works as if they are reference counted pointer.   
+
+\subsection{rarray assignment and function arguments}
+
+In C++, when we assign a variable of a built-in type to a new variable,
 the new copy is completely independent of the old variable. Likewise,
 the default way of passing arguments to a function involves a complete
 copy for built-in types.  For C-style arrays, however, only the
@@ -486,7 +648,7 @@ while using the same buffer as the original array.
 the original array retains its shape. It the array was passed by
 reference, the original array would be changed when applying \texttt{reshape}.
 
-As a design decision, the reshape method should not allocated any
+The reshape method will never allocate any
 memory. Thus, it is never possible to do a reshape that leads to more
 elements.
 
@@ -532,7 +694,7 @@ int main() {
 \end{verbatim}
 \vspace{-14pt}\end{framed}
 \noindent
-is a little simpler, but automatic arrays are allocated on the stack,
+is slightly simpler, but automatic arrays are allocated on the stack,
 which is typically of limited size. Another big drawback is that this array cannot be passed to functions that do
 not hard-code exact matching dimensions except for the last
 one.
@@ -605,6 +767,9 @@ public:
  void reshape(const size_type* size_type); // change shape (not data)
  void clear();                             // release memory
  void fill(const T& value);                // fill with uniform value
+ void fill({{...}}, ra::MISSING);          // fill with nested list
+ void form(size_type extent0, ..., value); // re-construct and fill
+ void form({{...}}, ra::MISSING);          // re-construct from nested list
  bool empty() const;                       // check if uninitialized
  rarray<T,R> copy() const;                 // deep copy
  const size_type*  shape() const;          // all extents as C-style array
@@ -793,7 +958,7 @@ thus to initialize an rarray, e.g. you could get an array with values
     ...
   }
 \end{verbatim}\vspace{-14pt}
-\end{framed}
+\end{framed}\noindent
 (replacing the type \texttt{ra::Xrange<int>} with c++11's
 \texttt{auto} seems like a good idea here).
 
@@ -932,7 +1097,7 @@ Rarray helps in satisfying these requirement as follows:
     the \texttt{extent} or \texttt{shape} member functions of rarray (or, for
     one-dimensional arrays, also with the \texttt{size} member function).
 \end{enumerate}
-
+\noindent
 Here is an example to call the matrix-matrix multiplication routine
 from blas, using the cblas interface:
 \vspace{-5pt}\begin{framed}\vspace{-14pt}%
@@ -953,14 +1118,14 @@ from blas, using the cblas interface:
                   C.data(), C.extent(1));
   }
   int main() {
-     int m=2, k=3, n=4;
-     rmatrix<double> A(m,k), B(k,n), C(m,n);
-     A = 1,-2,3,
-         2,-1,0;
-     B = -1,3,-2,1,
-         -2,1,-3,2,
-         -3,2,-1,3;
-     matrix_product(A,B,C);
+     rmatrix<double> A, B;
+     A.fill({ {1, -2, 3},
+               2, -1, 0} };
+     B.fill({ {-1, 3, -2, 1},
+              {-2, 1, -3, 2},
+              {-3, 2, -1, 3} } );
+     rmatrix C(A.extent(0), B.extent(1));
+     matrix_product(A, B, C);
      std::cout << "A=" << A << '\n'
                << "B=" << B << '\n' 
                << "C=A*B=" << C << '\n';
@@ -985,8 +1150,9 @@ rarray:
   #include <fftw3.h>
   int main() {
      int n = 4;
-     rvector<std::complex<double>> a(n), b(n);
-     a = 1.3+5.0i, 1.0, 5.0i, 2.0-5.0i;
+     rvector<std::complex<double>> a;
+     a.fill({1.3+5.0i, 1.0, 5.0i, 2.0-5.0i});
+     rvector<std::complex<double>> b(a.shape());
      fftw_plan plan = fftw_plan_dft_1d(a.size(),
                         (fftw_complex*)a.data(), (fftw_complex*)b.data(), 
                         FFTW_FORWARD, FFTW_ESTIMATE);

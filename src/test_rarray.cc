@@ -25,12 +25,20 @@
 #include <rarray>
 
 int main() {
+
     rmatrix<int> P((int[2][2]){});   // points at a temporary!!!
-    P[1][1] = 20;  // Not guarranteed to work, in fact, it should not, but often
-                   // does because how compilers optimize/implement the temporary array
+    P[1][1] = 20;  // Not guarranteed to work, in fact, it should not,
+                   // but often does because how compilers
+                   // optimize/implement the temporary array
     std::cout << P << "\n";
-    auto V = rvector<int>((int[4]){1, 2, 3, 4}).copy();  // this is safe, though still not
-    // standard c++. Also, the "<int>" may be omitted in c++20, but not supported by clang
+    auto V = rvector<int>((int[4]){1, 2, 3, 4}).copy();  // this is safe, though
+                                                         // still not standard
+                                                         // c++. Also,
+                                                         // the "<int>" may be
+
+                                                         // omitted in c++20,
+                                                         // but this not
+                                                         // supported yet by clang
     // (and so also not by aocc and intel)
     std::cout << V << "\n";
     auto M = rmatrix<int>((int[][2]){{1, 2}, {3, 4}}).copy();  // same c++20 remark

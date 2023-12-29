@@ -1121,8 +1121,8 @@ TEMPLATE_TEST_CASE("testcopy3d23", "",
     REQUIRE(d.extent(0) == b.extent(0));
     REQUIRE(d.extent(1) == b.extent(1));
     REQUIRE(d.extent(2) == b.extent(2));
-    for (ra::size_type i = 0; i y< l; i++) {
-        for (ra::size_type j = 0; j y< m; j++) {
+    for (ra::size_type i = 0; i < l; i++) {
+        for (ra::size_type j = 0; j < m; j++) {
             for (ra::size_type k = 0; k < n; k++) {
                 REQUIRE(b[i, j, k] == d[i, j, k]);
             }
@@ -2777,7 +2777,7 @@ TEST_CASE("testfill") {
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-TEMPLATE_TEST_CASE("testassign1", "",
+TEMPLATE_TEST_CASE("testform1", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2785,13 +2785,13 @@ TEMPLATE_TEST_CASE("testassign1", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 1> a;
-    a.assign(12, x1);
+    a.form(12, x1);
     REQUIRE(a.extent(0) == 12);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign2", "",
+TEMPLATE_TEST_CASE("testform2", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2799,14 +2799,14 @@ TEMPLATE_TEST_CASE("testassign2", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 2> a;
-    a.assign(3, 4, x1);
+    a.form(3, 4, x1);
     REQUIRE(a.extent(0) == 3);
     REQUIRE(a.extent(1) == 4);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign3", "",
+TEMPLATE_TEST_CASE("testform3", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2814,14 +2814,14 @@ TEMPLATE_TEST_CASE("testassign3", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 3> a;
-    a.assign(2, 2, 2, x1);
+    a.form(2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
          REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign4", "",
+TEMPLATE_TEST_CASE("testform4", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2829,14 +2829,14 @@ TEMPLATE_TEST_CASE("testassign4", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 4> a;
-    a.assign(2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign5", "",
+TEMPLATE_TEST_CASE("testform5", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2844,14 +2844,14 @@ TEMPLATE_TEST_CASE("testassign5", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 5> a;
-    a.assign(2, 2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign6", "",
+TEMPLATE_TEST_CASE("testform6", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2859,14 +2859,14 @@ TEMPLATE_TEST_CASE("testassign6", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 6> a;
-    a.assign(2, 2, 2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign7", "",
+TEMPLATE_TEST_CASE("testform7", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2874,14 +2874,14 @@ TEMPLATE_TEST_CASE("testassign7", "",
      using T = TestType;
      T x1 = global::get_value_1<T>();
      rarray<T, 7> a;
-     a.assign(2, 2, 2, 2, 2, 2, 2, x1);
+     a.form(2, 2, 2, 2, 2, 2, 2, x1);
      for (const auto& i : xrange(a.rank()))
          REQUIRE(a.extent(i) == 2);
      for (const auto& x : a)
          REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign8", "",
+TEMPLATE_TEST_CASE("testform8", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2889,14 +2889,14 @@ TEMPLATE_TEST_CASE("testassign8", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 8> a;
-    a.assign(2, 2, 2, 2, 2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, 2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign9", "",
+TEMPLATE_TEST_CASE("testform9", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2904,14 +2904,14 @@ TEMPLATE_TEST_CASE("testassign9", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 9> a;
-    a.assign(2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign10", "",
+TEMPLATE_TEST_CASE("testform10", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2919,14 +2919,14 @@ TEMPLATE_TEST_CASE("testassign10", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 10> a;
-    a.assign(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
         REQUIRE(x == x1);
 }
 
-TEMPLATE_TEST_CASE("testassign11", "",
+TEMPLATE_TEST_CASE("testform11", "",
                    int, double,
                    Compound,
                    (array<Compound, 3>),
@@ -2934,7 +2934,7 @@ TEMPLATE_TEST_CASE("testassign11", "",
     using T = TestType;
     T x1 = global::get_value_1<T>();
     rarray<T, 11> a;
-    a.assign(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
+    a.form(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
     for (const auto& i : xrange(a.rank()))
         REQUIRE(a.extent(i) == 2);
     for (const auto& x : a)
@@ -3465,4 +3465,476 @@ TEST_CASE("converting_from_const_automatic_arrays") {
     rarray<const double, 2> a = rarray<const double, 2>(printme).copy();
     double sumall2 = sum2d(a);
     REQUIRE(sumall1 == sumall2);
+}
+
+TEST_CASE("fill_form") {
+    rarray<double,2> matrix(3,3);
+    matrix.fill({{1}},ra::MISSING::REPEAT);
+    for (const auto& e: matrix)
+        REQUIRE(e == 1);
+    rvector<int> ilv;
+    ilv.form({1,2,3,4,5,6,7,8});
+    for (int i = 0; i < 8; i++)
+        REQUIRE(ilv[i] == i+1);
+    ilv.fill({1,9});
+    // test?
+    rmatrix<int> ilm;
+    ilm.form({{1,2,3},
+              {1,2,3,4},
+              {9,10,11,12},
+              {13,14,15,16}});
+    // test?
+    ilm.fill({{1,2},{9,7}});
+    // test?
+    rtensor<int> ilt;
+    ilt.form({{{1,2,3},
+               {1,2,3,4},
+               {9,10,11,12},
+               {13,14,15,16}},
+              {{1,2,3},
+               {1,2,3,4},
+               {9,10,11,12},
+               {13,14,15,16}}});
+    // test?
+    ilt.fill({{{1,2},{9,7}},{{1,2},{9,17}}});
+    // test?
+}
+
+TEMPLATE_TEST_CASE("form_fill_initializer_list", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    TestType val1 = global::get_value_1<TestType>();
+    TestType val2 = global::get_value_2<TestType>();
+    TestType val3 = global::get_value_3<TestType>();
+    auto zero = TestType{};
+    rarray<TestType, 1> a1;
+    a1.clear();
+    a1.form({val1, val2, val3});
+    REQUIRE(a1.size() == 3);
+    REQUIRE(a1[0] == val1);
+    REQUIRE(a1[1] == val2);
+    REQUIRE(a1[2] == val3);
+    rarray<TestType, 2> a2;
+    a2.form({{val1, val2}, {val3}});
+    REQUIRE(a2.extent(0) == 2);
+    REQUIRE(a2.extent(1) == 2);
+    REQUIRE(a2[0][0] == val1);
+    REQUIRE(a2[0][1] == val2);
+    REQUIRE(a2[1][0] == val3);
+    REQUIRE(a2[1][1] == TestType{});
+    a2.clear();
+    a2.form({{val1, val2}, {val3}}, ra::MISSING::REPEAT);
+    REQUIRE(a2.extent(0) == 2);
+    REQUIRE(a2.extent(1) == 2);
+    REQUIRE(a2[0][0] == val1);
+    REQUIRE(a2[0][1] == val2);
+    REQUIRE(a2[1][0] == val3);
+    REQUIRE(a2[1][1] == val3);
+    rarray<TestType, 3> a3;
+    a3.form({{ {val1, val2, val3}, {val1}}});
+    REQUIRE(a3.extent(0) == 1);
+    REQUIRE(a3.extent(1) == 2);
+    REQUIRE(a3.extent(2) == 3);
+    REQUIRE(a3[0][0][0] == val1);
+    REQUIRE(a3[0][0][1] == val2);
+    REQUIRE(a3[0][0][2] == val3);
+    REQUIRE(a3[0][1][0] == val1);
+    REQUIRE(a3[0][1][1] == TestType{});
+    REQUIRE(a3[0][1][2] == TestType{});
+    a3.clear();
+    a3.form({{ {val1, val2, val3}, {val1}}}, ra::MISSING::REPEAT);
+    REQUIRE(a3.extent(0) == 1);
+    REQUIRE(a3.extent(1) == 2);
+    REQUIRE(a3.extent(2) == 3);
+    REQUIRE(a3[0][0][0] == val1);
+    REQUIRE(a3[0][0][1] == val2);
+    REQUIRE(a3[0][0][2] == val3);
+    REQUIRE(a3[0][1][0] == val1);
+    REQUIRE(a3[0][1][1] == val1);
+    REQUIRE(a3[0][1][2] == val1);
+    rarray<TestType, 4> a4;
+    a4.form({
+             {
+              {
+               {val1, val2},  // [0][0][0][0..1]
+               {val1, val3}   // [0][0][1][0..1]
+              },
+              {
+               {val3, val2},  // [0][1][1][0..1]
+               {val1, val1}   // [0][1][1][0..1]
+              }
+             }
+             ,
+             {
+              {
+               {val1, val2},  // [1][0][0][0..1]
+               {val2, val3}   // [1][0][1][0..1]
+              }
+              ,
+              {
+               {val3, val2},  // [1][1][0][0..1]
+               {val2, val1}   // [1][1][1][0..1]
+              }
+             }
+        });
+    REQUIRE(a4.extent(0) == 2);
+    REQUIRE(a4.extent(1) == 2);
+    REQUIRE(a4.extent(2) == 2);
+    REQUIRE(a4.extent(3) == 2);
+    REQUIRE(a4[0][0][0][0] == val1);
+    REQUIRE(a4[0][0][0][1] == val2);
+    REQUIRE(a4[0][0][1][0] == val1);
+    REQUIRE(a4[0][0][1][1] == val3);
+    REQUIRE(a4[0][1][0][0] == val3);
+    REQUIRE(a4[0][1][0][1] == val2);
+    REQUIRE(a4[0][1][1][0] == val1);
+    REQUIRE(a4[0][1][1][1] == val1);
+    REQUIRE(a4[1][0][0][0] == val1);
+    REQUIRE(a4[1][0][0][1] == val2);
+    REQUIRE(a4[1][0][1][0] == val2);
+    REQUIRE(a4[1][0][1][1] == val3);
+    REQUIRE(a4[1][1][0][0] == val3);
+    REQUIRE(a4[1][1][0][1] == val2);
+    REQUIRE(a4[1][1][1][0] == val2);
+    REQUIRE(a4[1][1][1][1] == val1);
+    a4.fill(val3);
+    a4.fill({
+             {
+              {
+               {val1, val2},  // [0][0][0][0..1]
+               {val1, val3}   // [0][0][1][0..1]
+              },
+              {
+               {val3, val2},  // [0][1][1][0..1]
+               {val1, val1}   // [0][1][1][0..1]
+              }
+             }
+        }, ra::MISSING::REPEAT);
+    REQUIRE(a4[0][0][0][0] == val1);
+    REQUIRE(a4[0][0][0][1] == val2);
+    REQUIRE(a4[0][0][1][0] == val1);
+    REQUIRE(a4[0][0][1][1] == val3);
+    REQUIRE(a4[0][1][0][0] == val3);
+    REQUIRE(a4[0][1][0][1] == val2);
+    REQUIRE(a4[0][1][1][0] == val1);
+    REQUIRE(a4[0][1][1][1] == val1);
+    REQUIRE(a4[1][0][0][0] == val1);
+    REQUIRE(a4[1][0][0][1] == val2);
+    REQUIRE(a4[1][0][1][0] == val1);
+    REQUIRE(a4[1][0][1][1] == val3);
+    REQUIRE(a4[1][1][0][0] == val3);
+    REQUIRE(a4[1][1][0][1] == val2);
+    REQUIRE(a4[1][1][1][0] == val1);
+    REQUIRE(a4[1][1][1][1] == val1);
+    a4.fill({
+             {
+              {
+               {val1, val2},  // [0][0][0][0..1]
+               {val1, val3}   // [0][0][1][0..1]
+              },
+              {
+               {val3, val2},  // [0][1][1][0..1]
+               {val1, val1}   // [0][1][1][0..1]
+              }
+             }
+        }, ra::MISSING::DEFAULT);
+    REQUIRE(a4[1][0][0][0] == TestType{});
+    REQUIRE(a4[1][0][0][1] == TestType{});
+    REQUIRE(a4[1][0][1][0] == TestType{});
+    REQUIRE(a4[1][0][1][1] == TestType{});
+    REQUIRE(a4[1][1][0][0] == TestType{});
+    REQUIRE(a4[1][1][0][1] == TestType{});
+    REQUIRE(a4[1][1][1][0] == TestType{});
+    REQUIRE(a4[1][1][1][1] == TestType{});
+    a4.fill({
+             {
+              {
+               {val1, val2},  // [0][0][0][0..1]
+               {val1, val3}   // [0][0][1][0..1]
+              },
+              {
+               {val3, val2},  // [0][1][1][0..1]
+               {val1, val1}   // [0][1][1][0..1]
+              }
+             }
+        }, ra::MISSING::REPEAT);
+    REQUIRE(a4[1][0][0][0] == val1);
+    REQUIRE(a4[1][0][0][1] == val2);
+    REQUIRE(a4[1][0][1][0] == val1);
+    REQUIRE(a4[1][0][1][1] == val3);
+    REQUIRE(a4[1][1][0][0] == val3);
+    REQUIRE(a4[1][1][0][1] == val2);
+    REQUIRE(a4[1][1][1][0] == val1);
+    REQUIRE(a4[1][1][1][1] == val1);
+    rarray<TestType, 5> a5;
+    a5.form({
+             {
+              {
+               {
+                {val1, val2},
+                {val2, val1}
+               }
+              },
+              {
+               {{val3}}
+              }
+             }
+        });
+    REQUIRE(a5.extent(0) == 1);
+    REQUIRE(a5.extent(1) == 2);
+    REQUIRE(a5.extent(2) == 1);
+    REQUIRE(a5.extent(3) == 2);
+    REQUIRE(a5.extent(4) == 2);
+    REQUIRE(a5[0][0][0][0][0] == val1);
+    REQUIRE(a5[0][0][0][0][1] == val2);
+    REQUIRE(a5[0][0][0][1][0] == val2);
+    REQUIRE(a5[0][0][0][1][1] == val1);
+    REQUIRE(a5[0][1][0][0][0] == val3);
+    REQUIRE(a5[0][0][0][0][0] == val1);
+    rarray<TestType, 6> a6;
+    a6.form({
+             {
+              {
+               {
+                {
+                 {val1, val2},
+                 {val2, val1}
+                }
+               },
+               {
+                {{val3}}
+               }
+              }
+             }
+        });
+    REQUIRE(a6.extent(0) == 1);
+    REQUIRE(a6.extent(1) == 1);
+    REQUIRE(a6.extent(2) == 2);
+    REQUIRE(a6.extent(3) == 1);
+    REQUIRE(a6.extent(4) == 2);
+    REQUIRE(a6.extent(5) == 2);
+    REQUIRE(a6[0][0][0][0][0][0] == val1);
+    REQUIRE(a6[0][0][0][0][0][1] == val2);
+    REQUIRE(a6[0][0][0][0][1][0] == val2);
+    REQUIRE(a6[0][0][0][0][1][1] == val1);
+    REQUIRE(a6[0][0][1][0][0][0] == val3);
+    REQUIRE(a6[0][0][0][0][0][0] == val1);
+    rarray<TestType, 7> a7;
+    a7.form({
+             {
+              {
+               {
+                {
+                 {
+                  {val1, val2},
+                  {val2, val1}
+                 }
+                },
+                {
+                 {{val3}}
+                }
+               }
+              }
+             }
+        });
+    REQUIRE(a7.extent(0) == 1);
+    REQUIRE(a7.extent(1) == 1);
+    REQUIRE(a7.extent(2) == 1);
+    REQUIRE(a7.extent(3) == 2);
+    REQUIRE(a7.extent(4) == 1);
+    REQUIRE(a7.extent(5) == 2);
+    REQUIRE(a7.extent(6) == 2);
+    REQUIRE(a7[0][0][0][0][0][0][0] == val1);
+    REQUIRE(a7[0][0][0][0][0][0][1] == val2);
+    REQUIRE(a7[0][0][0][0][0][1][0] == val2);
+    REQUIRE(a7[0][0][0][0][0][1][1] == val1);
+    REQUIRE(a7[0][0][0][1][0][0][0] == val3);
+    REQUIRE(a7[0][0][0][0][0][0][0] == val1);
+    rarray<TestType, 8> a8;
+    a8.form({
+             {
+              {
+               {
+                {
+                 {
+                  {
+                   {val1, val2},
+                   {val2, val1}
+                  }
+                 },
+                 {
+                  {{val3}}
+                 }
+                }
+               }
+              }
+             }
+        });
+    REQUIRE(a8.extent(0) == 1);
+    REQUIRE(a8.extent(1) == 1);
+    REQUIRE(a8.extent(2) == 1);
+    REQUIRE(a8.extent(3) == 1);
+    REQUIRE(a8.extent(4) == 2);
+    REQUIRE(a8.extent(5) == 1);
+    REQUIRE(a8.extent(6) == 2);
+    REQUIRE(a8.extent(7) == 2);
+    REQUIRE(a8[0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a8[0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a8[0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a8[0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a8[0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a8[0][0][0][0][0][0][0][0] == val1);
+    rarray<TestType, 9> a9;
+    a9.form({
+             {
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {val1, val2},
+                    {val2, val1}
+                   }
+                  },
+                  {
+                   {{val3}}
+                  }
+                 }
+                }
+               }
+              }
+             }
+        });
+    REQUIRE(a9.extent(0) == 1);
+    REQUIRE(a9.extent(1) == 1);
+    REQUIRE(a9.extent(2) == 1);
+    REQUIRE(a9.extent(3) == 1);
+    REQUIRE(a9.extent(4) == 1);
+    REQUIRE(a9.extent(5) == 2);
+    REQUIRE(a9.extent(6) == 1);
+    REQUIRE(a9.extent(7) == 2);
+    REQUIRE(a9.extent(8) == 2);
+    REQUIRE(a9[0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a9[0][0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a9[0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a9[0][0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a9[0][0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a9[0][0][0][0][0][0][0][0][0] == val1);
+    rarray<TestType, 10> a10;
+    a10.form({
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {
+                     {
+                      {val1, val2},
+                      {val2, val1}
+                     }
+                    },
+                    {
+                     {{val3}}
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+        });
+    REQUIRE(a10.extent(0) == 1);
+    REQUIRE(a10.extent(1) == 1);
+    REQUIRE(a10.extent(2) == 1);
+    REQUIRE(a10.extent(3) == 1);
+    REQUIRE(a10.extent(4) == 1);
+    REQUIRE(a10.extent(5) == 1);
+    REQUIRE(a10.extent(6) == 2);
+    REQUIRE(a10.extent(7) == 1);
+    REQUIRE(a10.extent(8) == 2);
+    REQUIRE(a10.extent(9) == 2);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a10[0][0][0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][0][0] == val1);
+    rarray<TestType, 11> a11;
+    a11.form({
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {
+                     {
+                      {
+                       {val1, val2},
+                       {val2, val1}
+                      }
+                     },
+                     {
+                       {{val3}}
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              },
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {
+                     {
+                      {
+                       {val1},
+                       {val2, val3}
+                      },
+                      {
+                       {val3, val2},
+                       {val1, val2}
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             });
+    REQUIRE(a11.extent(0) == 2);
+    REQUIRE(a11.extent(1) == 1);
+    REQUIRE(a11.extent(2) == 1);
+    REQUIRE(a11.extent(3) == 1);
+    REQUIRE(a11.extent(4) == 1);
+    REQUIRE(a11.extent(5) == 1);
+    REQUIRE(a11.extent(6) == 1);
+    REQUIRE(a11.extent(7) == 2);
+    REQUIRE(a11.extent(8) == 2);
+    REQUIRE(a11.extent(9) == 2);
+    REQUIRE(a11.extent(10) == 2);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a11[0][0][0][0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][0][1] == zero);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][1][1] == val3);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][0][0] == val3);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][0][1] == val2);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][1][0] == val1);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][1][1] == val2);
 }

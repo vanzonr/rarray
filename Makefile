@@ -229,7 +229,7 @@ coverage23:
 
 .PHONY: run_test_shared_buffer
 run_test_shared_buffer: test_shared_buffer coverage
-	./test_shared_buffer
+	./test_shared_buffer -d yes
 	${GCOV} ./test_shared_buffer.o | \
 	( ${FILTERCOV} '/0:Source:headersources\/shared_buffer.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
@@ -240,7 +240,7 @@ run_valgrind_test_shared_buffer: test_shared_buffer
 
 .PHONY: run_test_offsets
 run_test_offsets: test_offsets coverage
-	./test_offsets
+	./test_offsets -d yes
 	${GCOV} ./test_offsets.o | \
 	( ${FILTERCOV} '/0:Source:headersources\/offsets.h/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
@@ -278,14 +278,14 @@ run_valgrind_test_rarray23: test_rarray23
 
 .PHONY: run_testsuite
 run_testsuite: testsuite coverage
-	./testsuite
+	./testsuite -d yes
 	${GCOV} ./testsuite.o | \
 	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage/$@
 
 .PHONY: run_testsuite23
 run_testsuite23: testsuite23 coverage23
-	./testsuite23
+	./testsuite23 -d yes
 	${GCOV} ./testsuite23.o | \
 	( ${FILTERCOV} '/0:Source:rarray/{f=1}/0:Colorization:/{f=0}f' || true ) \
 	> coverage23/$@

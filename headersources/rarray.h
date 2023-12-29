@@ -39,6 +39,7 @@
 #include <utility>
 #include <functional>
 #include <string>
+#include <initializer_list>
 #include "versionheader.h"
 #include "rarraymacros.h"
 #include "rarraytypes.h"
@@ -48,7 +49,8 @@
 // Forward definitions of ra::rarray<T, R> and ra::CommaOp
 namespace ra {
 
-enum class RESIZE { NO,  ALLOWED };
+enum class RESIZE { NO, ALLOWED };
+enum class MISSING { SKIP, DEFAULT, REPEAT };
 
 namespace detail {
 template<typename T> class CommaOp;
@@ -60,6 +62,40 @@ template<typename T, rank_type R, typename P> class ConstBracket;
 // using ExOp = int;
 #define ExOp class
 template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
+// Helper routines to recursively determine the shape of nested
+// initializer list used in rarray::assign(...).
+template<typename T>
+void init_shape_fill(unsigned N, size_type* sz, const T& l)
+{}
+template<typename U>
+void init_shape_fill(unsigned N, size_type* sz,
+                     const std::initializer_list<U>& l) {
+    // U should be a type of N-1 nested initializer lists, so l is a
+    // N-level nested initializer list. But the number of levels is
+    // less, this will only fill upto the actual number of levels,
+    // while if the number of levels is greater, only N levels will be
+    // initialized.
+    sz[0] = std::max(sz[0], static_cast<size_type>(l.size()));
+    if (N >= 2)
+        for (const auto& lsub : l)
+            init_shape_fill(N - 1, sz + 1, lsub);
+}
+template<unsigned N, typename U>
+auto init_shape(const std::initializer_list<U>& l) -> std::array<size_type, N> {
+    std::array<size_type, N> sz{0};
+    init_shape_fill(N,  &sz[0], l);
+    return sz;
+}
+template<typename T>
+struct init_list_prop {
+    enum { rank = 0 };
+    using  type = T;
+};
+template<typename U>
+struct init_list_prop<std::initializer_list<U>> {
+    enum { rank = init_list_prop<U>::rank + 1 };
+    using  type = typename init_list_prop<U>::type;
+};
 }  // namespace detail
 
 template<typename T, rank_type R>
@@ -588,38 +624,309 @@ class rarray {
         shape_ = detail::shared_shape<T, R>();
         buffer_ = detail::shared_buffer<T>();
     }
-    // fill with uniform value (does not change the size || shape)
+    // fill with uniform value (does not change the size nor shape)
     inline void fill(const T& value) {
         buffer_.fill(value);
     }
-    // assign with uniform value (will set the size and shape)
+    // fill with repeating sequence (does not change the size nor shape)
+ private:
+    template<rank_type R_ = R,
+             class = typename std::enable_if<R_ == 1>::type>
+    inline void fill_g(std::initializer_list<T> list,
+                       MISSING missing_policy) {
+        auto filler = list.begin();
+        for (size_type i = 0; i < extent(0); i++) {
+            if (filler != list.end()) {
+                buffer_[i] = *filler++;
+                if (filler == list.end()) {
+                    if (missing_policy == MISSING::REPEAT)
+                        filler = list.begin();
+                    else if (missing_policy == MISSING::SKIP)
+                        break;
+                }
+            } else {
+                buffer_[i] = T{};
+            }
+        }
+    }
+    template<typename U, rank_type R_ = R,
+             class = typename std::enable_if<R_ != 1>::type>
+    inline void fill_g(std::initializer_list<U> list,
+                       MISSING missing_policy) {
+        auto filler = list.begin();
+        for (size_type i = 0; i < extent(0); i++) {
+            if (filler != list.end()) {
+                at(i).fill_g(*filler++, missing_policy);
+                if (filler == list.end()) {
+                    if (missing_policy == MISSING::REPEAT)
+                        filler = list.begin();
+                    else if (missing_policy == MISSING::SKIP)
+                        break;
+                }
+            } else {
+                at(i).fill(T{});
+            }
+        }
+    }
+    template<typename U>
+    inline void form_g(std::initializer_list<U> list,
+                         MISSING missing_policy) {
+        std::array<size_type, R> newshape = detail::init_shape<R>(list);
+        size_type newsize = std::accumulate(newshape.begin(), newshape.end(),
+                                            1, std::multiplies<size_type>());
+        buffer_ = detail::shared_buffer<T>(newsize);
+        shape_ = detail::shared_shape<T, R>(newshape, buffer_.begin());
+        fill_g(list, missing_policy);
+    }
+ public:
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline void assign(size_type n0, const T& value) {
+    inline void fill(std::initializer_list<T> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<T>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
+    inline void fill(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        fill_g(list, missing_policy);
+    }
+    // form from initializer list
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
+    inline void form(std::initializer_list<T> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
+    inline void form(std::initializer_list<std::initializer_list<T>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
+    inline void form(std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<
+                     std::initializer_list<T>>>>>>>>>>> list,
+                     MISSING missing_policy = MISSING::DEFAULT) {
+        form_g(list, missing_policy);
+    }
+    // form with uniform value (will set the size and shape)
+    template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
+    inline void form(size_type n0, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0);
         shape_ = detail::shared_shape<T, R>({n0}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline void assign(size_type n0, size_type n1, const T& value) {
+    inline void form(size_type n0, size_type n1, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1);
         shape_ = detail::shared_shape<T, R>({n0, n1}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, const T& value) {
+    inline void form(size_type n0, size_type n1, size_type n2, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2);
         shape_ = detail::shared_shape<T, R>({n0, n1, n2}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3);
         shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4);
@@ -627,7 +934,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5);
@@ -635,7 +942,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6);
@@ -643,7 +950,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6, size_type n7,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7);
@@ -651,7 +958,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6, size_type n7,
                        size_type n8,
                        const T& value) {
@@ -660,7 +967,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6, size_type n7,
                        size_type n8, size_type n9,
                        const T& value) {
@@ -669,13 +976,13 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline void assign(size_type n0, size_type n1, size_type n2, size_type n3,
-                       size_type n4, size_type n5, size_type n6, size_type n7,
-                       size_type n8, size_type n9, size_type n10,
-                       const T& value) {
+    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+                     size_type n4, size_type n5, size_type n6, size_type n7,
+                     size_type n8, size_type n9, size_type n10,
+                     const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10);
         shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10},
-                                           buffer_.begin());
+                                            buffer_.begin());
         buffer_.fill(value);
     }
     // iterators over the data
