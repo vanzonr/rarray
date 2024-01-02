@@ -267,6 +267,8 @@ functions as a single argument.
 \item Use of \cxx11 move semantics for efficiency.
 \item Can be emptied with the {\tt clear} method.
 \item Can be filled with a uniform value with the {\tt fill} method.
+\item Can be filled with a nested initializer list.
+\item Can be formed from a nested initializer list.
 \item Can be reshaped.
 \item Automatic C-style arrays can be converted to rarrays.
 \item A method {\tt empty} to check if the rarray is uninitialized.
@@ -783,7 +785,8 @@ public:
  rarray<T,R>& operator=(const rarray<T,R> &a);// shallow assignment
  operator[](size_type i) const;  // enables const element access
  operator[](size_type i);        // enables element access for assignment
- rarray<T,R-1> at(size_t i);      // retrieve the ith 'row' with bounds checking
+ rarray<T,R-1> at(size_type i);      // retrieve the ith 'row' 
+ rarray<T,R> slice(size_type begin, size_type end);  // get subarray
 };
 }
 \end{verbatim}\vspace{-14pt}
@@ -851,7 +854,23 @@ This method release memory the memory associated with the rarray. If the rarray 
 
 \noindent\textbf{Definition:} \texttt{void fill(const T\& value);}
 
-This method fills the array with a uniform value \texttt{value}.
+This method fills the array with a uniform \texttt{value}.
+
+\noindent\textbf{Definition:} \texttt{void  fill(std::initializer\_list<....<T>>> list, ra::MISSING policy);}
+
+This method fills the array according to the nested
+initializer. Handles missing elements in the initializer according to
+policy.
+
+\noindent\textbf{Definition:} \texttt{void form(size\_type n0, .... const T\& value);}
+
+This method recreates (``forms'') the array with given dimensions, filled with a uniform \texttt{value}.
+
+\noindent\textbf{Definition:} \texttt{void  form(std::initializer\_list<....<T>>> list, ra::MISSING \texttt{policy});}
+
+This method recreates the array with dimensions that fit the nested
+initializer \texttt{list}. Handles missing elements in the initializer
+according to \texttt{policy}.
 
 \noindent\textbf{Definition:} \texttt{bool empty();}
 
@@ -860,6 +879,12 @@ Checks if the rarray is in an uninitialized state.
 \noindent\textbf{Definition:} \texttt{rarray{\tt<}T,R{\tt>} copy() const;}
 
 This method creates deep copy of the rarray, i.e., an independent rarray with the same dimensions are the original rarray and with its content a copy of the original rarray's content.
+
+\noindent\textbf{Definition:} \texttt{rarray<T,R-1> at(size\_t i);}
+
+Retrieves the ith 'row', with bounds checking. The returned array is
+one rank lower than the original and contains a (counted) reference to
+just that row of the original.
 
 \section{I/O}
 

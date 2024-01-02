@@ -66,7 +66,10 @@ struct PointerArray<T, 0> {  // We also end the recursion by specifically defini
 };
 
 template<class T, rank_type R>
-struct DataFromPtrsNoffsetsNdataoffsets;
+struct DataFromPtrs;
+
+template<class T, rank_type R>
+struct DataArrayFromPtrs;
 
 template<class T, rank_type R>
 class shared_shape {
@@ -90,19 +93,18 @@ class shared_shape {
         ptrs_ = reinterpret_cast<ptrs_type>(orig_);
         if (R == 1)
             orig_ = nullptr;  // avoids "double delete"
-        noffsets_ = P.get_num_offsets();
         ndataoffsets_ = P.get_num_data_offsets();
     }
     // copy constructor
     inline shared_shape(const shared_shape& other) noexcept
     : extent_(other.extent_), ptrs_(other.ptrs_), refs_(other.refs_), orig_(other.orig_),
-      noffsets_(other.noffsets_), ndataoffsets_(other.ndataoffsets_) {
+      ndataoffsets_(other.ndataoffsets_) {
         incref();
     }
     // move constructor
     inline shared_shape(shared_shape&& other) noexcept
     : extent_(other.extent_), ptrs_(other.ptrs_), refs_(other.refs_), orig_(other.orig_),
-      noffsets_(other.noffsets_), ndataoffsets_(other.ndataoffsets_) {
+      ndataoffsets_(other.ndataoffsets_) {
         other.uninit();
     }
     // (shallow) copy and move assignment
@@ -113,7 +115,6 @@ class shared_shape {
             ptrs_         = other.ptrs_;
             refs_         = other.refs_;
             orig_         = other.orig_;
-            noffsets_     = other.noffsets_;
             ndataoffsets_ = other.ndataoffsets_;
             incref();
         }
@@ -125,7 +126,6 @@ class shared_shape {
         ptrs_         = other.ptrs_;
         refs_         = other.refs_;
         orig_         = other.orig_;
-        noffsets_     = other.noffsets_;
         ndataoffsets_ = other.ndataoffsets_;
         other.uninit();
     }
@@ -134,28 +134,8 @@ class shared_shape {
         decref();
     }
     // create a deep copy of the shape (not the data)
-    inline auto copy() const -> shared_shape {
-        shared_shape copy_of_this;
-        copy_of_this.extent_ = extent_;
-        copy_of_this.noffsets_ = noffsets_;
-        copy_of_this.ndataoffsets_ = ndataoffsets_;
-        if (R > 1) {
-            copy_of_this.refs_ = new std::atomic<int>(1);
-            copy_of_this.orig_ = new void**[noffsets_];
-            using noconstT = typename std::remove_const<T>::type;
-            void*** old_eff_orig = reinterpret_cast<void***>(
-                                       const_cast<typename PointerArray<noconstT, R>::noconst_type>(
-                                         ptrs_));
-            std::copy(old_eff_orig, old_eff_orig + noffsets_, copy_of_this.orig_);
-            std::ptrdiff_t shift = reinterpret_cast<char*>(copy_of_this.orig_)
-                                   - reinterpret_cast<char*>(old_eff_orig);
-            for (size_type i = 0; i < noffsets_ - ndataoffsets_; i++)
-                copy_of_this.orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(copy_of_this.orig_[i]) + shift);
-            copy_of_this.ptrs_ = reinterpret_cast<ptrs_type>(copy_of_this.orig_);
-        } else {
-            copy_of_this.ptrs_ = ptrs_;
-        }
-        return copy_of_this;
+    inline auto copy() const -> shared_shape {        
+        return shared_shape(extent_, data());
     }
     // change data or shape
     // let shape point to other data block
@@ -169,9 +149,11 @@ class shared_shape {
             // let shape point to other datablock
             std::ptrdiff_t shift = reinterpret_cast<const char*>(newdata) - reinterpret_cast<const char*>(data());
             if (shift != 0) {
-                copy_before_write();
-                for (size_type i = noffsets_ - ndataoffsets_; i < noffsets_; i++)
-                    orig_[i] = reinterpret_cast<void**>(reinterpret_cast<char*>(orig_[i]) + shift);
+                if (refs_ && *refs_ > 1)
+                    *this = this->copy();
+                char** data_array = DataArrayFromPtrs<T,R>::call(ptrs_);
+                for (size_type i = 0; i < ndataoffsets_; i++)
+                    data_array[i] += shift;
             }
         }
     }
@@ -193,7 +175,7 @@ class shared_shape {
     }
     // get pointer to the data
     inline auto data() const noexcept -> T* {
-        return DataFromPtrsNoffsetsNdataoffsets<T, R>::call(ptrs_, noffsets_, ndataoffsets_);
+        return DataFromPtrs<T, R>::call(ptrs_);
     }
     // get total number of elements
     inline auto size() const noexcept -> size_type {
@@ -220,8 +202,25 @@ class shared_shape {
             result.ptrs_         = ptrs_[index];
             result.refs_         = refs_;
             result.orig_         = orig_;
-            result.noffsets_     = noffsets_/extent_[0] - 1;
             result.ndataoffsets_ = ndataoffsets_/extent_[0];
+            incref();
+        }
+        return result;
+    }
+    // get subshape with bounds checking
+    inline auto slice(size_type beginindex, size_type endindex) const -> shared_shape<T, R> {
+        if (R < 1 || beginindex < 0 || beginindex >= extent_[0]
+            || endindex < 0 || endindex > extent_[0])
+            throw std::out_of_range("shared_shape::slice");
+        shared_shape<T, R> result;
+        if (R > 1 && beginindex < endindex) {
+            result.extent_[0]    = endindex - beginindex;
+            for (rank_type i = 1; i < R; ++i)
+                result.extent_[i] = extent_[i];
+            result.ptrs_         = ptrs_ + beginindex;
+            result.refs_         = refs_;
+            result.orig_         = orig_;
+            result.ndataoffsets_ = result.extent_[0]*(ndataoffsets_/extent_[0]);
             incref();
         }
         return result;
@@ -232,14 +231,12 @@ class shared_shape {
     ptrs_type                ptrs_;
     std::atomic<int>*        refs_;
     void***                  orig_;
-    size_type                noffsets_;
     size_type                ndataoffsets_;
     // put this object into an uninitialized state
     inline void uninit() noexcept {
         ptrs_         = nullptr;
         orig_         = nullptr;
         refs_         = nullptr;
-        noffsets_     = 0;
         ndataoffsets_ = 0;
         extent_.fill(0);
     }
@@ -258,15 +255,8 @@ class shared_shape {
             }
         }
     }
-    // Checks if other references to it exist and if so, copies
-    // itself.  Intended to be called before changing ptrs_,
-    // like a copy-on-write.
-    inline void copy_before_write() {
-        if (R > 1 && refs_ && *refs_ > 1)
-            *this = this->copy();
-    }
     template<class U, int S> friend class shared_shape;  // for "at"
-    // for testing and debugging:           // EXCLUDE //
+    // for testing and debugging:             // EXCLUDE //
     friend int ::test_shared_shape_main();  // EXCLUDE //
 };
 
@@ -282,29 +272,45 @@ class shared_shape<T, 0> {
     ptrs_type                ptrs_;
     std::atomic<int>*        refs_;
     void***                  orig_;
-    size_type                noffsets_;
     size_type                ndataoffsets_;
     inline void incref() const noexcept {}
     template<class U, int S> friend class shared_shape;  // for "at"
 };
 
 template<class T, rank_type R>
-struct DataFromPtrsNoffsetsNdataoffsets {
-    static inline auto call(typename PointerArray<T, R>::type ptrs,
-                            typename shared_shape<T, R>::size_type noffsets,
-                            typename shared_shape<T, R>::size_type ndataoffsets) noexcept -> T* {
-        return reinterpret_cast<T*>(
-                  const_cast<typename PointerArray<T, R-1>::noconst_type>(
-                    ptrs[noffsets - ndataoffsets]));
+struct DataFromPtrs {
+    static inline auto call(typename PointerArray<T, R>::type ptrs) noexcept -> T* {
+        return DataFromPtrs<T,R-1>::call(*ptrs);
     }
 };
 
 template<class T>
-struct DataFromPtrsNoffsetsNdataoffsets<T, 1> {
-    static inline auto call(typename PointerArray<T, 1>::type ptrs,
-                            typename shared_shape<T, 1>::size_type noffsets,
-                            typename shared_shape<T, 1>::size_type ndataoffsets) noexcept -> T* {
+struct DataFromPtrs<T, 1> {
+    static inline auto call(typename PointerArray<T, 1>::type ptrs) noexcept -> T* {
         return reinterpret_cast<T*>(ptrs);
+    }
+};
+
+template<class T, rank_type R>
+struct DataArrayFromPtrs {
+    static inline auto call(typename PointerArray<T, R>::type ptrs) noexcept -> char** {
+        return DataArrayFromPtrs<T,R-1>::call(*ptrs);
+    }
+};
+
+template<class T>
+struct DataArrayFromPtrs<T, 2> {
+    static inline auto call(typename PointerArray<T, 2>::type ptrs) noexcept -> char** {
+        return reinterpret_cast<char**>(const_cast<typename PointerArray<typename std::remove_const<T>::type, 2>::noconst_type>(ptrs));
+    }
+};
+
+template<class T>
+struct DataArrayFromPtrs<T, 1> {
+    static inline auto call(typename PointerArray<T, 1>::type ptrs) noexcept -> char** {
+        return nullptr;  // should never be called, just there to
+                         // terminate the template recursion at
+                         // compile time.
     }
 };
 

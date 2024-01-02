@@ -1,3 +1,4 @@
+[//]: # \mainpage
 rarray - reference-counted multidimensional arrays
 ==================================================
 

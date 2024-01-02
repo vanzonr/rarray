@@ -3938,3 +3938,28 @@ TEMPLATE_TEST_CASE("form_fill_initializer_list", "",
     REQUIRE(a11[1][0][0][0][0][0][0][0][1][1][0] == val1);
     REQUIRE(a11[1][0][0][0][0][0][0][0][1][1][1] == val2);
 }
+
+TEMPLATE_TEST_CASE("slice", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {    
+    TestType val1 = global::get_value_1<TestType>();
+    TestType val2 = global::get_value_2<TestType>();
+    rarray<TestType, 2> a(8,8);
+    a.fill({{val1,val2},{val2,val1}},ra::MISSING::REPEAT);
+    rarray<TestType, 2> b = a.slice(2,6);
+    REQUIRE(b.extent(0) == 4);
+    REQUIRE(b.extent(1) == a.extent(1));   
+    for (int i = 0; i < b.extent(0); i++)
+        for (int j = 0; j < b.extent(0); j++)
+            REQUIRE(a[i][j] == b[i][j]);
+    rarray<TestType, 1> c = b.at(3);
+    for (int j = 0; j < c.extent(0); j++)
+        REQUIRE(c[j] == a[5][j]);
+    rarray<TestType, 1> d;
+    REQUIRE_THROWS(d = c.slice(1,30));
+    d = c.slice(1,2);
+    for (int j = 0; j < d.extent(0); j++)
+        REQUIRE(d[j] == a[5][j]);
+}

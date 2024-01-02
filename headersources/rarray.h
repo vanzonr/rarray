@@ -98,6 +98,7 @@ struct init_list_prop<std::initializer_list<U>> {
 };
 }  // namespace detail
 
+/// Class with multidimensional arrays
 template<typename T, rank_type R>
 class rarray {
  public:
@@ -789,7 +790,8 @@ class rarray {
                      MISSING missing_policy = MISSING::DEFAULT) {
         fill_g(list, missing_policy);
     }
-    // form from initializer list
+    /// @name Form from initializer lists
+    /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline void form(std::initializer_list<T> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
@@ -899,7 +901,12 @@ class rarray {
                      MISSING missing_policy = MISSING::DEFAULT) {
         form_g(list, missing_policy);
     }
-    // form with uniform value (will set the size and shape)
+    /// @}
+    /// @name Form with uniform value (will set the size and shape)
+    /// @{
+    /// @brief Creates a newly allocated rarray filled with a given value
+    /// @param n0... New dimensions of the rarray
+    /// @param value Value to fill the rarray with
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline void form(size_type n0, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0);
@@ -985,6 +992,7 @@ class rarray {
                                             buffer_.begin());
         buffer_.fill(value);
     }
+    ///@}
     // iterators over the data
     inline auto begin() noexcept -> iterator {
         return buffer_.begin();
@@ -1082,6 +1090,16 @@ class rarray {
         if (i < 0 || i >= extent(0))
             throw std::out_of_range("rarray<T, R>::at");
         return shape_.ptrs()[i];
+    }
+    // slice
+    RA_FORCE_inline auto slice(size_type beginindex, size_type endindex)
+    -> rarray {
+        if (beginindex < 0 || beginindex >= shape_.extent(0)
+            || endindex < 0 || endindex > shape_.extent(0))
+            throw std::out_of_range("rarray<T, R>::slice");
+        size_type stride = size()/extent(0);        
+        return {buffer_.slice(beginindex*stride, endindex*stride),
+                shape_.slice(beginindex, endindex)};
     }
     // for square bracket access:
     template<class U = T>

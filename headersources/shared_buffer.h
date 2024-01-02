@@ -55,6 +55,7 @@ int internal_check(const ra::detail::shared_buffer<V>& a,                  // EX
 namespace ra {
 namespace detail {
 
+/// Internal shared buffer class
 template<class T>
 class shared_buffer {
  public:
