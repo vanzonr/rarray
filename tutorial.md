@@ -466,7 +466,7 @@ int main() {
     rarray<double,4> a(10,10,4,4);
     a.fill(0.0);
     ofstream f("adump.bin","wb");
-    f.write((char*)a.data(), a.size()*sizeof(int));
+    f.write((char*)a.data(), a.size()*sizeof(double));
     f.close();
 }
 ```
@@ -494,7 +494,7 @@ prints "A:0 B:1 C:0".  Note that an array filled with zeros does not count as em
 
 # Reshaping
 
-To use the data in an rarray but access it in a different `shape', one can use the `reshape` method.  E.g.
+To use the data in an rarray but access it in a different shape, one can use the `reshape` method.  E.g.
 ```cpp
 rarray<double,4> a(10,10,4,4);
 a.fill(1.0);
@@ -504,17 +504,21 @@ This preserves the elements. Keep in mind that the elements are stored
 contiguously in row-major order when figuring out which elements end
 up where in the new shape.
 
-The number elements should be the same as the new shape.  This way, `reshape` can guarantee not to allocate more memory.  It is possible to reshape ending up with less elements by adding the RESIZE::ALLOWED flag, e.g.
+The number of elements in the new shape should be the same as in the
+old shape.  This way, `reshape` can guarantee not to allocate more
+memory.  It is also possible to reshape ending up with less elements by
+adding the ra::RESIZE::ALLOWED flag, e.g.
 ```cpp
-a.reshape(5,5,5,5, RESIZE::ALLOWED);
+a.reshape(5,5,5,5,ra::RESIZE::ALLOWED);
 ```
 
-If reference-counted copies of the reshaped array exists, these will
-not be reshaped when the `reshape` method is used.  In the reshape
-call, a new shape is stored in the rarray, while the copies contain
-the old shape.  The values stored in theose rarrays is still shared,
-however.  This makes it possible to resize an rarray in a function
-without affecting external copies, e.g.
+If reference-counted copies of the reshaped array exist, these will
+not be reshaped when the `reshape` method is used.  The reshape method
+stores a new shape in the rarray, while the copies contain the old
+shape.  The value of that data stored in those rarrays is still
+shared, even though their shapes now differ.  This makes it possible
+to resize an rarray inside a function without affecting external
+copies, e.g.
 ```cpp
 #include <rarray>
 #include <iostream>
@@ -541,9 +545,9 @@ which prints:
 This is one situation where pass-by-reference of the rarray would not
 work, as this would change the shape of the original rarray.
 
-The `reshape` method always returns an rarray of the same rank.  To
-reshape into a lower rank, one can combine this with the `at` method,
-e.g.
+The `reshape` method cannot change the rank of the rarray.  To
+reshape into a lower rank, one can combine `reshape` with the `at` method,
+e.g. to flatten a 4D rarray, one could use the following code:
 ```cpp
 rarray<double,4> a(10,10,4,4);
 a.fill(1.0);
@@ -621,8 +625,8 @@ int main() {
 prints '[0,0]=0.1 [0,1]=0.2 [1,0]=0.3 [1,1]=0.4'
 
 The index methods are provided as a convenience, but require a
-Note that computation based on offsets, and are not exactly cheap.  If you
-already know the indices of an elements in another way, usual those
+computation based on offsets, and are not exactly cheap.  If you
+already know the indices of an elements in another way, using those
 values would be recommended.
 
 # Auxiliary functions
