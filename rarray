@@ -2148,20 +2148,7 @@ inline void parse_strings(const std::pair<std::list<std::pair<token, std::string
 }  // namespace detail
 template<typename T, rank_type R>
 inline auto operator<<(std::ostream &o, const rarray<T, R>& r) -> std::ostream& {
-    if (R > 1) {
-        return detail::text_output(o, r);
-    } else if (R == 1) {
-        if (!r.empty()) {
-            o << "{";
-            for (size_type i = 0; i < r.extent(0); i++)  {
-                if (i > 0)
-                    o << ",";
-                o << r.data()[i];
-            }
-            o << "}";
-        }
-    }
-    return o;
+    return detail::text_output(o, r);
 }
 template<typename T, rank_type R>
 inline auto operator>>(std::istream &in, rarray<T, R>& r) -> std::istream& {
