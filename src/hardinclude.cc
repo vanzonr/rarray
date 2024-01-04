@@ -54,9 +54,9 @@ bool file_exists(const string& file_name) {
 }
 
 // check if string is one of a set of strings
-const size_t NOTFOUND = -1;
-size_t string_in_set(const string& str, const vector<string>& strset) {
-    for (size_t i = 0; i < strset.size(); i++)
+const long long NOTFOUND = -1;
+long long string_in_set(const string& str, const vector<string>& strset) {
+    for (long long i = 0; i < strset.size(); i++)
         if (strset[i] == str)
             return i;
     return NOTFOUND;
@@ -65,7 +65,7 @@ size_t string_in_set(const string& str, const vector<string>& strset) {
 
 // check if a line is just a comment
 bool iscommentline(const std::string& line) {
-    size_t i = 0;
+    long long i = 0;
     while (i < line.size() && line[i] == ' ')
         i++;
     return line.substr(i, 2) == std::string("//");
@@ -73,12 +73,12 @@ bool iscommentline(const std::string& line) {
 
 // find the end of the code line, not counting trailing comments or spaces
 // note: not prepared for quoted strings
-size_t endofcodeline(const std::string& line) {
-    size_t end;
+long long endofcodeline(const std::string& line) {
+    long long end;
     if (iscommentline(line)) {
         end = 0;
     } else {
-        size_t lastslashi = line.size()-1;
+        long long lastslashi = line.size()-1;
         while (lastslashi > 0 && line[lastslashi] != '/')
             lastslashi--;
         if (lastslashi == 0 || line[lastslashi] != '/' || line[lastslashi-1] != '/'
@@ -97,7 +97,7 @@ size_t endofcodeline(const std::string& line) {
 
 // trim whitespace
 string trimline(const string& line) {
-    size_t i = 0;
+    long long i = 0;
     while (i < line.size() && line[i] == ' ')
         i++;
     return line.substr(i);
@@ -175,12 +175,12 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         auto include = NOTFOUND;
         string includefilename;
         // find occurance of "#include"
-        size_t pos = line.find(INCLUDETAG);
-        size_t continueat = 0;
+        long long pos = line.find(INCLUDETAG);
+        long long continueat = 0;
         if (pos != string::npos) {
             // check if there are only spaces before it
             bool only_leading_space = true;
-            for (size_t i = 0; i < pos; i++)
+            for (long long i = 0; i < pos; i++)
                 if (line[i] != ' ' && line[i] != '\t') {
                     only_leading_space = false;
                     break;

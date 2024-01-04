@@ -52,6 +52,7 @@ MORECPPFLAGSOPT?=-DNOBLITZ -DNOBOOST -DNOEIGEN3 -DNOARMADILLO -DNOOPENBLAS
 MORELDFLAGSOPT?=
 FC?=gfortran
 FFLAGS?=-O2
+NOELIDECONSTRUCTORS?=
 
 CPPFLAGS+= -I. -I${HS}
 
@@ -194,7 +195,7 @@ test_offsets: test_offsets.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} ${DBGFLAGS} -o $@ $^ ${LIBSCOV}
 
 test_shared_shape.o: ${SRC}/test_shared_shape.cc ${HS}/shared_shape.h ${HS}/offsets.h
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} ${DBGFLAGS} -fno-elide-constructors -c -o $@ $<
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} ${CXXFLAGSCOV} ${DBGFLAGS} ${NOELIDECONSTRUCTORS} -c -o $@ $<
 
 test_shared_shape: test_shared_shape.o
 	${CXX} ${LDFLAGS} ${LDFLAGSCOV} ${DBGFLAGS} -o $@ $^ ${LIBSCOV}
