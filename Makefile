@@ -1,7 +1,7 @@
 # 
 # Makefile - make file for rarray
 #
-# Copyright (c) 2013-2023  Ramses van Zon
+# Copyright (c) 2013-2024  Ramses van Zon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
 #
 # To build and run tests:                 make test valgrindtest
 # To build and run the benchmarks:        make benchmarks
-# To rebuild the headers:                 make headers
+# To rebuild the header:                  make header
 # To rebuild the documentation:           make doc
 #
 
@@ -83,16 +83,16 @@ help:
 	@echo ""
 	@echo "  To build and run tests:                 make test valgrindtest"
 	@echo "  To build and run benchmarks:            make benchmarks"
-	@echo "  To rebuild the headers:                 make headers"
+	@echo "  To rebuild the header:                  make header"
 	@echo "  To rebuild the documentation:           make doc"
 	@echo "  To build and run c++23 tests:           make test23 valgrindtest23"
 	@echo ""
 
-.PHONY: headers
-headers: rarray
+.PHONY: header
+header: rarray
 
 .PHONY: all
-all: headers test valgrindtest benchmarks
+all: header test valgrindtest test23 valgrindtest23 benchmarks
 
 .PHONY: test
 test: run_testsuite  run_testsuite_bc  run_test_shared_buffer  run_test_offsets \
@@ -114,9 +114,12 @@ valgrindtest23: run_valgrind_testsuite23  run_valgrind_testsuite_bc23 \
 benchmarks: run_benchmark2d  run_benchmark4d
 
 .PHONY: doc
-doc: rarraydoc.pdf
+doc: rarraydoc.pdf doc-devel/html/index.html
 rarraydoc.pdf: rarraydoc.tex
 	pdflatex $^ && pdflatex $^
+
+doc-devel/html/index.html: Doxyfile.devel rarray
+	doxygen $<
 
 .PHONY: lint
 lint: clang-tidy-output/clang-tidy-rarray.out

@@ -6,7 +6,7 @@
 // structure, but the actual data is a simple pointer.  One of the
 // building blocks for rarray 2.x.
 //
-// Copyright (c) 2018-2023  Ramses van Zon
+// Copyright (c) 2018-2024  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -151,7 +151,7 @@ class shared_shape {
             if (shift != 0) {
                 if (refs_ && *refs_ > 1)
                     *this = this->copy();
-                char** data_array = DataArrayFromPtrs<T,R>::call(ptrs_);
+                char** data_array = DataArrayFromPtrs<T, R>::call(ptrs_);
                 for (size_type i = 0; i < ndataoffsets_; i++)
                     data_array[i] += shift;
             }
@@ -280,7 +280,7 @@ class shared_shape<T, 0> {
 template<class T, rank_type R>
 struct DataFromPtrs {
     static inline auto call(typename PointerArray<T, R>::type ptrs) noexcept -> T* {
-        return DataFromPtrs<T,R-1>::call(*ptrs);
+        return DataFromPtrs<T, R-1>::call(*ptrs);
     }
 };
 
@@ -294,7 +294,7 @@ struct DataFromPtrs<T, 1> {
 template<class T, rank_type R>
 struct DataArrayFromPtrs {
     static inline auto call(typename PointerArray<T, R>::type ptrs) noexcept -> char** {
-        return DataArrayFromPtrs<T,R-1>::call(*ptrs);
+        return DataArrayFromPtrs<T, R-1>::call(*ptrs);
     }
 };
 

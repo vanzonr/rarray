@@ -85,6 +85,8 @@ size_t endofcodeline(const std::string& line) {
             || line.find("  // namespace") != std::string::npos) {
             end = line.size();
         } else {
+            while (lastslashi >= 1 && line[lastslashi] == '/' and line[lastslashi-1] == '/')
+                lastslashi--;
             end = lastslashi-1;
         }
     }

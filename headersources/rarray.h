@@ -3,7 +3,7 @@
 //          runtime, reference counted, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2023  Ramses van Zon
+// Copyright (c) 2013-2024  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,8 @@ template<typename T, rank_type R, typename P> class ConstBracket;
 // which we forward-define first Forward definitions to support array
 // expressions // What type enumerates possible operators?
 // using ExOp = int;
-#define ExOp class
+#define ExOp class   ///< not used
+/// Not implemented
 template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A3> class Expr;
 // Helper routines to recursively determine the shape of nested
 // initializer list used in rarray::assign(...).
@@ -98,7 +99,9 @@ struct init_list_prop<std::initializer_list<U>> {
 };
 }  // namespace detail
 
-/// Class with multidimensional arrays
+/// Class for multidimensional arrays
+/// @tparam  T  the type of the elements (any type)
+/// @tparam  R  the rank (a positive integer)
 template<typename T, rank_type R>
 class rarray {
  public:
@@ -109,10 +112,11 @@ class rarray {
     using const_iterator = const T*;           // iterator type for constant access
     using parray_t = typename detail::PointerArray<T, R>::type;  // T*const*const*...
     using noconst_parray_t = typename detail::PointerArray<T, R>::noconst_type;  // T***...
-    // constructor leaving rarray undefined
+    /// Default constructor; leaves rarray undefined
     inline rarray()
     : buffer_(), shape_() {}
-    // constructors creating its own buffer for various R values
+    /// @name Constructors creating its own buffer for various R values
+    /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline explicit rarray(size_type n0)
     : buffer_(n0),
@@ -179,7 +183,9 @@ class rarray {
     : buffer_(std::accumulate(anextent, anextent+R, 1, std::multiplies<size_type>())),
       shape_(reinterpret_cast<const std::array<size_type, R>&>(*anextent), buffer_.begin())
     {}
-    // constructors from an existing buffer
+    /// @}
+    /// @name constructors from an existing buffer
+    /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline rarray(T* buffer, size_type n0)
     : buffer_(n0, buffer),
@@ -248,7 +254,9 @@ class rarray {
     : buffer_(std::accumulate(anextent, anextent+R, 1, std::multiplies<size_type>()), buffer),
       shape_(reinterpret_cast<const std::array<size_type, R>&>(*anextent), buffer)
     {}
-    // constructors from automatic arrays
+    /// @}
+    /// @name Constructors from automatic arrays
+    /// @{
     template<std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 1>::type>
     inline explicit rarray(T (&a)[Z])
@@ -322,8 +330,9 @@ class rarray {
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
-    // constructors from compound literal automatic arrays
-    // (non-standard c++ and may lead to dangling references)
+    /// @}
+    /// @name constructors from compound literal automatic arrays (non-standard c++ and may lead to dangling references).
+    /// @{
     template<std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 1>::type>
     inline explicit rarray(T (&&a)[Z])
@@ -397,27 +406,35 @@ class rarray {
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
-    // (shallow) copy constructor and assignment operator
+    /// @}
+    /// Shallow/reference copy constructor.
+    ///  @param[in]  a  the array to which to make this a reference (rarray<T,R>)
     RA_FORCE_inline rarray(const rarray<T, R> &a) noexcept
     : buffer_(a.buffer_),
       shape_(a.shape_)
     {}
-    inline auto operator=(const rarray<T, R> &a) noexcept -> rarray<T, R>& {
+    /// Shallow/reference assignment operator.
+    ///  @param[in]  a  the array to which to make this a reference (rarray<T,R>)
+    inline auto operator=(const rarray<T, R> &a) noexcept -> rarray& {
         buffer_ = a.buffer_;
         shape_ = a.shape_;
         return *this;
     }
-    // move constructor and assignment operator
+    /// @name move constructor and move-assignment operator
+    /// @{
     inline rarray(rarray<T, R>&& x) noexcept
     : buffer_(std::move(x.buffer_)),
       shape_(std::move(x.shape_))
     {}
-    inline auto operator=(rarray<T, R>&& x) noexcept -> rarray<T, R>& {
+    inline auto operator=(rarray<T, R>&& x) noexcept -> rarray& {
         buffer_ = std::move(x.buffer_);
         shape_ = std::move(x.shape_);
         return *this;
     }
-    // Comma separated element assignment
+    /// @}
+    /// Comma separated element assignment (deprecated)
+    ///  @param[in]  e  value for the first element (value_type)
+    ///  @return  Intermediate object implementing the comma operator to mean assignment.
     inline auto operator=(const T& e) noexcept(RA_noboundscheck && std::is_nothrow_copy_constructible<T>()) -> detail::CommaOp<T> {
         // puts the first element in and prepares for more
         RA_CHECKORSAY(!empty(), "assignment to unsized array");
@@ -430,142 +447,313 @@ class rarray {
         detail::CommaOp<T> co(first+1, first+size()-1);
         return co;
     }
-    // destructor
+    /// Destructor
     RA_FORCE_inline ~rarray() = default;
-    // Will need constructor and assignment for expressions
-    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline explicit rarray(const detail::Expr<T, R, AOP, A1, A2, A3>& e);
+    /// Not implemented
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline void fill(const detail::Expr<T, R, AOP, A1, A2, A3>& e);
+    /// Not implemented
+    template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline void form(const detail::Expr<T, R, AOP, A1, A2, A3>& e);
+    /// Not implemented
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator=(const detail::Expr<T, R, AOP, A1, A2, A3>& e) -> rarray&;
+    /// Not implemented
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator+=(const detail::Expr<T, R, AOP, A1, A2, A3>& e) -> rarray&;
+    /// Not implemented
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator-=(const detail::Expr<T, R, AOP, A1, A2, A3>& e) -> rarray&;
+    /// Not implemented
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator*=(const detail::Expr<T, R, AOP, A1, A2, A3>& e) -> rarray&;
+    /// Not implemented
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator/=(const detail::Expr<T, R, AOP, A1, A2, A3>& e) -> rarray&;
+    /// Not implemented
     template<ExOp AOP, typename A1, typename A2, typename A3> RA_FORCE_inline auto operator%=(const detail::Expr<T, R, AOP, A1, A2, A3>& e) -> rarray&;
-    // reshape shallow copy keeping the underlying data
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 1.
+    ///  @param[in]  n0               new extent (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline void reshape(size_type n0, RESIZE resize_allowed = RESIZE::NO) {
-        if ( (size() == n0) || (resize_allowed == RESIZE::ALLOWED && size() >= n0) )
+    inline void reshape(size_type n0, RESIZE resize_policy = RESIZE::NO) {
+        if ( (size() == n0) || (resize_policy == RESIZE::ALLOWED && size() >= n0) )
             shape_ = detail::shared_shape<T, R>({n0}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 2.
+    ///  @param[in]  n0               new extent in dimension 0 (size_type)
+    ///  @param[in]  n1               new extent in dimension 1 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline void reshape(size_type n0, size_type n1, RESIZE resize_allowed = RESIZE::NO) {
+    inline void reshape(size_type n0, size_type n1, RESIZE resize_policy = RESIZE::NO) {
         if (size() == n0*n1
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1))
             shape_ = detail::shared_shape<T, R>({n0, n1}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 3.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 4.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 5.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
-                        size_type n4, RESIZE resize_allowed = RESIZE::NO)  {
+                        size_type n4, RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 6.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  n5              new extent in dimension 5 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
-                        size_type n4, size_type n5, RESIZE resize_allowed = RESIZE::NO)  {
+                        size_type n4, size_type n5, RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4*n5
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 7.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  n5              new extent in dimension 5 (size_type)
+    ///  @param[in]  n6              new extent in dimension 6 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4*n5*n6
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 8.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  n5              new extent in dimension 5 (size_type)
+    ///  @param[in]  n6              new extent in dimension 6 (size_type)
+    ///  @param[in]  n7              new extent in dimension 7 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 9.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  n5              new extent in dimension 5 (size_type)
+    ///  @param[in]  n6              new extent in dimension 6 (size_type)
+    ///  @param[in]  n7              new extent in dimension 7 (size_type)
+    ///  @param[in]  n8              new extent in dimension 8 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 10.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  n5              new extent in dimension 5 (size_type)
+    ///  @param[in]  n6              new extent in dimension 6 (size_type)
+    ///  @param[in]  n7              new extent in dimension 7 (size_type)
+    ///  @param[in]  n8              new extent in dimension 8 (size_type)
+    ///  @param[in]  n9              new extent in dimension 9 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8, size_type n9,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
     }
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for rank 11.
+    ///  @param[in]  n0              new extent in dimension 0 (size_type)
+    ///  @param[in]  n1              new extent in dimension 1 (size_type)
+    ///  @param[in]  n2              new extent in dimension 2 (size_type)
+    ///  @param[in]  n3              new extent in dimension 3 (size_type)
+    ///  @param[in]  n4              new extent in dimension 4 (size_type)
+    ///  @param[in]  n5              new extent in dimension 5 (size_type)
+    ///  @param[in]  n6              new extent in dimension 6 (size_type)
+    ///  @param[in]  n7              new extent in dimension 7 (size_type)
+    ///  @param[in]  n8              new extent in dimension 8 (size_type)
+    ///  @param[in]  n9              new extent in dimension 9 (size_type)
+    ///  @param[in]  n10             new extent in dimension 10 (size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8, size_type n9, size_type n10,
-                        RESIZE resize_allowed = RESIZE::NO)  {
+                        RESIZE resize_policy = RESIZE::NO)  {
         if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10
-            || (resize_allowed == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10))
+            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10))
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}, buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    inline void reshape(const size_type* newshape, RESIZE resize_allowed = RESIZE::NO) {
+    /// Change the shape of the rarray while keeping the underlying data.
+    /// The data in the underlying buffer will not change. Note that
+    /// the rank will remain the same. If the \p resize_policy
+    /// argument is used with a value of ra::RESIZE::ALLOWED, the new
+    /// total size is allowed to be smaller than the previous size,
+    /// otherwise the total size must remain the same.
+    /// This is the overloaded method for any rank.
+    ///  @param[in]  newshape        Array wih rank() elements (pointer to size_type)
+    ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
+    inline void reshape(const size_type* newshape, RESIZE resize_policy = RESIZE::NO) {
         size_type newsize = std::accumulate(newshape, newshape+R,
                                             1, std::multiplies<size_type>());
         if (size() == newsize
-            || (resize_allowed == RESIZE::ALLOWED && size() >= newsize))
+            || (resize_policy == RESIZE::ALLOWED && size() >= newsize))
             shape_ = detail::shared_shape<T, R>((const std::array<size_type, R>&)(*newshape), buffer_.begin());
         else
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
     }
-    // create a deep copy
-    inline auto copy() const -> rarray<T, R> {
+    /// Create a deep, independent copy.
+    /// @return Independent rarray with its own shape and data copied from the original.
+    inline auto copy() const -> rarray {
         // return a copy
         rarray<T, R> clone;
         clone.buffer_ = buffer_.copy();
@@ -573,63 +761,77 @@ class rarray {
         clone.shape_.relocate(clone.buffer_.begin());
         return clone;
     }
-    // automatic conversion to const value_type, *if* it is not already const
+    /// Automatic conversion to an rarray with const elements.
+    ///  @return  A const reference to *this reinterpreted as having const value_type.
+    ///  @note  Only implemented if value_type is not already const.
     template<typename U = T,
              typename = typename std::enable_if<!std::is_const<U>::value>::type>
     inline operator const rarray<const U, R>&() const noexcept {
         return const_ref();
     }
-    // properties
+    /// This method returns the number of dimensions of the rarray, a.k.a., its rank.
+    ///  @return rank of the rarray (integer)
     constexpr auto rank() const noexcept -> int {
         return R;
     }
-    // check if undefined
+    /// Check if the rarray is undefined.
+    /// @return  bool indicating if thie rarray has no shape, i.e. is undefined.
     inline auto empty() const noexcept -> bool {
         return buffer_.cbegin() == nullptr;
     }
-    // retrieve array size in dimension i
+    /// Retrieve the array size (a.k.a. extent) in a given dimension.
+    ///  @param[in]  i  The dimension of which to give the extent (integer)
+    ///  @return        The extent of the array in dimension \p i (size_type)
     inline auto extent(int i) const -> size_type {
         return shape_.extent(i);
     }
-    // retrieve array sizes in all dimensions
+    /// Retrieve the sizes (a.k.a. extents) of the rarray in all dimensions.
+    ///  @return  Array of extents (pointer to size_type)
     RA_FORCE_inline auto shape() const noexcept -> const size_type* {
         return &(shape_.extent()[0]);
     }
-    // retrieve the total number of elements
+    /// Retrieve the number of elements. This is also the product of all extents.
+    ///  @return  The total number of elements in the array (size_type)
     inline auto size() const noexcept -> size_type {
         return shape_.size();
     }
-    // return pointer to the internal data
+    /// Retrieve the address to the internal data.
+    ///  @return  The internal data's address (pointer to value_type)
     inline auto data() noexcept -> T* {
         return buffer_.begin();
     }
-    // return a T* to the internal data
+    /// Retrieve the address to the internal data when this is const.
+    ///  @return  The internal data's address (pointer to const value_type)
     inline auto data() const noexcept -> const T* {
         return buffer_.begin();
     }
-    // return a T*const*.. acting similarly to this rarray when using []:
+    /// Retrieve nested pointer-to-pointer structure.
+    ///  @return  A T*const*.. pointer acting similarly to this rarray when using square brackets.
     inline auto ptr_array() const noexcept -> parray_t {
         return shape_.ptrs();
     }
-    // return a T**.. acting similarly to this rarray when using []:
+    /// Retrieve const-stripped nested pointer-to-pointer structure.
+    ///  @return   A T**.. pointer acting similarly to this rarray when using square brackets.
+    ///  @warning  Breaks const-correctness.
     inline auto noconst_ptr_array() const noexcept -> noconst_parray_t {
         return const_cast<noconst_parray_t>(shape_.ptrs());
     }
-    // create a reference to this that treats elements as constant:
+    /// Converts rarray to an rarray with const elements.
+    ///  @return  A const reference to *this reinterpreted as having const value_type.
     inline auto const_ref() const noexcept -> const rarray<const T, R>& {
         return reinterpret_cast<const rarray<const T, R>&>(*this);
     }
-    // modifiers
-    // make undefined
+    /// Make undefined.
     RA_FORCE_inline void clear() noexcept {
         shape_ = detail::shared_shape<T, R>();
         buffer_ = detail::shared_buffer<T>();
     }
-    // fill with uniform value (does not change the size nor shape)
+    /// Fill with uniform value. Does not change the size nor shape.
+    ///  @param  value  new value for all elements (type_value)
     inline void fill(const T& value) {
         buffer_.fill(value);
     }
-    // fill with repeating sequence (does not change the size nor shape)
+
  private:
     template<rank_type R_ = R,
              class = typename std::enable_if<R_ == 1>::type>
@@ -679,7 +881,10 @@ class rarray {
         shape_ = detail::shared_shape<T, R>(newshape, buffer_.begin());
         fill_g(list, missing_policy);
     }
+
  public:
+    /// @name Fill with repeating sequence (does not change the size nor shape)
+    /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline void fill(std::initializer_list<T> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
@@ -790,7 +995,9 @@ class rarray {
                      MISSING missing_policy = MISSING::DEFAULT) {
         fill_g(list, missing_policy);
     }
-    /// @name Form from initializer lists
+    /// @}
+    /// @name form
+    /// Form from initializer lists
     /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline void form(std::initializer_list<T> list,
@@ -993,7 +1200,8 @@ class rarray {
         buffer_.fill(value);
     }
     ///@}
-    // iterators over the data
+    /// @name iterators over the data
+    ///@{
     inline auto begin() noexcept -> iterator {
         return buffer_.begin();
     }
@@ -1012,11 +1220,9 @@ class rarray {
     inline auto cend() const noexcept -> const_iterator {
         return buffer_.cend();
     }
-    // compute index of a reference inside an array
-    // if a is an element in the array, get index in dimension i of that element
-    // if i points at an element in the array, get index in dimension i of that element
-    // if a is an element in the array, get the indices of that element
-    // if i points at an element in the array, get the indices of that element
+    ///@}
+    /// Compute index of a reference inside an array.
+    /// If \p a is an element in the array, get index in dimension \p i of that element;
     inline auto index(const T& a, int i) const -> size_type {
         // retrieve index in dimension i within *this of the element a
         ptrdiff_t linearindex = &a - &(buffer_[0]);
@@ -1027,9 +1233,13 @@ class rarray {
             linearindex /= extent_[j];
         return linearindex % extent_[i];
     }
+    /// Compute index of a reference inside an array
+    /// If \p iter points at an element in the array, get index in dimension \p i of that element;
     inline auto index(const iterator& iter, int i) const -> size_type {
         return index(*iter, i);
     }
+    /// Compute index of a reference inside an array.
+    /// If \p a is an element in the array, get the indices of that element;
     inline auto index(const T& a) const -> std::array<size_type, R> {
         std::array<size_type, R> ind;
         ptrdiff_t linearindex = &a - &(buffer_[0]);
@@ -1042,25 +1252,13 @@ class rarray {
         }
         return ind;
     }
+    /// Compute index of a reference inside an array.
+    /// If \p i points at an element in the array, get the indices of that element.
     inline auto index(const iterator& i) const -> std::array<size_type, R> {
         return index(*i);
     }
-    // old forms of index functions:
-    inline auto index(const T& a, size_type* ind) const -> size_type* {
-        ptrdiff_t linearindex = &a - &(buffer_[0]);
-        RA_CHECKORSAY(linearindex >= 0 && linearindex < size(), "element not in array");
-        int j = R;
-        const size_type* extent_ = shape();
-        while (j-->0) {
-            ind[j] = linearindex % extent_[j];
-            linearindex /= extent_[j];
-        }
-        return ind;
-    }
-    inline auto index(const iterator& i, size_type* ind) const -> size_type* {
-        return index(*i, ind);
-    }
-    // access subarrays with bounds checking
+    /// @name access subarrays with bounds checking
+    /// @{
     template<class U = rarray<T, R-1>>
     RA_FORCE_inline auto at(size_type i)
     -> typename std::enable_if<R != 1, U>::type {
@@ -1091,17 +1289,23 @@ class rarray {
             throw std::out_of_range("rarray<T, R>::at");
         return shape_.ptrs()[i];
     }
-    // slice
-    RA_FORCE_inline auto slice(size_type beginindex, size_type endindex)
-    -> rarray {
+    /// @}
+    /// Allows to select successive indices for the first index.
+    /// It always results in an rarray of the same rank as the original
+    /// rarray.
+    ///  @param[in]  beginindex  the starting value for the first index
+    ///  @param[in]  endindexe   the last value of the first index plus one
+    ///  @return an rarray which references the slice.
+    RA_FORCE_inline auto slice(size_type beginindex, size_type endindex) -> rarray {
         if (beginindex < 0 || beginindex >= shape_.extent(0)
             || endindex < 0 || endindex > shape_.extent(0))
             throw std::out_of_range("rarray<T, R>::slice");
-        size_type stride = size()/extent(0);        
+        size_type stride = size()/extent(0);
         return {buffer_.slice(beginindex*stride, endindex*stride),
                 shape_.slice(beginindex, endindex)};
     }
-    // for square bracket access:
+    /// @name square bracket access
+    /// @{
     template<class U = T>
     RA_FORCE_inline auto operator[](size_type i)
     -> typename std::enable_if<R == 1, U&>::type {
@@ -1124,8 +1328,10 @@ class rarray {
     -> typename std::enable_if<R != 1, typename detail::ConstBracket<U, R-1, rarray>>::type {
         return { *this, i, this->shape() };
     }
-    // allow c++23 multidimentional subscripts
+    /// @}
     #if __cpp_multidimensional_subscript >= 202110L
+    /// @name Allow c++23 multidimentional subscripts
+    /// @{
     template<typename... Ts>
     RA_FORCE_inline auto operator[](size_type i, Ts... args)
     -> typename std::enable_if<R == sizeof...(Ts)+1, T&>::type {
@@ -1136,8 +1342,10 @@ class rarray {
     -> typename std::enable_if<R == sizeof...(Ts)+1, const T&>::type {
         return operator[](i)[args...];
     }
+    /// @}
     #endif
     // TODO(geet): for expressions
+    /// Not implemented.
     RA_FORCE_inline auto leval(size_type i) const -> const T&;
 
  private:
@@ -1157,21 +1365,22 @@ class rarray {
         buffer_(std::forward<detail::shared_buffer<T>>(abuffer)),
         shape_(std::forward<detail::shared_shape<T, R>>(ashape))
     {}
-    // need the following for rarray<T, R+1>::at(..) const
+    /// Meeded in rarray<T, R+1>::at(..) const.
     inline rarray(const detail::shared_buffer<T>&& abuffer, detail::shared_shape<T, R>&& ashape) :
         buffer_(std::forward<detail::shared_buffer<T>>(const_cast<detail::shared_buffer<T>&& >(abuffer))),
         shape_(std::forward<detail::shared_shape<T, R>>(ashape))
     {}
-    detail::shared_buffer<T>  buffer_;
-    detail::shared_shape<T, R> shape_;
+    detail::shared_buffer<T>  buffer_;  ///< contains the data
+    detail::shared_shape<T, R> shape_;  ///< contains the extents and pointer-to-pointer
 };  // end definition rarray<T, R>
 
 namespace detail {
-// Class to facilitate assignment from a comma separated list
+
+/// Class to facilitate assignment from a comma separated list.
 template<typename T>
 class CommaOp {
  public:
-    // put the next number into the array:
+    /// Put the next number into the array.
     RA_FORCE_inline auto operator,(const T& e) -> CommaOp& {
         RA_CHECKORSAY(ptr_ != nullptr && last_ != nullptr, "invalid comma operator");
         RA_CHECKORSAY(ptr_ <= last_, "assignment with more elements than in array");
@@ -1184,25 +1393,25 @@ class CommaOp {
     : ptr_(ptr), last_(last) {
         RA_CHECKORSAY(ptr_ != nullptr && last_ != nullptr, "invalid comma operator");
     }
-    T *ptr_;          // points to next element to be filled
-    T * const last_;  // points to last element
+    T *ptr_;          ///< points to next element to be filled
+    T * const last_;  ///< points to last element
     template<typename, int> friend class ra::rarray;
 };
 
-// Classes for repeated bracket access to elements
+/// Class for repeated bracket access to elements
 template<typename T, rank_type R, typename P>
 class Bracket {
  private:
-    P&               parent_;  // what array/array expression is being accessed
-    size_type        index_;   // at what index
-    const size_type* shape_;   // what is the shape of the result
+    P&               parent_;  ///< what array/array expression is being accessed
+    size_type        index_;   ///< at what index
+    const size_type* shape_;   ///< what is the shape of the result
 
  public:
-    // implement square brackets to go to the next level:
+    /// Implement square brackets to go to the next level.
     RA_FORCE_inline auto operator[](size_type nextindex) noexcept(RA_noboundscheck) -> Bracket<T, R-1, Bracket> {
         return { *this, nextindex, shape_ + 1 };
     }
-    // implement implicit conversion to whatever parent.at() gives:
+    /// Implement implicit conversion to whatever parent.at() gives
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
         return parent_.at(index_);
     }
@@ -1220,13 +1429,14 @@ class Bracket {
     RA_FORCE_inline auto private_at(size_type nextindex) noexcept(RA_noboundscheck) -> decltype(parent_.private_at(index_)[nextindex]) {
         return parent_.private_at(index_)[nextindex];
     }
-    template<typename, int> friend class ra::rarray;  // allow descending
-    template<typename, int, typename> friend class detail::Bracket;  // allow descending
+    template<typename, int> friend class ra::rarray;  ///< allow descending
+    template<typename, int, typename> friend class detail::Bracket;  ///< allow descending
  public:
     RA_FORCE_inline auto at(size_type nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
         return parent_.at(index_).at(nextindex);
     }
     #if __cpp_multidimensional_subscript >= 202110L
+    /// Allow C++23 multidimensional subscripts
     template<typename... Ts>
     RA_FORCE_inline auto operator[](size_type nextindex, Ts... args) -> typename std::enable_if<R == sizeof...(Ts)+1, T&>::type {
         return operator[](nextindex)[args...];
@@ -1234,20 +1444,21 @@ class Bracket {
     #endif
 };
 
+/// Class for repeated bracket access to elements (specialized for R==1)
 template<typename T, typename P>
 class Bracket<T, 1, P> {
  private:
-    P&               parent_;  // what array/array expression is being accessed
-    size_type        index_;   // at what index
-    const size_type* shape_;   // what is the shape of the result
+    P&               parent_;  ///< what array/array expression is being accessed
+    size_type        index_;   ///< at what index
+    const size_type* shape_;   ///< what is the shape of the result
 
  public:
-    // implement square brackets to go to the next level:
+    /// Implement square brackets to go to the next level.
     RA_FORCE_inline auto operator[](size_type nextindex) noexcept(RA_noboundscheck) -> T& {
         RA_CHECKORSAY(nextindex >= 0 && nextindex < shape_[1], "index out of range of array");
         return parent_.private_at(index_)[nextindex];
     }
-    // implement implicit conversion to whatever parent.at() gives:
+    /// Implement implicit conversion to whatever parent.at() gives.
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
         return parent_.at(index_);
     }
@@ -1265,12 +1476,13 @@ class Bracket<T, 1, P> {
     template<typename, int> friend class ra::rarray;  // allow descending
     template<typename, int, typename> friend class detail::Bracket;  // allow descending
  public:
+    /// Used for conversion to whatever parent.at() gives.
     RA_FORCE_inline auto at(size_type nextindex) -> decltype(parent_.at(index_).at(nextindex)) {
-        // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
 };
 
+/// Class for repeated bracket access to const elements
 template<typename T, rank_type R, typename P>
 class ConstBracket {
  private:
@@ -1281,8 +1493,8 @@ class ConstBracket {
     RA_FORCE_inline auto operator[](size_type nextindex) const noexcept(RA_noboundscheck) -> ConstBracket<T, R-1, ConstBracket> {
         return { *this, nextindex, shape_ + 1 };
     }
+    /// Implement implicit conversion to whatever parent.at() gives.
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
-        // implement implicit conversion to whatever parent.at() gives
         return parent_.at(index_);
     }
     ConstBracket(const ConstBracket&) = delete;
@@ -1304,12 +1516,12 @@ class ConstBracket {
     template<typename, int, typename> friend class detail::ConstBracket;
 
  public:
+    /// Used for conversion to whatever parent.at() gives.
     RA_FORCE_inline auto at(size_type nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
-        // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
-    // allow c++23 multidimentional subscripts
     #if __cpp_multidimensional_subscript >= 202110L
+    /// Allow C++23 multidimensional subscripts
     template<typename... Ts>
     RA_FORCE_inline auto operator[](size_type nextindex, Ts... args) -> typename std::enable_if<R == sizeof...(Ts)+1, const T&>::type {
         return operator[](nextindex)[args...];
@@ -1317,6 +1529,7 @@ class ConstBracket {
     #endif
 };
 
+/// Class for repeated bracket access to const elements, specialized for R==1
 template<typename T, typename P>
 class ConstBracket<T, 1, P> {
  private:
@@ -1328,8 +1541,8 @@ class ConstBracket<T, 1, P> {
         RA_CHECKORSAY(nextindex >=0 && nextindex < shape_[1], "index out of range of array");
         return parent_.private_at(index_)[nextindex];
     }
+    /// Implement implicit conversion to whatever parent.at() gives.
     RA_FORCE_inline operator decltype(parent_.at(index_)) () {
-        // implement implicit conversion to whatever parent.at() gives
         return parent_.at(index_);
     }
     ConstBracket(const ConstBracket&) = delete;
@@ -1344,12 +1557,12 @@ class ConstBracket<T, 1, P> {
     : parent_(parent), index_(i), shape_(shape) {
         RA_CHECKORSAY(index_ >= 0 && index_ < shape_[0], "index out of range of array");
     }
-    template<typename, int> friend class ra::rarray;  // allow descending
+    template<typename, int> friend class ra::rarray;  ///< allow descending
     template<typename, int, typename> friend class detail::ConstBracket;
 
  public:
+    /// Used for conversion to whatever parent.at() gives.
     RA_FORCE_inline auto at(size_type nextindex) const -> decltype(parent_.at(index_).at(nextindex)) {
-        // used for conversion to whatever parent.at() gives
         return parent_.at(index_).at(nextindex);
     }
 };
@@ -1375,7 +1588,8 @@ inline auto linspace(S x1, S x2, size_type n = 0, bool end_incl = true) -> rarra
     return x;
 }
 
-// T should be an arithemetic type, i.e, an integer, float || double.
+/// Helper class to generate a range of numbers
+/// @tparam  T  should be an arithemetic type, i.e, an integer, float, or double.
 template<class T>
 class Xrange {
  private:

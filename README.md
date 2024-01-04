@@ -1,4 +1,3 @@
-[//]: # \mainpage
 rarray - reference-counted multidimensional arrays
 ==================================================
 
@@ -6,7 +5,7 @@ rarray is a C++ library for reference counted multidimensional arrays.
 It is a header-only implementation that uses templates, which allows 
 most compilers to generate fast code.
 
-The latest release version is 2.6.1
+The latest release version is 2.7.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -14,16 +13,41 @@ named 'LICENSE', and license statements in the source files.
 
 For details on the installation procedure see the file named 'INSTALL'.
 
+For the impatient: the what, why and how of rarray
+==================================================
+
+What
+-----
+Reference-counted and non-owning multidimensional arrays with runtime dimensions. 
+
+What not
+--------
+No strides, no linear algebra, overloaded operators etc.
+
+Why
+----
+Usually faster than alternatives.    
+Uses the same accessors as automatic arrays.    
+Requires only the C++-11 standard.    
+Data is contiguous to allow interfacing with libraries like BLAS, LAPACK, FFTW, etc.
+
+How
+----
+The header file `rarray` provides the type `rarray<T,R>`, where `T` is
+any type and `R` is the rank. Element access uses repeated square
+brackets. Copying rarrays or passing them to functions mean shallow
+copies, unless explicitly asking for a deep copy. Streaming I/O is
+also supported.
+
+
 Documentation
 =============
 
-The rarray library comes with documentation in rararaydoc.pdf.
-
-The LaTeX source of the documentation is rarraydoc.tex. To re-create
-the pdf documentation from this source, you need to have pdflatex
-installed, and type
+The rarray library comes with a tutorial tutorial.md. Code documentation can be generated using doxygen with
 
     make doc
+
+Background information on the design of the library can be found in background.tex.
 
 Installation
 ============
@@ -33,10 +57,34 @@ Installation
     ../configure --prefix=<PREFIXDIR>
     make install
 
-Or copy the file "`rarray`" to <PREFIXDIR>/include.
+Or copy the file "`rarray`" to `<PREFIXDIR>/include`.
 
 The configure-make recipe also allows running tests; type "make help"
 to see the options.
+
+If you have sudo permissions, you can also do "`sudo make install`" to
+install the header and documentation to /usr/include and
+/usr/share/doc, respectively. Note that this will fail on recent MacOS
+versions, in which case, try "`sudo make install PREFIX=/usr/local`".
+
+Development
+===========
+
+To modify rarray, do not edit the rarray header file, as this is a
+generated file. Instead, edit the files in the `headersources`
+directory.  You can use the included Makefile to assemble the rarray
+headers with `make headers`.
+
+The Makefile can compile and run the unit tests and benchmarks. Simply do:
+
+    ./configure
+    make test
+    make benchmarks
+
+The `configure` command should work under Linux if you have a recent
+GNU, Intel, IBM or Clang compiler.  Note that to pick your compiler,
+you may have the set the CXX environment variable point to the right
+compiler command (e.g. `export CXX=clang++`) before running `configure`.
 
 Release History and Changes
 ===========================
@@ -81,71 +129,83 @@ Release History and Changes
 
  * Version 2.1, January 2020
 
-   Reference counting of rarray data is now done atomically, so
-   copying rarrays should now be thread-safe.
+     - Reference counting of rarray data is now done atomically.
    
-   One character names of substructures, used in debugging rarray
-   itself, were removed.
+     - One character names of substructures for debug were removed.
 
-   Streaming operators for rarrays moved to the ra namespace.
+     - Streaming operators for rarrays moved to the ra namespace.
 
    In version 2.1.1, the undocumented rlinear function was renamed
    linspace and added to the documentation, as was xrange.
 
  * Version 2.2, February 2020
 
-   Several bug fixed with running and installing rarray on MacOS.
+     - Several bug fixed with running and installing rarray on MacOS.
 
-   The rarray unit test library 'rut' was dropped in favour of
-   'catch2', which does everything that 'rut' was intended to do, but
-   better. Since 'catch2' is header only, this makes running the tests
-   on different platforms much easier.
+     - The rarray unit test library 'rut' was dropped in favour of
+       'catch2', which does everything that 'rut' was intended to do,
+       but better. Since 'catch2' is header only, this makes running
+       the tests on different platforms much easier.
 
  * Version 2.3.0, January 2022
 
-   Returned to a single-header implementation by incorporating the
-   rarrayio header into the rarray header.
+     - Returned to a single-header implementation by incorporating the
+       rarrayio header into the rarray header.
 
  * Version 2.4.0, December 2022
 
-   Internal refactoring focussed on eliminating warnings, dead code,
-   version tracking in code, and exception safety.
+     - Eliminated dead code and added exception safety.
 
-   Fixed bug for compound data types.
+     - Fixed bug for compound data types.
    
-   Support added for Intel OneAPI's icpx C++ compiler.
+     - Support added for Intel OneAPI's icpx C++ compiler.
 
-   (2.4.1 was a bug fix for the at() function)
+   2.4.1 was a bug fix for the at() function.
    
  * Version 2.5.0, February 2023
 
-   Bounds checking reinstated.
+     - Bounds checking reinstated.
 
-   Can now get a subarray with square brackets.
+     - Can now get a subarray with square brackets.
  
-   Rarray objects no nolonger automatically convert into T*const*... pointers.
+     - Rarray objects no longer automatically converted into
+       T*const*... pointers.
 
-   More extensive unit and coverage tests.
+     - More extensive unit and coverage tests.
 
-   'is_clear' renamed to 'empty'.
+     - 'is_clear' renamed to 'empty'.
 
-  * Version 2.5.1, May 2023 
+ * Version 2.5.1, May 2023 
      
-    Bug fixes, most importantely bounds checking of 1d arrays
-    100% code coverage in tests
-    Comparison with mdspan (C++23)
-    Updated documentation.
+     - Bug fixes, most importantely bounds checking of 1d arrays
+     
+     - Expanded tests for 100% code coverage
+     
+     - Comparison with mdspan (C++23)
+     
+     - Updated documentation.
 
-  * Version 2.6.0, November 2023
+ * Version 2.6.0, November 2023
 
-    Bug fixes (inlining, compiler settings, exception safety).
-    Support for the multidimensional subscript operator for c++23 compilers.
-    Better support for rarray<const T,R>
-    Implicit conversion operator from rarray<T,R> to rarray<const T,R>.
+     - Bug fixes (inlining, compiler settings, exception safety).
+     
+     - Support for the multidimensional subscript operator for c++23
+       compilers.
+       
+     - More complete support for rarray<const T,R>.
 
-    Version 2.6.1 from December 2023 is functionally the same, but
-    with substantial code cleanup and C++11 modernization.  The stub
-    header file rarrayio was removed.
+     - Implicit conversion operator from rarray<T,R> to
+       rarray<const T,R>.
+
+   Version 2.6.1 from December 2023 is functionally the same, but with
+   substantial code cleanup.  The stub header file rarrayio was
+   removed.
+
+ * Version 2.7.0, January 2024 (to be released)
+
+     - Added fill and form methods.
+     
+     - Better documentation, now in markdown and doxygen.
 
 Known issues
 ============
@@ -175,10 +235,6 @@ In the top directory
 
 rarray                 Header file defining runtime arrays (produced from headersources)
 
-rarraydoc.tex          LaTeX source of the documentation
-
-rarraydoc.pdf          Pdf format of the documentation
-
 configure              A non-autotools configure script for compiling 
                        benchmarks; Creates config.mk
 
@@ -205,6 +261,13 @@ READMEBENCHMARK.txt    Explanation of what the 2d and 4d benchmarks
 
 README.md              This file.
 
+tutorial.md            Explains how to use rarray
+
+Doxyfile.devel         Doxygen file for developer documentation
+
+rarraydoc.tex          LaTeX source of the background documentation
+
+rarraydoc.pdf          Pdf format of the background documentation
 
 In the directory 'headersources'
 ---------------------------------

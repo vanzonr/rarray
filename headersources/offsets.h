@@ -3,7 +3,7 @@
 // Header for the helper class for rarray 2.x to compute pointer
 // offsets in a multidimensional array.
 //
-// Copyright (c) 2018-2023  Ramses van Zon
+// Copyright (c) 2018-2024  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal

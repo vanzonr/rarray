@@ -42,17 +42,21 @@ rarray<double,2> a;
 ```
 This array does not have a shape yet (or, said differently, its shape is 0x0). To define this array with a given shape, e.g., to make this a matrix with 4 rows and 5 columns, you should specify the extent of the array in each dimension:
 ```cpp
-rarray<double,2> a(4,5);
+rarray<double,2> a(4, 5);
 ```
-This array has a shape now, but its elements are not initialized.
+This works for rarrays of rank up to 11. For rarrays with higher rank, you have to pass an pointer to the array of extents.
+
+Thw array `a` has a shape now, but its elements are not initialized.
 Uninitialized values are bad practice, but there are too many ways to
-do this initialization to be able to cover all of them during construction of the rarray.  One should aim to initialize the elements of
-an rarray in the code **shortly after** the definition of the rarray.
+do this initialization to be able to cover all of them during
+construction of the rarray.  One should aim to initialize the elements
+of an rarray in the code **shortly after** the definition of the
+rarray.
 
 One way to initialize the all the values of an rarray at once is with
 the `fill` method.  Uniform initialization with the same value (e.g., one) can be done with the fill method with a single argument:
 ```cpp
-rarray<double,2> a(4,5);
+rarray<double,2> a(4, 5);
 a.fill(1.0);
 ```
 To check that this indeed happened, one can printi the result.  Rarrays can be used with streams, so the following program:
@@ -60,7 +64,7 @@ To check that this indeed happened, one can printi the result.  Rarrays can be u
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,2> a(4,5);
+    rarray<double,2> a(4, 5);
     a.fill(1.0);
     std::cout << a << '\n';
 }
@@ -83,7 +87,7 @@ curly braces format as the argument of the fill method:
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,2> b(4,5);
+    rarray<double,2> b(4, 5);
     b.fill({
         { 1.0,  2.0,  3.0,  4.0,  5.0},
         { 6.0,  7.0,  8.0,  9.0, 10.0},
@@ -102,7 +106,7 @@ numerical types).
 Two other ways to deal with missing elements can be
 specified as well.  One is to repeat the pattern that was given, e.g.
 ```cpp
-rarray<double,2> matrix(4,4);
+rarray<double,2> matrix(4, 4);
 matrix.fill({{1.0, 2.0}, {3.0, 4.0}}, ra::MISSING::REPEAT);
 std::cout << matrix << '\n';
 ```
@@ -115,7 +119,7 @@ will give
 ```
 The other way to deal with missing elements is to keep what ever value was there before. E.g.
 ```cpp
-rarray<double,2> matrix(4,4);
+rarray<double,2> matrix(4, 4);
 matrix.fill(5.0);
 matrix.fill({{1.0, 2.0}, {3.0, 4.0}}, ra::MISSING::SKIP);
 std::cout << matrix << '\n';
@@ -141,8 +145,8 @@ and `b` as above, but uses the `form` method:
 int main() {
     rarray<double,2> a;  // 2D arrays without size or shape.
     rarray<double,2> b;
-    a.form(4,5,1.0);  // Form array with 4x5 elements, all set to 1.
-    b.form({          // Form array that fits the given nested lists.
+    a.form(4, 5, 1.0);   // Form array with 4x5 elements, all set to 1.
+    b.form({             // Form array that fits the given nested lists
         { 1.0,  2.0,  3.0,  4.0,  5.0},
         { 6.0,  7.0,  8.0,  9.0, 10.0},
         {11.0, 12.0, 13.0, 14.0, 15.0},
@@ -152,6 +156,33 @@ int main() {
               << b << '\n';
 }
 ```
+
+Similar to the situation with the `fill` method, if there are missing
+elements, those spots will be assigned the default value corresponding
+to the type (often 0). Thus, one can for instance create a 3x3 matrix
+of zeros with
+```
+rarray<double,2> matrix;
+matrix.form({{}, {}, {0.0, 0.0, 0.0}};
+```
+One can also specify other
+ways to deal with missing elements.  E.g.
+```
+rarray<double,2> matrix;
+matrix.form({{1.0, 2.0, 3.0}, {} ,{}, ra::MISSING::REPEAT};
+```
+creates an array with the value of 1 in the first column, 2 in the second column
+and 3 in the third column, while
+```
+rarray<double,2> matrix;
+matrix.form({{1.0, 1.0, 1.0}, {2.0}, {3.0}, ra::MISSING::REPEAT};
+```
+creates an array with 1s in the first row, 2s in the second row
+and 3s in the third row. Because the size of the array is determined
+from the nested expression, at least on row must be fully specified.
+
+When using `ra::MISSING::SKIP` instead of `ra::MISSING::REPEAT`, the
+missing elements are not initialized.
 
 Finally, to undo any initialization, one can remove the data and shape
 from an rarray with the `clear()` method.  This returns the rarray to
@@ -170,7 +201,7 @@ also be done as follows:
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,2> a(4,5);
+    rarray<double,2> a(4, 5);
     int k = 1;
     for (int i = 0; i < 4; i++) 
         for (int j = 0; j < 5; j++)
@@ -190,7 +221,7 @@ elements, so the same initialization can be written as follows:
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,2> a(4,5);
+    rarray<double,2> a(4, 5);
     int k = 1;
     for (auto& element : a)
         element = (double)(k++);
@@ -217,7 +248,7 @@ only be sliced in the first dimension.
 
 An rarray has two slightly different slicing methods: `at` and `slice`.
 
-## The `at` method
+## The at method
 
 The `at` method takes a single index and produces an rarray of one
 rank lower containing all elements that have that index for the first
@@ -256,7 +287,7 @@ The expression `a.at(i)` method is similar to `a[i]`,
 but the former checks that `i` is a valid index and produces an
 rarray, whereas `a[i]` is an internal intermediate expression.
 
-## The `slice` method
+## The slice method
 
 This method allows to select successive indices for the first index.
 It always results in an rarray of the same rank as the original
@@ -392,7 +423,7 @@ encoded in its type). E.g.
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,4> a(10,10,4,4);
+    rarray<double,4> a(10, 10, 4, 4);
     std::cout << "rank = " << a.rank() << '\n';
 }
 ```
@@ -405,7 +436,7 @@ This method returns the sizes in each dimension, e.g.
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,4> a(10,10,4,4);
+    rarray<double,4> a(10, 10, 4, 4);
     auto shape = a.shape();
     std::cout << "shape ="
     for (int i = 0; i < a.rank()) 
@@ -418,7 +449,7 @@ This method returns a C pointer in the current version, but this may change in t
 
 The shape method can be useful to define a second array with the same shapes as an existing rarray, without having to make a copy. E.g.
 ```cpp
-rarray<double,4> a(10,10,4,4); // our first rarray
+rarray<double,4> a(10, 10, 4, 4); // our first rarray
 rarray<double,4> b(a.shape()); // independent rarray with same shape as a
 ```
 
@@ -429,7 +460,7 @@ This method take an integer parameter `i` and returns the size of the `i`th dime
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,4> a(10,10,4,4);
+    rarray<double,4> a(10, 10, 4, 4);
     std::cout << "extent(i=0..3) ="
     for (int i = 0; i < a.rank()) 
        std::cout << ' '  << extent(i);
@@ -446,7 +477,7 @@ This method returns the total number of elements in the rarray.  It is equal to 
 #include <rarray>
 #include <iostream>
 int main() {
-    rarray<double,4> a(10,10,4,4);
+    rarray<double,4> a(10, 10, 4, 4);
     std::cout << "size = " << a.size();
 }
 ```
@@ -463,7 +494,7 @@ E.g. to write the content of a 10x10x4x4 array of zeros in binary format to a fi
 #include <rarray>
 #include <fstream>
 int main() {
-    rarray<double,4> a(10,10,4,4);
+    rarray<double,4> a(10, 10, 4, 4);
     a.fill(0.0);
     ofstream f("adump.bin","wb");
     f.write((char*)a.data(), a.size()*sizeof(double));
@@ -496,9 +527,9 @@ prints "A:0 B:1 C:0".  Note that an array filled with zeros does not count as em
 
 To use the data in an rarray but access it in a different shape, one can use the `reshape` method.  E.g.
 ```cpp
-rarray<double,4> a(10,10,4,4);
+rarray<double,4> a(10, 10, 4, 4);
 a.fill(1.0);
-a.reshape(5,5,8,8);
+a.reshape(5, 5, 8, 8);
 ```
 This preserves the elements. Keep in mind that the elements are stored
 contiguously in row-major order when figuring out which elements end
@@ -509,7 +540,7 @@ old shape.  This way, `reshape` can guarantee not to allocate more
 memory.  It is also possible to reshape ending up with less elements by
 adding the ra::RESIZE::ALLOWED flag, e.g.
 ```cpp
-a.reshape(5,5,5,5,ra::RESIZE::ALLOWED);
+a.reshape(5, 5, 5, 5, ra::RESIZE::ALLOWED);
 ```
 
 If reference-counted copies of the reshaped array exist, these will
@@ -529,7 +560,7 @@ void printflat(rarray<double,2> a) {
 }
 int main() {
    rarray<double,2> a;
-   a.form({{1,2},{3,4}});
+   a.form({{1.0, 2.0}, {3.0, 4.0}});
    printflat(a);
    std::cout << '\n' << a << '\n';
 }
@@ -549,16 +580,16 @@ The `reshape` method cannot change the rank of the rarray.  To
 reshape into a lower rank, one can combine `reshape` with the `at` method,
 e.g. to flatten a 4D rarray, one could use the following code:
 ```cpp
-rarray<double,4> a(10,10,4,4);
+rarray<double,4> a(10, 10, 4, 4);
 a.fill(1.0);
-a.reshape(1,1,1,a.size());
+a.reshape(1, 1, 1, a.size());
 rarray<double,1> aflat = a.at(0).at(0).at(0);
 ```
 Reshaping into a higher rank requires getting the pointer to the data out and using it in a new rarray, e.g. 
 ```cpp
 rarray<double,1> aflat(1600);
 aflat.fill(1.0);
-rarray<double,4> a(aflat.data(),10,10,4,4);
+rarray<double,4> a(aflat.data(), 10, 10, 4, 4);
 ```
 Because this technique to reshape into a higher rank breaks the reference counting mechanism, only use it if you really need to.
 
@@ -570,7 +601,7 @@ Rarray supports iterators similar to standard C++ containers. However, these ite
 
 These standard iterator calls give the pointer to the first element and a pointer just passed the last, and can be used in the for-loop standard construction:
 ```cpp
-rarray<double,4> a(10,10,4,4);
+rarray<double,4> a(10, 10, 4, 4);
 a.fill(1.0);
 int sum = 0;
 for (auto iter = a.begin(); iter != a.end(); iter++)
@@ -580,7 +611,7 @@ std::cout << "sum = " << sum << '\n';
 
 It is due to these iterator method that the range-based for loop works:
 ```cpp
-rarray<double,4> a(10,10,4,4);
+rarray<double,4> a(10, 10, 4, 4);
 a.fill(1.0);
 int sum = 0;
 for (auto x : a)
@@ -891,3 +922,259 @@ int main() {
 }
 ```
 
+# Further features
+
+## Bypassing Reference Counting
+
+It is possible to use an external, pre-allocated buffer, as follows:
+```cpp
+std::unique_ptr<float[]> pre_alloc_data(new float[256*256*256]); 
+rarray<float,3> s(pre_alloc_data, 256, 256, 256);
+```
+Note that `s` will have dangling references (often leading to
+"segmentation faults") if `pre_alloc_data` is deallocated while `s` has
+not gone out of scope or has not yet been `clear`-ed.
+
+## Comma Separated Assignment
+
+In addition to the explicit assignment of each element and the fill and form methods, there is one more way to assign values to the elements of an rarray as a whole using a
+comma separate form, as follows
+```
+rarray<double,2> matrix(3,3);
+matrix = 1.0, 2.0, 3.0, 
+         4.0, 5.0, 6.0, 
+         7.0, 8.0, 9.0;
+```
+This initialization method is deprecated as it does not specify the shape and because its semantics clashes with the other assignment operator that creates a reference-counted shallow copy.
+
+## Returning a rarray from a function
+
+Because rarray implements move semantics, returning an rarray from a
+function does not pose any problems.
+
+Consider the function `zeros` used in `main()`:
+```cpp
+#include <rarray>
+rarray<double,2> zeros(int n, int m) {
+   rarray<double,2> r(n, m);
+   r.fill(0.0);
+   return r;
+}
+int main() {
+   rarray<double,2> s = zeros(100, 100);
+   return s[99][99];
+}
+```
+In line 3, a rarray `r` is created, and filled, on line 4, with
+zeros. On line 5, `r` gets moved out of the function and into `s`
+using C++11's move semantics. Move semantics cause `r` inside the
+function to be left in an empty state detached from `s`, so when the
+function comes to an end, the data in `s` persists.
+
+## Optional bounds checking
+
+If the preprocessor constant `RA_BOUNDSCHECK` is defined, an
+`out_of_bounds` exception is thrown if
+
+  - an index is too small or too large;
+
+  - the size of dimension is requested that does not exist (in a call to `extent(int i)`);
+
+  - a constructor is called with a zero pointer for the buffer or for the shape array.
+
+`RA_BOUNDSCHECK` can be defined by adding the `-DRA_BOUNDSCHECK`
+argument to the compilation command, or by inserting `#define
+RA_BOUNDSCHECK` before the `#include <rarray>` line in the source
+code.
+
+## Conversions
+
+Rarray supports a lot of conversions to other, older common ways that multidimensional arrays may be used in C++.
+
+### Converting automatic C-style arrays to rarrays
+
+It is possible to convert C-style automatic arrays to rarrays if they
+have a rank of at most 11.  The main convenience of this is that one
+can write functions that take rarray argument(s) and pass automatic
+arrays to them. For example:
+```cpp
+#include <iostream>
+#include <rarray>
+void print2d(const rarray<float,2> &s) {
+    for (int i = 0; i < s.extent(0); i++) {
+        for (int j = 0; j < s.extent(1); j++)
+            std::cout << s[i][j] << ' ';
+        std::cout << std::endl;
+    }
+}
+int main() {
+    float stackarray[4][4] = { { 1.0, 1.2, 1.4, 1.6},
+                               { 2.0, 2.2, 2.4, 2.6},
+                               { 3.0, 3.2, 3.4, 3.6},
+                               { 4.0, 4.2, 4.4, 4.6} };
+    // automatic conversion
+    print2d(stackarray);
+    // view using the same data
+    auto a = rarray<float,2>(stackarray);
+    print2d(a);
+    // independent copy of the same data
+    auto b = rarray<float,2>(stackarray).copy();
+    print2d(b);
+}
+```
+
+### Conversions for function arguments
+
+A function might take a `rarray<const T,R>` parameter
+if elements are not changed by it.  Although C++ cannot convert
+template types with a `T` to ones with a `const T`
+reference, the rarray library provides this conversion from
+`rarray<T,R>` to a `rarray<const T,R>`. For example:
+```
+#include <rarray>
+float add(const rarray<const float,2> &s) {
+     float x = 0.0;
+     for (int i = 0; i < s.extent(0); i++)
+          for (int j = 0; j < s.extent(1); j++)
+              x += s[i][j];
+     return x;
+}
+int main() {
+     rarray<float,2> s(40, 40); // note: not const!
+     float z = add(s); // yet this works
+}
+```
+One can also explicitly use the `const_ref` method to do this conversion.
+
+Note: This works equally well when the function argument is passed by value.
+
+## Conversion to raw pointers
+
+Rarray objects are also easy to pass to functions from legacy that do
+not use `rarray`s but pointers.  To avoid ambiguities, conversions of
+a rarray to a pointer must be done using explicit methods.
+
+There are two main ways that such functions expect a multidimensional
+array to be passed: either as a pointer (a `T*`) to the first element
+of the internal buffer composed of all elements, or as a
+pointer-to-pointer structure (a `T**...`).  In the former case, it may
+be important to remember that an rarray stores elements in row-major
+format.
+
+With the `const` keyword, the number of useful C++ forms for
+multidimensional array arguments has grown to about six.  In the case
+of a two-dimensional array these take the forms: `T*`, `const T*`,
+`T*const*`, `const T*const*`, `T**`, and `const T**`.  Using the
+rarray library, const-correct argument passing requires the `data` or
+`ptr_array` method but non-const-correct argument passing will require
+the `noconst_ptr_array` function, possibly combined with `const_ref`.
+
+We will briefly looking at these cases separately now.
+
+### Conversion to a T* or a const T*
+
+A function may expect a multidimensional array to be passed as a
+simple pointer to the first element, of the form `T*`, or of the form
+`const T*`. This is the case for most C or fortran libraries, as
+disussed above. A rarray object `s` of type `rarray<T,R>` can be
+passed to these functions using the syntax `s.data()`, which yields a
+`T*`. Examples:
+```cpp
+void fill1(float* a, int n1, int n2, float z) {
+    for (int i=0; i<n1*n2; i++)
+        a[i] = z;
+}
+int main() {
+    rarray<float,2> s(40, 40);
+    fill1(s.data(), s.extent(0), s.extent(1), 3.14);
+}
+```
+```cpp
+float add2(const float* a, int n1, int n2) {
+    float x = 0.0;
+    for (int i=0; i<n1*n2; i++)
+        x += a[i];
+    return x;
+}
+int main() {
+    rarray<float,2> s(40, 40);
+    float z = add2(s.data(), s.extent(0), s.extent(1));
+}
+```
+
+C++ accepts a `float*` instead of a `const float*`, so `data()` could
+be used in the latter example.
+
+### Conversion to a T*const* or a const T*const* 
+
+In `T*const*`, the middle const means that one cannot reassign the row
+pointers.  The rarray classes can be converted to this type using the
+`ptr_array()` method.  For higher dimensions, the repeated pointer
+type that `ptr_array` returns generalizes to `T*const*const*`,
+`T*const*const*const*`, etc.  Examples:
+```cpp
+void fill3(float*const* a, int n1, int n2, float z) {
+    for (int i=0; i<n1; i++)
+        for (int j=0; j<n2; j++)
+            a[i][j] = z;
+}
+int main() {
+    rarray<float,2> s(40, 40);
+    fill3(s.ptr_array(), s.extent(0), s.extent(1), 3.14);
+}
+```
+```cpp
+float add4(const float*const* a, int n1, int n2) {
+    float x = 0.0;
+    for (int i=0; i<n1; i++)
+        for (int j=0; j<n2; j++)
+            x += a[i][j];
+    return x;
+}
+int main() {
+    rarray<float,2> s(40, 40);
+    float z = add4(s.ptr_array(), 40, 40);
+}
+```
+
+C++ accepts a `T*const*` where a `const T*const*` is expected, so here one can again use the method `ptr_array()`.
+
+### Conversion to a T**
+
+If one were to generating a `T**` from a rarray object, one could
+change the internal structure of that rarray object through the double
+pointer.  This is therefore considered not *const-correct*.  It is
+however sometimes needed when using legacy code that expects such a
+pointer, and for that reason, `rarray` has a function for it, called
+`noconst_ptr_array`. Example:
+```cpp
+void fill5(float** a, int n1, int n2, float z) {
+    for (int i=0; i<n1; i++)
+        for (int j=0; j<n2; j++)
+            a[i][j] = z;
+}
+int main() {
+    rarray<float,2> s(40, 40);
+    fill5(s.noconst_ptr_array(), s.extent(0), s.extent(1), 3.14);
+}
+```
+
+### Conversion to a const T**
+
+C++ does not allow conversion from `T**` to `const T**`.  To convert
+to a `const T**`, one first needs to convert the `rarray<T,R>` to a
+`rarray<const T,R>` using `const_ref()`, after which one can use the
+`noconst_ptr_array` function, e.g.:
+```cpp
+float add6(const float** a, int n1, int n2) {
+    float x = 0.0;
+    for (int i=0; i<n1; i++)
+        for (int j=0; j<n2; j++)
+            x += a[i][j];
+    return x;
+}
+int main() {
+    rarray<float,2> s(40, 40);
+    float z = add6(s.const_ref().noconst_ptr_array(), 40, 40);
+}
+```
