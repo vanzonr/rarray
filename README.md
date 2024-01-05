@@ -201,7 +201,7 @@ Release History and Changes
    substantial code cleanup.  The stub header file rarrayio was
    removed.
 
- * Version 2.7.0, January 2024 (to be released)
+ * Version 2.7.0, January 2024
 
      - Added fill and form methods.
      
@@ -245,7 +245,7 @@ VERSION                Contains the tag of most recently release version.
                        Note: If cloned from the github repository, the
                              code may differ due to subsequent
                              commits. Do a "git checkout TAG",
-                             e.g. "git checkout v2.4.0" to get the
+                             e.g. "git checkout 2.7.0" to get the
                              exact release.
 
 WARRANTY               File that expresses that there is no warranty
@@ -339,6 +339,10 @@ compiler.icpc.mk
 
 compiler.icpx.mk
 
+compiler.nvc++.mk
+
+compiler.pgc++.mk
+
 compiler.xlC.mk
 
 compiler.xlC_r.mk
@@ -346,5 +350,4 @@ compiler.xlC_r.mk
 compiler.xlc++.mk
 
 
-
-- December 2023
+- January 2024
