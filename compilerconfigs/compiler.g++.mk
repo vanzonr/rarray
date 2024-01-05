@@ -16,3 +16,4 @@ CXXFLAGSCOV=-fprofile-arcs -ftest-coverage
 LIBSCOV=-lgcov
 GCOV=gcov -trkm
 FILTERCOV=awk
+NOELIDECONSTRUCTORS=-fno-elide-constructors
