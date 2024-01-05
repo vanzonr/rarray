@@ -327,40 +327,40 @@ run_valgrind_testsuite_bc23: testsuite_bc23
 .PHONY: run_benchmark2d
 run_benchmark2d: $(BENCHMARK2DNAME) $(BENCHMARK2DNAMEF) $(BENCHMARK2DNAME23) 
 	@echo Comparison benchmark on a 2d array example
-	@./$(BENCHMARK2DNAME) 1 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 1 || true)  
 	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 2 || true) 
-	@./$(BENCHMARK2DNAME) 3 
-	@./$(BENCHMARK2DNAME) 4 
-	@./$(BENCHMARK2DNAME) 5 
-	@./$(BENCHMARK2DNAME) 6 
-	@./$(BENCHMARK2DNAME) 7 
-	@./$(BENCHMARK2DNAME) 8 
-	@./$(BENCHMARK2DNAME) 9
-	@./$(BENCHMARK2DNAME) 10
-	@./$(BENCHMARK2DNAME23) 11 
-	@./$(BENCHMARK2DNAMEF)
-	@./$(BENCHMARK2DNAME) 1
-	@./$(BENCHMARK2DNAME23) 11
-	@./$(BENCHMARK2DNAME23) 10
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 3  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 4  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 5  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 6  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 7  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 8  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 9 || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 10 || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME23) 11  || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAMEF) || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME) 1 || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME23) 11 || true) 
+	@(ulimit -s 4000000 && ./$(BENCHMARK2DNAME23) 10 || true) 
 
 .PHONY: run_benchmark4d
 run_benchmark4d: $(BENCHMARK4DNAME) $(BENCHMARK4DNAMEF) $(BENCHMARK4DNAME23) 
 	@echo Comparison benchmark on a 4d array example
-	@./$(BENCHMARK4DNAME) 1 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 1  || true) 
 	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 2 || true) 
-	@./$(BENCHMARK4DNAME) 3 
-	@./$(BENCHMARK4DNAME) 4 
-	@./$(BENCHMARK4DNAME) 5 
-	@./$(BENCHMARK4DNAME) 6 
-	@./$(BENCHMARK4DNAME) 7 
-	@./$(BENCHMARK4DNAME) 8 
-	@./$(BENCHMARK4DNAME) 9 
-	@./$(BENCHMARK4DNAME) 10 
-	@./$(BENCHMARK4DNAME23) 11
-	@./$(BENCHMARK4DNAMEF)
-	@./$(BENCHMARK4DNAME) 1
-	@./$(BENCHMARK4DNAME23) 11
-	@./$(BENCHMARK4DNAME23) 10
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 3  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 4  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 5  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 6  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 7  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 8  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 9  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 10  || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME23) 11 || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAMEF) || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME) 1 || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME23) 11 || true) 
+	@(ulimit -s 8000000 && ./$(BENCHMARK4DNAME23) 10 || true) 
 
 $(BENCHMARK2DNAME): $(BENCHMARK2DNAME).o $(PASS).o config.mk
 	$(CXX) $(LDFLAGSOPT) -o $@ $(BENCHMARK2DNAME).o $(PASS).o $(LDLIBS)
