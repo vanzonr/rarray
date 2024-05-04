@@ -53,13 +53,13 @@ construction of the rarray.  One should aim to initialize the elements
 of an rarray in the code **shortly after** the definition of the
 rarray.
 
-One way to initialize the all the values of an rarray at once is with
+One way to initialize all the values of an rarray at once is with
 the `fill` method.  Uniform initialization with the same value (e.g., one) can be done with the fill method with a single argument:
 ```cpp
 rarray<double,2> a(4, 5);
 a.fill(1.0);
 ```
-To check that this indeed happened, one can printi the result.  Rarrays can be used with streams, so the following program:
+To check that this indeed happened, one can print the result.  Rarrays can be used with streams, so the following program:
 ```cpp
 #include <rarray>
 #include <iostream>
@@ -79,7 +79,7 @@ will print the array, in the following format:
 }
 ```
 This format with the curly braces is chosen as it is unique and can
-therefore be correcly read in again by input streams.
+therefore be correctly read in again by input streams.
 
 A second way to set the values of an array at once is using a similar
 curly braces format as the argument of the fill method:
@@ -131,8 +131,8 @@ will give
  {5,5,5,5},
  {5,5,5,5}}
 ```
-The default way of zeroing missing elements that one gets by no using
-a `ra::MISSING` argument can also be established by
+The default way of zeroing missing elements that one gets by not using
+a `ra::MISSING` argument, can also be established by
 passing `ra::MISSING::DEFAULT` as the second argument to the
 `fill` method.
 
@@ -179,14 +179,14 @@ matrix.form({{1.0, 1.0, 1.0}, {2.0}, {3.0}, ra::MISSING::REPEAT};
 ```
 creates an array with 1s in the first row, 2s in the second row
 and 3s in the third row. Because the size of the array is determined
-from the nested expression, at least on row must be fully specified.
+from the nested expression, at least one row must be fully specified.
 
 When using `ra::MISSING::SKIP` instead of `ra::MISSING::REPEAT`, the
 missing elements are not initialized.
 
 Finally, to undo any initialization, one can remove the data and shape
 from an rarray with the `clear()` method.  This returns the rarray to
-the state as if it were defined without any arguments.
+the state as if it were newly constructed without any arguments.
 
 ## Rarray Indexing
 
@@ -237,7 +237,7 @@ iterates over the content of the array.
 By design, the elements of an rarray are always stored contiguously in
 memory (i.e., without gaps).  This ensures that they can be used in
 calls to many numerical software libraries.  But this does restrict
-the possibilities in which one can take subarrays of an rarray and
+the ways in which one can take subarrays of an rarray and
 still store it in an rarray.
 
 To understand what kind of slicing is and is not possible with
@@ -496,7 +496,7 @@ E.g. to write the content of a 10x10x4x4 array of zeros in binary format to a fi
 int main() {
     rarray<double,4> a(10, 10, 4, 4);
     a.fill(0.0);
-    ofstream f("adump.bin","wb");
+    std::ofstream f("adump.bin",std::ios::binary);
     f.write((char*)a.data(), a.size()*sizeof(double));
     f.close();
 }
@@ -1030,7 +1030,7 @@ if elements are not changed by it.  Although C++ cannot convert
 template types with a `T` to ones with a `const T`
 reference, the rarray library provides this conversion from
 `rarray<T,R>` to a `rarray<const T,R>`. For example:
-```
+```cpp
 #include <rarray>
 float add(const rarray<const float,2> &s) {
      float x = 0.0;
@@ -1105,7 +1105,7 @@ int main() {
 C++ accepts a `float*` instead of a `const float*`, so `data()` could
 be used in the latter example.
 
-### Conversion to a T*const* or a const T*const* 
+### Conversion to a `T*const*` or a `const T*const*` 
 
 In `T*const*`, the middle const means that one cannot reassign the row
 pointers.  The rarray classes can be converted to this type using the
