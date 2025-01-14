@@ -820,7 +820,7 @@ class rarray {
     }
     /// This method returns the number of dimensions of the rarray, a.k.a., its rank.
     ///  @return rank of the rarray (integer)
-    constexpr auto rank() const noexcept -> int {
+    constexpr static auto rank() noexcept -> int {
         return R;
     }
     /// Check if the rarray is undefined.
@@ -1616,6 +1616,16 @@ class ConstBracket<T, 1, P> {
     }
 };
 
+// generic version of make_rarray, but this cannot use type deduction
+
+template<typename U>
+auto make_rarray_g(std::initializer_list<U> list, ra::MISSING missing_policy) ->  rarray<typename ra::detail::init_list_prop<decltype(list)>::type,ra::detail::init_list_prop<decltype(list)>::rank>
+{
+    rarray<typename ra::detail::init_list_prop<decltype(list)>::type, ra::detail::init_list_prop<decltype(list)>::rank> a;
+    a.form(list, missing_policy);
+    return a;
+}
+    
 }  // namespace detail
 
 template<typename S>
@@ -1729,6 +1739,224 @@ inline auto extent(const rarray<T, R> &a, int i) -> size_type {
     return a.extent(i);
 }
 
+// specific versions of make_rarray for each rank, from 1 to 11, which can work with type deduction.
+
+/// @name form
+/// Functions to form new rarrays from nested initializer lists
+/// @{
+template<typename T>
+auto make_rarray(std::initializer_list<T> list,
+                 MISSING missing_policy = MISSING::DEFAULT) -> rarray<T,1>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<T>> list,
+                 MISSING missing_policy = MISSING::DEFAULT) -> rarray<T,2>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,3>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,4>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,5>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,6>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,7>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,8>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,9>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>>>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,10>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+template<typename T>
+auto make_rarray(std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<
+                 std::initializer_list<T>>>>>>>>>>> list,
+                 MISSING missing_policy=MISSING::DEFAULT) -> rarray<T,11>
+{
+    return detail::make_rarray_g(list, missing_policy);
+}
+/// @}
+
+/// @name form
+/// Functions to form new rarrays from a shape and a fill value.
+/// @{
+template<typename T>
+auto make_rarray(size_type n0, const T& fillvalue) -> rarray<T,1>
+{
+    rarray<T,1> result(n0);
+    result.fill(fillvalue);
+    return result;
+}
+template<typename T>
+auto make_rarray(size_type n0, size_type n1, const T& fillvalue) -> rarray<T,2>
+{
+    rarray<T,2> result(n0,n1);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,const T& fillvalue) -> rarray<T,3>
+{
+    rarray<T,3> result(n0,n1,n2);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,const T& fillvalue) -> rarray<T,4>
+{
+    rarray<T,4> result(n0,n1,n2,n3);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,const T& fillvalue) -> rarray<T,5>
+{
+    rarray<T,5> result(n0,n1,n2,n3,n4);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,const T& fillvalue) -> rarray<T,6>
+{
+    rarray<T,6> result(n0,n1,n2,n3,n4,n5);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,const T& fillvalue) -> rarray<T,7>
+{
+    rarray<T,7> result(n0,n1,n2,n3,n4,n5,n6);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,const T& fillvalue) -> rarray<T,8>
+{
+    rarray<T,8> result(n0,n1,n2,n3,n4,n5,n6,n7);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,const T& fillvalue) -> rarray<T,9>
+{
+    rarray<T,9> result(n0,n1,n2,n3,n4,n5,n6,n7,n8);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,const T& fillvalue) -> rarray<T,10>
+{
+    rarray<T,10> result(n0,n1,n2,n3,n4,n5,n6,n7,n8,n9);
+    result.fill(fillvalue);
+    return result;
+}
+
+template<typename T>
+auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n4,size_type n5,size_type n6,size_type n7,size_type n8,size_type n9,size_type n10,const T& fillvalue) -> rarray<T,11>
+{
+    rarray<T,11> result(n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10);
+    result.fill(fillvalue);
+    return result;
+}
+
 }  // namespace ra
 
 // make RARRAY and INDEX work for rarrays as well as automatic arrays:
@@ -1760,6 +1988,7 @@ struct rank<ra::rarray<T, R>> {
 using ra::rarray;
 using ra::linspace;
 using ra::xrange;
+using ra::make_rarray;
 
 // add rvector, rmatrix and rtensor shortcut types
 template<typename T> using rvector = rarray<T, 1>;

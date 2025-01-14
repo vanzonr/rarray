@@ -5,7 +5,7 @@ rarray is a C++ library for reference counted multidimensional arrays.
 It is a header-only implementation that uses templates, which allows 
 most compilers to generate fast code.
 
-The latest release version is 2.7.0.
+The latest release version is 2.8.0.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -57,7 +57,9 @@ Installation
     ../configure --prefix=<PREFIXDIR>
     make install
 
-Or copy the file "`rarray`" to `<PREFIXDIR>/include`.
+Or copy the file "`rarray`" to `<PREFIXDIR>/include`. Make sure
+`<PREFIXDIR>/include` is in your `CPATH` variable or the include path
+is passed to the compiler (usually with a `-I <PREFIXDIR>` flag).
 
 The configure-make recipe also allows running tests; type "make help"
 to see the options.
@@ -207,6 +209,14 @@ Release History and Changes
      
      - Better documentation, now in markdown and doxygen.
 
+ * Version 2.8.0, January 2025
+
+     - Added `make_rarray` functions
+
+     - Made `rarray<T,R>::rank()` static
+
+     - Fixed bug in reshape to a smaller size
+     
 Known issues
 ============
 

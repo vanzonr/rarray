@@ -1,4 +1,4 @@
-# Rarray Tutorial
+# Rarray Tutorial (v2.8)
 
 One-dimensional arrays are a collection of elements that are all of
 the same type and are arranged in a linear fashion, so each element
@@ -47,13 +47,11 @@ rarray<double,2> a(4, 5);
 This works for rarrays of rank up to 11. For rarrays with higher rank, you have to pass an pointer to the array of extents.
 
 Thw array `a` has a shape now, but its elements are not initialized.
-Uninitialized values are bad practice, but there are too many ways to
-do this initialization to be able to cover all of them during
-construction of the rarray.  One should aim to initialize the elements
+Uninitialized values are bad practice, but have occasional usage.  One should nonetheless aim to initialize the elements
 of an rarray in the code **shortly after** the definition of the
 rarray.
 
-One way to initialize all the values of an rarray at once is with
+One way to (re)initialize all the values of an existing rarray at once is with
 the `fill` method.  Uniform initialization with the same value (e.g., one) can be done with the fill method with a single argument:
 ```cpp
 rarray<double,2> a(4, 5);
@@ -81,7 +79,7 @@ will print the array, in the following format:
 This format with the curly braces is chosen as it is unique and can
 therefore be correctly read in again by input streams.
 
-A second way to set the values of an array at once is using a similar
+A second way to set the values of an existing array at once is using a similar
 curly braces format as the argument of the fill method:
 ```cpp
 #include <rarray>
@@ -136,8 +134,8 @@ a `ra::MISSING` argument, can also be established by
 passing `ra::MISSING::DEFAULT` as the second argument to the
 `fill` method.
 
-The fill methods cannot change the shape of the rarray, but another
-method, `form`, can.  The following code creates the same rarrays `a`
+The fill methods do not change the shape of the exisiting rarray, but another
+method, `form`, does.  The following code creates the same rarrays `a`
 and `b` as above, but uses the `form` method:
 ```cpp
 #include <rarray>
@@ -183,6 +181,24 @@ from the nested expression, at least one row must be fully specified.
 
 When using `ra::MISSING::SKIP` instead of `ra::MISSING::REPEAT`, the
 missing elements are not initialized.
+
+It is (since version 2.8) also possible to combine the declaration of an rarray and give it a form and content with the `make_rarray` functions.  For instance
+```cpp
+#include <rarray>
+#include <iostream>
+int main() {
+    auto a = make_rarray(4, 5, 1.0);   // Form array with 4x5 elements, all set to 1.
+    auto b = make_rarray({             // Form array that fits the given nested lists
+        { 1.0,  2.0,  3.0,  4.0,  5.0},
+        { 6.0,  7.0,  8.0,  9.0, 10.0},
+        {11.0, 12.0, 13.0, 14.0, 15.0},
+        {16.0, 17.0, 18.0, 19.0, 20.0}
+        });
+    std::cout << a << '\n'
+              << b << '\n';
+}
+```
+Does the same as in the example above.  In fact, the `make_rarray` functions create an array of the right rank and call its `.form` method either to repeat an element (as for the `a` rarray) or detect the shape from a given nested initializer list and copy the data from there (as for the `b` rarray).
 
 Finally, to undo any initialization, one can remove the data and shape
 from an rarray with the `clear()` method.  This returns the rarray to
@@ -417,7 +433,7 @@ An rarray object has a number of methods to query its properties.
 
 ## rank
 
-This method returns the rank of the rarray (eventhough this is already
+This static method returns the rank of the rarray (even though this is already
 encoded in its type). E.g.
 ```cpp
 #include <rarray>

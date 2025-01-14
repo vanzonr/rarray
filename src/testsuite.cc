@@ -2941,6 +2941,561 @@ TEMPLATE_TEST_CASE("testform11", "",
         REQUIRE(x == x1);
 }
 
+//// make_ functions
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+TEMPLATE_TEST_CASE("testmakerarray1", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(12, x1);
+    REQUIRE(a.rank() == 1);
+    REQUIRE(a.extent(0) == 12);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray2", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(3, 4, x1);
+    REQUIRE(a.rank() == 2);
+    REQUIRE(a.extent(0) == 3);
+    REQUIRE(a.extent(1) == 4);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray3", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, x1);
+    REQUIRE(a.rank() == 3);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+         REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray4", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 4);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray5", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 5);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray6", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 6);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray7", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 7);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray8", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 8);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray9", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 9);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray10", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 10);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+TEMPLATE_TEST_CASE("testmakerarray11", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    using T = TestType;
+    T x1 = global::get_value_1<T>();
+    auto a = make_rarray(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, x1);
+    REQUIRE(a.rank() == 11);
+    for (const auto& i : xrange(a.rank()))
+        REQUIRE(a.extent(i) == 2);
+    for (const auto& x : a)
+        REQUIRE(x == x1);
+}
+
+// TEMPLATE_TEST_CASE("testmakerarray12", "",
+//                    int, double,
+//                    Compound,
+//                    (array<Compound, 3>),
+//                    (std::complex<float>)) {
+//     using T = TestType;
+//     T x1 = global::get_value_1<T>();
+//     ra::size_type shape[12] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+//     auto a = make_rarray(&shape[0], x1);
+//     REQUIRE(a.rank() == 12);
+//     for (const auto& i : xrange(a.rank()))
+//         REQUIRE(a.extent(i) == 2);
+//     for (const auto& x : a)
+//         REQUIRE(x == x1);
+// }
+
+TEMPLATE_TEST_CASE("make_initializer_list", "",
+                   int, double,
+                   Compound,
+                   (array<Compound, 3>),
+                   (std::complex<float>)) {
+    TestType val1 = global::get_value_1<TestType>();
+    TestType val2 = global::get_value_2<TestType>();
+    TestType val3 = global::get_value_3<TestType>();
+    auto zero = TestType{};
+    auto a1 = make_rarray({val1, val2, val3});
+    REQUIRE(a1.rank() == 1);
+    REQUIRE(a1.size() == 3);
+    REQUIRE(a1[0] == val1);
+    REQUIRE(a1[1] == val2);
+    REQUIRE(a1[2] == val3);
+    auto a2 = make_rarray({{val1, val2}, {val3}});
+    REQUIRE(a2.rank() == 2);
+    REQUIRE(a2.extent(0) == 2);
+    REQUIRE(a2.extent(1) == 2);
+    REQUIRE(a2[0][0] == val1);
+    REQUIRE(a2[0][1] == val2);
+    REQUIRE(a2[1][0] == val3);
+    REQUIRE(a2[1][1] == TestType{});
+    a2 = make_rarray({{val1, val2}, {val3}}, ra::MISSING::REPEAT);
+    REQUIRE(a2.extent(0) == 2);
+    REQUIRE(a2.extent(1) == 2);
+    REQUIRE(a2[0][0] == val1);
+    REQUIRE(a2[0][1] == val2);
+    REQUIRE(a2[1][0] == val3);
+    REQUIRE(a2[1][1] == val3);
+    auto a3 = make_rarray({{ {val1, val2, val3}, {val1}}});
+    REQUIRE(a3.rank() == 3);
+    REQUIRE(a3.extent(0) == 1);
+    REQUIRE(a3.extent(1) == 2);
+    REQUIRE(a3.extent(2) == 3);
+    REQUIRE(a3[0][0][0] == val1);
+    REQUIRE(a3[0][0][1] == val2);
+    REQUIRE(a3[0][0][2] == val3);
+    REQUIRE(a3[0][1][0] == val1);
+    REQUIRE(a3[0][1][1] == TestType{});
+    REQUIRE(a3[0][1][2] == TestType{});
+    a3 = make_rarray({{ {val1, val2, val3}, {val1}}}, ra::MISSING::REPEAT);
+    REQUIRE(a3.extent(0) == 1);
+    REQUIRE(a3.extent(1) == 2);
+    REQUIRE(a3.extent(2) == 3);
+    REQUIRE(a3[0][0][0] == val1);
+    REQUIRE(a3[0][0][1] == val2);
+    REQUIRE(a3[0][0][2] == val3);
+    REQUIRE(a3[0][1][0] == val1);
+    REQUIRE(a3[0][1][1] == val1);
+    REQUIRE(a3[0][1][2] == val1);
+    auto a4 = make_rarray({
+             {
+              {
+               {val1, val2},  // [0][0][0][0..1]
+               {val1, val3}   // [0][0][1][0..1]
+              },
+              {
+               {val3, val2},  // [0][1][1][0..1]
+               {val1, val1}   // [0][1][1][0..1]
+              }
+             }
+             ,
+             {
+              {
+               {val1, val2},  // [1][0][0][0..1]
+               {val2, val3}   // [1][0][1][0..1]
+              }
+              ,
+              {
+               {val3, val2},  // [1][1][0][0..1]
+               {val2, val1}   // [1][1][1][0..1]
+              }
+             }
+        });
+    REQUIRE(a4.rank() == 4);
+    REQUIRE(a4.extent(0) == 2);
+    REQUIRE(a4.extent(1) == 2);
+    REQUIRE(a4.extent(2) == 2);
+    REQUIRE(a4.extent(3) == 2);
+    REQUIRE(a4[0][0][0][0] == val1);
+    REQUIRE(a4[0][0][0][1] == val2);
+    REQUIRE(a4[0][0][1][0] == val1);
+    REQUIRE(a4[0][0][1][1] == val3);
+    REQUIRE(a4[0][1][0][0] == val3);
+    REQUIRE(a4[0][1][0][1] == val2);
+    REQUIRE(a4[0][1][1][0] == val1);
+    REQUIRE(a4[0][1][1][1] == val1);
+    REQUIRE(a4[1][0][0][0] == val1);
+    REQUIRE(a4[1][0][0][1] == val2);
+    REQUIRE(a4[1][0][1][0] == val2);
+    REQUIRE(a4[1][0][1][1] == val3);
+    REQUIRE(a4[1][1][0][0] == val3);
+    REQUIRE(a4[1][1][0][1] == val2);
+    REQUIRE(a4[1][1][1][0] == val2);
+    REQUIRE(a4[1][1][1][1] == val1);    
+    auto a5 = make_rarray({
+             {
+              {
+               {
+                {val1, val2},
+                {val2, val1}
+               }
+              },
+              {
+               {{val3}}
+              }
+             }
+        });
+    REQUIRE(a5.rank() == 5);
+    REQUIRE(a5.extent(0) == 1);
+    REQUIRE(a5.extent(1) == 2);
+    REQUIRE(a5.extent(2) == 1);
+    REQUIRE(a5.extent(3) == 2);
+    REQUIRE(a5.extent(4) == 2);
+    REQUIRE(a5[0][0][0][0][0] == val1);
+    REQUIRE(a5[0][0][0][0][1] == val2);
+    REQUIRE(a5[0][0][0][1][0] == val2);
+    REQUIRE(a5[0][0][0][1][1] == val1);
+    REQUIRE(a5[0][1][0][0][0] == val3);
+    REQUIRE(a5[0][0][0][0][0] == val1);
+    auto a6 = make_rarray({
+             {
+              {
+               {
+                {
+                 {val1, val2},
+                 {val2, val1}
+                }
+               },
+               {
+                {{val3}}
+               }
+              }
+             }
+        });
+    REQUIRE(a6.rank() == 6);
+    REQUIRE(a6.extent(0) == 1);
+    REQUIRE(a6.extent(1) == 1);
+    REQUIRE(a6.extent(2) == 2);
+    REQUIRE(a6.extent(3) == 1);
+    REQUIRE(a6.extent(4) == 2);
+    REQUIRE(a6.extent(5) == 2);
+    REQUIRE(a6[0][0][0][0][0][0] == val1);
+    REQUIRE(a6[0][0][0][0][0][1] == val2);
+    REQUIRE(a6[0][0][0][0][1][0] == val2);
+    REQUIRE(a6[0][0][0][0][1][1] == val1);
+    REQUIRE(a6[0][0][1][0][0][0] == val3);
+    REQUIRE(a6[0][0][0][0][0][0] == val1);
+    auto a7 = make_rarray({
+             {
+              {
+               {
+                {
+                 {
+                  {val1, val2},
+                  {val2, val1}
+                 }
+                },
+                {
+                 {{val3}}
+                }
+               }
+              }
+             }
+        });
+    REQUIRE(a7.rank() == 7);
+    REQUIRE(a7.extent(0) == 1);
+    REQUIRE(a7.extent(1) == 1);
+    REQUIRE(a7.extent(2) == 1);
+    REQUIRE(a7.extent(3) == 2);
+    REQUIRE(a7.extent(4) == 1);
+    REQUIRE(a7.extent(5) == 2);
+    REQUIRE(a7.extent(6) == 2);
+    REQUIRE(a7[0][0][0][0][0][0][0] == val1);
+    REQUIRE(a7[0][0][0][0][0][0][1] == val2);
+    REQUIRE(a7[0][0][0][0][0][1][0] == val2);
+    REQUIRE(a7[0][0][0][0][0][1][1] == val1);
+    REQUIRE(a7[0][0][0][1][0][0][0] == val3);
+    REQUIRE(a7[0][0][0][0][0][0][0] == val1);
+    auto a8 = make_rarray({
+             {
+              {
+               {
+                {
+                 {
+                  {
+                   {val1, val2},
+                   {val2, val1}
+                  }
+                 },
+                 {
+                  {{val3}}
+                 }
+                }
+               }
+              }
+             }
+        });
+    REQUIRE(a8.rank() == 8);
+    REQUIRE(a8.extent(0) == 1);
+    REQUIRE(a8.extent(1) == 1);
+    REQUIRE(a8.extent(2) == 1);
+    REQUIRE(a8.extent(3) == 1);
+    REQUIRE(a8.extent(4) == 2);
+    REQUIRE(a8.extent(5) == 1);
+    REQUIRE(a8.extent(6) == 2);
+    REQUIRE(a8.extent(7) == 2);
+    REQUIRE(a8[0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a8[0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a8[0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a8[0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a8[0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a8[0][0][0][0][0][0][0][0] == val1);
+    auto a9 = make_rarray({
+             {
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {val1, val2},
+                    {val2, val1}
+                   }
+                  },
+                  {
+                   {{val3}}
+                  }
+                 }
+                }
+               }
+              }
+             }
+        });
+    REQUIRE(a9.rank() == 9);
+    REQUIRE(a9.extent(0) == 1);
+    REQUIRE(a9.extent(1) == 1);
+    REQUIRE(a9.extent(2) == 1);
+    REQUIRE(a9.extent(3) == 1);
+    REQUIRE(a9.extent(4) == 1);
+    REQUIRE(a9.extent(5) == 2);
+    REQUIRE(a9.extent(6) == 1);
+    REQUIRE(a9.extent(7) == 2);
+    REQUIRE(a9.extent(8) == 2);
+    REQUIRE(a9[0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a9[0][0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a9[0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a9[0][0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a9[0][0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a9[0][0][0][0][0][0][0][0][0] == val1);
+    auto a10 = make_rarray({
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {
+                     {
+                      {val1, val2},
+                      {val2, val1}
+                     }
+                    },
+                    {
+                     {{val3}}
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+        });
+    REQUIRE(a10.rank() == 10);
+    REQUIRE(a10.extent(0) == 1);
+    REQUIRE(a10.extent(1) == 1);
+    REQUIRE(a10.extent(2) == 1);
+    REQUIRE(a10.extent(3) == 1);
+    REQUIRE(a10.extent(4) == 1);
+    REQUIRE(a10.extent(5) == 1);
+    REQUIRE(a10.extent(6) == 2);
+    REQUIRE(a10.extent(7) == 1);
+    REQUIRE(a10.extent(8) == 2);
+    REQUIRE(a10.extent(9) == 2);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a10[0][0][0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a10[0][0][0][0][0][0][0][0][0][0] == val1);
+    auto a11 = make_rarray({
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {
+                     {
+                      {
+                       {val1, val2},
+                       {val2, val1}
+                      }
+                     },
+                     {
+                       {{val3}}
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              },
+              {
+               {
+                {
+                 {
+                  {
+                   {
+                    {
+                     {
+                      {
+                       {val1},
+                       {val2, val3}
+                      },
+                      {
+                       {val3, val2},
+                       {val1, val2}
+                      }
+                     }
+                    }
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             });
+    REQUIRE(a11.rank() == 11);
+    REQUIRE(a11.extent(0) == 2);
+    REQUIRE(a11.extent(1) == 1);
+    REQUIRE(a11.extent(2) == 1);
+    REQUIRE(a11.extent(3) == 1);
+    REQUIRE(a11.extent(4) == 1);
+    REQUIRE(a11.extent(5) == 1);
+    REQUIRE(a11.extent(6) == 1);
+    REQUIRE(a11.extent(7) == 2);
+    REQUIRE(a11.extent(8) == 2);
+    REQUIRE(a11.extent(9) == 2);
+    REQUIRE(a11.extent(10) == 2);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][0][1] == val2);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a11[0][0][0][0][0][0][0][0][0][1][1] == val1);
+    REQUIRE(a11[0][0][0][0][0][0][0][1][0][0][0] == val3);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][0][0] == val1);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][0][1] == zero);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][1][0] == val2);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][0][1][1] == val3);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][0][0] == val3);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][0][1] == val2);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][1][0] == val1);
+    REQUIRE(a11[1][0][0][0][0][0][0][0][1][1][1] == val2);
+}
+
+
+//// end make_functions
+
 #if __cpp_multidimensional_subscript >= 202110L
 
 TEST_CASE("testfill23") {
@@ -3970,7 +4525,6 @@ TEST_CASE("Consistent reshape to smaller shape")
     const ra::size_type newsize[12] = {1,1,1,1,1,1,1,1,1,1,1,1};
     double *oldbegin, *oldend;
     ra::size_type a_measured_extent;
-    bool testA, testB, testC, testD, testE, test = true;
     // 1D
     rarray<double,1> a1(oldsize);
     oldbegin = a1.begin();
