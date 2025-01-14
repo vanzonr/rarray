@@ -3963,3 +3963,145 @@ TEMPLATE_TEST_CASE("slice", "",
     for (int j = 0; j < d.extent(0); j++)
         REQUIRE(d[j] == a[5][j]);
 }
+
+TEST_CASE("Consistent reshape to smaller shape")
+{
+    const ra::size_type oldsize[12] = {2,1,1,1,1,1,1,1,1,1,1,1};
+    const ra::size_type newsize[12] = {1,1,1,1,1,1,1,1,1,1,1,1};
+    double *oldbegin, *oldend;
+    ra::size_type a_measured_extent;
+    bool testA, testB, testC, testD, testE, test = true;
+    // 1D
+    rarray<double,1> a1(oldsize);
+    oldbegin = a1.begin();
+    oldend = a1.end();
+    a1.reshape(newsize[0], ra::RESIZE::ALLOWED);
+    a_measured_extent = a1.end() - a1.begin();
+    REQUIRE(a_measured_extent == a1.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a1.size() == newsize[0]);
+    REQUIRE(a1.begin() == oldbegin);
+    REQUIRE(a1.end() != oldend);
+    // 2D
+    rarray<double,2> a2(oldsize);
+    oldbegin = a2.begin();
+    oldend = a2.end();
+    a2.reshape(newsize[0],newsize[1], ra::RESIZE::ALLOWED);
+    a_measured_extent = a2.end() - a2.begin();
+    REQUIRE(a_measured_extent == a2.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a2.size() == newsize[0]);
+    REQUIRE(a2.begin() == oldbegin);
+    REQUIRE(a2.end() != oldend);
+    // 3D
+    rarray<double,3> a3(oldsize);
+    oldbegin = a3.begin();
+    oldend = a3.end();
+    a3.reshape(newsize[0],newsize[1], newsize[2], ra::RESIZE::ALLOWED);
+    a_measured_extent = a3.end() - a3.begin();
+    REQUIRE(a_measured_extent == a3.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a3.size() == newsize[0]);
+    REQUIRE(a3.begin() == oldbegin);
+    REQUIRE(a3.end() != oldend);
+    // 4D
+    rarray<double,4> a4(oldsize);
+    oldbegin = a4.begin();
+    oldend = a4.end();
+    a4.reshape(newsize[0],newsize[1], newsize[2], newsize[3], ra::RESIZE::ALLOWED);
+    a_measured_extent = a4.end() - a4.begin();
+    REQUIRE(a_measured_extent == a4.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a4.size() == newsize[0]);
+    REQUIRE(a4.begin() == oldbegin);
+    REQUIRE(a4.end() != oldend);
+    // 5D
+    rarray<double,5> a5(oldsize);
+    oldbegin = a5.begin();
+    oldend = a5.end();
+    a5.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], ra::RESIZE::ALLOWED);
+    a_measured_extent = a5.end() - a5.begin();
+    REQUIRE(a_measured_extent == a5.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a5.size() == newsize[0]);
+    REQUIRE(a5.begin() == oldbegin);
+    REQUIRE(a5.end() != oldend);
+    // 6D
+    rarray<double,6> a6(oldsize);
+    oldbegin = a6.begin();
+    oldend = a6.end();
+    a6.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], ra::RESIZE::ALLOWED);
+    a_measured_extent = a6.end() - a6.begin();
+    REQUIRE(a_measured_extent == a6.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a6.size() == newsize[0]);
+    REQUIRE(a6.begin() == oldbegin);
+    REQUIRE(a6.end() != oldend);
+    // 7D
+    rarray<double,7> a7(oldsize);
+    oldbegin = a7.begin();
+    oldend = a7.end();
+    a7.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], ra::RESIZE::ALLOWED);
+    a_measured_extent = a7.end() - a7.begin();
+    REQUIRE(a_measured_extent == a7.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a7.size() == newsize[0]);
+    REQUIRE(a7.begin() == oldbegin);
+    REQUIRE(a7.end() != oldend);
+    // 8D
+    rarray<double,8> a8(oldsize);
+    oldbegin = a8.begin();
+    oldend = a8.end();
+    a8.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], ra::RESIZE::ALLOWED);
+    a_measured_extent = a8.end() - a8.begin();
+    REQUIRE(a_measured_extent == a8.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a8.size() == newsize[0]);
+    REQUIRE(a8.begin() == oldbegin);
+    REQUIRE(a8.end() != oldend);
+    // 9D
+    rarray<double,9> a9(oldsize);
+    oldbegin = a9.begin();
+    oldend = a9.end();
+    a9.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], newsize[8], ra::RESIZE::ALLOWED);
+    a_measured_extent = a9.end() - a9.begin();
+    REQUIRE(a_measured_extent == a9.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a9.size() == newsize[0]);
+    REQUIRE(a9.begin() == oldbegin);
+    REQUIRE(a9.end() != oldend);
+    // 10D
+    rarray<double,10> a10(oldsize);
+    oldbegin = a10.begin();
+    oldend = a10.end();
+    a10.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], newsize[8], newsize[9], ra::RESIZE::ALLOWED);
+    a_measured_extent = a10.end() - a10.begin();
+    REQUIRE(a_measured_extent == a10.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a10.size() == newsize[0]);
+    REQUIRE(a10.begin() == oldbegin);
+    REQUIRE(a10.end() != oldend);
+    // 11D
+    rarray<double,11> a11(oldsize);
+    oldbegin = a11.begin();
+    oldend = a11.end();
+    a11.reshape(newsize[0], newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], newsize[8], newsize[9], newsize[10], ra::RESIZE::ALLOWED);
+    a_measured_extent = a11.end() - a11.begin();
+    REQUIRE(a_measured_extent == a11.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a11.size() == newsize[0]);
+    REQUIRE(a11.begin() == oldbegin);
+    REQUIRE(a11.end() != oldend);
+    // 12D
+    rarray<double,12> a12(oldsize);
+    oldbegin = a12.begin();
+    oldend = a12.end();
+    a12.reshape(newsize, ra::RESIZE::ALLOWED);
+    a_measured_extent = a12.end() - a12.begin();
+    REQUIRE(a_measured_extent == a12.size());
+    REQUIRE(a_measured_extent == newsize[0]);
+    REQUIRE(a12.size() == newsize[0]);
+    REQUIRE(a12.begin() == oldbegin);
+    REQUIRE(a12.end() != oldend);
+}
+
