@@ -476,11 +476,16 @@ class rarray {
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
     inline void reshape(size_type n0, RESIZE resize_policy = RESIZE::NO) {
-        if ( (size() == n0) || (resize_policy == RESIZE::ALLOWED && size() >= n0) )
+        const size_type newsize = n0;
+        if (size() == newsize) { 
             shape_ = detail::shared_shape<T, R>({n0}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= n0) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -494,12 +499,16 @@ class rarray {
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
     inline void reshape(size_type n0, size_type n1, RESIZE resize_policy = RESIZE::NO) {
-        if (size() == n0*n1
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1))
+        const size_type newsize = n0*n1;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -515,12 +524,16 @@ class rarray {
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2))
+        const size_type newsize = n0*n1*n2;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -537,12 +550,16 @@ class rarray {
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3))
+        const size_type newsize = n0*n1*n2*n3;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -560,12 +577,16 @@ class rarray {
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4))
+        const size_type newsize = n0*n1*n2*n3*n4;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -584,12 +605,16 @@ class rarray {
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4*n5
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5))
+        const size_type newsize = n0*n1*n2*n3*n4*n5;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -610,12 +635,17 @@ class rarray {
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4*n5*n6
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6))
+        const size_type newsize = n0*n1*n2*n3*n4*n5*n6;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6}, buffer_.begin());
-        else
+        }
+        else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -637,12 +667,16 @@ class rarray {
     inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4*n5*n6*n7
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7))
+        const size_type newsize=n0*n1*n2*n3*n4*n5*n6*n7;
+        if (size() == n0*n1*n2*n3*n4*n5*n6*n7) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7}, buffer_.begin());
-        else
+        } else if  (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -666,12 +700,16 @@ class rarray {
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8))
+        const size_type newsize = n0*n1*n2*n3*n4*n5*n6*n7*n8;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) { 
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                                 + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -696,12 +734,16 @@ class rarray {
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8, size_type n9,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9))
+        const size_type newsize = n0*n1*n2*n3*n4*n5*n6*n7*n8*n9;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ")
                                     + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -727,11 +769,15 @@ class rarray {
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8, size_type n9, size_type n10,
                         RESIZE resize_policy = RESIZE::NO)  {
-        if (size() == n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10
-            || (resize_policy == RESIZE::ALLOWED && size() >= n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10))
+        const size_type newsize =  n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10;
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}, buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}, buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Change the shape of the rarray while keeping the underlying data.
     /// The data in the underlying buffer will not change. Note that
@@ -743,13 +789,16 @@ class rarray {
     ///  @param[in]  newshape        Array wih rank() elements (pointer to size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     inline void reshape(const size_type* newshape, RESIZE resize_policy = RESIZE::NO) {
-        size_type newsize = std::accumulate(newshape, newshape+R,
+        const size_type newsize = std::accumulate(newshape, newshape+R,
                                             1, std::multiplies<size_type>());
-        if (size() == newsize
-            || (resize_policy == RESIZE::ALLOWED && size() >= newsize))
+        if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>((const std::array<size_type, R>&)(*newshape), buffer_.begin());
-        else
+        } else if (resize_policy == RESIZE::ALLOWED && size() >= newsize) {
+            buffer_ = buffer_.slice(0, newsize);
+            shape_ = detail::shared_shape<T, R>((const std::array<size_type, R>&)(*newshape), buffer_.begin());
+        } else {
             throw std::out_of_range(std::string("Incompatible dimensions in function ") + std::string(__PRETTY_FUNCTION__));
+        }
     }
     /// Create a deep, independent copy.
     /// @return Independent rarray with its own shape and data copied from the original.

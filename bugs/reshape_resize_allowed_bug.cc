@@ -2,39 +2,229 @@
 
 int main()
 {
-    const int oldsize = 2, newsize = 1;
-    rvector<double> a(oldsize);
-    auto oldbegin = a.begin();
-    auto oldend = a.end();
-    a.reshape(newsize, ra::RESIZE::ALLOWED);
-    auto newbegin = a.begin();
-    auto newend = a.end();
-    auto reported_size = a.size();
-    auto measured_extent = a.end() - a.begin();
-    auto test1 = measured_extent == reported_size;
-    auto test2 = measured_extent == newsize;
-    auto test3 = reported_size == newsize;
-    auto test4 = newbegin == oldbegin;
-    auto test5 = newend != oldend;
-    if (test1)
-        std::cerr << "RIGHT: measured_extent == reported_size\n";
-    else
-        std::cerr << "WRONG: measured_extent != reported_size\n";
-    if (test2)
-        std::cerr << "RIGHT: measured_extent == newsize\n";
-    else
-        std::cerr << "WRONG: measured_extent != newsize\n";
-    if (test3) 
-        std::cerr << "RIGHT: reported_size == newsize\n";
-    else
-        std::cerr << "WRONG: reported_size != newsize\n";
-    if (test4) 
-        std::cerr << "RIGHT: newbegin == oldbegin\n";
-    else
-        std::cerr << "WRONG: newbegin != oldbegin\n";
-    if (test5) 
-        std::cerr << "RIGHT: newend != oldend\n";
-    else
-        std::cerr << "WRONG: newend == oldend\n";
-    return not (test1 and test2 and test3 and test4 and test5);
+    const char chstr[2][6] = {"WRONG","RIGHT"};
+    const char opstr[2][3] = {"!=","=="};
+    const ra::size_type oldsize[12] = {2,1,1,1,1,1,1,1,1,1,1,1};
+    const ra::size_type newsize[12] = {1,1,1,1,1,1,1,1,1,1,1,1};
+    double *oldbegin, *oldend;
+    ra::size_type a_measured_extent;
+    bool testA, testB, testC, testD, testE, test = true;
+
+    std::cout << "1D\n";
+    rarray<double,1> a1(oldsize);
+    oldbegin = a1.begin();
+    oldend = a1.end();
+    a1.reshape(newsize[0], ra::RESIZE::ALLOWED);
+    a_measured_extent = a1.end() - a1.begin();
+    testA = a_measured_extent == a1.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a1.size() == newsize[0];
+    testD = a1.begin() == oldbegin;
+    testE = a1.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    std::cout << "2D\n";
+    rarray<double,2> a2(oldsize);
+    oldbegin = a2.begin();
+    oldend = a2.end();
+    a2.reshape(newsize[0],newsize[1], ra::RESIZE::ALLOWED);
+    a_measured_extent = a2.end() - a2.begin();
+    testA = a_measured_extent == a2.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a2.size() == newsize[0];
+    testD = a2.begin() == oldbegin;
+    testE = a2.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    std::cout << "3D\n";
+    rarray<double,3> a3(oldsize);
+    oldbegin = a3.begin();
+    oldend = a3.end();
+    a3.reshape(newsize[0],newsize[1], newsize[2], ra::RESIZE::ALLOWED);
+    a_measured_extent = a3.end() - a3.begin();
+    testA = a_measured_extent == a3.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a3.size() == newsize[0];
+    testD = a3.begin() == oldbegin;
+    testE = a3.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+    
+    std::cout << "4D\n";
+    rarray<double,4> a4(oldsize);
+    oldbegin = a4.begin();
+    oldend = a4.end();
+    a4.reshape(newsize[0],newsize[1], newsize[2], newsize[3], ra::RESIZE::ALLOWED);
+    a_measured_extent = a4.end() - a4.begin();
+    testA = a_measured_extent == a4.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a4.size() == newsize[0];
+    testD = a4.begin() == oldbegin;
+    testE = a4.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    std::cout << "5D\n";
+    rarray<double,5> a5(oldsize);
+    oldbegin = a5.begin();
+    oldend = a5.end();
+    a5.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], ra::RESIZE::ALLOWED);
+    a_measured_extent = a5.end() - a5.begin();
+    testA = a_measured_extent == a5.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a5.size() == newsize[0];
+    testD = a5.begin() == oldbegin;
+    testE = a5.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    std::cout << "6D\n";
+    rarray<double,6> a6(oldsize);
+    oldbegin = a6.begin();
+    oldend = a6.end();
+    a6.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], ra::RESIZE::ALLOWED);
+    a_measured_extent = a6.end() - a6.begin();
+    testA = a_measured_extent == a6.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a6.size() == newsize[0];
+    testD = a6.begin() == oldbegin;
+    testE = a6.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+    
+    std::cout << "7D\n";
+    rarray<double,7> a7(oldsize);
+    oldbegin = a7.begin();
+    oldend = a7.end();
+    a7.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], ra::RESIZE::ALLOWED);
+    a_measured_extent = a7.end() - a7.begin();
+    testA = a_measured_extent == a7.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a7.size() == newsize[0];
+    testD = a7.begin() == oldbegin;
+    testE = a7.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+    
+    std::cout << "8D\n";
+    rarray<double,8> a8(oldsize);
+    oldbegin = a8.begin();
+    oldend = a8.end();
+    a8.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], ra::RESIZE::ALLOWED);
+    a_measured_extent = a8.end() - a8.begin();
+    testA = a_measured_extent == a8.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a8.size() == newsize[0];
+    testD = a8.begin() == oldbegin;
+    testE = a8.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    std::cout << "9D\n";
+    rarray<double,9> a9(oldsize);
+    oldbegin = a9.begin();
+    oldend = a9.end();
+    a9.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], newsize[8], ra::RESIZE::ALLOWED);
+    a_measured_extent = a9.end() - a9.begin();
+    testA = a_measured_extent == a9.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a9.size() == newsize[0];
+    testD = a9.begin() == oldbegin;
+    testE = a9.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+    
+    std::cout << "10D\n";
+    rarray<double,10> a10(oldsize);
+    oldbegin = a10.begin();
+    oldend = a10.end();
+    a10.reshape(newsize[0],newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], newsize[8], newsize[9], ra::RESIZE::ALLOWED);
+    a_measured_extent = a10.end() - a10.begin();
+    testA = a_measured_extent == a10.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a10.size() == newsize[0];
+    testD = a10.begin() == oldbegin;
+    testE = a10.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+    
+    std::cout << "11D\n";
+    rarray<double,11> a11(oldsize);
+    oldbegin = a11.begin();
+    oldend = a11.end();
+    a11.reshape(newsize[0], newsize[1], newsize[2], newsize[3], newsize[4], newsize[5], newsize[6], newsize[7], newsize[8], newsize[9], newsize[10], ra::RESIZE::ALLOWED);
+    a_measured_extent = a11.end() - a11.begin();
+    testA = a_measured_extent == a11.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a11.size() == newsize[0];
+    testD = a11.begin() == oldbegin;
+    testE = a11.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    std::cout << "12D\n";
+    rarray<double,12> a12(oldsize);
+    oldbegin = a12.begin();
+    oldend = a12.end();
+    a12.reshape(newsize, ra::RESIZE::ALLOWED);
+    a_measured_extent = a12.end() - a12.begin();
+    testA = a_measured_extent == a12.size();
+    testB = a_measured_extent == newsize[0];
+    testC = a12.size() == newsize[0];
+    testD = a12.begin() == oldbegin;
+    testE = a12.end() != oldend;
+    std::cerr<<chstr[testA]<<": a_measured_extent "<<opstr[testA]<<" a.size()\n";
+    std::cerr<<chstr[testB]<<": a_measured_extent "<<opstr[testB]<<" newsize\n";
+    std::cerr<<chstr[testC]<<": a.size() "<<opstr[testC]<<" newsize\n";
+    std::cerr<<chstr[testD]<<": a.begin() "<<opstr[testD]<<" oldbegin\n";
+    std::cerr<<chstr[testE]<<": a.end() "<<opstr[!testE]<<" oldend\n";
+    test = test && testA && testB && testC && testD && testE;
+
+    return not test;
 }
