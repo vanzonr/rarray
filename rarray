@@ -3,7 +3,7 @@
 //          runtime, reference counted, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2024  Ramses van Zon
+// Copyright (c) 2013-2025  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
