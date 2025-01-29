@@ -1,7 +1,7 @@
 //
 // rarraytypes.h - common types for runtime reference counted arrays.
 //
-// Copyright (c) 2023-2024  Ramses van Zon
+// Copyright (c) 2023-2025  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,8 @@
 #include <string>
 
 namespace ra {
-    using size_type = ssize_t;
-    using index_type = ssize_t;
+    using size_type = ptrdiff_t;
+    using index_type = ptrdiff_t;
     using rank_type = int;
 }  // namespace ra
 
