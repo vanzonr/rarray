@@ -1274,7 +1274,7 @@ class rarray {
     /// If \p a is an element in the array, get index in dimension \p i of that element;
     inline auto index(const T& a, int i) const -> size_type {
         // retrieve index in dimension i within *this of the element a
-        ptrdiff_t linearindex = &a - &(buffer_[0]);
+        std::ptrdiff_t linearindex = &a - &(buffer_[0]);
         if (linearindex < 0 || linearindex >= size())
             throw "element not in array";
         const size_type* extent_ = shape();
@@ -1291,7 +1291,7 @@ class rarray {
     /// If \p a is an element in the array, get the indices of that element;
     inline auto index(const T& a) const -> std::array<size_type, R> {
         std::array<size_type, R> ind;
-        ptrdiff_t linearindex = &a - &(buffer_[0]);
+        std::ptrdiff_t linearindex = &a - &(buffer_[0]);
         RA_CHECKORSAY(linearindex >= 0 && linearindex < size(), "element not in array");
         int j = R;
         const size_type* extent_ = shape();

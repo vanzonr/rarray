@@ -24,10 +24,10 @@
 #ifndef HEADERSOURCES_RARRAYTYPES_H_  // EXCLUDE //
 #define HEADERSOURCES_RARRAYTYPES_H_  // EXCLUDE //
 #include <string>
-
+#include <cstddef>
 namespace ra {
-    using size_type = ptrdiff_t;
-    using index_type = ptrdiff_t;
+    using size_type = std::ptrdiff_t;
+    using index_type = std::ptrdiff_t;
     using rank_type = int;
 }  // namespace ra
 

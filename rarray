@@ -80,8 +80,8 @@
 # endif
 #endif
 namespace ra {
-    using size_type = ptrdiff_t;
-    using index_type = ptrdiff_t;
+    using size_type = std::ptrdiff_t;
+    using index_type = std::ptrdiff_t;
     using rank_type = int;
 }  // namespace ra
 namespace ra {
@@ -1566,7 +1566,7 @@ class rarray {
         return buffer_.cend();
     }
     inline auto index(const T& a, int i) const -> size_type {
-        ptrdiff_t linearindex = &a - &(buffer_[0]);
+        std::ptrdiff_t linearindex = &a - &(buffer_[0]);
         if (linearindex < 0 || linearindex >= size())
             throw "element not in array";
         const size_type* extent_ = shape();
@@ -1579,7 +1579,7 @@ class rarray {
     }
     inline auto index(const T& a) const -> std::array<size_type, R> {
         std::array<size_type, R> ind;
-        ptrdiff_t linearindex = &a - &(buffer_[0]);
+        std::ptrdiff_t linearindex = &a - &(buffer_[0]);
         RA_CHECKORSAY(linearindex >= 0 && linearindex < size(), "element not in array");
         int j = R;
         const size_type* extent_ = shape();
