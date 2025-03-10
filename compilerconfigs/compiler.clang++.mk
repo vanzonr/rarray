@@ -10,7 +10,8 @@ DBGFLAGS=-g -gdwarf-2
 CPPFLAGS=-Wall -D__extern_always_inline=inline 
 CPPFLAGSOPT=-DNDEBUG -D__extern_always_inline=inline 
 CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native 
-FC=gfortran
+#FC was gfortran
+FC=flang
 FFLAGS=-O3 -fstrict-aliasing -march=native
 LDFLAGSCOV=-fprofile-instr-generate -fcoverage-mapping
 CXXFLAGSCOV=-fprofile-instr-generate -fcoverage-mapping
