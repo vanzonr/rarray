@@ -213,14 +213,18 @@ class shared_shape {
             || endindex < 0 || endindex > extent_[0])
             throw std::out_of_range("shared_shape::slice");
         shared_shape<T, R> result;
-        if (R > 1 && beginindex < endindex) {
+        if (R > 0 && beginindex < endindex) {
             result.extent_[0]    = endindex - beginindex;
             for (rank_type i = 1; i < R; ++i)
                 result.extent_[i] = extent_[i];
             result.ptrs_         = ptrs_ + beginindex;
             result.refs_         = refs_;
             result.orig_         = orig_;
-            result.ndataoffsets_ = result.extent_[0]*(ndataoffsets_/extent_[0]);
+            if (R > 1) {
+                result.ndataoffsets_ = result.extent_[0]*(ndataoffsets_/extent_[0]);
+            } else {
+                result.ndataoffsets_ = 1;
+            }
             incref();
         }
         return result;

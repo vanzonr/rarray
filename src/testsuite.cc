@@ -4514,9 +4514,11 @@ TEMPLATE_TEST_CASE("slice", "",
         REQUIRE(c[j] == a[5][j]);
     rarray<TestType, 1> d;
     REQUIRE_THROWS(d = c.slice(1,30));
-    d = c.slice(1,2);
+    d = c.slice(1,4);
+    REQUIRE(d.size()==3);
+    REQUIRE(d.extent(0)==3);
     for (int j = 0; j < d.extent(0); j++)
-        REQUIRE(d[j] == a[5][j]);
+        REQUIRE(d[j] == a[5][j+1]);
 }
 
 TEST_CASE("Consistent reshape to smaller shape")
