@@ -46,8 +46,8 @@
 #include <iostream>
 #include <sstream>
 #include <initializer_list>
-#define RA_VERSION "v2.8.1"
-#define RA_VERSION_NUMBER 2008001
+#define RA_VERSION "v2.8.2"
+#define RA_VERSION_NUMBER 2008002
 #ifdef RA_BOUNDSCHECK
 #define RA_CHECKORSAY(a, b) if (not(a)) throw std::out_of_range(std::string(b) + " in function " + std::string(__PRETTY_FUNCTION__) + " (rarray:" + std::to_string(__LINE__) + ")")
 #define RA_noboundscheck false
