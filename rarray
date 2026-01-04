@@ -3,7 +3,7 @@
 //          runtime, reference counted, multi-dimensional
 //          arrays.  Documentation in rarraydoc.pdf
 //
-// Copyright (c) 2013-2025  Ramses van Zon
+// Copyright (c) 2013-2026  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1909,7 +1909,7 @@ class Xrange {
             return i_;
         }
         inline auto operator+=(difference_type n) -> const_iterator& {
-            i_ += n*di_;
+            i_ += (T)(n*di_);
             if (n*di_ > 0 && i_ >= b_)
                i_ = b_;
             if (n*di_ < 0 && i_ <= b_)
@@ -1917,7 +1917,7 @@ class Xrange {
             return *this;
         }
         inline auto operator-=(difference_type n) -> const_iterator& {
-            i_ -= n*di_;
+            i_ -= (T)(n*di_);
             if (-n*di_ > 0 && i_ >= b_)
                i_ = b_;
             if (-n*di_ < 0 && i_ <= b_)

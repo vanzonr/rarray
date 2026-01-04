@@ -5,7 +5,7 @@ rarray is a C++ library for reference counted multidimensional arrays.
 It is a header-only implementation that uses templates, which allows 
 most compilers to generate fast code.
 
-The latest release version is 2.8.0.
+The latest release version is 2.8.1.
 
 rarray is open-source, and is released under the MIT license. This
 library is distributed WITHOUT ANY WARRANTY. For details, see the file
@@ -217,6 +217,14 @@ Release History and Changes
 
      - Fixed bug in reshape to a smaller size
      
+ * Version 2.8.1, August 2025
+
+     Bug fixes:
+     
+     - implicit posix requirement fixed by replacing ssize_t with ptrdiff_t
+
+     - size of slices of 1d arrays fixed (always had size 0)
+     
 Known issues
 ============
 
@@ -360,4 +368,4 @@ compiler.xlC_r.mk
 compiler.xlc++.mk
 
 
-- January 2024
+- January 2026
