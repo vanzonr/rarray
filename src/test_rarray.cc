@@ -1,7 +1,7 @@
 //
 // test_rarray.cc - simple tests for rarray
 //
-// Copyright (c) 2019-2023  Ramses van Zon
+// Copyright (c) 2019-2026  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,42 @@
 // THE SOFTWARE.
 //
 
-#include <rarray>
+#include "rarray.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 int main() {
 
+    // checks for the iterators in Xrange
+    ra::Xrange<long int>::const_iterator it(10,2,200);
+    ra::Xrange<long int>::const_iterator it2;
+    it2 = it;
+    long int l = *it;
+    ++it;
+    it++;
+    --it;
+    it--;
+    bool equal = it == it2;
+    auto it3 = it + 3;
+    auto it4 = 3 + it;
+    ptrdiff_t di = it - it2;
+    it += 2;
+    it -= 2;
+    l = it[7];
+    auto cmp1 = it < it2;
+    auto cmp2 = it > it2;
+    auto cmp3 = it <= it2;
+    auto cmp4 = it >= it2;
+    std::cout << ' ' << *it << ' ' << *it2 << ' ' << l << ' ' << equal <<'\n';
+
+    // check that the xrange iterator works with openmp
+    #ifdef _OPENMP
+    #pragma omp parallel for default(none) shared(std::cout) num_threads(4)
+    for (int i: xrange(2,10,2)) {
+        std::cout << std::to_string(omp_get_thread_num()) + ":" + std::to_string(i)+"\n";
+    }
+    #endif
     rmatrix<int> P((int[2][2]){});   // points at a temporary!!!
     P[1][1] = 20;  // Not guarranteed to work, in fact, it should not,
                    // but often does because how compilers
@@ -170,5 +202,6 @@ int main() {
         return 1;
 
 #endif
+    
 }
 

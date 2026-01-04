@@ -1651,7 +1651,7 @@ inline auto linspace(S x1, S x2, size_type n = 0, bool end_incl = true) -> rarra
 /// @tparam  T  should be an arithemetic type, i.e, an integer, float, or double.
 template<class T>
 class Xrange {
- private:
+ public: // EXCLUDE //
     struct const_iterator {
         using difference_type = std::ptrdiff_t;
         using value_type = T;
@@ -1681,6 +1681,72 @@ class Xrange {
         }
         inline auto operator*() const -> const T& {
             return i_;
+        }
+        // more operators are needed so openmp can split a for loop over an xrange
+        inline auto operator+=(difference_type n) -> const_iterator& {
+            i_ += n*di_;
+            if (n*di_ > 0 && i_ >= b_)
+               i_ = b_;
+            if (n*di_ < 0 && i_ <= b_)
+               i_ = b_;
+            return *this;
+        }
+        inline auto operator-=(difference_type n) -> const_iterator& {
+            i_ -= n*di_;
+            if (-n*di_ > 0 && i_ >= b_)
+               i_ = b_;
+            if (-n*di_ < 0 && i_ <= b_)
+               i_ = b_;
+            return *this;
+        }
+        inline auto operator-(const const_iterator& other) const -> difference_type {
+            // check that di_ and b_ are the same
+            return (i_ - other.i_)/di_;
+        }
+        // complete the bidirectionality of this iterator
+        inline auto operator--() -> const_iterator& {
+            i_ -= di_;
+            if (-di_ > 0 && i_ >= b_)
+               i_ = b_;
+            if (-di_ < 0 && i_ <= b_)
+               i_ = b_;
+            return *this;
+        }
+        inline auto operator--(int) -> const_iterator {
+            const const_iterator temp = *this;
+            this->operator--();
+            return temp;
+        }
+        inline auto operator+(difference_type n) const -> const_iterator {
+            const_iterator result(*this);
+	    result += n;
+            return result;
+        }
+        inline auto operator-(difference_type n) const -> const_iterator {
+            const_iterator result(*this);
+	    result -= n;
+            return result;
+        }
+        inline auto operator[](difference_type n) const -> const T {
+	    return i_ + n*di_;
+        }
+        // external operator defined as an inline defined friend
+        friend auto operator+(difference_type n, const const_iterator& rhs) -> const_iterator {
+            const_iterator result(rhs);
+            result += n;
+            return result;
+        }
+        inline auto operator<(const const_iterator& other) const -> bool {
+            return i_ < other.i_;
+        }
+        inline auto operator<=(const const_iterator& other) const -> bool {
+            return i_ <= other.i_;
+        }
+        inline auto operator>(const const_iterator& other) const -> bool {
+            return i_ < other.i_;
+        }
+        inline auto operator>=(const const_iterator& other) const -> bool {
+            return i_ <= other.i_;
         }
         T i_, di_, b_;
     };
