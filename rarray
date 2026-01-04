@@ -37,6 +37,7 @@
 #include <functional>
 #include <list>
 #include <utility>
+#include <format>
 #include <cstdlib>
 #include <vector>
 #include <type_traits>
@@ -2468,6 +2469,19 @@ inline auto operator>>(std::istream &in, rarray<T, R>& r) -> std::istream& {
     return in;
 }
 }  // namespace ra
+#if __cplusplus >= 202002L
+namespace std {
+template<typename T, ra::rank_type R>
+struct formatter<ra::rarray<T,R>> : formatter<string> {
+    template<typename CTX>
+    auto format(const ra::rarray<T,R>& r, CTX& ctx) const {
+        stringstream s;
+        s << r;
+        return formatter<string>::format(s.str(), ctx);
+    }
+};
+}
+#endif
 #undef RA_CHECKORSAY
 #undef RA_FORCE_inline
 #undef RA_noboundscheck

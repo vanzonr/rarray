@@ -27,6 +27,11 @@
 #include <omp.h>
 #endif
 
+#if __cplusplus >= 202302L
+#include <format>
+#include <print>
+#endif
+
 int main() {
 
     // checks for the iterators in Xrange
@@ -155,6 +160,11 @@ int main() {
         auto x = rmatrix((const int[2][2]){{1, 2}, {3, 4}});
     }
     std::cout << "Simple C++23 test\n";
+    #if __cplusplus >= 202302L
+    auto formatme = make_rarray({{1.2,2.1},{11.3,6.5}});
+    std::println("2d rarray: {}",formatme);
+    #endif
+
     a[1, 2, 3] = 4.4;
     int faultscaught = 0;
     try {
@@ -202,6 +212,5 @@ int main() {
         return 1;
 
 #endif
-    
 }
 

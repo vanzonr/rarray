@@ -1,7 +1,7 @@
 //
 // rarrayio.h - I/O routines for runtime reference counted arrays.
 //
-// Copyright (c) 2013-2024  Ramses van Zon
+// Copyright (c) 2013-2026  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -303,3 +303,22 @@ inline auto operator>>(std::istream &in, rarray<T, R>& r) -> std::istream& {
 
 }  // namespace ra
 
+// add support for std::format (C++20) and std::print (C++23)
+
+#if __cplusplus >= 202002L
+
+#include <format>
+
+namespace std {
+template<typename T, ra::rank_type R>
+struct formatter<ra::rarray<T,R>> : formatter<string> {
+    template<typename CTX>
+    auto format(const ra::rarray<T,R>& r, CTX& ctx) const {
+        stringstream s;
+        s << r;
+        return formatter<string>::format(s.str(), ctx);
+    }
+};
+}
+
+#endif
