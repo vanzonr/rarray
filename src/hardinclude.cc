@@ -34,6 +34,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <limits>
 
 #ifndef ADDEDCOMMENTS
 #define NOADDEDCOMMENTS
@@ -48,15 +49,17 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+using INT = std::size_t;
+
 // check if a file exists
 bool file_exists(const string& file_name) {
     return ifstream(file_name).is_open();
 }
 
 // check if string is one of a set of strings
-const long long NOTFOUND = -1;
-long long string_in_set(const string& str, const vector<string>& strset) {
-    for (long long i = 0; i < strset.size(); i++)
+const INT NOTFOUND = std::numeric_limits<INT>::max();
+INT string_in_set(const string& str, const vector<string>& strset) {
+    for (INT i = 0; i < strset.size(); i++)
         if (strset[i] == str)
             return i;
     return NOTFOUND;
@@ -65,7 +68,7 @@ long long string_in_set(const string& str, const vector<string>& strset) {
 
 // check if a line is just a comment
 bool iscommentline(const std::string& line) {
-    long long i = 0;
+    INT i = 0;
     while (i < line.size() && line[i] == ' ')
         i++;
     return line.substr(i, 2) == std::string("//");
@@ -73,12 +76,12 @@ bool iscommentline(const std::string& line) {
 
 // find the end of the code line, not counting trailing comments or spaces
 // note: not prepared for quoted strings
-long long endofcodeline(const std::string& line) {
-    long long end;
+INT endofcodeline(const std::string& line) {
+    INT end;
     if (iscommentline(line)) {
         end = 0;
     } else {
-        long long lastslashi = line.size()-1;
+        INT lastslashi = line.size()-1;
         while (lastslashi > 0 && line[lastslashi] != '/')
             lastslashi--;
         if (lastslashi == 0 || line[lastslashi] != '/' || line[lastslashi-1] != '/'
@@ -97,7 +100,7 @@ long long endofcodeline(const std::string& line) {
 
 // trim whitespace
 string trimline(const string& line) {
-    long long i = 0;
+    INT i = 0;
     while (i < line.size() && line[i] == ' ')
         i++;
     return line.substr(i);
@@ -175,12 +178,12 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
         auto include = NOTFOUND;
         string includefilename;
         // find occurance of "#include"
-        long long pos = line.find(INCLUDETAG);
-        long long continueat = 0;
+        INT pos = line.find(INCLUDETAG);
+        INT continueat = 0;
         if (pos != string::npos) {
             // check if there are only spaces before it
             bool only_leading_space = true;
-            for (long long i = 0; i < pos; i++)
+            for (INT i = 0; i < pos; i++)
                 if (line[i] != ' ' && line[i] != '\t') {
                     only_leading_space = false;
                     break;
