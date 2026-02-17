@@ -158,6 +158,91 @@ int main(int argc, char** argv) {
     process_one_file(inputfile, includefiles, alreadyincluded, headercommentsdone, systemincludefiles);
 }
 
+#include <map>
+void print_by_cpp_standard(const std::vector<std::string>& systemincludefiles)
+{
+    std::map<std::string, int> headerstandard = {
+        {"<thread>", 11},
+        {"<mutex>", 11},
+        {"<future>", 11},
+        {"<condition_variable>", 11},
+        {"<atomic>", 11},
+        {"<chrono>", 11},
+        {"<ratio>", 11},
+        {"<random>", 11},
+        {"<array>", 11},
+        {"<forward_list>", 11},
+        {"<unordered_map>", 11},
+        {"<unordered_set>", 11},
+        {"<type_traits>", 11},
+        {"<tuple>", 11},
+        {"<initializer_list>", 11},
+        {"<regex>", 11},
+        {"<system_error>", 11},
+        {"<functional>", 11},
+        {"<utility>", 11},
+        {"<typeindex>", 11},
+        {"<any>", 17}, 
+        {"<optional>",17},
+        {"<variant>",17},
+        {"<execution>",17},
+	{"<filesystem>",17},
+        {"<charconv>",17},
+        {"<memory_resource>",17},
+        {"<scoped_allocator>",17},
+        {"<bit>", 20},
+        {"<compare>", 20},
+        {"<concepts>", 20},
+        {"<coroutine>", 20},
+        {"<format>", 20},
+        {"<numbers>", 20},
+        {"<ranges>", 20},
+        {"<source_location>", 20},
+        {"<span>", 20},
+        {"<syncstream>", 20},
+        {"<version>", 20},
+        {"<expected>", 23},
+        {"<flat_map>", 23},
+        {"<flat_set>", 23},
+        {"<generator>", 23},
+        {"<mdspan>", 23},
+        {"<print>", 23},
+        {"<spanstream>", 23},
+        {"<stacktrace>", 23},
+        {"<stdfloat>", 23}
+    };
+    std::map<int,std::string> stdstring {
+        { 0, ""},
+        {98, ""},
+        {11, "201103L"},
+        {14, "201402L"},
+        {17, "201703L"},
+        {20, "202002L"},
+        {23, "202302L"}
+    };
+    for (int std: {0,98,11,14,17,20,23}) {
+        int n = 0;
+        for (const auto& sysline : systemincludefiles)
+            if (headerstandard[sysline.substr(9)]==std)
+                n++;
+        if (n > 0) {
+            if (stdstring[std] != "") 
+                cout << "#if __cplusplus >= " << stdstring[std] << "\n";
+            for (const auto& sysline : systemincludefiles) {
+                if (headerstandard[sysline.substr(9)]==std) {
+                    if (std >= 20)
+                        cout << "#if __has_include(" << sysline.substr(9) << ")\n";
+                    cout << sysline << '\n';
+                    if (std >= 20)
+                        cout << "#endif\n";
+                }
+            }
+            if (stdstring[std] != "") 
+                cout << "#endif\n";
+        }
+    }
+}
+
 void process_one_file(const string& inputfile, const vector<string>& includefiles,
                       vector<bool>& alreadyincluded, bool& headercommentsdone,
                       const vector<string>& systemincludefiles) {
@@ -232,8 +317,7 @@ void process_one_file(const string& inputfile, const vector<string>& includefile
                             if (insertline > 0) {
                                 insertline--;
                                 if (insertline == 0)
-                                    for (const auto& sysline : systemincludefiles)
-                                        cout << sysline << '\n';
+                                    print_by_cpp_standard(systemincludefiles);
                             }
                             cout << line.substr(0, tohere) << '\n';
                         }

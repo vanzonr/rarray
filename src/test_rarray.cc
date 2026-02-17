@@ -63,12 +63,12 @@ int main() {
         std::cout << std::to_string(omp_get_thread_num()) + ":" + std::to_string(i)+"\n";
     }
     #endif
-    rmatrix<int> P((int[2][2]){});   // points at a temporary!!!
-    P[1][1] = 20;  // Not guarranteed to work, in fact, it should not,
+    //rmatrix<int> P((int[2][2]){});   // points at a temporary!!!
+    //P[1][1] = 20;  // Not guarranteed to work, in fact, it should not,
                    // but often does because how compilers
                    // optimize/implement the temporary array
-    std::cout << P << "\n";
-    auto V = rvector<int>((int[4]){1, 2, 3, 4}).copy();  // this is safe, though
+    //std::cout << P << "\n";
+    //auto V = rvector<int>((int[4]){1, 2, 3, 4}).copy();  // this is safe, though
                                                          // still not standard
                                                          // c++. Also,
                                                          // the "<int>" may be
@@ -77,11 +77,15 @@ int main() {
                                                          // but this not
                                                          // supported yet by clang
     // (and so also not by aocc and intel)
-    std::cout << V << "\n";
-    auto M = rmatrix<int>((int[][2]){{1, 2}, {3, 4}}).copy();  // same c++20 remark
-    std::cout << M << "\n";
-    const int Nstack[2][2]{{1, -2}, {-3, 4}};
-    rarray<const int, 2> N(Nstack);  // even in c++20, "rarray N(Nstack);" does not work
+    //std::cout << V << "\n";
+    //auto M = rmatrix<int>((int[][2]){{1, 2}, {3, 4}}).copy();  // same c++20 remark
+    //std::cout << M << "\n";
+     int N1stack[2]{-3, 4};
+    rarray< int, 1> N1(N1stack);  // even in c++20, "rarray N(Nstack);" does not work
+                                     // because the compiler can't determine that R==2.
+    std::cout << N1 << "\n";
+     int Nstack[2][2]{{1, -2}, {-3, 4}};
+    rarray< int, 2> N(Nstack);  // even in c++20, "rarray N(Nstack);" does not work
                                      // because the compiler can't determine that R==2.
     std::cout << N << "\n";
 
@@ -109,7 +113,7 @@ int main() {
     }
     // 1.b.i  : Y create reference of the temporary (dangling!)
     {
-        auto x = rarray<int, 2>((int[2][2]){{1, 2}, {3, 4}});
+        //auto x = rarray<int, 2>((int[2][2]){{1, 2}, {3, 4}});
     }
     // 1.b.ii : Z create reference of the const temporary (dangling, but:)
     // should not compile
@@ -128,11 +132,12 @@ int main() {
     }
     // 2.b.i  : Z create reference to the temporary (dangling!)
     {
-        auto x = rarray<const int, 2>((int[2][2]){{1, 2}, {3, 4}});
+        //auto x = rarray<const int, 2>((int[2][2]){{1, 2}, {3, 4}});
     }
     // 2.b.ii : Y create a const referencey of the temporary (dangling!)
     {
         auto x = rarray<const int, 2>((const int[2][2]){{1, 2}, {3, 4}});
+        std::cerr << "z\n";
     }
 
     ///////

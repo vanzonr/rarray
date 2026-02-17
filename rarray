@@ -31,16 +31,22 @@
 #include <stdexcept>
 #include <memory>
 #include <cstring>
-#include <atomic>
-#include <array>
 #include <numeric>
-#include <functional>
 #include <list>
-#include <utility>
-#include <format>
 #include <cstdlib>
 #include <vector>
+#if __cplusplus >= 201103L
+#include <atomic>
+#include <array>
+#include <functional>
+#include <utility>
 #include <type_traits>
+#endif
+#if __cplusplus >= 202002L
+#if __has_include(<format>)
+#include <format>
+#endif
+#endif
 #if __cplusplus >= 201103L
 #include <cmath>
 #include <iostream>
