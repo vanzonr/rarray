@@ -331,81 +331,107 @@ class rarray {
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     /// @}
-    /// @name constructors from compound literal automatic arrays (non-standard c++ and may lead to dangling references).
+    /// @name constructors from compound literal automatic arrays.
+    /// @note This is non-standard C++ and may lead to dangling references
+    /// before rarray version 2.8.2. By changing the behavior to copy
+    /// the data (after version 2.8.2), it should not have any
+    /// dangling reference anymore.       
     /// @{
     template<std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 1>::type>
     inline explicit rarray(T (&&a)[Z])
-    : buffer_(Z, a),
+    : buffer_(Z),
       shape_({Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 2>::type>
     inline explicit rarray(T (&&a)[Y][Z])
-    : buffer_(Y*Z, *a),
+    : buffer_(Y*Z), 
       shape_({Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t X, std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 3>::type>
     inline explicit rarray(T (&&a)[X][Y][Z])
-    : buffer_(X*Y*Z, **a),
+    : buffer_(X*Y*Z),
       shape_({X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 4>::type>
     inline explicit rarray(T (&&a)[W][X][Y][Z])
-    : buffer_(W*X*Y*Z, ***a),
+    : buffer_(W*X*Y*Z),
       shape_({W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 5>::type>
     inline explicit rarray(T (&&a)[V][W][X][Y][Z])
-    : buffer_(V*W*X*Y*Z, ****a),
+    : buffer_(V*W*X*Y*Z),
       shape_({V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 6>::type>
     inline explicit rarray(T (&&a)[U][V][W][X][Y][Z])
-    : buffer_(U*V*W*X*Y*Z,  *****a),
+    : buffer_(U*V*W*X*Y*Z),
       shape_({U, V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t T_, std::size_t U, std::size_t V, std::size_t W, std::size_t X,
              std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 7>::type>
     inline explicit rarray(T (&&a)[T_][U][V][W][X][Y][Z])
-    : buffer_(T_*U*V*W*X*Y*Z,  ******a),
+    : buffer_(T_*U*V*W*X*Y*Z),
       shape_({T_, U, V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t S, std::size_t T_, std::size_t U, std::size_t V, std::size_t W,
              std::size_t X, std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 8>::type>
     inline explicit rarray(T (&&a)[S][T_][U][V][W][X][Y][Z])
-    : buffer_(S*T_*U*V*W*X*Y*Z,  *******a),
+    : buffer_(S*T_*U*V*W*X*Y*Z),
       shape_({S, T_, U, V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t R_, std::size_t S, std::size_t T_, std::size_t U, std::size_t V,
              std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 9>::type>
     inline explicit rarray(T (&&a)[R_][S][T_][U][V][W][X][Y][Z])
-    : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********a),
+    : buffer_(R_*S*T_*U*V*W*X*Y*Z),
       shape_({R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_, std::size_t U,
              std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 10>::type>
     inline explicit rarray(T (&&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
-    : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********a),
+    : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z),
       shape_({Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     template<std::size_t P, std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_,
              std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
              rank_type R__=R, typename=typename std::enable_if<R__ == 11>::type>
     inline explicit rarray(T (&&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
-    : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
+    : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
-    {}
+    {
+        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+    }
     /// @}
     /// Shallow/reference copy constructor.
     ///  @param[in]  a  the array to which to make this a reference (rarray<T,R>)
