@@ -48,7 +48,6 @@
 #endif
 #endif
 #if __cplusplus >= 201103L
-#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <initializer_list>
@@ -2002,9 +2001,12 @@ class Xrange {
         T i_, di_, b_;
     };
     T a_, b_, d_;
+    static T ceil(double x) {
+        return static_cast<T>(static_cast<std::ptrdiff_t>(x) + static_cast<std::ptrdiff_t>(x != static_cast<double>(static_cast<std::ptrdiff_t>(x))));
+    }
  public:
     inline Xrange(T a, T b, T d)
-    : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d)
+        : a_(a), b_(a + ceil(static_cast<double>(b-a)/static_cast<double>(d))*d), d_(d)
     {}
     inline auto begin() const -> const_iterator {
         return const_iterator(a_, d_, b_);
@@ -2258,6 +2260,7 @@ struct rank<ra::rarray<T, R>> {
     static const size_t value = R;
 };
 }  // namespace std
+#include "rarray.h"
 namespace ra {
 namespace detail {
 template<typename T, rank_type R>

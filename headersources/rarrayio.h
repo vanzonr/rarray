@@ -21,12 +21,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-
+#ifndef HEADERSOURCES_RARRAYIO_H_  // EXCLUDE //
+#define HEADERSOURCES_RARRAYIO_H_  // EXCLUDE //
 #include <list>
 #include <utility>
 #include <string>
 #include <functional>
 #include "rarraytypes.h"
+#include "rarray.h"
 
 namespace ra {
 namespace detail {
@@ -322,3 +324,5 @@ struct formatter<ra::rarray<T,R>> : formatter<string> {
 }
 
 #endif
+
+#endif // EXCLUDE //
