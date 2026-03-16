@@ -35,7 +35,7 @@
 int main() {
 
     // checks for the iterators in Xrange
-    ra::Xrange<long int>::const_iterator it(10,2,200);
+    ra::Xrange<long int>::const_iterator it(ra::Xrange<long int>(10,200,2),10);
     ra::Xrange<long int>::const_iterator it2;
     it2 = it;
     long int l = *it;

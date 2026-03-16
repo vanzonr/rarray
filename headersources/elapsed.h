@@ -62,7 +62,7 @@ inline void elapsed_write(double time) {
         itime %= 1000000;
         if (itime > 1000 || continu == 1) {
             fprintf(stderr, "%03llus", itime/1000);
-            itime %= 1000;
+            // itime %= 1000;
         }
     } else {
         fprintf(stderr, "%llu microsec.", itime);
@@ -71,7 +71,7 @@ inline void elapsed_write(double time) {
         fprintf(stderr, " (%ds)", static_cast<int>(time));
 }
 
-#define START -elapsed_etime()
+#define START (-elapsed_etime())
 
 inline void stopwatchStop(Stopwatch *sw) {
     *sw += elapsed_etime();

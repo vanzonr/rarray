@@ -152,7 +152,7 @@ static inline auto get_but_eat_whitespace(std::istream & in) -> char {
 template<rank_type R>
 inline auto parse_shape(std::istream & in) -> std::pair<std::list<std::pair<token, std::string>>, size_type[R]> {
     std::pair<std::list<std::pair<token, std::string>>, size_type[R]> wholeresult;
-    size_t init_file_ptr = in.tellg();
+    auto init_file_ptr = in.tellg();
     try {
         std::list<std::pair<token, std::string>>& result = wholeresult.first;
         size_type* shape = wholeresult.second;

@@ -257,66 +257,66 @@ class rarray {
     /// @name Constructors from automatic arrays
     /// @{
     template<std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 1>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 1>::type>
     inline explicit rarray(T (&a)[Z])
     : buffer_(Z, a),
       shape_({Z}, buffer_.begin())
     {}
     template<std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 2>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 2>::type>
     inline explicit rarray(T (&a)[Y][Z])
     : buffer_(Y*Z, *a),
       shape_({Y, Z}, buffer_.begin())
     {}
     template<std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 3>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 3>::type>
     inline explicit rarray(T (&a)[X][Y][Z])
     : buffer_(X*Y*Z, **a),
       shape_({X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 4>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 4>::type>
     inline explicit rarray(T (&a)[W][X][Y][Z])
     : buffer_(W*X*Y*Z, ***a),
       shape_({W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 5>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 5>::type>
     inline explicit rarray(T (&a)[V][W][X][Y][Z])
     : buffer_(V*W*X*Y*Z, ****a),
       shape_({V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 6>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 6>::type>
     inline explicit rarray(T (&a)[U][V][W][X][Y][Z])
     : buffer_(U*V*W*X*Y*Z,  *****a),
       shape_({U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t T_, std::size_t U, std::size_t V, std::size_t W, std::size_t X,
              std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 7>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 7>::type>
     inline explicit rarray(T (&a)[T_][U][V][W][X][Y][Z])
     : buffer_(T_*U*V*W*X*Y*Z,  ******a),
       shape_({T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t S, std::size_t T_, std::size_t U, std::size_t V, std::size_t W,
              std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 8>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 8>::type>
     inline explicit rarray(T (&a)[S][T_][U][V][W][X][Y][Z])
     : buffer_(S*T_*U*V*W*X*Y*Z,  *******a),
       shape_({S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t R_, std::size_t S, std::size_t T_, std::size_t U, std::size_t V,
              std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 9>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 9>::type>
     inline explicit rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********a),
       shape_({R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_, std::size_t U,
              std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 10>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 10>::type>
     inline explicit rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********a),
       shape_({Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -324,7 +324,7 @@ class rarray {
     template<std::size_t P, std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_,
              std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 11>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 11>::type>
     inline explicit rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -337,7 +337,7 @@ class rarray {
     /// dangling reference anymore.       
     /// @{
     template<std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 1>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 1>::type>
     inline explicit rarray(T (&&a)[Z])
     : buffer_(Z),
       shape_({Z}, buffer_.begin())
@@ -345,7 +345,7 @@ class rarray {
         std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
     }
     template<std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 2>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 2>::type>
     inline explicit rarray(T (&&a)[Y][Z])
     : buffer_(Y*Z), 
       shape_({Y, Z}, buffer_.begin())
@@ -353,7 +353,7 @@ class rarray {
         std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
     }
     template<std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 3>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 3>::type>
     inline explicit rarray(T (&&a)[X][Y][Z])
     : buffer_(X*Y*Z),
       shape_({X, Y, Z}, buffer_.begin())
@@ -361,7 +361,7 @@ class rarray {
         std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
     }
     template<std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 4>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 4>::type>
     inline explicit rarray(T (&&a)[W][X][Y][Z])
     : buffer_(W*X*Y*Z),
       shape_({W, X, Y, Z}, buffer_.begin())
@@ -369,7 +369,7 @@ class rarray {
         std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
     }
     template<std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 5>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 5>::type>
     inline explicit rarray(T (&&a)[V][W][X][Y][Z])
     : buffer_(V*W*X*Y*Z),
       shape_({V, W, X, Y, Z}, buffer_.begin())
@@ -378,7 +378,7 @@ class rarray {
     }
     template<std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 6>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 6>::type>
     inline explicit rarray(T (&&a)[U][V][W][X][Y][Z])
     : buffer_(U*V*W*X*Y*Z),
       shape_({U, V, W, X, Y, Z}, buffer_.begin())
@@ -387,7 +387,7 @@ class rarray {
     }
     template<std::size_t T_, std::size_t U, std::size_t V, std::size_t W, std::size_t X,
              std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 7>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 7>::type>
     inline explicit rarray(T (&&a)[T_][U][V][W][X][Y][Z])
     : buffer_(T_*U*V*W*X*Y*Z),
       shape_({T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -396,7 +396,7 @@ class rarray {
     }
     template<std::size_t S, std::size_t T_, std::size_t U, std::size_t V, std::size_t W,
              std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 8>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 8>::type>
     inline explicit rarray(T (&&a)[S][T_][U][V][W][X][Y][Z])
     : buffer_(S*T_*U*V*W*X*Y*Z),
       shape_({S, T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -405,7 +405,7 @@ class rarray {
     }
     template<std::size_t R_, std::size_t S, std::size_t T_, std::size_t U, std::size_t V,
              std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 9>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 9>::type>
     inline explicit rarray(T (&&a)[R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(R_*S*T_*U*V*W*X*Y*Z),
       shape_({R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -414,7 +414,7 @@ class rarray {
     }
     template<std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_, std::size_t U,
              std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 10>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 10>::type>
     inline explicit rarray(T (&&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z),
       shape_({Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -424,7 +424,7 @@ class rarray {
     template<std::size_t P, std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_,
              std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
-             rank_type R__=R, typename=typename std::enable_if<R__ == 11>::type>
+             rank_type RANK=R, typename=typename std::enable_if<RANK == 11>::type>
     inline explicit rarray(T (&&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
@@ -1683,19 +1683,19 @@ class Xrange {
         using pointer = T*;
         using reference = T&;
         using iterator_category = std::input_iterator_tag;
-        inline const_iterator(): i_(0), di_(1), b_(0) {}
-        inline const_iterator(T i, T di, T b): i_(i), di_(di), b_(b) {}
+        inline const_iterator(): i_(0), b_(0), d_(1) {}
+        inline const_iterator(const Xrange& xr, T i): i_(i), b_(xr.b_), d_(xr.d_) {}
         inline auto operator!=(const const_iterator& other) const -> bool {
             return i_ != other.i_;
         }
         inline auto operator==(const const_iterator& other) const -> bool {
-            return i_ == other.i_ && di_ == other.di_ && b_ == other.b_;
+            return i_ == other.i_ && d_ == other.d_ && b_ == other.b_;
         }
         inline auto operator++() -> const_iterator& {
-            i_ += di_;
-            if (di_ > 0 && i_ >= b_)
+            i_ += d_;
+            if (d_ > 0 && i_ >= b_)
                i_ = b_;
-            if (di_ < 0 && i_ <= b_)
+            if (d_ < 0 && i_ <= b_)
                i_ = b_;
             return *this;
         }
@@ -1709,31 +1709,31 @@ class Xrange {
         }
         // more operators are needed so openmp can split a for loop over an xrange
         inline auto operator+=(difference_type n) -> const_iterator& {
-            i_ += (T)(n*di_);
-            if (n*di_ > 0 && i_ >= b_)
+            i_ += (T)(n*d_);
+            if (n*d_ > 0 && i_ >= b_)
                i_ = b_;
-            if (n*di_ < 0 && i_ <= b_)
+            if (n*d_ < 0 && i_ <= b_)
                i_ = b_;
             return *this;
         }
         inline auto operator-=(difference_type n) -> const_iterator& {
-            i_ -= (T)(n*di_);
-            if (-n*di_ > 0 && i_ >= b_)
+            i_ -= (T)(n*d_);
+            if (-n*d_ > 0 && i_ >= b_)
                i_ = b_;
-            if (-n*di_ < 0 && i_ <= b_)
+            if (-n*d_ < 0 && i_ <= b_)
                i_ = b_;
             return *this;
         }
         inline auto operator-(const const_iterator& other) const -> difference_type {
-            // check that di_ and b_ are the same
-            return (i_ - other.i_)/di_;
+            // check that d_ and b_ are the same
+            return (i_ - other.i_)/d_;
         }
         // complete the bidirectionality of this iterator
         inline auto operator--() -> const_iterator& {
-            i_ -= di_;
-            if (-di_ > 0 && i_ >= b_)
+            i_ -= d_;
+            if (-d_ > 0 && i_ >= b_)
                i_ = b_;
-            if (-di_ < 0 && i_ <= b_)
+            if (-d_ < 0 && i_ <= b_)
                i_ = b_;
             return *this;
         }
@@ -1753,7 +1753,7 @@ class Xrange {
             return result;
         }
         inline auto operator[](difference_type n) const -> const T {
-	    return i_ + n*di_;
+	    return i_ + n*d_;
         }
         // external operator defined as an inline defined friend
         friend auto operator+(difference_type n, const const_iterator& rhs) -> const_iterator {
@@ -1773,7 +1773,7 @@ class Xrange {
         inline auto operator>=(const const_iterator& other) const -> bool {
             return i_ <= other.i_;
         }
-        T i_, di_, b_;
+        T i_, b_, d_;
     };
     T a_, b_, d_;
     // an T-valued version of ceil removes dependencies on cmath and simplies the constructor code
@@ -1785,10 +1785,10 @@ class Xrange {
         : a_(a), b_(a + ceil(static_cast<double>(b-a)/static_cast<double>(d))*d), d_(d)
     {}
     inline auto begin() const -> const_iterator {
-        return const_iterator(a_, d_, b_);
+        return const_iterator(*this, a_);
     }
     inline auto end() const -> const_iterator {
-        return const_iterator(b_, d_, b_);
+        return const_iterator(*this, b_);
     }
     inline auto size() const -> size_t  {
         return static_cast<size_t>((b_-a_)/d_);
