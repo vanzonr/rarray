@@ -1,7 +1,7 @@
 //
 // elapsed.h - header file for elapsed time functions in c/c++
 //
-// Copyright (c) 2013-2024  Ramses van Zon
+// Copyright (c) 2013-2026  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,9 @@
 
 using Stopwatch = double;
 
-inline double elapsed_etime() {
+inline auto elapsed_etime() -> double {
     struct timeval t;
-    gettimeofday(&t, 0);
+    gettimeofday(&t, nullptr);
     return static_cast<double>(t.tv_sec) + 0.000001 * static_cast<double>(t.tv_usec);
 }
 

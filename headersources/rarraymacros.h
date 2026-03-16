@@ -1,7 +1,7 @@
 //
 // rarraymacros.h - Checks and inlining macros used in runtime arrays
 //
-// Copyright (c) 2015-2024  Ramses van Zon
+// Copyright (c) 2015-2026  Ramses van Zon
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -45,25 +45,33 @@
 # if defined(_MSC_VER)
 #  if _MSC_VER >= 1900
 #   define RA_FORCE_inline [[msvc::forceinline]] inline
+#   define RA_FORCE_static_inline [[msvc::forceinline]] static inline
 #  else
 #   define RA_FORCE_inline __forceinline inline
+#   define RA_FORCE_static_inline __forceinline static inline
 #  endif
 # elif defined(__INTEL_COMPILER)
 #  define RA_FORCE_inline  __forceinline inline
+#  define RA_FORCE_static_inline  __forceinline static inline
 # elif defined(__clang__)
 #  if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ < 3)
 #   define RA_FORCE_inline __attribute__((always_inline)) inline
+#   define RA_FORCE_static_inline __attribute__((always_inline)) static inline
 #  else
 #   define RA_FORCE_inline [[gnu::always_inline]] inline
+#   define RA_FORCE_static_inline [[gnu::always_inline]] static inline
 #  endif
 # elif defined(__GNUC__)
 #  if __GNUC__ < 4 || (GNU_C == 4 && __GNUC_MINOR < 8)
 #   define RA_FORCE_inline __attribute__((always_inline)) inline
+#   define RA_FORCE_static_inline __attribute__((always_inline)) static inline
 #  else
 #   define RA_FORCE_inline [[gnu::always_inline]] inline
+#   define RA_FORCE_static_inline [[gnu::always_inline]] static inline
 #  endif
 # else
 #  define RA_FORCE_inline inline
+#  define RA_FORCE_static_inline static inline
 # endif
 #endif
 #endif  // EXCLUDE //

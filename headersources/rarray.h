@@ -65,26 +65,28 @@ template<typename T, rank_type R, ExOp AOP, typename A1, typename A2, typename A
 // Helper routines to recursively determine the shape of nested
 // initializer list used in rarray::assign(...).
 template<typename T>
-void init_shape_fill(unsigned N, size_type* sz, const T& l)
+void init_shape_fill(unsigned rank, size_type* extents, const T& lst)
 {}
 template<typename U>
-void init_shape_fill(unsigned N, size_type* sz,
-                     const std::initializer_list<U>& l) {
-    // U should be a type of N-1 nested initializer lists, so l is a
-    // N-level nested initializer list. But the number of levels is
+void init_shape_fill(unsigned rank, size_type* extents,
+                     const std::initializer_list<U>& lst) {
+    // U should be a type of rank-1 nested initializer lists, so lst is a
+    // rank-level nested initializer list. But the number of levels is
     // less, this will only fill upto the actual number of levels,
-    // while if the number of levels is greater, only N levels will be
+    // while if the number of levels is greater, only rank levels will be
     // initialized.
-    sz[0] = std::max(sz[0], static_cast<size_type>(l.size()));
-    if (N >= 2)
-        for (const auto& lsub : l)
-            init_shape_fill(N - 1, sz + 1, lsub);
+    extents[0] = std::max(extents[0], static_cast<size_type>(lst.size()));
+    if (rank >= 2) {
+        for (const auto& sublst : lst) {
+            init_shape_fill(rank - 1, extents + 1, sublst);
+        }
+    }
 }
-template<unsigned N, typename U>
-auto init_shape(const std::initializer_list<U>& l) -> std::array<size_type, N> {
-    std::array<size_type, N> sz{0};
-    init_shape_fill(N,  &sz[0], l);
-    return sz;
+template<unsigned R, typename U>
+auto init_shape(const std::initializer_list<U>& lst) -> std::array<size_type, R> {
+    std::array<size_type, R> extents{0};
+    init_shape_fill(R,  extents.data(), lst);
+    return extents;
 }
 template<typename T>
 struct init_list_prop {
@@ -112,73 +114,73 @@ class rarray {
     using parray_t = typename detail::PointerArray<T, R>::type;  // T*const*const*...
     using noconst_parray_t = typename detail::PointerArray<T, R>::noconst_type;  // T***...
     /// Default constructor; leaves rarray undefined
-    inline rarray()
+    RA_FORCE_inline rarray()
     : buffer_(), shape_() {}
     /// @name Constructors creating its own buffer for various R values
     /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline explicit rarray(size_type n0)
+    RA_FORCE_inline explicit rarray(size_type n0)
     : buffer_(n0),
       shape_({n0}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline rarray(size_type n0, size_type n1)
+    RA_FORCE_inline rarray(size_type n0, size_type n1)
     : buffer_(n0*n1),
       shape_({n0, n1}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2)
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2)
     : buffer_(n0*n1*n2),
       shape_({n0, n1, n2}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3)
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3)
     : buffer_(n0*n1*n2*n3),
       shape_({n0, n1, n2, n3}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4)
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4)
     : buffer_(n0*n1*n2*n3*n4),
       shape_({n0, n1, n2, n3, n4}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
                   size_type n5)
     : buffer_(n0*n1*n2*n3*n4*n5),
       shape_({n0, n1, n2, n3, n4, n5}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
                   size_type n5, size_type n6)
     : buffer_(n0*n1*n2*n3*n4*n5*n6),
       shape_({n0, n1, n2, n3, n4, n5, n6}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
                   size_type n5, size_type n6, size_type n7)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
                   size_type n5, size_type n6, size_type n7, size_type n8)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7, n8}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
                   size_type n5, size_type n6, size_type n7, size_type n8, size_type n9)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}, buffer_.begin())
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
+    RA_FORCE_inline rarray(size_type n0, size_type n1, size_type n2, size_type n3, size_type n4,
                   size_type n5, size_type n6, size_type n7, size_type n8, size_type n9,
                   size_type n10)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}, buffer_.begin())
     {}
-    explicit inline rarray(const size_type* anextent)
+    RA_FORCE_inline explicit rarray(const size_type* anextent)
     : buffer_(std::accumulate(anextent, anextent+R, 1, std::multiplies<size_type>())),
       shape_(reinterpret_cast<const std::array<size_type, R>&>(*anextent), buffer_.begin())
     {}
@@ -186,70 +188,70 @@ class rarray {
     /// @name constructors from an existing buffer
     /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline rarray(T* buffer, size_type n0)
+    RA_FORCE_inline rarray(T* buffer, size_type n0)
     : buffer_(n0, buffer),
       shape_({n0}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1)
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1)
     : buffer_(n0*n1, buffer),
       shape_({n0, n1}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2)
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2)
     : buffer_(n0*n1*n2, buffer),
       shape_({n0, n1, n2}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3)
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3)
     : buffer_(n0*n1*n2*n3, buffer),
       shape_({n0, n1, n2, n3}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4)
     : buffer_(n0*n1*n2*n3*n4, buffer),
       shape_({n0, n1, n2, n3, n4}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4, size_type n5)
     : buffer_(n0*n1*n2*n3*n4*n5, buffer),
       shape_({n0, n1, n2, n3, n4, n5}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4, size_type n5, size_type n6)
     : buffer_(n0*n1*n2*n3*n4*n5*n6, buffer),
       shape_({n0, n1, n2, n3, n4, n5, n6}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4, size_type n5, size_type n6, size_type n7)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7, buffer),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4, size_type n5, size_type n6, size_type n7, size_type n8)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8, buffer),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7, n8}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4, size_type n5, size_type n6, size_type n7, size_type n8,
                   size_type n9)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9, buffer),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}, buffer)
     {}
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline rarray(T* buffer, size_type n0, size_type n1, size_type n2, size_type n3,
                   size_type n4, size_type n5, size_type n6, size_type n7, size_type n8,
                   size_type n9, size_type n10)
     : buffer_(n0*n1*n2*n3*n4*n5*n6*n7*n8*n9*n10, buffer),
       shape_({n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}, buffer)
     {}
-    inline rarray(T* buffer, const size_type* anextent)
+    RA_FORCE_inline rarray(T* buffer, const size_type* anextent)
     : buffer_(std::accumulate(anextent, anextent+R, 1, std::multiplies<size_type>()), buffer),
       shape_(reinterpret_cast<const std::array<size_type, R>&>(*anextent), buffer)
     {}
@@ -258,75 +260,75 @@ class rarray {
     /// @{
     template<std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 1>::type>
-    inline explicit rarray(T (&a)[Z])
-    : buffer_(Z, a),
+    RA_FORCE_inline explicit rarray(T (&arr)[Z])
+    : buffer_(Z, arr),
       shape_({Z}, buffer_.begin())
     {}
     template<std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 2>::type>
-    inline explicit rarray(T (&a)[Y][Z])
-    : buffer_(Y*Z, *a),
+    RA_FORCE_inline explicit rarray(T (&arr)[Y][Z])
+    : buffer_(Y*Z, *arr),
       shape_({Y, Z}, buffer_.begin())
     {}
     template<std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 3>::type>
-    inline explicit rarray(T (&a)[X][Y][Z])
-    : buffer_(X*Y*Z, **a),
+    RA_FORCE_inline explicit rarray(T (&arr)[X][Y][Z])
+    : buffer_(X*Y*Z, **arr),
       shape_({X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 4>::type>
-    inline explicit rarray(T (&a)[W][X][Y][Z])
-    : buffer_(W*X*Y*Z, ***a),
+    RA_FORCE_inline explicit rarray(T (&arr)[W][X][Y][Z])
+    : buffer_(W*X*Y*Z, ***arr),
       shape_({W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 5>::type>
-    inline explicit rarray(T (&a)[V][W][X][Y][Z])
-    : buffer_(V*W*X*Y*Z, ****a),
+    RA_FORCE_inline explicit rarray(T (&arr)[V][W][X][Y][Z])
+    : buffer_(V*W*X*Y*Z, ****arr),
       shape_({V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 6>::type>
-    inline explicit rarray(T (&a)[U][V][W][X][Y][Z])
-    : buffer_(U*V*W*X*Y*Z,  *****a),
+    RA_FORCE_inline explicit rarray(T (&arr)[U][V][W][X][Y][Z])
+    : buffer_(U*V*W*X*Y*Z,  *****arr),
       shape_({U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t T_, std::size_t U, std::size_t V, std::size_t W, std::size_t X,
              std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 7>::type>
-    inline explicit rarray(T (&a)[T_][U][V][W][X][Y][Z])
-    : buffer_(T_*U*V*W*X*Y*Z,  ******a),
+    RA_FORCE_inline explicit rarray(T (&arr)[T_][U][V][W][X][Y][Z])
+    : buffer_(T_*U*V*W*X*Y*Z,  ******arr),
       shape_({T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t S, std::size_t T_, std::size_t U, std::size_t V, std::size_t W,
              std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 8>::type>
-    inline explicit rarray(T (&a)[S][T_][U][V][W][X][Y][Z])
-    : buffer_(S*T_*U*V*W*X*Y*Z,  *******a),
+    RA_FORCE_inline explicit rarray(T (&arr)[S][T_][U][V][W][X][Y][Z])
+    : buffer_(S*T_*U*V*W*X*Y*Z,  *******arr),
       shape_({S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t R_, std::size_t S, std::size_t T_, std::size_t U, std::size_t V,
              std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 9>::type>
-    inline explicit rarray(T (&a)[R_][S][T_][U][V][W][X][Y][Z])
-    : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********a),
+    RA_FORCE_inline explicit rarray(T (&arr)[R_][S][T_][U][V][W][X][Y][Z])
+    : buffer_(R_*S*T_*U*V*W*X*Y*Z,  ********arr),
       shape_({R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_, std::size_t U,
              std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 10>::type>
-    inline explicit rarray(T (&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
-    : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********a),
+    RA_FORCE_inline explicit rarray(T (&arr)[Q][R_][S][T_][U][V][W][X][Y][Z])
+    : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z,  *********arr),
       shape_({Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     template<std::size_t P, std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_,
              std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 11>::type>
-    inline explicit rarray(T (&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
-    : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********a),
+    RA_FORCE_inline explicit rarray(T (&arr)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
+    : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z,  **********arr),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {}
     /// @}
@@ -338,139 +340,146 @@ class rarray {
     /// @{
     template<std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 1>::type>
-    inline explicit rarray(T (&&a)[Z])
+    inline explicit rarray(T (&&arr)[Z])
     : buffer_(Z),
       shape_({Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 2>::type>
-    inline explicit rarray(T (&&a)[Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[Y][Z])
     : buffer_(Y*Z), 
       shape_({Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 3>::type>
-    inline explicit rarray(T (&&a)[X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[X][Y][Z])
     : buffer_(X*Y*Z),
       shape_({X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 4>::type>
-    inline explicit rarray(T (&&a)[W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[W][X][Y][Z])
     : buffer_(W*X*Y*Z),
       shape_({W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 5>::type>
-    inline explicit rarray(T (&&a)[V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[V][W][X][Y][Z])
     : buffer_(V*W*X*Y*Z),
       shape_({V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 6>::type>
-    inline explicit rarray(T (&&a)[U][V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[U][V][W][X][Y][Z])
     : buffer_(U*V*W*X*Y*Z),
       shape_({U, V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t T_, std::size_t U, std::size_t V, std::size_t W, std::size_t X,
              std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 7>::type>
-    inline explicit rarray(T (&&a)[T_][U][V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[T_][U][V][W][X][Y][Z])
     : buffer_(T_*U*V*W*X*Y*Z),
       shape_({T_, U, V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t S, std::size_t T_, std::size_t U, std::size_t V, std::size_t W,
              std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 8>::type>
-    inline explicit rarray(T (&&a)[S][T_][U][V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[S][T_][U][V][W][X][Y][Z])
     : buffer_(S*T_*U*V*W*X*Y*Z),
       shape_({S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t R_, std::size_t S, std::size_t T_, std::size_t U, std::size_t V,
              std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 9>::type>
-    inline explicit rarray(T (&&a)[R_][S][T_][U][V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(R_*S*T_*U*V*W*X*Y*Z),
       shape_({R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_, std::size_t U,
              std::size_t V, std::size_t W, std::size_t X, std::size_t Y, std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 10>::type>
-    inline explicit rarray(T (&&a)[Q][R_][S][T_][U][V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(Q*R_*S*T_*U*V*W*X*Y*Z),
       shape_({Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     template<std::size_t P, std::size_t Q, std::size_t R_, std::size_t S, std::size_t T_,
              std::size_t U, std::size_t V, std::size_t W, std::size_t X, std::size_t Y,
              std::size_t Z,
              rank_type RANK=R, typename=typename std::enable_if<RANK == 11>::type>
-    inline explicit rarray(T (&&a)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
+    RA_FORCE_inline explicit rarray(T (&&arr)[P][Q][R_][S][T_][U][V][W][X][Y][Z])
     : buffer_(P*Q*R_*S*T_*U*V*W*X*Y*Z),
       shape_({P, Q, R_, S, T_, U, V, W, X, Y, Z}, buffer_.begin())
     {
-        std::copy_n(reinterpret_cast<T*>(a), buffer_.size(), buffer_.begin());
+        using Tnoconst = typename std::remove_const<T>::type;
+        std::copy_n(reinterpret_cast<T*>(arr), buffer_.size(), const_cast<Tnoconst*>(buffer_.begin()));
     }
     /// @}
     /// Shallow/reference copy constructor.
     ///  @param[in]  a  the array to which to make this a reference (rarray<T,R>)
-    RA_FORCE_inline rarray(const rarray<T, R> &a) noexcept
-    : buffer_(a.buffer_),
-      shape_(a.shape_)
+    RA_FORCE_inline rarray(const rarray<T, R> &rarr) noexcept
+    : buffer_(rarr.buffer_),
+      shape_(rarr.shape_)
     {}
     /// Shallow/reference assignment operator.
     ///  @param[in]  a  the array to which to make this a reference (rarray<T,R>)
-    inline auto operator=(const rarray<T, R> &a) noexcept -> rarray& {
-        buffer_ = a.buffer_;
-        shape_ = a.shape_;
-        return *this;
-    }
+    RA_FORCE_inline auto operator=(const rarray<T, R> &rarr) noexcept -> rarray& = default; 
     /// @name move constructor and move-assignment operator
     /// @{
-    inline rarray(rarray<T, R>&& x) noexcept
-    : buffer_(std::move(x.buffer_)),
-      shape_(std::move(x.shape_))
+    RA_FORCE_inline rarray(rarray<T, R>&& rarr) noexcept
+    : buffer_(std::move(rarr.buffer_)),
+      shape_(std::move(rarr.shape_))
     {}
-    inline auto operator=(rarray<T, R>&& x) noexcept -> rarray& {
-        buffer_ = std::move(x.buffer_);
-        shape_ = std::move(x.shape_);
+    RA_FORCE_inline auto operator=(rarray<T, R>&& rarr) noexcept -> rarray& {
+        buffer_ = std::move(rarr.buffer_);
+        shape_ = std::move(rarr.shape_);
         return *this;
     }
     /// @}
     /// Comma separated element assignment (deprecated)
     ///  @param[in]  e  value for the first element (value_type)
     ///  @return  Intermediate object implementing the comma operator to mean assignment.
-    inline auto operator=(const T& e) noexcept(RA_noboundscheck && std::is_nothrow_copy_constructible<T>()) -> detail::CommaOp<T> {
+    RA_FORCE_inline auto operator=(const T& value) noexcept(RA_noboundscheck && std::is_nothrow_copy_constructible<T>()) -> detail::CommaOp<T> {
         // puts the first element in and prepares for more
         RA_CHECKORSAY(!empty(), "assignment to unsized array");
         RA_CHECKORSAY(size() > 0, "assignment with more elements than in array");
         T* first = &(buffer_[0]);
-        if (size() > 0)
-            *first = e;
-        else
-            return detail::CommaOp<T>(nullptr, nullptr);
-        detail::CommaOp<T> co(first+1, first+size()-1);
-        return co;
+        if (size() > 0) {
+            *first = value;
+            detail::CommaOp<T> co(first+1, first+size()-1);
+            return co;
+        } 
+        return detail::CommaOp<T>(nullptr, nullptr);
     }
     /// Destructor
     RA_FORCE_inline ~rarray() = default;
@@ -500,7 +509,7 @@ class rarray {
     ///  @param[in]  n0               new extent (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline void reshape(size_type n0, RESIZE resize_policy = RESIZE::NO) {
+    RA_FORCE_inline void reshape(size_type n0, RESIZE resize_policy = RESIZE::NO) {
         const size_type newsize = n0;
         if (size() == newsize) { 
             shape_ = detail::shared_shape<T, R>({n0}, buffer_.begin());
@@ -523,7 +532,7 @@ class rarray {
     ///  @param[in]  n1               new extent in dimension 1 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline void reshape(size_type n0, size_type n1, RESIZE resize_policy = RESIZE::NO) {
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, RESIZE resize_policy = RESIZE::NO) {
         const size_type newsize = n0*n1;
         if (size() == newsize) {
             shape_ = detail::shared_shape<T, R>({n0, n1}, buffer_.begin());
@@ -547,7 +556,7 @@ class rarray {
     ///  @param[in]  n2              new extent in dimension 2 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2,
                         RESIZE resize_policy = RESIZE::NO)  {
         const size_type newsize = n0*n1*n2;
         if (size() == newsize) {
@@ -573,7 +582,7 @@ class rarray {
     ///  @param[in]  n3              new extent in dimension 3 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         RESIZE resize_policy = RESIZE::NO)  {
         const size_type newsize = n0*n1*n2*n3;
         if (size() == newsize) {
@@ -600,7 +609,7 @@ class rarray {
     ///  @param[in]  n4              new extent in dimension 4 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, RESIZE resize_policy = RESIZE::NO)  {
         const size_type newsize = n0*n1*n2*n3*n4;
         if (size() == newsize) {
@@ -628,7 +637,7 @@ class rarray {
     ///  @param[in]  n5              new extent in dimension 5 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, RESIZE resize_policy = RESIZE::NO)  {
         const size_type newsize = n0*n1*n2*n3*n4*n5;
         if (size() == newsize) {
@@ -657,7 +666,7 @@ class rarray {
     ///  @param[in]  n6              new extent in dimension 6 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6,
                         RESIZE resize_policy = RESIZE::NO)  {
         const size_type newsize = n0*n1*n2*n3*n4*n5*n6;
@@ -689,7 +698,7 @@ class rarray {
     ///  @param[in]  n7              new extent in dimension 7 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         RESIZE resize_policy = RESIZE::NO)  {
         const size_type newsize=n0*n1*n2*n3*n4*n5*n6*n7;
@@ -721,7 +730,7 @@ class rarray {
     ///  @param[in]  n8              new extent in dimension 8 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8,
                         RESIZE resize_policy = RESIZE::NO)  {
@@ -755,7 +764,7 @@ class rarray {
     ///  @param[in]  n9              new extent in dimension 9 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8, size_type n9,
                         RESIZE resize_policy = RESIZE::NO)  {
@@ -790,7 +799,7 @@ class rarray {
     ///  @param[in]  n10             new extent in dimension 10 (size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void reshape(size_type n0, size_type n1, size_type n2, size_type n3,
                         size_type n4, size_type n5, size_type n6, size_type n7,
                         size_type n8, size_type n9, size_type n10,
                         RESIZE resize_policy = RESIZE::NO)  {
@@ -813,7 +822,7 @@ class rarray {
     /// This is the overloaded method for any rank.
     ///  @param[in]  newshape        Array wih rank() elements (pointer to size_type)
     ///  @param[in]  resize_policy   ra::RESIZE::NO (default) or ra::RESIZE::ALLOWED
-    inline void reshape(const size_type* newshape, RESIZE resize_policy = RESIZE::NO) {
+    RA_FORCE_inline void reshape(const size_type* newshape, RESIZE resize_policy = RESIZE::NO) {
         const size_type newsize = std::accumulate(newshape, newshape+R,
                                             1, std::multiplies<size_type>());
         if (size() == newsize) {
@@ -827,7 +836,7 @@ class rarray {
     }
     /// Create a deep, independent copy.
     /// @return Independent rarray with its own shape and data copied from the original.
-    inline auto copy() const -> rarray {
+    RA_FORCE_inline auto copy() const -> rarray {
         // return a copy
         rarray<T, R> clone;
         clone.buffer_ = buffer_.copy();
@@ -840,7 +849,7 @@ class rarray {
     ///  @note  Only implemented if value_type is not already const.
     template<typename U = T,
              typename = typename std::enable_if<!std::is_const<U>::value>::type>
-    inline operator const rarray<const U, R>&() const noexcept {
+    RA_FORCE_inline operator const rarray<const U, R>&() const noexcept {
         return const_ref();
     }
     /// This method returns the number of dimensions of the rarray, a.k.a., its rank.
@@ -850,14 +859,14 @@ class rarray {
     }
     /// Check if the rarray is undefined.
     /// @return  bool indicating if thie rarray has no shape, i.e. is undefined.
-    inline auto empty() const noexcept -> bool {
+    RA_FORCE_inline auto empty() const noexcept -> bool {
         return buffer_.cbegin() == nullptr;
     }
     /// Retrieve the array size (a.k.a. extent) in a given dimension.
-    ///  @param[in]  i  The dimension of which to give the extent (integer)
-    ///  @return        The extent of the array in dimension \p i (size_type)
-    inline auto extent(int i) const -> size_type {
-        return shape_.extent(i);
+    ///  @param[in]  dim  The dimension of which to give the extent (rank_type)
+    ///  @return          The extent of the array in dimension \p i (size_type)
+    RA_FORCE_inline auto extent(rank_type dim) const -> size_type {
+        return shape_.extent(dim);
     }
     /// Retrieve the sizes (a.k.a. extents) of the rarray in all dimensions.
     ///  @return  Array of extents (pointer to size_type)
@@ -866,33 +875,33 @@ class rarray {
     }
     /// Retrieve the number of elements. This is also the product of all extents.
     ///  @return  The total number of elements in the array (size_type)
-    inline auto size() const noexcept -> size_type {
+    RA_FORCE_inline auto size() const noexcept -> size_type {
         return shape_.size();
     }
     /// Retrieve the address to the internal data.
     ///  @return  The internal data's address (pointer to value_type)
-    inline auto data() noexcept -> T* {
+    RA_FORCE_inline auto data() noexcept -> T* {
         return buffer_.begin();
     }
     /// Retrieve the address to the internal data when this is const.
     ///  @return  The internal data's address (pointer to const value_type)
-    inline auto data() const noexcept -> const T* {
+    RA_FORCE_inline auto data() const noexcept -> const T* {
         return buffer_.begin();
     }
     /// Retrieve nested pointer-to-pointer structure.
     ///  @return  A T*const*.. pointer acting similarly to this rarray when using square brackets.
-    inline auto ptr_array() const noexcept -> parray_t {
+    RA_FORCE_inline auto ptr_array() const noexcept -> parray_t {
         return shape_.ptrs();
     }
     /// Retrieve const-stripped nested pointer-to-pointer structure.
     ///  @return   A T**.. pointer acting similarly to this rarray when using square brackets.
     ///  @warning  Breaks const-correctness.
-    inline auto noconst_ptr_array() const noexcept -> noconst_parray_t {
+    RA_FORCE_inline auto noconst_ptr_array() const noexcept -> noconst_parray_t {
         return const_cast<noconst_parray_t>(shape_.ptrs());
     }
     /// Converts rarray to an rarray with const elements.
     ///  @return  A const reference to *this reinterpreted as having const value_type.
-    inline auto const_ref() const noexcept -> const rarray<const T, R>& {
+    RA_FORCE_inline auto const_ref() const noexcept -> const rarray<const T, R>& {
         return reinterpret_cast<const rarray<const T, R>&>(*this);
     }
     /// Make undefined.
@@ -902,14 +911,14 @@ class rarray {
     }
     /// Fill with uniform value. Does not change the size nor shape.
     ///  @param  value  new value for all elements (type_value)
-    inline void fill(const T& value) {
+    RA_FORCE_inline void fill(const T& value) {
         buffer_.fill(value);
     }
 
  private:
     template<rank_type R_ = R,
              class = typename std::enable_if<R_ == 1>::type>
-    inline void fill_g(std::initializer_list<T> list,
+    RA_FORCE_inline void fill_g(std::initializer_list<T> list,
                        MISSING missing_policy) {
         auto filler = list.begin();
         for (size_type i = 0; i < extent(0); i++) {
@@ -928,7 +937,7 @@ class rarray {
     }
     template<typename U, rank_type R_ = R,
              class = typename std::enable_if<R_ != 1>::type>
-    inline void fill_g(std::initializer_list<U> list,
+    RA_FORCE_inline void fill_g(std::initializer_list<U> list,
                        MISSING missing_policy) {
         auto filler = list.begin();
         for (size_type i = 0; i < extent(0); i++) {
@@ -946,7 +955,7 @@ class rarray {
         }
     }
     template<typename U>
-    inline void form_g(std::initializer_list<U> list,
+    RA_FORCE_inline void form_g(std::initializer_list<U> list,
                          MISSING missing_policy) {
         std::array<size_type, R> newshape = detail::init_shape<R>(list);
         size_type newsize = std::accumulate(newshape.begin(), newshape.end(),
@@ -960,25 +969,25 @@ class rarray {
     /// @name Fill with repeating sequence (does not change the size nor shape)
     /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline void fill(std::initializer_list<T> list,
+    RA_FORCE_inline void fill(std::initializer_list<T> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<T>> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<T>>> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<T>>>> list,
@@ -986,7 +995,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -995,7 +1004,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1005,7 +1014,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1016,7 +1025,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1028,7 +1037,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1041,7 +1050,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1055,7 +1064,7 @@ class rarray {
         fill_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline void fill(std::initializer_list<
+    RA_FORCE_inline void fill(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1074,24 +1083,24 @@ class rarray {
     /// Form from initializer lists
     /// @{
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline void form(std::initializer_list<T> list,
+    RA_FORCE_inline void form(std::initializer_list<T> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline void form(std::initializer_list<std::initializer_list<T>> list,
+    RA_FORCE_inline void form(std::initializer_list<std::initializer_list<T>> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<T>>> list,
                      MISSING missing_policy = MISSING::DEFAULT) {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<T>>>> list,
@@ -1099,7 +1108,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1108,7 +1117,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1118,7 +1127,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1129,7 +1138,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1141,7 +1150,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1154,7 +1163,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1168,7 +1177,7 @@ class rarray {
         form_g(list, missing_policy);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline void form(std::initializer_list<
+    RA_FORCE_inline void form(std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
                      std::initializer_list<
@@ -1189,32 +1198,32 @@ class rarray {
     /// @param n0... New dimensions of the rarray
     /// @param value Value to fill the rarray with
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 1>::type>
-    inline void form(size_type n0, const T& value) {
+    RA_FORCE_inline void form(size_type n0, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0);
         shape_ = detail::shared_shape<T, R>({n0}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 2>::type>
-    inline void form(size_type n0, size_type n1, const T& value) {
+    RA_FORCE_inline void form(size_type n0, size_type n1, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1);
         shape_ = detail::shared_shape<T, R>({n0, n1}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 3>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, const T& value) {
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2);
         shape_ = detail::shared_shape<T, R>({n0, n1, n2}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 4>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3);
         shape_ = detail::shared_shape<T, R>({n0, n1, n2, n3}, buffer_.begin());
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 5>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4);
@@ -1222,7 +1231,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 6>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5);
@@ -1230,7 +1239,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 7>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6);
@@ -1238,7 +1247,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 8>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6, size_type n7,
                        const T& value) {
         buffer_ = detail::shared_buffer<T>(n0*n1*n2*n3*n4*n5*n6*n7);
@@ -1246,7 +1255,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 9>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6, size_type n7,
                        size_type n8,
                        const T& value) {
@@ -1255,7 +1264,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 10>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                        size_type n4, size_type n5, size_type n6, size_type n7,
                        size_type n8, size_type n9,
                        const T& value) {
@@ -1264,7 +1273,7 @@ class rarray {
         buffer_.fill(value);
     }
     template<rank_type R_ = R, class = typename std::enable_if<R_ == 11>::type>
-    inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
+    RA_FORCE_inline void form(size_type n0, size_type n1, size_type n2, size_type n3,
                      size_type n4, size_type n5, size_type n6, size_type n7,
                      size_type n8, size_type n9, size_type n10,
                      const T& value) {
@@ -1276,28 +1285,28 @@ class rarray {
     ///@}
     /// @name iterators over the data
     ///@{
-    inline auto begin() noexcept -> iterator {
+    RA_FORCE_inline auto begin() noexcept -> iterator {
         return buffer_.begin();
     }
-    inline auto begin() const noexcept -> const_iterator {
+    RA_FORCE_inline auto begin() const noexcept -> const_iterator {
         return buffer_.begin();
     }
-    inline auto cbegin() const noexcept -> const_iterator {
+    RA_FORCE_inline auto cbegin() const noexcept -> const_iterator {
         return buffer_.cbegin();
     }
-    inline auto end() noexcept -> iterator {
+    RA_FORCE_inline auto end() noexcept -> iterator {
         return buffer_.end();
     }
-    inline auto end() const noexcept -> const_iterator {
+    RA_FORCE_inline auto end() const noexcept -> const_iterator {
         return buffer_.end();
     }
-    inline auto cend() const noexcept -> const_iterator {
+    RA_FORCE_inline auto cend() const noexcept -> const_iterator {
         return buffer_.cend();
     }
     ///@}
     /// Compute index of a reference inside an array.
     /// If \p a is an element in the array, get index in dimension \p i of that element;
-    inline auto index(const T& a, int i) const -> size_type {
+    RA_FORCE_inline auto index(const T& a, int i) const -> size_type {
         // retrieve index in dimension i within *this of the element a
         std::ptrdiff_t linearindex = &a - &(buffer_[0]);
         if (linearindex < 0 || linearindex >= size())
@@ -1309,12 +1318,12 @@ class rarray {
     }
     /// Compute index of a reference inside an array
     /// If \p iter points at an element in the array, get index in dimension \p i of that element;
-    inline auto index(const iterator& iter, int i) const -> size_type {
+    RA_FORCE_inline auto index(const iterator& iter, int i) const -> size_type {
         return index(*iter, i);
     }
     /// Compute index of a reference inside an array.
     /// If \p a is an element in the array, get the indices of that element;
-    inline auto index(const T& a) const -> std::array<size_type, R> {
+    RA_FORCE_inline auto index(const T& a) const -> std::array<size_type, R> {
         std::array<size_type, R> ind;
         std::ptrdiff_t linearindex = &a - &(buffer_[0]);
         RA_CHECKORSAY(linearindex >= 0 && linearindex < size(), "element not in array");
@@ -1328,7 +1337,7 @@ class rarray {
     }
     /// Compute index of a reference inside an array.
     /// If \p i points at an element in the array, get the indices of that element.
-    inline auto index(const iterator& i) const -> std::array<size_type, R> {
+    RA_FORCE_inline auto index(const iterator& i) const -> std::array<size_type, R> {
         return index(*i);
     }
     /// @name access subarrays with bounds checking
@@ -1435,12 +1444,12 @@ class rarray {
     // allow rarray<T, R+1>::at(..) to create a proper rarray<T, R>
     // referencing data in current array
     friend class rarray<T, R+1>;
-    inline rarray(detail::shared_buffer<T>&& abuffer, detail::shared_shape<T, R>&& ashape) :
+    RA_FORCE_inline rarray(detail::shared_buffer<T>&& abuffer, detail::shared_shape<T, R>&& ashape) :
         buffer_(std::forward<detail::shared_buffer<T>>(abuffer)),
         shape_(std::forward<detail::shared_shape<T, R>>(ashape))
     {}
     /// Meeded in rarray<T, R+1>::at(..) const.
-    inline rarray(const detail::shared_buffer<T>&& abuffer, detail::shared_shape<T, R>&& ashape) :
+    RA_FORCE_inline rarray(const detail::shared_buffer<T>&& abuffer, detail::shared_shape<T, R>&& ashape) :
         buffer_(std::forward<detail::shared_buffer<T>>(const_cast<detail::shared_buffer<T>&& >(abuffer))),
         shape_(std::forward<detail::shared_shape<T, R>>(ashape))
     {}
@@ -1683,15 +1692,15 @@ class Xrange {
         using pointer = T*;
         using reference = T&;
         using iterator_category = std::input_iterator_tag;
-        inline const_iterator(): i_(0), b_(0), d_(1) {}
-        inline const_iterator(const Xrange& xr, T i): i_(i), b_(xr.b_), d_(xr.d_) {}
-        inline auto operator!=(const const_iterator& other) const -> bool {
+        RA_FORCE_inline const_iterator(): i_(0), b_(0), d_(1) {}
+        RA_FORCE_inline const_iterator(const Xrange& xr, T i): i_(i), b_(xr.b_), d_(xr.d_) {}
+        RA_FORCE_inline auto operator!=(const const_iterator& other) const -> bool {
             return i_ != other.i_;
         }
-        inline auto operator==(const const_iterator& other) const -> bool {
+        RA_FORCE_inline auto operator==(const const_iterator& other) const -> bool {
             return i_ == other.i_ && d_ == other.d_ && b_ == other.b_;
         }
-        inline auto operator++() -> const_iterator& {
+        RA_FORCE_inline auto operator++() -> const_iterator& {
             i_ += d_;
             if (d_ > 0 && i_ >= b_)
                i_ = b_;
@@ -1699,16 +1708,16 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        inline auto operator++(int) -> const_iterator {
+        RA_FORCE_inline auto operator++(int) -> const_iterator {
             const const_iterator temp = *this;
             this->operator++();
             return temp;
         }
-        inline auto operator*() const -> const T& {
+        RA_FORCE_inline auto operator*() const -> const T& {
             return i_;
         }
         // more operators are needed so openmp can split a for loop over an xrange
-        inline auto operator+=(difference_type n) -> const_iterator& {
+        RA_FORCE_inline auto operator+=(difference_type n) -> const_iterator& {
             i_ += (T)(n*d_);
             if (n*d_ > 0 && i_ >= b_)
                i_ = b_;
@@ -1716,7 +1725,7 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        inline auto operator-=(difference_type n) -> const_iterator& {
+        RA_FORCE_inline auto operator-=(difference_type n) -> const_iterator& {
             i_ -= (T)(n*d_);
             if (-n*d_ > 0 && i_ >= b_)
                i_ = b_;
@@ -1724,12 +1733,12 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        inline auto operator-(const const_iterator& other) const -> difference_type {
+        RA_FORCE_inline auto operator-(const const_iterator& other) const -> difference_type {
             // check that d_ and b_ are the same
             return (i_ - other.i_)/d_;
         }
         // complete the bidirectionality of this iterator
-        inline auto operator--() -> const_iterator& {
+        RA_FORCE_inline auto operator--() -> const_iterator& {
             i_ -= d_;
             if (-d_ > 0 && i_ >= b_)
                i_ = b_;
@@ -1737,60 +1746,60 @@ class Xrange {
                i_ = b_;
             return *this;
         }
-        inline auto operator--(int) -> const_iterator {
+        RA_FORCE_inline auto operator--(int) -> const_iterator {
             const const_iterator temp = *this;
             this->operator--();
             return temp;
         }
-        inline auto operator+(difference_type n) const -> const_iterator {
+        RA_FORCE_inline auto operator+(difference_type n) const -> const_iterator {
             const_iterator result(*this);
 	    result += n;
             return result;
         }
-        inline auto operator-(difference_type n) const -> const_iterator {
+        RA_FORCE_inline auto operator-(difference_type n) const -> const_iterator {
             const_iterator result(*this);
 	    result -= n;
             return result;
         }
-        inline auto operator[](difference_type n) const -> const T {
+        RA_FORCE_inline auto operator[](difference_type n) const -> const T {
 	    return i_ + n*d_;
         }
-        // external operator defined as an inline defined friend
+        // external operator defined as an RA_FORCE_inline defined friend
         friend auto operator+(difference_type n, const const_iterator& rhs) -> const_iterator {
             const_iterator result(rhs);
             result += n;
             return result;
         }
-        inline auto operator<(const const_iterator& other) const -> bool {
+        RA_FORCE_inline auto operator<(const const_iterator& other) const -> bool {
             return i_ < other.i_;
         }
-        inline auto operator<=(const const_iterator& other) const -> bool {
+        RA_FORCE_inline auto operator<=(const const_iterator& other) const -> bool {
             return i_ <= other.i_;
         }
-        inline auto operator>(const const_iterator& other) const -> bool {
+        RA_FORCE_inline auto operator>(const const_iterator& other) const -> bool {
             return i_ < other.i_;
         }
-        inline auto operator>=(const const_iterator& other) const -> bool {
+        RA_FORCE_inline auto operator>=(const const_iterator& other) const -> bool {
             return i_ <= other.i_;
         }
         T i_, b_, d_;
     };
     T a_, b_, d_;
     // an T-valued version of ceil removes dependencies on cmath and simplies the constructor code
-    static T ceil(double x) {
+    static auto ceil(double x) -> T {
         return static_cast<T>(static_cast<std::ptrdiff_t>(x) + static_cast<std::ptrdiff_t>(x != static_cast<double>(static_cast<std::ptrdiff_t>(x))));
     }
  public:
-    inline Xrange(T a, T b, T d)
+    RA_FORCE_inline Xrange(T a, T b, T d)
         : a_(a), b_(a + ceil(static_cast<double>(b-a)/static_cast<double>(d))*d), d_(d)
     {}
-    inline auto begin() const -> const_iterator {
+    RA_FORCE_inline auto begin() const -> const_iterator {
         return const_iterator(*this, a_);
     }
-    inline auto end() const -> const_iterator {
+    RA_FORCE_inline auto end() const -> const_iterator {
         return const_iterator(*this, b_);
     }
-    inline auto size() const -> size_t  {
+    RA_FORCE_inline auto size() const -> size_t  {
         return static_cast<size_t>((b_-a_)/d_);
     }
 };
