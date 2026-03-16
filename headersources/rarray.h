@@ -48,8 +48,8 @@
 // Forward definitions of ra::rarray<T, R> and ra::CommaOp
 namespace ra {
 
-enum class RESIZE { NO, ALLOWED };
-enum class MISSING { SKIP, DEFAULT, REPEAT };
+enum class RESIZE : unsigned char { NO, ALLOWED };
+enum class MISSING : unsigned char { SKIP, DEFAULT, REPEAT };
 
 namespace detail {
 template<typename T> class CommaOp;

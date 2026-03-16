@@ -71,7 +71,7 @@ struct StringToValue<std::string> {
     }
 };
 
-enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
+enum class token : unsigned char { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
 
 inline auto toch(const token& Token) -> char {
     switch (Token) {
@@ -121,7 +121,7 @@ inline auto text_output(std::ostream &o, const rarray<T, 1>& r)
             if (result.find_first_of("{,}#") != std::string::npos
                 && !
                 (result[0] == '(' && result[result.size()-1] == ')'
-                 && result.substr(1, result.size()-2).find_first_of(")") == std::string::npos) )
+                 && result.substr(1, result.size()-2).find_first_of(')') == std::string::npos) )
                 o << '#' << result.size() << ':';
             o << result;
         }

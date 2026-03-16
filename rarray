@@ -616,8 +616,8 @@ struct DataArrayFromPtrs<T, 1> {
 }  // namespace detail
 }  // namespace ra
 namespace ra {
-enum class RESIZE { NO, ALLOWED };
-enum class MISSING { SKIP, DEFAULT, REPEAT };
+enum class RESIZE : unsigned char { NO, ALLOWED };
+enum class MISSING : unsigned char { SKIP, DEFAULT, REPEAT };
 namespace detail {
 template<typename T> class CommaOp;
 template<typename T, rank_type R, typename P> class Bracket;
@@ -2290,7 +2290,7 @@ struct StringToValue<std::string> {
         output = input;
     }
 };
-enum class token { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
+enum class token : unsigned char { BRACEOPEN, BRACECLOSE, COMMA, DATASTRING, END };
 inline auto toch(const token& Token) -> char {
     switch (Token) {
     case token::BRACEOPEN:  return '{';
@@ -2336,7 +2336,7 @@ inline auto text_output(std::ostream &o, const rarray<T, 1>& r)
             if (result.find_first_of("{,}#") != std::string::npos
                 && !
                 (result[0] == '(' && result[result.size()-1] == ')'
-                 && result.substr(1, result.size()-2).find_first_of(")") == std::string::npos) )
+                 && result.substr(1, result.size()-2).find_first_of(')') == std::string::npos) )
                 o << '#' << result.size() << ':';
             o << result;
         }
