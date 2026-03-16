@@ -30,7 +30,6 @@
 #if __cplusplus >= 201103L
 
 #include <algorithm>
-#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <list>
@@ -1777,10 +1776,13 @@ class Xrange {
         T i_, di_, b_;
     };
     T a_, b_, d_;
-
+    // an T-valued version of ceil removes dependencies on cmath and simplies the constructor code
+    static T ceil(double x) {
+        return static_cast<T>(static_cast<std::ptrdiff_t>(x) + static_cast<std::ptrdiff_t>(x != static_cast<double>(static_cast<std::ptrdiff_t>(x))));
+    }
  public:
     inline Xrange(T a, T b, T d)
-    : a_(a), b_(a + static_cast<T>(static_cast<T>(std::ceil(static_cast<double>(b-a)/static_cast<double>(d)))*d)), d_(d)
+        : a_(a), b_(a + ceil(static_cast<double>(b-a)/static_cast<double>(d))*d), d_(d)
     {}
     inline auto begin() const -> const_iterator {
         return const_iterator(a_, d_, b_);
