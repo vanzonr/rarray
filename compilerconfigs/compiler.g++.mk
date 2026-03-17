@@ -8,9 +8,9 @@ CXXFLAGS=-Og
 DBGFLAGS=-g
 CPPFLAGS=-Wall -Wshadow -Wconversion -Wfatal-errors
 CPPFLAGSOPT=-DNDEBUG
-CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native
+CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native -fno-signed-zeros -fno-trapping-math -fassociative-math
 FC=gfortran
-FFLAGS=-O3 -fstrict-aliasing -march=native
+FFLAGS=-O3 -fstrict-aliasing -march=native -fno-signed-zeros -fno-trapping-math -fassociative-math
 LDFLAGSCOV=
 CXXFLAGSCOV=-fprofile-arcs -ftest-coverage
 LIBSCOV=-lgcov

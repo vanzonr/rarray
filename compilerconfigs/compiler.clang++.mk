@@ -5,14 +5,16 @@
 CXX=clang++ -std=c++11
 CXX17=clang++ -std=c++17
 CXX23=clang++ -std=c++23
-CXXFLAGS=-g -gdwarf-2
-DBGFLAGS=-g -gdwarf-2
+#CXXFLAGS=-g -gdwarf-2
+#DBGFLAGS=-g -gdwarf-2
+CXXFLAGS=-g
+DBGFLAGS=-g
 CPPFLAGS=-Wall -D__extern_always_inline=inline 
 CPPFLAGSOPT=-DNDEBUG -D__extern_always_inline=inline 
-CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native 
+CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native -fno-signed-zeros -fno-trapping-math -fassociative-math
 #FC was gfortran
 FC=flang
-FFLAGS=-O3 -fstrict-aliasing -march=native
+FFLAGS=-O3 -fstrict-aliasing -march=native -fno-signed-zeros -fno-trapping-math -fassociative-math
 LDFLAGSCOV=-fprofile-instr-generate -fcoverage-mapping
 CXXFLAGSCOV=-fprofile-instr-generate -fcoverage-mapping
 LIBSCOV=

@@ -10,9 +10,11 @@ CXXFLAGS=-O0
 DBGFLAGS=-g
 CPPFLAGS=-Wall
 CPPFLAGSOPT=-DNDEBUG
-CXXFLAGSOPT=-O3 -xhost -ansi-alias -funroll-loops
+#CXXFLAGSOPT=-O3 -xhost -ansi-alias -funroll-loops
+CXXFLAGSOPT=-O3 -march=skylake-avx512 -ansi-alias -funroll-loops
 FC=ifx
-FFLAGS=-O3 -xhost -ansi-alias -funroll-loops
+#FFLAGS=-O3 -xhost -ansi-alias -funroll-loops
+FFLAGS=-O3 -march=skylake-avx512 -ansi-alias -funroll-loops
 LDFLAGSCOV=
 CXXFLAGSCOV=
 LIBSCOV=
