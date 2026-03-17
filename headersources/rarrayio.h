@@ -328,6 +328,8 @@ inline auto operator>>(std::istream &instream, rarray<T, R>& rarr) -> std::istre
 
 #if __cplusplus >= 202002L
 
+#if __has_include(<format>)
+
 #include <format>
 
 namespace std {
@@ -341,6 +343,8 @@ struct formatter<ra::rarray<T,R>> : formatter<string> {
     }
 };
 }
+
+#endif
 
 #endif
 

@@ -2566,6 +2566,7 @@ inline auto operator>>(std::istream &instream, rarray<T, R>& rarr) -> std::istre
 }
 }  // namespace ra
 #if __cplusplus >= 202002L
+#if __has_include(<format>)
 namespace std {
 template<typename T, ra::rank_type R>
 struct formatter<ra::rarray<T,R>> : formatter<string> {
@@ -2577,6 +2578,7 @@ struct formatter<ra::rarray<T,R>> : formatter<string> {
     }
 };
 }
+#endif
 #endif
 #undef RA_CHECKORSAY
 #undef RA_FORCE_inline
