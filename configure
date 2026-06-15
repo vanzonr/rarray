@@ -76,7 +76,8 @@ EOF
             echo -n " $compilewithout" >> config.mk
         fi
     else
-        #$CXX -DBOOST_TEST_NO_MAIN -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
+        ###
+        ### $CXX -DBOOST_TEST_NO_MAIN -E $incdir $tmpfile | grep $headerfile | head -n 1| awk -F\" '{print $2}'
         echo "found"
         if [ -n "$compilewithout" ]; then
             echo -n " $compilewith" >> config.mk
@@ -210,11 +211,15 @@ else
         #########################################################
         detect_library OPENBLAS openblas_config.h -DNOOPENBLAS -DOPENBLAS ""
         #########################################################
-        if ! [ -f mdspan.hpp ]; then
-           curl -o mdspan.hpp "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
-           sed -i 's/__has_include(<version>)/0/' mdspan.hpp || true
+        # check if mdspan is in the compiler?
+        detect_library MDSPAN mdspan "-DNOMDSPAN" "-DMDSPAN -DNOMDSPANREF" ""
+        if ! grep DNOMDSPANREF config.mk; then
+            if ! [ -f mdspan.hpp ]; then
+                curl -o mdspan.hpp "https://raw.githubusercontent.com/kokkos/mdspan/single-header/mdspan.hpp" || true
+                sed -i 's/__has_include(<version>)/0/' mdspan.hpp || true
+            fi
+            detect_library MDSPANREF "$PWD/mdspan.hpp" -DNOMDSPANREF -DMDSPANREF ""
         fi
-        detect_library MDSPANREF "$PWD/mdspan.hpp" -DNOMDSPANREF -DMDSPANREF ""
         #######################################################
         echo >> config.mk
         # Extra include dirs added to MORECPPFLAGS

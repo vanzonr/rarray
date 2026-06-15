@@ -50,6 +50,10 @@
 #include "mdspan.hpp"
 #endif
 
+#ifdef MDSPAN
+#include <mdspan>
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 
 const int nrepeats = 3;
@@ -405,6 +409,70 @@ double case_mdspan_ref(int repeat) {
 
 //////////////////////////////////////////////////////////////////////////////
 
+double case_mdspan(int repeat) {
+    double d = 0.0;
+#if defined(MDSPAN) && defined(__cpp_lib_mdspan)
+    std::unique_ptr<float[]> adata(new float[n*n*n*n]);
+    std::unique_ptr<float[]> bdata(new float[n*n*n*n]);
+    std::unique_ptr<float[]> cdata(new float[n*n*n*n]);
+    std::mdspan<float, std::extents<size_t, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent>>
+        a{adata.get(), std::extents<size_t, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent>{n, n, n, n}},
+        b{bdata.get(), std::extents<size_t, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent>{n, n, n, n}},
+        c{cdata.get(), std::extents<size_t, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent, std::dynamic_extent>{n, n, n, n}};
+#if __cpp_multidimensional_subscript >= 202110L
+    while (repeat--) {
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < n; k++)
+                    for (int l = 0; l < n; l++) {
+                        a[i, j, k, l] = static_cast<float>(l+i+repeat);
+                        b[i, j, k, l] = static_cast<float>(k+j+repeat/2);
+                    }
+        pass(&(a[0, 0, 0, 0]), &(b[0, 0, 0, 0]), repeat);
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < n; k++)
+                    for (int l = 0; l < n; l++)
+                        c[i, j, k, l] = a[i, j, k, l] + b[i, j, k, l];
+        pass(&(c[0, 0, 0, 0]), &(c[0, 0, 0, 0]), repeat);
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < n; k++)
+                    for (int l = 0; l < n; l++)
+                        d += c[i, j, k, l];
+        pass(&(c[0, 0, 0, 0]), reinterpret_cast<float*>(&d), repeat);
+    }
+#else
+    while (repeat--) {
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < n; k++)
+                    for (int l = 0; l < n; l++) {
+                        a(i, j, k, l) = static_cast<float>(l+i+repeat);
+                        b(i, j, k, l) = static_cast<float>(k+j+repeat/2);
+                    }
+        pass(&(a(0, 0, 0, 0)), &(b(0, 0, 0, 0)), repeat);
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < n; k++)
+                    for (int l = 0; l < n; l++)
+                        c(i, j, k, l) = a(i, j, k, l) + b(i, j, k, l);
+        pass(&(c(0, 0, 0, 0)), &(c(0, 0, 0, 0)), repeat);
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < n; k++)
+                    for (int l = 0; l < n; l++)
+                        d += c(i, j, k, l);
+        pass(&(c(0, 0, 0, 0)), reinterpret_cast<float*>(&d), repeat);
+    }
+#endif
+#endif
+    return d;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
 double case_blitz_1(int repeat) {
 #ifndef NOBLITZ
     double d = 0.0;
@@ -574,9 +642,15 @@ int main(int argc, char**argv) {
         answer = case_eigen(nrepeats);
         break;
     case 10:
+        #if defined(MDSPAN) && defined(__cpp_lib_mdspan)
+        printf("mdspan:    ");
+        fflush(stdout);
+        answer = case_mdspan(nrepeats);
+        #else
         printf("mdspan_ref:");
         fflush(stdout);
         answer = case_mdspan_ref(nrepeats);
+        #endif
         break;
     #if __cpp_multidimensional_subscript >= 202110L
     case 11:
