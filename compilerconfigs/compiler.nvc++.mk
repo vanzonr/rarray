@@ -3,7 +3,7 @@
 #
 CXX=nvc++ --c++11 --diag_suppress declared_but_not_referenced
 CXX17=nvc++ --c++17 --diag_suppress declared_but_not_referenced
-CXX23=:
+CXX23=nvc++ --c++23 --diag_suppress declared_but_not_referenced -D__cpp_lib_mdspan
 CXXFLAGS=
 DBGFLAGS=-O0 -g
 CPPFLAGSOPT=-DNDEBUG
