@@ -2300,6 +2300,7 @@ auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n
 }
 }  // namespace ra
 namespace std {
+#if ! defined(__clang__)
 template<typename T, ra::rank_type R>
 struct remove_all_extents<ra::rarray<T, R>> {
     using type = T;
@@ -2308,6 +2309,7 @@ template<typename T, ra::rank_type R>
 struct rank<ra::rarray<T, R>> {
     static const size_t value = R;
 };
+#endif
 }  // namespace std
 #ifndef RA_FORCE_static_inline
 #define RA_FORCE_static_inline static

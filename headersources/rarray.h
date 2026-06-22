@@ -2064,14 +2064,18 @@ auto make_rarray(size_type n0,size_type n1,size_type n2,size_type n3,size_type n
 
 // make RARRAY and INDEX work for rarrays as well as automatic arrays:
 namespace std {
+#if ! defined(__clang__)
+// clang erroneously does not allow specialization of types in std
 template<typename T, ra::rank_type R>
 struct remove_all_extents<ra::rarray<T, R>> {
     using type = T;
 };
+    
 template<typename T, ra::rank_type R>
 struct rank<ra::rarray<T, R>> {
     static const size_t value = R;
 };
+#endif
 }  // namespace std
 
 // Include I/O always (from version 2.3 onwards)

@@ -2,14 +2,14 @@
 # clang++
 # Tested v13; need v15 for c++23, but may give compiler errors. v17 seems to work, and would allow std=c++23 instead of std=c++2b.)
 #
-CXX=clang++ -std=c++11
-CXX17=clang++ -std=c++17
-CXX23=clang++ -std=c++23
+CXX=clang++ -std=c++11 -stdlib=libc++
+CXX17=clang++ -std=c++17 -stdlib=libc++
+CXX23=clang++ -std=c++23 -stdlib=libc++
 #CXXFLAGS=-g -gdwarf-2
 #DBGFLAGS=-g -gdwarf-2
 CXXFLAGS=-g
 DBGFLAGS=-g
-CPPFLAGS=-Wall -D__extern_always_inline=inline 
+CPPFLAGS=-Wall -D__extern_always_inline=inline -stdlib=libc++
 CPPFLAGSOPT=-DNDEBUG -D__extern_always_inline=inline 
 CXXFLAGSOPT=-O3 -fstrict-aliasing -march=native -fno-signed-zeros -fno-trapping-math -fassociative-math
 #FC was gfortran
