@@ -27,28 +27,28 @@ application.
 
 ## Getting Started
 
-You can use the rarray library with "#include <rarray>".  Here,
-rarray is its header file. In fact, this is the only thing you need to
-do, as rarray is a header-only library.
+You can use the rarray library with `#include <rarray>`.
+In fact, this is the only thing you need to do, as rarray is a header-only library.
 
 ## Creating Rarrays
 
-The library provides a template class `rarray<T,R>`, where T is the
-type of the elements are R is the rank.  To define a multidimensional
-array, use rarray<T,R> as the typename with the elements' type
-substituted for T and the required rank substituted for R.  For instance, the following defines a two-dimensional array of integers:
+The library provides a template class `rarray<T,R>`, where `T` is the
+type of the elements are `R` is the rank.  To define a multidimensional
+array, use `rarray<T,R>` as the typename with the elements' type
+substituted for `T` and the required rank substituted for `R`.
+For instance, the following defines a two-dimensional array of `double`s:
 ```cpp
 rarray<double,2> a;
 ```
-This array does not have a shape yet (or, said differently, its shape is 0x0). To define this array with a given shape, e.g., to make this a matrix with 4 rows and 5 columns, you should specify the extent of the array in each dimension:
+This array does not have a shape yet. To define this array with a given shape, e.g., to make this a matrix with 4 rows and 5 columns, you should specify the extent of the array in each dimension:
 ```cpp
 rarray<double,2> a(4, 5);
 ```
-This works for rarrays of rank up to 11. For rarrays with higher rank, you have to pass an pointer to the array of extents.
+This method of providing the dimensions as arguments to the constructor, works for rarrays of rank up to 11. For rarrays with rank higher than 11, you have to pass an pointer to the array of extents.
 
-Thw array `a` has a shape now, but its elements are not initialized.
-Uninitialized values are bad practice, but have occasional usage.  One should nonetheless aim to initialize the elements
-of an rarray in the code **shortly after** the definition of the
+The rarray `a` has a shape now, but its elements are not initialized.
+Uninitialized values are bad practice, but have occasional usage.  One should nonetheless aim to initialize the rarray elements
+**shortly after** the definition of the
 rarray.
 
 One way to (re)initialize all the values of an existing rarray at once is with
@@ -76,8 +76,8 @@ will print the array, in the following format:
 {1,1,1,1,1}
 }
 ```
-This format with the curly braces is chosen as it is unique and can
-therefore be correctly read in again by input streams.
+This format mimics c-style syntax and can
+be correctly read in by input streams.
 
 A second way to set the values of an existing array at once is using a similar
 curly braces format as the argument of the fill method:
